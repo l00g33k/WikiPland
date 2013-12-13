@@ -1,0 +1,11 @@
+#TOP
+
+#lunch routine
+@6.3p
+=30 get up
+=45 drive to work
+=60 meeting
+=30 goto bank
+@13.00
+=45 lunch
+=30 meet Joe

@@ -1,0 +1,20 @@
+=HTML font color=
+* Black Gray Silver White Yellow Lime Aqua Fuchsia Red Green Blue Purple Maroon Olive Navy Teal
+<pre>
+<font style="color:black;background-color:yellow">abc red</font> <font style="color:yellow;background-color:black">abc red</font> <font style="color:white;background-color:blue">abc red</font> nothing
+<font style="color:black;background-color:green">abc red</font> <font style="color:black;background-color:yellow">abc red</font> <font style="color:black;background-color:red">abc red</font> nothing
+
+<font style="color:white;background-color:gray">more words</font>
+<font style="color:black;background-color:silver">more words</font>
+<font style="color:black;background-color:yellow">more words</font>
+<font style="color:black;background-color:lime">more words</font>
+<font style="color:black;background-color:aqua">more words</font>
+<font style="color:white;background-color:fuchsia">more words</font>
+<font style="color:white;background-color:red">more words</font>
+<font style="color:white;background-color:olive">more words</font>
+<font style="color:white;background-color:teal">more words</font>
+<font style="color:white;background-color:green">more words</font>
+<font style="color:white;background-color:blue">more words</font>
+<font style="color:white;background-color:maroon">more words</font>
+<font style="color:white;background-color:navy">more words</font>
+</pre>

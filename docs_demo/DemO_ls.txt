@@ -1,0 +1,65 @@
+%TOC%
+==Wiki text and rendered text==
+* If you are viewing this page by following the 'l00httpd Features Tour', you are viewing the rendered wiki page.
+** Click [[/view.pl?path=./DemO_ls.txt|here]] to view the raw text.  This is what you will see in an editor.
+*** The 'view' module is used to view raw text.  You can easily invoke this at any time by changing the 'ls.pl' in the URL to 'view.pl' and view the new URL.
+==Key Wiki Features==
+* Starting from the top...
+* The links at the top are built-in links for standard functions.  They are not the result of entries in the wiki text.
+* The Table Of Content (TOC).  The trailing '--' indicates that the subodinate branches can be collapsed by clicking the link.
+* Heading text are created by equal number of '=' at the start and the end of the text.  The first '=' must start at the left most column.  The number of '=' must be the same.  One '=' is level 1 and two '=' is level 2, etc.
+** A 'Heading' becomes an anchor and is linked from the TOC.
+* Bullet is created by one or more '*' starting at the left most column and a space, and text.  The more '*' creates the more tab indentation.
+==Wiki word==
+* A wiki word is any word starting with one or more capital letters, follow by one of more lower case letters, follow by one or more capital letters, and finally follow by any non space characters
+** This is best illustrated by examples.  In the sample words below, valid wiki words are rendered as a link, while invalid words are mere words.  These are non existing wiki words in this wiki so the link will be broken:
+*** Thisisnotwikiword
+*** ThisIswikiword
+*** ThisIsWikiWord
+*** ThisIS
+*** THISISNOTEITHER
+*** ButThis____is_wiki_word
+*** -ButNotThis__
+*** WikiWithNumbers1234
+*** 123NotStartWithNumbers
+*** '!' prevents !WikiWord
+==Wiki formatting==
+* Heading
+** A level 1 heading is made by an equal sign (=) at the start of the line, follow by the heading text, and end with another equal sign at the end of the line
+*** For example:
+*** =Level 1 Heading=
+** Add more equal signs for lower level
+** The number of equal signs must be the same at the start and at the end
+* Bullet
+** A level 1 bullet is made by an asterisk (*) follow by a space at the start of the line
+*** For example:
+*** * level 1 bullet
+** Add more asterisk for indentation
+* %TOC%
+** Must start at the left most column
+** Creates a Table Of Content at that point with links to each headings.
+==Editing==
+* To edit the raw wiki text, click the 'Edit' link at the top of this page.  It is suggested that you open the link in a new browser window/tab so you can see both this page and the 'Edit' page by switching between the windows/tabs.
+** Features on the 'Edit' page:
+*** Some links at the top (some of these apply to all l00httpd pages):
+**** 'Home': links to the l00httpd homepage for a list of loaded modules, and remote access control, etc.
+**** 'Quick': links to a URL defined in 'l00httpd.cfg'.  I set this to point to my homepage in the wiki.  This link exist on all 'l00httpd' pages so you can get home quickly.
+**** 'Jump to end': jumps to the end of the page, at the end of the wiki text dump
+**** '/sdcard/....': links to render the wiki page being edited
+*** The text edit box.  The size is defined in 'l00httpd.cfg' so you can adjust to suit the size of your screen and the font size you used.
+*** The 'Save' button, and the destination.  By default, it points to the current file being edited.  To make a copy, simply enter a new file name.
+*** Some copy/paste text for use from the desktop ('adb pull "/sdcard...'; see DemO_ls_advanced)
+*** Links to older versions
+*** The raw wiki text dump with line number at the bottom.
+* Try to add some texts between '%TOC%' and '==Wiki text and rendered text==', save, then reload the original window, or just click the '.../DemO_ls.txt' link at the top.
+** Try enter this text (starting at the left most column): * my first line
+** You will see that the texts you have just added appear between the table of content and the first heading 'Wiki text and rendered text' as a new bullet.
+==Making new page==
+* To make a new page, you can repeat the exercise above except this time use a wiki word
+===Actuallly creating new pages===
+* To create a new page, simply edit and add a new wiki word
+* Save and reload the wiki page
+* Click the new wiki word
+* l00httpd will report that the page does not exist.  Click the 'Edit' button near the bottom
+* Add your own content in the new page
+* View the newly created content either by following the new wiki word from the original page, or click the link to the page at the top, to the right of 'Path:'

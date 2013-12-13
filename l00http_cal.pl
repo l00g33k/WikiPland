@@ -1,0 +1,379 @@
+use strict;
+use warnings;
+use l00wikihtml;
+use l00backup;
+
+# Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
+
+# This module display a calendar
+
+# What it does:
+# 1) Read a description file
+# 1.1) Each description is a single line with 2 comma separating 
+#      3 fields:
+#      Field 1 : year/month/day
+#      Field 2 : number of days
+#      Field 3 : description (no comma allowed)
+# 2) Render an HTML table as well as an ASCII table of the calendar
+# 3) Display form controls
+
+use l00mktime;
+
+my %config = (proc => "l00http_cal_proc",
+              desc => "l00http_cal_desc");
+
+my ($celllen, $date, $day, $dayofwk, $days, $finalweek);
+my ($firstweek, $fullpathname, $gshour, $gsisdst);
+my ($gsmday, $gsmin, $gsmon, $gssec, $gswday, $gsyday);
+my ($gsyear, $hdr, $idx, $ii, $jj, $jj1, $jj2, $julian, $k, $ldate);
+my ($len, $ln, $outsz, $thisweek, $todo, $wk, $wkce);
+my ($wkln, $wkno, $wkos, $xx, $yy, %db);
+my ($results);
+my (%list, %tbl, @outs);
+
+
+# defaults
+my $cellwd = 5;
+my $cellht = 4;
+my $lenwk = 10;
+my $border = 0;        # text border on both sides of cell
+
+
+
+sub l00http_cal_desc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    "cal: Displaying a calendar rendered from cal.txt";
+}
+
+
+sub l00http_cal_proc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};
+    my $form = $ctrl->{'FORM'};
+    my ($rpt, $now, $buf, $tmp, $table, $pname, $lnno);
+
+    # get current date/time
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    $mon++;
+    # convert to week number
+    ($thisweek, $now) = &l00mktime::weekno ($year, $mon, $mday);
+
+    #: open input file and scan calendar inputs
+    if (defined ($form->{'pathname'}) && length ($form->{'pathname'}) > 6) {
+        $fullpathname = $form->{'pathname'};
+    } else {
+        $fullpathname = $ctrl->{'workdir'} . "l00_cal.txt";
+    }
+    print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
+    ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
+
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'home'} - <a href=\"$ctrl->{'quick'}\">Quick</a> - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+
+    # handling moving lnno to moveto
+    if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {
+        if (open (IN, "<$fullpathname")) {
+            $buf = '';
+            $lnno = 0;
+            while (<IN>) {
+			    $lnno++;
+				if ($lnno == $form->{'lnno'}) {
+                    ($date, $len, $todo) = split (',', $_);
+			        $buf .= "$form->{'moveto'},$len,$todo\n";
+				} else {
+				    $buf .= $_;
+				}
+			}
+            close (IN);
+            &l00backup::backupfile ($ctrl, $fullpathname, 0, 0);
+            open (OU, ">$fullpathname");
+			print OU $buf;
+			close (OU);
+		}
+        print $sock "<p><a href=\"/cal.htm?pathname=$fullpathname\">Return to calendar</a>\n";
+        print $sock $ctrl->{'htmlfoot'};
+        return;
+    }
+
+    # remember parameters if new ones are provided
+    if (defined ($form->{'cellwd'}) && $form->{'cellwd'} > 3) {
+        $cellwd = $form->{'cellwd'};
+    }
+    if (defined ($form->{'cellht'}) && $form->{'cellht'} > 3) {
+        $cellht = $form->{'cellht'};
+    }
+    if (defined ($form->{'lenwk'}) && $form->{'lenwk'} > 3) {
+        $lenwk = $form->{'lenwk'};
+    }
+
+
+    # 1) Read a description file
+
+    undef %db;
+    if (open (IN, "<$fullpathname")) {
+        $lnno = 0;
+        while (<IN>) {
+            chop;
+            $lnno++;
+            if (/^#/) {
+	        # # in column 1 is remark
+                next;
+            }
+            if (!/^\d/) {
+	        # must start with numeric
+                next;
+            }
+            ($date, $len, $todo) = split (',', $_);
+            if (defined ($date) && defined ($len) && defined ($todo)) {
+                if (defined ($form->{'movefrom'})) {
+				    # selected movefrom date, list items for picking
+                    if ($date eq $form->{'movefrom'}) {
+                        print $sock "<br>Choose to move: <a href=\"/cal.htm?pathname=$fullpathname&movelnno=$lnno\">$_</a>\n";
+                    }
+                }
+                if (defined ($form->{'movelnno'})) {
+				    # Announce item to move picked
+                    if ($lnno == $form->{'movelnno'}) {
+                        print $sock "<br>Moving: $_<br>Pick 'to' date on left half of date<br>\n";
+                    }
+                }
+                print "cal: >$todo<>$len<>$date<\n", if ($ctrl->{'debug'} >= 3);
+                @db{"$date`$len`$todo"} = 'x';
+            }
+        }
+        close (IN);
+        if (defined ($form->{'today'}))  {
+            @db{sprintf("%d/%d/%d",$year+1900,$mon,$mday)."`1`<font style=\"color:black;background-color:lime\">NOW</font>"} = 'x';
+        }
+    }
+
+    undef $todo;
+    undef $hour;
+    undef $date;
+    #: create cell content
+
+    $ldate = "";
+    $firstweek = $thisweek;
+    $finalweek = $thisweek;
+
+    undef  %list;
+    foreach $k (sort keys %db) {
+        ($date, $len, $todo) = split ('`', $k);
+        # repeating
+        $rpt = 0;
+        if ($date =~ /^(.+)\+(.+)$/) {
+            $date = $1;
+            $rpt = $2;
+        } elsif ($len <= 3) {
+		    # color $todo
+		    $todo = "<font style=\"color:black;background-color:aqua\">$todo</font>";
+		} else {
+		    # color $todo
+		    $todo = "<font style=\"color:black;background-color:silver\">$todo</font>";
+		}
+        if ($ldate ne $date) {
+            ($year,$mon, $mday,) = split ('/', $date);
+            $year -= 1900;
+            ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+            $ldate = $date;
+        }
+        #print "cal: $date $rpt; j $julian ", $julian - $now, "\n";
+        if ($rpt > 0) {
+            while ($julian < $now) {
+                $julian += $rpt;
+            }
+            $ldate = ''; # force weekno calc
+        }
+        $jj = $julian;
+        for ($days = 1; $days <= $len; $days++) {
+            ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                                gmtime ($jj * 3600 * 24);
+            $gsmon++;
+            $dayofwk =   ($jj + 3) % 7;
+            $wkno = int (($jj + 3) / 7);
+            if ($firstweek > $wkno) {
+                $firstweek = $wkno;
+            }
+            if ($finalweek < $wkno) {
+                $finalweek = $wkno;
+            }
+            if (defined ($list {"$wkno`$dayofwk"})) {
+                $list {"$wkno`$dayofwk"} .= " ! $todo";
+            } else {
+                $list {"$wkno`$dayofwk"} = $todo;
+            }
+
+            if ($ctrl->{'debug'} >= 5) {
+                ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                                gmtime (($wkno * 7 + $dayofwk - 3) * 3600 * 24);
+                $gsmon++;
+                printf ("$date %3d/%02d/%02d ", $gsyear + 1900, $gsmon, $gsmday);
+                print "\$list{\"$wkno`$dayofwk\"} = $todo;\n";
+            }
+            $jj++;
+        }
+    }
+    if ($lenwk > 0) {
+        $finalweek = $firstweek + $lenwk;
+    }
+
+
+
+    $wkln = "+" . "-" x ($cellwd - 1);
+    $wkln = $wkln x 7 . "+";
+    substr ($wkln, 0, 1) = "+";
+    $wkce = $wkln;
+    $wkce =~ s/-/ /g;
+    $wkce =~ s/\+/|/g;
+
+
+    # 2) Render an HTML table as well as an ASCII table of the calendar
+
+    #: create output table
+    #html table
+    undef %tbl;
+    for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
+        for ($day = 0; $day < 7; $day++) {
+            ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                          gmtime (($wk * 7 + $day - 3) * 3600 * 24);
+            $gsmon++;
+            $gsyear += 1900;
+            $jj1 = sprintf ("%x", $gsmon);
+            $jj2 = sprintf ("%2d", $gsmday);
+            $buf = "$gsyear%2F$gsmon%2F$gsmday";
+            if (defined ($form->{'movelnno'})) {
+                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?pathname=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>\n";
+            } else {
+                $jj = "<a href=\"/cal.htm?pathname=$fullpathname&movefrom=$buf\">$jj1</a>";
+            }
+            $buf = "$gsyear%2F$gsmon%2F$gsmday,1,";
+            $jj .= "<a href=\"/blogtag.htm?path=$fullpathname&buffer=$buf&blog=\">$jj2</a>";
+            $idx = sprintf ("%02d%d", $wk - $firstweek, $day);
+            if ($day < 5) {
+                $tbl{"$idx"} = "<i><small>$jj</small></i>";
+            } else {
+                $tbl{"$idx"} = "<small>$jj</small>";
+            }
+        }
+    }
+    foreach $wk (sort keys %list) {
+        ($wkno, $dayofwk) = split ('`', $wk);
+        $todo = $list {$wk};
+        $wkos = $wkno - $firstweek;
+        $idx = sprintf ("%02d%d", $wkos, $dayofwk);
+        $tbl{"$idx"} .= "<br><small>$todo</small>";
+    }
+
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    print $sock "<tr>\n";
+    print $sock "<td>Mon</td><td>Tues</td><td>Wed</td><td>Thu</td><td>Fri</td><td>Sat</td><td>Sun</td>\n";
+    print $sock "</tr>\n";
+    for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
+        print $sock "<tr>\n";
+        for ($day = 0; $day < 7; $day++) {
+            $idx = sprintf ("%02d%d", $wk - $firstweek, $day);
+            $tmp = $tbl{$idx};
+            $tmp =~ s/\[\[(.+?)\|(.+?)\]\]/<a href=\"$1\">$2<\/a>/g;
+            $tmp =~ s/\[\[(.+?)\|(.+?)\]\]/<a href=\"$1\">$2<\/a>/g;
+            $tmp =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
+            # For http(s) not preceeded by =" becomes whatever [[http...]]
+            $tmp =~ s|([^="][^">])(https*://[^ ]+)|$1 <a href=\"$2\">$2<\/a> |g;
+            print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
+        }
+        print $sock "</tr>\n";
+    }
+    print $sock "</table>\n";
+
+    undef @outs;
+    $outsz = 0;
+    for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
+        $outs [$outsz++] = $wkln;
+        for ($ii = 1; $ii < $cellht; $ii++) {
+            $outs [$outsz] = $wkce;
+            if ($ii == 1) {
+                for ($day = 0; $day < 7; $day++) {
+                    ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                                      gmtime (($wk * 7 + $day - 3) * 3600 * 24);
+                    $gsmon++;
+                    $jj = sprintf ("%x%2d", $gsmon, $gsmday);
+                    #print "y$jj\n";
+                    substr ($outs [$outsz], $cellwd * $day, 3) = $jj;
+                }
+            }
+            $outsz++;
+        }
+    }
+    $outs [$outsz++] = $wkln;
+
+    $hdr = 2;
+    $celllen = ($cellht - $hdr) * ($cellwd - 1);
+    if ($ctrl->{'debug'} >= 5) {
+        print ">wkos<>dayofwk<>todo<\n";
+    }
+    foreach $wk (sort keys %list) {
+        ($wkno, $dayofwk) = split ('`', $wk);
+        $todo = $list {$wk};
+        $wkos = $wkno - $firstweek;
+        if ($ctrl->{'debug'} >= 5) {
+            print ">$wkos<>$dayofwk<>$todo<\n";
+        }
+        $yy = $wkos * $cellht + $hdr;
+        $xx = $dayofwk * $cellwd + 1;
+        if (length ($todo) <= $celllen) {
+            $todo .= " " x ($celllen - length ($todo) + 1);
+        }
+        for ($ii = 0; $ii < $cellht - $hdr; $ii++) {
+            if (($yy >= 0) && (($yy + $ii) < $outsz)) {
+                substr ($outs [$yy + $ii], $xx + $border, $cellwd - 1 - 2 * $border) = 
+                    substr ($todo, ($cellwd - 1 - 2 * $border) * $ii, $cellwd - 1 - 2 * $border);
+            }
+        }    
+    }
+
+    # print ASCII table
+#   print $sock "<pre>\n";
+#   foreach $ln (@outs) {
+#       print $sock "$ln\n";
+#   }
+#   print $sock "</pre>\n";
+
+    # 3) Display form controls
+
+    print $sock "<form action=\"/cal.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>ASCII cell width:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"3\" name=\"cellwd\" value=\"$cellwd\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>ASCII cell height:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"3\" name=\"cellht\" value=\"$cellht\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>Length in weeks:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"3\" name=\"lenwk\" value=\"$lenwk\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>Full input file path and name:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"12\" name=\"pathname\" value=\"$fullpathname\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "    <tr>\n";
+#   print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"today\">Mark NOW</td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
+
+    print $sock $ctrl->{'htmlfoot'};
+}
+
+
+\%config;

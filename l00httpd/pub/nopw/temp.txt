@@ -1,0 +1,103 @@
+* IMPCI2
+* All errors are '1' read as '0'. The counts are listed in the table for the SN+memory address
+** naming convention: (S/N).-e(memory address).txt
+*** -e is the 'pcijtag -e' option
+** b0 and b3 have the most errors
+||SN . addr     || b9 || b8 || b7 || b6 || b5 || b4 || b3 || b2 || b1 || b0 ||
+||12136.-e0.txt ||    ||    ||    ||    ||    ||    || 205||    ||    || 187||
+||12136.-e4.txt ||    ||    ||    ||    ||    ||    || 204||    ||    || 200||
+||12136.-e8.txt ||    ||    ||    ||    ||    ||    || 206||    ||    || 204||
+||12136.-ec.txt ||    ||    ||    ||    ||    ||    || 191||    ||    || 207||
+||              ||    ||    ||    ||    ||    ||    ||    ||    ||    ||    ||
+||12137.-e0.txt ||    ||    ||    || 147|| 150||    || 153|| 156||    || 164||
+||12137.-e4.txt ||    ||    ||    || 150|| 164||    || 163|| 152||    || 147||
+||12137.-e8.txt ||    ||    ||    || 153|| 159||    || 161|| 170||    || 153||
+||12137.-ec.txt ||    ||    ||    || 154|| 164||    || 152|| 163||    || 152||
+||              ||    ||    ||    ||    ||    ||    ||    ||    ||    ||    ||
+||12138.-e0.txt ||    ||    ||    ||    ||    || 169|| 160||    || 155|| 161||
+||12138.-e4.txt ||    ||    ||    ||    ||    || 166|| 157||    || 166|| 155||
+||12138.-e8.txt ||    ||    ||    ||    ||    || 162|| 163||    || 148|| 158||
+||12138.-ec.txt ||    ||    ||    ||    ||    || 166|| 156||    || 165|| 154||
+||              ||    ||    ||    ||    ||    ||    ||    ||    ||    ||    ||
+||12146.-e0.txt ||    ||    ||    ||    ||    || 167|| 165||    || 150|| 153||
+||12146.-e4.txt ||    ||    ||    ||    ||    || 158|| 162||    || 162|| 151||
+||12146.-e8.txt ||    ||    ||    ||    ||    || 164|| 164||    || 172|| 167||
+||12146.-ec.txt ||    ||    ||    ||    ||    || 168|| 169||    || 153|| 149||
+||              ||    ||    ||    ||    ||    ||    ||    ||    ||    ||    ||
+||12154.-e0.txt || 181||    ||    ||    ||    || 168||    ||    ||    || 170||
+||12154.-e4.txt ||    ||    ||    ||    ||    || 163|| 178||    ||    || 167||
+||12154.-e8.txt ||    ||    ||    ||    ||    || 181|| 170||    ||    || 167||
+||12154.-ec.txt ||    ||    ||    ||    ||    || 168|| 173||    ||    || 171||
+
+* If a particular bit on a particular address has been detected with '1' read as '0' error, there is no case where the bits are correct
+** This may not be surprising because the error free tests are not reported
+
+
+
+
+
+
+
+
+
+
+
+
+||ID             ||ImPci2_450_ODT_333.ejtag.eep||thumb push test ||
+||missing_r4     ||dvpmon connected            ||                ||
+||12136 (no glue)||dvpmon failed               ||pattern changed ||
+||12137          ||dvpmon failed               ||pattern changed ||
+||12138          ||dvpmon failed               ||pattern changed ||
+||12146          ||dvpmon failed               ||pattern changed ||
+||12154          ||dvpmon failed               ||pattern changed ||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* end

@@ -1,0 +1,7 @@
+# must follow same format
+# date,number of days,your description without comma
+
+2010/01/19,1,Publish prototype l00httpd
+2010/02/03,4,Refine l00httpd
+2010/02/07,1,Publish alpha l00httpd
+2010/02/24,1,Publish beta l00httpd

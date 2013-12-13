@@ -1,0 +1,149 @@
+use strict;
+use warnings;
+
+# Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
+
+# this is a simple template, a good starting point to make your own modules
+
+my %config = (proc => "l00http_scratch_proc",
+              desc => "l00http_scratch_desc");
+my ($scratch, $scratchhtml, $tmp, $eval);
+$eval = '';
+
+sub l00http_scratch_desc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    # Descriptions to be displayed in the list of modules table
+    # at http://localhost:20337/
+    " A: scratch: A scratch pad";
+}
+
+
+sub l00http_scratch_proc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+    my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my (@alllines, $line);
+
+    # Send HTTP and HTML headers
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>scratch</title>" . $ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "<a href=\"#end\">Jump to end</a><br>\n";
+
+    if (defined ($form->{'eval'})) {
+        $eval = $form->{'eval'};
+    }
+    if (defined ($form->{'cbmobi'})) {
+        if ($ctrl->{'os'} eq 'and') {
+            $scratch = $ctrl->{'droid'}->getClipboard();
+            $scratch = $scratch->{'result'};
+            #&l00httpd::dumphash ("key", $scratch);
+        }
+    } elsif (defined ($form->{'append'})) {
+        $scratch = '';
+        if ($ctrl->{'os'} eq 'and') {
+            $scratch = $ctrl->{'droid'}->getClipboard();
+            $scratch = $scratch->{'result'};
+        }
+        if (defined ($form->{'scratchbuf'})) {
+            $scratch = "$form->{'scratchbuf'} $scratch";
+        }
+    } elsif (defined ($form->{'update'})) {
+        if (defined ($form->{'scratchbuf'})) {
+            $scratch = $form->{'scratchbuf'};
+        } else {
+            $scratch = "";
+        }
+    } elsif (defined ($form->{'clear'})) {
+        $scratch = "";
+    } else {
+        if (!defined ($scratch)) {
+            $scratch = "";
+        }
+    }
+    if (defined ($form->{'cburl'})) {
+        if ($ctrl->{'os'} eq 'and') {
+            if (($tmp) = $scratch =~ /(http:\/\/[^ \n\r\t]+)/) {
+                $ctrl->{'droid'}->setClipboard ($tmp); 
+            }
+        }
+    }
+    $tmp = $scratch;
+    if (defined ($form->{'cbcopy'})) {
+        if ($ctrl->{'os'} eq 'and') {
+            $ctrl->{'droid'}->setClipboard ($scratch); 
+        }
+    }
+
+    print "scratch: >$scratch<\n", if ($ctrl->{'debug'} >= 5);
+
+#    $tmp =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+    print $sock "<form action=\"/scratch.htm\" method=\"post\">\n";
+    print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$tmp</textarea>\n";
+    print $sock "<p><input type=\"submit\" name=\"update\" value=\"Update\"> \n";
+    print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"CB paste\"> \n";
+    print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"CB copy\"> \n";
+    print $sock "<br>\n";
+    print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
+    print $sock "<input type=\"submit\" name=\"cburl\" value=\"CB cp URL\">\n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+
+    print $sock "<br><input type=\"text\" size=\"10\" name=\"eval\" value=\"$eval\">\n";
+    print $sock "The whole content of the scratch buffer is put in \$_ and then this string is \"eval'ed\", e.g. 'print \$sock \$_' prints the content to this HTML page\n";
+    print $sock "</form>\n";
+
+    print $sock "<form action=\"/scratch.htm\" method=\"get\">\n";
+    print $sock "Refresh as:<br>\n";
+    print $sock "<input type=\"submit\" name=\"mobi\" value=\"Mobilize\">\n";
+    print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
+    print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
+    print $sock "</form><p>\n";
+
+
+    # get submitted name and print greeting
+    if (defined ($form->{'text'})) {
+        $scratchhtml = $scratch;
+        $scratchhtml =~ s/</&lt;/g;
+        $scratchhtml =~ s/>/&gt;/g;
+        $scratchhtml =~ s/\r\n/<br>/g;
+        $scratchhtml =~ s/\r/<br>/g;
+        $scratchhtml =~ s/\n/<br>/g;
+        $scratchhtml =~ s/<br>/<br>\n/g;
+    } else {
+        $scratchhtml = $scratch;
+        $scratchhtml =~ s/\r//g;
+        if (length ($eval) > 2) {
+            print $sock "<pre>eval: $eval</pre>\n";
+            $_ = $scratchhtml;
+            eval "$eval";
+            $scratchhtml = $_;
+        }
+        @alllines = split ("\n", $scratchhtml);
+        $scratchhtml = "";
+        foreach $line (@alllines) {
+            if ((defined ($form->{'cbmobi'})) ||
+                (defined ($form->{'mobi'}))) {
+                #http://www.google.com/gwt/n?u=http%3A%2F%2Fwww.a.com
+                $line =~ s|:|%3A|g;
+                $line =~ s|/|%2F|g;
+                $line =~ s|(https*%3A%2F%2F[^ ]+)|<a href=\"http://www.google.com/gwt/n?u=$1\">http://www.google.com/gwt/n?u=$1</a>|g;
+            } else {
+                $line =~ s|(https*://[^ ]+)|<a href=\"$1\">$1</a>|g;
+            }
+            $scratchhtml .= "$line<br>";
+        }
+    }
+
+    print $sock "$scratchhtml\n";
+
+    print $sock "<p><p><hr>\n";
+    print $sock "<p><p><hr>\n";
+    print $sock "<p><p><hr>\n";
+    print $sock "<hr><a name=\"end\"></a><p><p>\n";
+
+ 
+    # send HTML footer and ends
+    print $sock $ctrl->{'htmlfoot'};
+}
+
+
+\%config;

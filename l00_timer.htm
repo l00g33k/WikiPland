@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html><head><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+<style type="text/css">
+#clock  { font-family: Arial, Helvetica, sans-serif; font-size: 2.0em; color: white; background-color: black; border: 2px solid purple; padding: 4px; }
+</style>
+
+<script Language="JavaScript">
+<!--
+var timerID = null;
+var timerRunning = false;
+var startsec;
+var timer0clock1 = 0;
+
+function runtimer (){
+    timer0clock1 = 0;
+}
+function runclock (){
+    timer0clock1 = 1;
+}
+
+function stopclock (){
+    if(timerRunning)
+        clearTimeout(timerID);
+    timerRunning = false;
+}
+
+function startclock () {
+    // Make sure the clock is stopped
+    stopclock();
+    var currentTime = new Date ( );
+
+    var currentHours = currentTime.getHours ( );
+    var currentMinutes = currentTime.getMinutes ( );
+    var currentSeconds = currentTime.getSeconds ( );
+    startsec = currentSeconds + currentMinutes * 60 + currentHours * 3600
+
+    updateClock();
+}
+
+function init () {
+    timeDisplay = document.createTextNode ( "" );
+    document.getElementById("clock").appendChild ( timeDisplay );
+}
+
+function updateClock () {
+    var currentTime = new Date ( );
+
+    var currentHours = currentTime.getHours ( );
+    var currentMinutes = currentTime.getMinutes ( );
+    var currentSeconds = currentTime.getSeconds ( );
+
+    if (timer0clock1) {
+        // Pad the minutes and seconds with leading zeros, if required
+        currentHours   = ( currentHours < 10 ? "0" : "" ) + currentHours;
+        currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
+        currentSeconds = ( currentSeconds < 10 ? "0" : "" ) + currentSeconds;
+    } else {
+        var nowsec = currentSeconds + currentMinutes * 60 + currentHours * 3600;
+        var tmp = nowsec - startsec;
+
+        currentSeconds = tmp % 60;
+        tmp = (tmp - currentSeconds) / 60;
+        currentMinutes = tmp % 60;
+        currentHours   = (tmp - currentMinutes) / 60;
+
+        // Pad the minutes and seconds with leading zeros, if required
+        currentHours   = ( currentHours < 10 ? "0" : "" ) + currentHours;
+        currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
+        currentSeconds = ( currentSeconds < 10 ? "0" : "" ) + currentSeconds;
+    }
+
+    // Compose the string for display
+    var currentTimeString = currentHours + ":" + currentMinutes + ":" + currentSeconds;
+
+    // Update the time display
+    document.getElementById("clock").firstChild.nodeValue = currentTimeString;
+
+
+    timerID = setTimeout("updateClock()",1000);
+    timerRunning = true;
+}
+
+// -->
+</script>
+</head><body onload="startclock();">
+<div style="width: 10em; text-align: center; margin: 20px auto;">
+Count Up Timer/Clock
+<p style="font-size: 500%;">
+<span id="clock">&nbsp;</span>
+</p>
+<p>
+<form name="clock" onSubmit="0">
+    <input type="button" name="start" value="(re)start" onClick="startclock()">
+    <input type="button" name="stop"  value="stop"  onClick="stopclock ()">
+    <input type="button" name="timer"  value="Display Timer"  onClick="runtimer()">
+    <input type="button" name="clock"  value="Display Clock"  onClick="runclock ()">
+</form>
+</div>
+</body></html>

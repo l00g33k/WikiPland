@@ -1,0 +1,4 @@
+%TOC%
+==My first entry==
+* HTTP link: http://www.google.com
+* Wikiword: ThisFileDoesNotExist : click and Edit to create it

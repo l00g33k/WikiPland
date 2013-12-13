@@ -1,0 +1,22 @@
+%BOOKMARK%
+* main:
+camera | /do.pl?path=%L00HTTP<plpath>%docs_demo/l00_camera.pl
+nopw/ | /ls.pl?path=%L00HTTP<workdir>%pub/
+periocam 2min/10h | /periocam.pl?submit=y&interval=120&repeat=300
+scratch | /scratch.pl
+
+* Wifi l00httpd:
+wifi/wake cli on | /httpd?wifi=on&noclinav=0&allappson=on&timeout=86400&scratch=on&hello=on&wake=on
+wifi/wake cli off | /httpd?wifi=off&noclinav=1&allappsoff=on&timeout=0&path=%L00HTTP<plpath>%docs_demo/pub/&wake=off
+
+* GPS logging:
+15" log | /gps.pl?interval=15&mode=loc&wake=on&submit=Submit
+off | /gps.pl?interval=0&submit=Submit
+refresh | /gps.pl
+
+* Sample wiki word and link:
+ExLink1
+ **- ExLink2 -**
+Note: these links don't exist.  The seconds on demonstrate font control
+
+%END%

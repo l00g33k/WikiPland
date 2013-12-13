@@ -1,0 +1,146 @@
+use strict;
+use warnings;
+use IO::Socket;
+use IO::Select;
+use l00wget;
+
+# Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
+
+# wget clone to download target
+
+my %config = (proc => "l00http_wget_proc",
+              desc => "l00http_wget_desc");
+my ($wgetpath, $url);
+$url = "http://www.google.com";
+
+sub l00http_wget_desc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    # Descriptions to be displayed in the list of modules table
+    # at http://localhost:20337/
+    " B: wget: wget clone to download target";
+}
+
+
+sub l00http_wget_proc (\%) {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+    my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my ($fname, $buf);
+    my ($server_socket, $cnt, $hdrlen, $bdylen, $hdr, $bdy);
+    my ($readable, $ready, $curr_socket, $ret, $mode);
+    my ($chunksz, $host, $port, $path, $contlen);
+    my ($name, $pw);
+
+    $mode = '';
+
+    if (!defined ($wgetpath)) {
+        $wgetpath = "$ctrl->{'workdir'}del/wget.htm";
+    }
+
+    # Send HTTP and HTML headers
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>wget</title>" . $ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+
+    if (defined ($form->{'wgetpath'})) {
+        $wgetpath = $form->{'wgetpath'}
+    }
+    if (defined ($form->{'url'})) {
+        $url = $form->{'url'}
+    }
+    if (defined ($form->{'paste'}) && ($ctrl->{'os'} eq 'and')) {
+        $url = $ctrl->{'droid'}->getClipboard()->{'result'};
+        if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
+            $url = $1;
+        }
+        if (!($url =~ /https*:\/\//)) {
+            # Opera Mini does not include http://
+            $url = "http://$url";
+        }
+        print $sock "URL from clipboard:<br>$url<br>\n";
+#       $form->{'submit'} = 1;
+    }
+    if (defined ($form->{'name'})) {
+        $name = $form->{'name'}
+    } else {
+        $name = '';
+    }
+    if (defined ($form->{'pw'})) {
+        $pw = $form->{'pw'}
+    } else {
+        $pw = '';
+    }
+
+    print $sock "<form action=\"/wget.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    print $sock "        <tr>\n";
+    print $sock "            <td>URL:<input type=\"submit\" name=\"paste\" value=\"CB\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"url\" value=\"$url\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>Save path:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"wgetpath\" value=\"$wgetpath\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>Name:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"name\" value=\"\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>Password:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"pw\" value=\"\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Fetch URL\"></td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"nofetch\">Don't fetch; generate URL</td>\n";
+    print $sock "    </tr>\n";
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
+
+    if (defined ($form->{'submit'})) {
+       if ((!defined ($form->{'nofetch'})) ||
+           ($form->{'nofetch'} ne 'on')) {
+            print $sock "Fetching '$url'<p>\n";
+            print $sock "<a href=\"/ls.htm?path=$wgetpath\">ls $wgetpath</a><p>\n";
+            print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a><p>\n";
+            print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a><br>\n";
+
+            if (($name ne '') || ($pw ne '')) {
+                ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
+            } else {
+                ($hdr, $bdy) = &l00wget::wget ($url);
+            }
+
+            if (defined ($hdr)) {
+                print $sock "<p>Header length ",length($hdr), " bytes<br>\n";
+                print $sock "Body length ",length($bdy), " bytes<br>\n";
+
+                print $sock "<p><pre>$hdr</pre>\n";
+                if (open (OU, ">$wgetpath")) {
+                    binmode (OU);
+                    print OU $bdy;
+                    close (OU);
+                    $bdy = substr($bdy, 0, 2000);
+                    $bdy =~ s/</&lt;/g;
+                    $bdy =~ s/>/&gt;/g;
+                    print $sock "<hr>\n";
+                    print $sock "<p>Fisrt 2000 bytes of body<p>\n";
+                    print $sock "<pre>$bdy</pre>\n";
+                }
+            }
+        } else {
+            print $sock "<p>Failed to fetch '$url'\n";
+        }
+    }
+
+
+
+    # send HTML footer and ends
+    print $sock $ctrl->{'htmlfoot'};
+}
+
+
+\%config;

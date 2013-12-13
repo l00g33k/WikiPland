@@ -1,0 +1,60 @@
+%TOC%
+=l00httpd Features Tour=
+* This [[/ls.pl?path=./|directory]] contains a collection of short wiki files demonstrating various features of l00httpd.  They are all linked from this page.
+* This page and its subodinate pages are intended to be rendered by the l00httpd micro HTTP applet server.  Full features are supported on the Android phone. Non Android specific features are usable under Windows and Linux Perl.
+* The features introduction is divided into:
+** Bare minimum: The least you will need
+** Basic: Simple and easy to use features supporting wiki and more
+** Advanced: How to get the most out of l00httpd
+** Perl Expert: You should be able to read the Perl scripts and understood TCP/IP networking
+* Listed below are l00httpd module names.  For the basic modules, you don't need to remember their names as you will be directed to the appropriate module automatically.  For beyond the Bare Minimum features, just look at the examples on this page and copy and modify to suit
+* To make automatic linking wiki words, the '!DemO_' prefix is prepended to all module names
+==Bare minimum==
+* These features allow you to create and update simple wikis to keep notes.  Bear in mind that you don't even need to remember these module names to start using it.  Just start modifying this page via the 'Edit' link at the top and start adding your own stuff right on this page, or make a new Wiki word to make a new page and start from there.
+** A word on editing.  The built in text box editor is usable for short notes.  However, long notes are more easily edited by a good text editor, or from the desktop.  I use 'vi', which is built-in to my Motorola Cliq.  Touchqode from the Android Market is my next choice.
+* DemO_ls : Demonstrates basic wiki features including the edit module
+==Basic==
+* DemO_blog
+* DemO_find
+* DemO_hello
+* DemO_hexview
+* DemO_notify
+* DemO_readme
+* DemO_reminder
+* DemO_scratch
+* DemO_screen
+* DemO_table
+* DemO_timelog
+* DemO_timestamp
+* DemO_tr
+* DemO_view
+==Advanced==
+* DemO_advanced_ls
+* DemO_adb
+* DemO_cal
+* DemO_clip
+* DemO_coorcalc
+* DemO_dirnotes
+* DemO_gps
+* DemO_gpsmap
+* DemO_jetlag
+* DemO_play
+* DemO_playcopy
+* DemO_shell
+* DemO_speech
+* DemO_toast
+==Perl Expert==
+* DemO_crypt
+* DemO_do
+* DemO_eval
+* DemO_filecrypt
+* DemO_kml
+* DemO_myfriends
+* DemO_periodic
+* DemO_perioifconfig
+* DemO_periolog
+* DemO_perionetstat
+* DemO_sleep
+* DemO_solver
+* DemO_twitter
+* DemO_txtdopl

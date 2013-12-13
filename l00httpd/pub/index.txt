@@ -1,0 +1,2 @@
+* This is the example password protected public directory
+

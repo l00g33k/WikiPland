@@ -1,0 +1,16 @@
+==Table sorting==
+* [[http://localhost:20337/table.pl?path=%2Fsdcard%2Fase%2Fscripts%2Ftable.txt&sort=Sort&keys=0|hdr1 inc]]
+* [[http://localhost:20337/table.pl?path=%2Fsdcard%2Fase%2Fscripts%2Ftable.txt&sort=Sort&keys=0-|hdr1 dec]]
+* [[http://localhost:20337/table.pl?path=%2Fsdcard%2Fase%2Fscripts%2Ftable.txt&sort=Sort&keys=1%7C%7C2|hdr2 inc, hdr3 inc]]
+* [[http://localhost:20337/table.pl?path=%2Fsdcard%2Fase%2Fscripts%2Ftable.txt&sort=Sort&keys=1%7C%7C2-|hdr2 inc, hdr3 dec]]
+* [[http://localhost:20337/table.pl?path=%2Fsdcard%2Fase%2Fscripts%2Ftable.txt&sort=Sort&keys=0-%3A...%28%5Cd%5Cd%29%7C%7C1|hdr1 4th-5th chars dec, hdr2 inc]]
+* [[http://localhost:20337/table.pl?path=%2Fsdcard%2Fase%2Fscripts%2Ftable.txt&sort=Sort&keys=0-%3A...%28%5Cd%5Cd%29%7C%7C2-|hdr1 4th-5th chars dec, hdr3 dec]]
+||hdr1   ||hdr2  ||hdr3  ||
+||row312 ||col321||col332||
+||col311 ||col322||col331||
+||col211 ||col221||col232||
+||row212 ||col222||col232||
+||row212 ||col221||col231||
+||col111 ||col122||col132||
+||col111 ||col121||col131||
+||row112 ||col122||col131||

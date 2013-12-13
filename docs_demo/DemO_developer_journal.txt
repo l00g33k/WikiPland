@@ -1,0 +1,69 @@
+
+%TOC%
+::index::day4::
+=Controls via URL=
+* These are before the %SHOW... controls as they are always visible
+==SHOWTAG directory==
+* [[/ls.pl?path=./DemO_developer_journal.txt&SHOWTAG=|SHOWTAG all]]
+* [[/ls.pl?path=./DemO_developer_journal.txt&SHOWTAG=:Topic1|SHOWTAG Topic1]]
+* [[/ls.pl?path=./DemO_developer_journal.txt&SHOWTAG=:Topic2|SHOWTAG Topic2]]
+==SHOWLINENO mode==
+* [[/ls.pl?path=./DemO_developer_journal.txt|SHOWLINENO off]]
+* [[/ls.pl?path=./DemO_developer_journal.txt&SHOWLINENO=|SHOWLINENO on]]
+
+%SHOWTAG:Topic1%
+ %SHOWTAG% shows everything, but disabled by the leading space
+%SHOWOFF:Topic1%
+%SHOWOFF:Topic2%
+
+
+
+%SHOWON:Topic1%
+=This is Topic1=
+::index::day3::
+* This paragraph is in Topic1
+%SHOWOFF:Topic1%
+
+%SHOWON:Topic2%
+=This is Topic2=
+::index::day2::
+* This paragraph is in Topic2
+%SHOWOFF:Topic2%
+
+
+%SHOWON:ALWAYS%
+=SHOWLTGT demo=
+::index::key2::
+* The tag '%SHOWLTGT%' causes all &lt; and &gt; to be translated to &amp;lt; and &amp;gt; so they don't get interpreted as HTML tags
+%SHOWLTGT%
+<i>showltgt</i>
+* The tag '%NOSHOWLTGT%' turns the SHOWLTGT mode off
+%NOSHOWLTGT%
+<i>showltgt</i>
+* and so 'showltgt' is italicized
+
+=Bookmarks=
+::index::day5::
+* 3 exclamation marks at the end of the line make this a bookmark that appears before the TOC!!!
+
+=Leading spaces=
+no leading space
+    leading spaces
+
+=::index::=
+::index::day1::
+* One use of '::index::day1::' is so that you can put sections in random order in the file but provides a way to visit them in a certain order, e.g. chonological
+* Or it could just be a index to terms just like the index in a book
+
+=SHOWLINENO mode=
+* Put '%SHOWLINENO%' in the file causes line number to be prepended to non bulleted text and section header, as in the [[/view.pl?path=./DemO_developer_journal.txt&SHOWTAG=|raw text file]] shown below
+** The purpose of this mode is such that two people at different location can easily and positively refer to a particular section by line number of section number
+%SHOWLINENO%
+* Control through URL parameter is also possible
+** [[/ls.pl?path=./DemO_developer_journal.txt|SHOWLINENO off]]
+** [[/ls.pl?path=./DemO_developer_journal.txt&SHOWLINENO=|SHOWLINENO on]]
+** But it can't be turn off through URL
+
+
+%::INDEX::%
+%SHOWOFF:ALWAYS%

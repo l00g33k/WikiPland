@@ -1,0 +1,35 @@
+%TOC%
+=What Is WikiPland=
+* !WikiPland is a Perl based Wiki application that runs any where Perl interpreter is available, such as desktop Windows, Linux, !SaaS (Software as a Service platform,) and even Android cell phone.A
+* !WikiPland is basically a Wiki server so you can use it to organize information. I primarily use it to organize all sort of notes that I have on my Android phone, including this document that you are reading. Its key attraction is that it is not in the cloud, but is on your phone. It is attractive if you don't have network access, and you can access its content using any desktop computer through local only wifi; or if you simply want to avoid the cloud for privacy or security reasons.
+* Another complelling reason is that it is completely written in Perl, and the Perl interpreter is right on your phone, you can extend its capability and feature set to your heart's content.
+* I think !WikiPland has such a rich set of capabilities that you will have to give it time so you can appreciate it's capability. To help, I will try to write and blog about it.
+=Where Are My WikiPland Sites=
+* I have created several sites related to !WikiPland. I will provide a summary of them here to give you a better sense of which to visit and what you will find there.
+==Wikispaces==
+* Home of the technical reference material for !WikiPland
+* I plan to update these as things changed.
+* It's an open wiki so you may help to update and maintain it too.
+* It's in the process of being re-organized so you may find it disorganized
+* http://l00g33k.wikispaces.com/
+==Wordpress==
+* I plan to blog about the how it works or how to make the best use of it aspect.
+* These articles are not likely to be updated.
+* http://l00g33k.wordpress.com/
+==wikipland-l00g33k.rhcloud.com==
+* This is a demonstration site using Red Hat's Openshift Software as a Service (!SaaS) platform using the DIY Peal gear.
+* All write to disk modules are disabled so it is a read only site. But it gives you a look and feel of !WikiPland.
+* You can also browse the source code there.
+* http://wikipland-l00g33k.rhcloud.com/httpd.htm
+* sf git
+==Sourceforge: l00httpd==
+* This is the source git repository
+* http://sourceforge.net/projects/l00httpd/files/
+===WikiPland APK===
+* Our friends at SL4A have make it possible to combine both the Perl interrupter and the !WikiPland source into an APK so you can install this APK to try !WikiPland on you Android phone without having to first install SL4A Perl intepreter. You do have to allow non-Android Play Store APK.
+* 
+===AAShare2Clip===
+* This is a trivial APK that you can share a link to. It simply puts it in the clipboard. This is useful since !WikiPland has many buttons to paste clipboard content (as I am too impatient for the long press paste pop up menu.)
+* 
+
+::hot::

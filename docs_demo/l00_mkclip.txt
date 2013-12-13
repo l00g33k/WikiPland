@@ -1,0 +1,45 @@
+* This is a content processor demo: convert structured text to wiki links for putting text in Android's clipboard
+* This example are shortcuts for commands to connect to additional internal telent servers after you have use ConnectBot to connect to the ssh server
+* This is the plain text version
+%TOC%
+[[!l00_crypt_ex_2.pl]]
+#===PC #1===
+#* 
+#telnet 192.168.1.32
+telnet 192.168.1.32\n
+#id:john
+john\n
+#pw:johnpass
+johnpass\n
+#su root
+su root\n
+#pw:johnroot
+johnroot\n
+#exit
+exit\n
+#end of definition
+#===PC #2===
+#* 
+#telnet 192.168.1.41
+telnet 192.168.1.41\n
+#id:adam
+adam\n
+#pw:adampass
+adampass\n
+#su root
+su root\n
+#pw:adamroot
+adamroot\n
+#exit
+exit\n
+#end of definition
+###Begin cheatsheet
+## ##comment
+## #name of shortcut
+## shortcut string, multiple lines
+###These are optional
+## #==wiki title==
+## #* wiki bullet
+## #<.. HTML text
+[[!l00_crypt_exend]]
+* Bulleted text after mkclip

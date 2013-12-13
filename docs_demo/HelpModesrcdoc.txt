@@ -1,0 +1,3 @@
+* Control fields:
+%SRCDOC:ROOT:C:\srcdoc\%
+%SRCDOC:FILTER:\.c$|||\.cpp$|||\.h$%

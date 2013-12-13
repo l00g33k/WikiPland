@@ -1,0 +1,126 @@
+20130504 001430 16.8 lb 
+20130503 001916 16.7 lb 
+20130501 230912 16.8 lb 
+20130501 000051 17.8 lb 
+20130429 231658 17.9 lb 
+20130429 001634 18.6 lb 
+20130428 002536 17.2 lb 
+20130427 003437 15.0 lb 
+20130425 233457 17.1 lb 
+20130425 001610 17.0 lb 
+20130424 001448 17.6 lb 
+20130423 000717 17.4 lb 
+20130422 074127 16.5 lb 
+20130422 001626 18.9 lb
+20130419 000934 17.3 lb 
+20130415 002532 16.7 lb 
+20130413 003009 16.1 lb 
+20130411 001514 15.9 lb 
+20130409 232618 16.5 lb 
+20130409 002459 15.3 lb 
+20130407 015020 16.3 lb 
+20130406 003844 13.9 lb 
+20130404 235320 15.1 lb 
+20130404 001100 14.7 lb 
+20130402 001337 15.7 lb 
+20130331 003331 16.0 lb 
+20130330 005535 15.2 lb 
+20130329 002637 16.9 lb 
+20130326 234410 14.8 lb 
+20130324 231934 16.4 lb 
+20130323 004913 15.5 lb 
+20130320 235540 15.2 lb 
+20130318 225842 15.5 lb 
+20130317 232528 14.7 lb 
+20130316 231451 14.1 lb 
+20130314 235150 13.9 lb 
+20130313 003812 12.8 lb 
+20130312 001640 12.4 lb 
+20130228 234913 18.7 lb 
+20130226 001024 19.5 lb 
+20130224 234933 19.2 lb 
+20130217 003322 19.6 lb 
+20130217 002317 19.8 lb 
+20130211 234852 20.1 lb 
+20130211 233903 20.3 lb 
+20130210 235950 20.5 lb 
+20130209 001335 19.9 lb 
+20130205 004036 17.8 lb 
+20130204 003131 18.3 lb 
+20130202 004003 18.0 lb 
+
+%TOC%
+==run==
+* Click 'run' below to plot graph
+** On my T-Mobile Slide I can see the graph only in Dolphin Browser and Opera. The built-in Browser, Dolphin Mini, and Maxthon Browser do not work
+** Chrome on Windows works
+* [[/txtdopl.pl?runbare=RunBare&path=./l00_svg.txt|run]]
+
+%TXTDOPL%
+use l00svg;
+sub txtdopl {
+    my ($sock, $ctrl, $lnno, $last, $this, $next) = @_; #$ctrl is a hash, see l00httpd.pl for content definition
+    my ($tthis, $itlast, $diff);
+    my ($yr, $mo, $da, $hr, $mi, $se, $data);
+
+    # This is a txtdopl module and SVG plotting demo
+    # The log is a record of weight with date/time stamp
+    # The script here demonstrate how to compute the time elapsed between 
+    # measurement, and extract the measurement, and plot them
+
+    $diff = 0;
+    if (defined($this) && defined($last)) {
+        # If this line and last line are defined
+        # get this date/time stamp
+        if (($yr, $mo, $da, $hr, $mi, $se) = ($this =~ /^(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/)) {
+            # convert to seconds
+            $yr -= 1900;
+            $mo--;
+            $tthis = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+            #($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+            #$obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+            #    $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+            #    substr ($obuf, 15, 9999));
+            # get last date/time stamp
+            if (($yr, $mo, $da, $hr, $mi, $se) = ($last =~ /^(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/)) {
+                # convert to seconds
+                $yr -= 1900;
+                $mo--;
+                $tlast = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                # compute time lapse between measurement
+                $diff = $tlast - $tthis;
+            }
+        }
+    }
+    if (!defined($last)) {
+        # No last line, first time ever, clear things
+        $svgxy = '';
+    }
+    if ($diff > 0) {
+        # time elapsed
+        # extract weight measurement
+        ($data) = $this =~ /([0-9.]+) lb/;
+        # append one data point: time now, time elapsed, weight
+        $svgxy .= "$tthis,$diff,$data ";
+
+        # print time elapsed in day
+        $diff = $diff / 3600 / 24;
+        print $sock sprintf("%4.1fd $this ($svgxy)\n", $diff);
+    }
+    if (!defined($next)) {
+        # no next line, i.e. end of file
+        # create SVG named 'l00_svg'
+        &l00svg::plotsvg ('l00_svg', $svgxy, 1280, 960);
+        # display the data points
+        print $sock "plot: ($svgxy)\n";
+        print $sock "</pre>\n";
+        # Display the graph and link to the graph only
+        print $sock "<a href=\"/svg.pl?graph=l00_svg&view=\">View with cursor</a><p>\n";
+        print $sock "<a href=\"/svg.pl?graph=l00_svg\"><img src=\"/svg.pl?graph=l00_svg\"></a>\n";
+        print $sock "<pre>\n";
+    }
+    $this;
+}
+1;
+%TXTDOPL%
+

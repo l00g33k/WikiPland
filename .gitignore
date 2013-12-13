@@ -1,0 +1,10 @@
+*.bak
+l00httpd.log
+*.tmp
+NtDirNotes.txt
+l00http_cmdedit.sh
+l00httpd_demo/gps.trk
+vssver.scc
+desktop.ini
+l00httpd.log
+*.orig

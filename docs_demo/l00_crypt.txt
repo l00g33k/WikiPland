@@ -1,0 +1,11 @@
+==Crypt testbed==
+* Begin cipher text
+* Blowfish password: android
+---===###crypt:blow:
+T82lFQgJlvxzO9ZgQUeku3CNj+e+CGBVqrZHHf4S1BAnUebTrjFz+isAP2f1
+NEODM4C7zYD9PfeXTEEs13Fkp9xDKXhrXhpjnR6BunCtepH9SEBvdYIqiPah
+nQNOG9aSogouuy0rfn00Y0R48m4rmw9KeGx3slMhno6BIEtqVnTjp3pXJmG8
+eYLCText7u5xydcpAUugyUE=
+
+---===###crypt:blow:
+* End cipher text

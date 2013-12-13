@@ -1,0 +1,7 @@
+%TOC%
+==Controls on a wiki page==
+* Listing links and controls from the left to the right and from the top to the bottom
+===Path:===
+* This returns the fullpath name to the target file
+** On Windows, because of the fullpath name format (C:\) it is automatically made into a file:///C: link.  You can right click and save the target as
+** On the phone, becuase of the Linux fullpath name format (/sdcard) it is automatically made into http://127.0.0.1/sdcard... This is an alias to ls.pl and results in the same action as ls.pl

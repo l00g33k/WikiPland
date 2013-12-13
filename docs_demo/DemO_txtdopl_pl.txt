@@ -1,0 +1,38 @@
+20110324 082713 36700 
+20110323 082759 36686 
+20110322 081425 36672 
+20110321 081908 36657 
+20110319 144932 36631 
+20110319 122910 36630 
+20110318 082606 36618 
+20110317 082314 36606 
+20110316 081949 36595 
+20110315 082538 36583 
+20110314 082506 36573 
+20110311 082509 36537 
+20110310 082828 36526 
+20110309 082643 36515 
+20110308 081609 36503 
+20110307 081356 36490 
+20110304 081806 36455 
+20110303 082433 36433 
+20110302 084041 36431 
+20110301 081916 36416 
+%TOC%
+%TXTDOPL%
+sub txtdopl {
+    my ($sock, $ctrl, $lnno, $last, $this, $next) = @_; #$ctrl is a hash, see l00httpd.pl for content definition
+    my ($ym1, $d1, $h1, $r1, $ym2, $d2, $h2, $r2, $out);
+    if ((($ym1, $d1, $h1, $r1) = ($this =~ /^(\d+)(\d\d) (\d+) (\d+) */)) &&
+        (($ym2, $d2, $h2, $r2) = ($next =~ /^(\d+)(\d\d) (\d+) (\d+) */))) {
+        $out = "$ym1$d1 $h1 $r1 = " . ($r1 - $r2);
+        #print HTML to browser
+        print $sock "$out\n";
+    }
+    #return unmodified $this to keep file unchanged; else the returned string replaces the original current line
+    $this;
+}
+1;
+%TXTDOPL%
+==calc==
+* [[/txtdopl.pl?path=./DemO_txtdopl_pl.txt|run calculation]]

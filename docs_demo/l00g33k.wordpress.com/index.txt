@@ -1,0 +1,55 @@
+%TOC%
+=Phase 0: Preparing=
+* Notations:
+** *l*Todo now*l*
+** *y*Todo next*y*
+** *r*Todo when*r*
+** *g*Done*g*
+* WhatIsAndWhereAreMyWikiPlandSites
+** *r*Why is this interesting*r*
+** *r*How can I see a demo*r*
+** *r*Where is everything*r*
+** *r*What do I do next*r*
+* AAShare2Clip
+** *r*Rebuild on Asus*r*
+** *r*README.md*r*
+*** How to use
+*** How to build
+** *r*Sourceforge repo*r*
+** *r*List in master list*r*
+* RHC Wikipland
+** *r*README.md*r*
+*** How to use
+*** How to setup
+** *r*Sourceforge repo*r*
+** *r*List in master list*r*
+* Wikipland APK
+** *r*Rebuild on Asus*r*
+** *r*README.md*r*
+*** How to use
+*** How to build
+** *r*Sourceforge repo*r*
+** *r*List in master list*r*
+* l00httpd
+** *r*README.md*r*
+*** How to use
+*** How to build
+=Phase 1: Getting People Intrested=
+* WhatIsWikiPland: What is !WikiPland?
+* WikiPland Web Footprint:
+** What is on http://wikipland-l00g33k.rhcloud.com/httpd.pl/httpd.htm ?
+** l00httpd, AAShare2Clip, RHC WikiPland, wikispaces.com, wordpress.com
+** ListOfComponents: List of all components and how are they connected.
+* DenseBookmarkAndPastePhrases: How to save a lot of typing when using ssh terminal on an Android phone.
+=Phase 2: Getting Started Guide=
+* See a quick but partial demo on [[http://wikipland-l00g33k.rhcloud.com/ls.pl/QuickStart.htm?path=/var/lib/openshift/526590bde0b8cdb5e4000028/app-root/runtime/repo/wikipland/docs_demo/QuickStart.txt|Red Hat's !OpenShift]]. It's a DIY gear running Perl script.
+* QuickStartGuide: If you want to get your feet wet, you can just download and run under Perl on Linux or Windows, or you can download the APK from Sourceforge to run on your Androd phone
+=Phase 3: It Works Really Well For Me=
+* How I work on tablet connected to phone: connectbot, wikipland cb transfer
+* How I manage my on-line reading bookmarks.
+* How to display most websites in gigantic fonts for easy reading.
+---
+* BuildingWikiPland
+* DenseBookmarkAndClipboard
+
+::hot::

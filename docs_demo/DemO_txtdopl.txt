@@ -1,0 +1,32 @@
+%TOC%
+==Embedding Perl script in text file==
+* [[/view.pl?path=./DemO_txtdopl_pl.txt|see raw file in plain text]]
+** The top section is a log my my electricity meter: yyyymmdd hhmmss (meter reading in kW/h)
+* [[/txtdopl.pl?path=./DemO_txtdopl_pl.txt|run demo calculation]]
+** This embedded Perl script computes the difference between the two meter readings which is the amount of electricity used in the interval
+* This module supports text processing using Perl script embedded in the text file
+* A control loop is implemented in the module which calls a function defined in the embedded Perl script.  The control loop calls the Perl function for each line in the text file, passing the following arguments:
+** The statement for arguments retrieval:
+*** my ($sock, $ctrl, $lnno, $last, $this, $next) = @_; #$ctrl is a hash, see l00httpd.pl for content definition
+*** $sock: the socket for output to the HTML display
+*** $ctrl: for accessing l00httpd system control variables
+*** $lnno: line number in the text file
+*** $last: the full line before the current line
+*** $this: the current line
+*** $next: the full line after the current line (looking forward)
+** The Perl script section is skipped
+** This loop takes care of the mechanics of Perl processing, much like the Perl argument -ne allowing simple command line processing without loop control.  It:
+*** Loops through all lines
+*** Provides easy to the previous line and the next line, making it easy to compute difference between adjacent lines
+* The Perl script is delimited by the special marker, %TXTDOPL%
+** Marker must start on the left most column
+** There must be only one pair marking bracketting the Perl script
+** One Perl function must be defined using 'sub txtdopl {...}'
+** Ends with '1;'
+** Special notes:
+*** Print to browser in HDML:
+**** print $sock "A horizontal line<hr>\n";
+*** The return argument is written back to the file to replace the current line
+**** This allows for example new computation results to be added to the file
+**** The output line is bufferred and only written to the file at the end of the loop
+*** To prevent rewriting back to the file, return the unmodified $this

@@ -1,0 +1,1 @@
+Paste text that you want to be copied to the clipboard into the text area and click 'Copy to clipboard'. Make a link from the resulting URL. Now you can click a link in the browser and paste the text any where you need

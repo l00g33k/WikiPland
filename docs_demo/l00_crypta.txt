@@ -1,0 +1,9 @@
+==Crypt testbed==
+* Begin cipher text
+---===###crypt:base:
+VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZy4g
+ClRoZSBxdWljayBicm93biBmb3gganVtcHMgb3ZlciB0aGUgbGF6eSBkb2cs
+IGFnYWluLgowMTIzNDU2Nzg5CiFAIyQlXiYqKCk=
+
+---===###crypt:base:
+* End cipher text

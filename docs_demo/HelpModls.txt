@@ -1,0 +1,42 @@
+%TOC%
+=Help for l00http_ls.pl=
+==Additional Header and Trailer to the wiki content==
+* The following links are automatically added before the wiki content
+** Path:
+** /full/path/:
+** Home:
+** ?:
+** QUICK:
+** end:
+** toc:
+** bk&vi:
+** log:
+** Edit:
+* The following links are automatically added after the wiki content
+** Settings/Descriptions block: this is the old way of selecting target file for viewing
+*** reading/raw/pre mode:
+*** !NoCliNav:
+*** Show chapter numbers:
+*** Show .bak files
+** 
+** Find block:
+** Edit: 
+** 
+** 
+** 
+** 
+** 
+==Bookmarks==
+* Append !!! at the end of the line
+* Produces a TOC at the beginning of the TOC
+==Posts-it notes==
+* Append ???x at the end of the line
+** x is color:
+** r: red
+** y: yellow
+** l: lime
+** s: silver
+** a: aqua
+** f: fuchsia
+** (none): olive
+* Produces a TOC at the beginning of the TOC

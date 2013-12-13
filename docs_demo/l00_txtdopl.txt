@@ -1,0 +1,23 @@
+20101214 083336 35301 = 6 @ 13.5kWh/day
+20101214 004705 35295 = 22 @ 13.2857142857143kWh/day
+20101212 122415 35273 = 8 @ 13.4615384615385kWh/day
+20101211 215209 35265 = 342 @ 13.68kWh/day
+20101116 000000 34923 + 294 = 35217, 30% = 35305
+%TXTDOPL%
+sub txtdopl {
+    my ($sock, $ctrl, $lnno, $last, $this, $next) = @_; #$ctrl is a hash, see l00httpd.pl for content definition
+    my ($ym1, $d1, $h1, $r1, $ym2, $d2, $h2, $r2);
+    if ((($ym1, $d1, $h1, $r1) = ($this =~ /^(\d+)(\d\d) (\d+) (\d+) */)) &&
+        (($ym2, $d2, $h2, $r2) = ($next =~ /^(\d+)(\d\d) (\d+) (\d+) */))) {
+        # rewrite line
+        $this = "$ym1$d1 $h1 $r1 = " . ($r1 - $r2) .
+                " @ " . (($r1 - 34923) / ($d1 + 14)) . 
+                'kWh/day'; 
+        #print $sock "$this\n";
+    }
+    $this;
+}
+1;
+%TXTDOPL%
+* more lines
+* here
