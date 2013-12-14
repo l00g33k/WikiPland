@@ -13,7 +13,7 @@ use l00httpd;
 my %config = (proc => "l00http_clipbrdxfer_proc",
               desc => "l00http_clipbrdxfer_desc");
 my ($url, $name, $pw);
-$url = "127.0.0.1:30337";
+$url = "127.0.0.1:50337";
 $name = 'p';
 $pw = 'p';
 
@@ -43,12 +43,12 @@ sub l00http_clipbrdxfer_proc (\%) {
     if (defined ($form->{'name'})) {
         $name = $form->{'name'}
     } else {
-        $name = '';
+#       $name = '';
     }
     if (defined ($form->{'pw'})) {
         $pw = $form->{'pw'}
     } else {
-        $pw = '';
+#       $pw = '';
     }
 
     print $sock "<form action=\"/clipbrdxfer.htm\" method=\"get\">\n";

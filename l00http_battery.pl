@@ -79,6 +79,12 @@ sub l00http_battery_proc (\%) {
             if ($lasttimestamp ne $timestamp) {
                 $lasttimestamp = $timestamp;
                 $battcnt++;
+                $chg_src =~ s/0/0 (off)/;
+                $chg_src =~ s/1/1 (usb)/;
+                $chg_src =~ s/2/2 (wall)/;
+                $chg_en =~ s/0/0 (off)/;
+                $chg_en =~ s/1/1 (usb)/;
+                $chg_en =~ s/2/2 (wall)/;
                 $table = "||$battcnt||$level||$vol||$temp||$curr||$dis_curr||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
                 if (open (OU, ">$ctrl->{'workdir'}del/l00_battery.txt")) {
                     print OU $table;

@@ -59,8 +59,8 @@ sub l00http_cal_proc {
     ($thisweek, $now) = &l00mktime::weekno ($year, $mon, $mday);
 
     #: open input file and scan calendar inputs
-    if (defined ($form->{'pathname'}) && length ($form->{'pathname'}) > 6) {
-        $fullpathname = $form->{'pathname'};
+    if (defined ($form->{'path'}) && length ($form->{'path'}) > 6) {
+        $fullpathname = $form->{'path'};
     } else {
         $fullpathname = $ctrl->{'workdir'} . "l00_cal.txt";
     }
@@ -90,7 +90,7 @@ sub l00http_cal_proc {
 			print OU $buf;
 			close (OU);
 		}
-        print $sock "<p><a href=\"/cal.htm?pathname=$fullpathname\">Return to calendar</a>\n";
+        print $sock "<p><a href=\"/cal.htm?path=$fullpathname\">Return to calendar</a>\n";
         print $sock $ctrl->{'htmlfoot'};
         return;
     }
@@ -128,7 +128,7 @@ sub l00http_cal_proc {
                 if (defined ($form->{'movefrom'})) {
 				    # selected movefrom date, list items for picking
                     if ($date eq $form->{'movefrom'}) {
-                        print $sock "<br>Choose to move: <a href=\"/cal.htm?pathname=$fullpathname&movelnno=$lnno\">$_</a>\n";
+                        print $sock "<br>Choose to move: <a href=\"/cal.htm?path=$fullpathname&movelnno=$lnno\">$_</a>\n";
                     }
                 }
                 if (defined ($form->{'movelnno'})) {
@@ -166,7 +166,7 @@ sub l00http_cal_proc {
             $rpt = $2;
         } elsif ($len <= 3) {
 		    # color $todo
-		    $todo = "<font style=\"color:black;background-color:aqua\">$todo</font>";
+		    $todo = "<font style=\"color:black;background-color:olive\">$todo</font>";
 		} else {
 		    # color $todo
 		    $todo = "<font style=\"color:black;background-color:silver\">$todo</font>";
@@ -175,6 +175,7 @@ sub l00http_cal_proc {
             ($year,$mon, $mday,) = split ('/', $date);
             $year -= 1900;
             ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+            #print __LINE__ . " ($thisweek, $julian) ($year, $mon, $mday)\n";
             $ldate = $date;
         }
         #print "cal: $date $rpt; j $julian ", $julian - $now, "\n";
@@ -242,9 +243,9 @@ sub l00http_cal_proc {
             $jj2 = sprintf ("%2d", $gsmday);
             $buf = "$gsyear%2F$gsmon%2F$gsmday";
             if (defined ($form->{'movelnno'})) {
-                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?pathname=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>\n";
+                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?path=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>\n";
             } else {
-                $jj = "<a href=\"/cal.htm?pathname=$fullpathname&movefrom=$buf\">$jj1</a>";
+                $jj = "<a href=\"/cal.htm?path=$fullpathname&movefrom=$buf\">$jj1</a>";
             }
             $buf = "$gsyear%2F$gsmon%2F$gsmday,1,";
             $jj .= "<a href=\"/blogtag.htm?path=$fullpathname&buffer=$buf&blog=\">$jj2</a>";
@@ -359,7 +360,7 @@ sub l00http_cal_proc {
                                                 
     print $sock "        <tr>\n";
     print $sock "            <td>Full input file path and name:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"12\" name=\"pathname\" value=\"$fullpathname\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"12\" name=\"path\" value=\"$fullpathname\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
