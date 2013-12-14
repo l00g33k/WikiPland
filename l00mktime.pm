@@ -51,8 +51,11 @@ sub mktime  {
     for ($i = 0; $i < 30; $i++) {
         #   time from 1st guest
         ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
-                                                                #gmtime ($gstime);
-                                                                localtime ($gstime);
+                                                                gmtime ($gstime);
+                                                                #localtime ($gstime);
+        # gmtime yields correct results on a Saturday night 8pm at GMT + 8
+        # on a Windows set to GMT - 8 time zone
+        # on a phone set to GMT + 8 time zone
         #print "$gstime:$gsyear,$gsmon,$gsmday,$gshour,$gsmin,$gssec\n";
 
         if ($year != $gsyear) {
@@ -96,6 +99,7 @@ sub mktime  {
     }
 
     #   return value
+    #print "mktime $gstime\n";
     $gstime;
 
 }# mktime
