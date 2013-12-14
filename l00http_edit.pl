@@ -51,11 +51,15 @@ sub l00http_edit_proc2 {
         $buffer = $form->{'buffer'};
     }
     if (defined ($form->{'blklineno'})) {
-        if ($blklineno == 0) {
+        if (defined ($form->{'contextln'})) {
+		    # This special invokation from ls.pl. Always set to 1 line mode
+            $contextln = 1;
+            $blklineno = $form->{'blklineno'};
+        } elsif ($blklineno == 0) {
 		    # no in block mode; turn it on
             $blklineno = $form->{'blklineno'};
         } else {
-		    # in block mode
+            # in block mode
             if ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
                 $contextln += ($blklineno - $form->{'blklineno'});

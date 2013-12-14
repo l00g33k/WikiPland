@@ -8,17 +8,18 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_battery_proc",
               desc => "l00http_battery_desc");
-my ($allreadings, $lasttimestamp, $battcnt, $dmesgcnt);
+my ($allreadings, $lasttimestamp, $battcnt, $dmesgcnt, $hdr);
 $allreadings = '';
 $lasttimestamp = 0;
 $battcnt = 0;
 $dmesgcnt = 0;
+$hdr = "||#||level||vol||temp||curr||dis curr||chg src||chg en||over vchg||batt state||time stamp||\n";
 
 sub l00http_battery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "battery: print battery level";
+    " A: battery: print battery level";
 }
 
 sub l00http_battery_proc (\%) {
@@ -32,10 +33,10 @@ sub l00http_battery_proc (\%) {
 	# Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>battery</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+    print $sock "<a href=\"#end\">Jump to end</a>\n";
 
     print $sock "<form action=\"/battery.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Submit\">\n";
-    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear all readings\">\n";
     print $sock "</form>\n";
 
     if (defined($form->{'clear'})) {
@@ -70,7 +71,7 @@ sub l00http_battery_proc (\%) {
             $table = <IN>;
 			close (IN);
 		} else {
-            $table = "||#||level||vol||temp||curr||dis_curr||chg_src||chg_en||over_vchg||batt_state||timestamp||\n";
+            $table = $hdr;
 		}
 		$/ = $slash;
         if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
@@ -85,15 +86,21 @@ sub l00http_battery_proc (\%) {
 				}
             }
         }
-        $tmp = "||#||level||vol||temp||curr||dis_curr||chg_src||chg_en||over_vchg||batt_state||timestamp||\n" . $table;
+        $tmp = $hdr . $table;
+        $tmp =~ s/(\.\d)\d+ UTC/ UTC/g;
         print $sock &l00wikihtml::wikihtml ($ctrl, "", $tmp, 0);
+        print $sock "<a name=\"end\"></a>";
         print $sock "<p>Saved: <a href=\"/ls.htm?path=$ctrl->{'workdir'}del/l00_battery.txt\">$ctrl->{'workdir'}del/l00_battery.txt</a><p>\n";
+
+        print $sock "<form action=\"/battery.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear All Readings\">\n";
+        print $sock "</form>\n";
+
         print $sock "<p>Last reading:<p>\n$bstat<p>\n";
         $dmesgcnt++;
         $allreadings = "$dmesgcnt: $bstat<p>\n$allreadings";
-        print $sock "<hr>All readings:<p>\n$allreadings\n";
+        print $sock "<hr>All Readings:<p>\n$allreadings\n";
     }
-
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
