@@ -75,7 +75,7 @@ sub l00http_recedit_proc (\%) {
                             $mo--;
                             $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                             $tmp += 24 * 3600;
-                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                             $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                 $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
                                 substr ($obuf, 15, 9999));
@@ -88,7 +88,7 @@ sub l00http_recedit_proc (\%) {
                             $se = 0;
                             $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                             $tmp += 24 * 3600;
-                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                             $obuf = sprintf ("%d/%d/%d%s", 
                                 $yr + 1900, $mo + 1, $da, $tmp2);
                         }
@@ -123,7 +123,7 @@ sub l00http_recedit_proc (\%) {
                         $mo--;
                         $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                         $tmp += 24 * 3600;
-                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                         $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                             $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
                             substr ($obuf, 15, 9999));

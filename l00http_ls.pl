@@ -524,7 +524,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             if (defined ($form->{'editline'})) {
 							    s/\r//;
 							    s/\n//;
-                                $_ = "$_ <a href=\"/edit.htm?path=$path&contextln=0&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
+                                $_ = "$_ <a href=\"/edit.htm?path=$path&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
 							}
 
                             # highlighting

@@ -181,7 +181,7 @@ sub plotsvg {
                     # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                     # print "sec $dummy\n";
                     # 1577865600 is 2020/1/1 00:00:00, must be a date
-                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = localtime ($minx);
+                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($minx);
                     $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                     $svg .= "<text x=\"$mgl\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$date</text>";
                 } else {
@@ -192,7 +192,7 @@ sub plotsvg {
                     # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                     # print "sec $dummy\n";
                     # 1577865600 is 2020/1/1 00:00:00, must be a date
-                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = localtime ($maxx);
+                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($maxx);
                     $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                     $svg .= "<text x=\"".int($wd-$txw-$mgr)."\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$date</text>";
                 } else {

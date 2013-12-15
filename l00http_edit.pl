@@ -53,16 +53,14 @@ sub l00http_edit_proc2 {
     }
     if (defined ($form->{'blklineno'})) {
         if (defined ($form->{'editline'})) {
-		    # This is special edit line invocation from ls.pl. Always set to 1 line mode
-#           $contextln = 1;
-print $sock "contextln $contextln = 1<p>";
-#           $blklineno = $form->{'blklineno'};
-        }
-		if ($blklineno == 0) {
+            # edit line from ls.pl
+            $contextln = 1;
+            $blklineno = $form->{'blklineno'};
+        } elsif ($blklineno == 0) {
 		    # no in block mode; turn it on
             $blklineno = $form->{'blklineno'};
         } else {
-            # in block mode
+		    # in block mode
             if ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
                 $contextln += ($blklineno - $form->{'blklineno'});

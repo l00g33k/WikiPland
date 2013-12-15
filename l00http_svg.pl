@@ -74,7 +74,7 @@ sub l00http_svg_proc {
                 # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                 # print "sec $dummy\n";
                 # 1577865600 is 2020/1/1 00:00:00, must be a date
-                ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = localtime ($x);
+                ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($x);
                 $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                 print $sock "Values: ($date, $y)<br>\n";
             } else {
