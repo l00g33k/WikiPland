@@ -39,6 +39,7 @@ sub l00http_edit_proc2 {
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
         print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+        print $sock " <a href=\"/ls.htm?path=$form->{'path'}&editline=on\">Edit line link</a>\n";
     }
     print $sock " <a href=\"/ls.htm?path=$form->{'path'}#__toc__\">toc</a>\n";
     
@@ -51,7 +52,11 @@ sub l00http_edit_proc2 {
         $buffer = $form->{'buffer'};
     }
     if (defined ($form->{'blklineno'})) {
-        if ($blklineno == 0) {
+        if (defined ($form->{'editline'})) {
+            # edit line from ls.pl
+            $contextln = 1;
+            $blklineno = $form->{'blklineno'};
+        } elsif ($blklineno == 0) {
 		    # no in block mode; turn it on
             $blklineno = $form->{'blklineno'};
         } else {

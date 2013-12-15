@@ -85,7 +85,7 @@ sub l00http_reminder_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $temp, $timstr);
     my ($yr, $mo, $da, $hr, $mi, $se, $pausewant);
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time);
 
     # get submitted name and print greeting
     if (defined ($form->{"vibra"})) {
@@ -265,10 +265,10 @@ sub l00http_reminder_proc {
     print $sock "</form>\n";
 
     print $sock "<br>Interval: $interval Msg: $msg<br>\n";
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime ($starttime);
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($starttime);
     print $sock sprintf ("Start: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime ($lastcalled + $pause + $interval);
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($lastcalled + $pause + $interval);
     print $sock sprintf ("Next: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
     print $sock "Count: $percnt<br>\n";

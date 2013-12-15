@@ -9,9 +9,9 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_reader_proc",
               desc => "l00http_reader_desc");
-my ($hostpath);
+my ($hostpath, $zoom);
 $hostpath = "c:\\x\\";
-
+$zoom = 150;
 
 sub l00http_reader_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -42,6 +42,9 @@ sub l00http_reader_proc (\%) {
     }
     if (defined ($form->{'last'})) {
         $readln--;
+    }
+    if (defined ($form->{'mobizoomzoom'})) {
+        $zoom = $form->{'zoom'};
     }
 
     $curr = '';
@@ -112,7 +115,7 @@ sub l00http_reader_proc (\%) {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
-    print $sock "<br><a href=\"/mobizoom.htm\">mobiz</a>\n";
+    print $sock "<p><a href=\"/mobizoom.htm\">mobiz</a>\n";
 
     print $sock "<a href=\"#line\">Line $readln</a>:";
     if ($curr =~ /^(\d{8,8} \d{6,6}) /) {
@@ -122,7 +125,7 @@ sub l00http_reader_proc (\%) {
         $cachename = "$cachepath$cachename.txt";
         $tmp2 = '';
 		while (-e $cachename) {
-            print $sock " <a target=\"reader$tmp2\" href=\"/mobizoom.htm?url=$cachename&fetch=1\">cached$tmp2</a> ";
+            print $sock " <a target=\"reader$tmp2\" href=\"/mobizoom.htm?url=$cachename&fetch=1&zoom=$zoom\">cached$tmp2</a> ";
             $cachename =~ s/\.txt$/_.txt/;   # grow _.txt :)
             if ($tmp2 eq '') {
                 $tmp2 = '-1';
@@ -130,17 +133,19 @@ sub l00http_reader_proc (\%) {
                 $tmp2 = '-' . (substr($tmp2, 1, 1) + 1);
             }
 		}
-	}
+    }
     $curr = &l00wikihtml::wikihtml ($ctrl, "", $curr, 0);
     print $sock "<p>$curr";
 
 
     print $sock "<p>Listing of <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>:\n";
 
+
     print $sock " <form action=\"/reader.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"download\" value=\"Download All\">\n";
-    print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"144\">\n";
+    print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<input type=\"submit\" name=\"mobizoomzoom\" value=\"Mobizoom %\">\n";
     print $sock "</form>\n";
 
     if ((defined ($form->{'path'})) && (defined ($form->{'download'}))) {

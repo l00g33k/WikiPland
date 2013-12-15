@@ -10,11 +10,13 @@ my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
 my ($hostpath);
-my ($findtext, $block, $prefmt, $found, $pname, $fname);
+my ($findtext, $block, $prefmt, $found, $pname, $fname, $maxln, $skip);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '';
 $prefmt = '';
+$skip = 0;
+$maxln = 1000;
 
 sub l00http_view_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -27,7 +29,7 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $maxln, $skip);
+    my ($lineno, $buffer, $pname, $fname, $hilite);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -53,13 +55,9 @@ sub l00http_view_proc {
     print $sock "<p>\n";
     if (defined ($form->{'maxln'})) {
         $maxln = $form->{'maxln'};
-    } else {
-        $maxln = 1000;
     }
     if (defined ($form->{'skip'})) {
         $skip = $form->{'skip'};
-    } else {
-        $skip = 0;
     }
     print $sock "<form action=\"/view.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"update\" value=\"Skip\">\n";

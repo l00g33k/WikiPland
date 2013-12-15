@@ -521,6 +521,11 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         }
                         while (<FILE>) {
                             $lnno++;
+                            if (defined ($form->{'editline'})) {
+							    s/\r//;
+							    s/\n//;
+                                $_ = "$_ <a href=\"/edit.htm?path=$path&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
+							}
 
                             # highlighting
                             if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
@@ -1008,7 +1013,8 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td>&nbsp;</td>\n";
+#       print $sock "        <td>&nbsp;</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
 
         if ($showchno == 2) {
             $buf = "checked";
