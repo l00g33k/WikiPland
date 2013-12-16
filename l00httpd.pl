@@ -1131,10 +1131,10 @@ print "sock timeout 3s\n";
                         print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
 
                         print $sock "</tr>\n";
-
 	            	}
                 }
-
+                print $sock "</table>\n";
+                print $sock "<p>End of page.<p>\n";
 
                 # send HTML footer and ends
                 print $sock $ctrl{'htmlfoot'};

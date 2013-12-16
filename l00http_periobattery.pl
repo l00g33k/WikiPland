@@ -4,20 +4,22 @@ use warnings;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 
-my ($lastcalled, $netiflog, $netifcnt, $netifnoln, $perltime, %ifrxtx, %ifbase, $totalifcon);
+my ($lastcalled, $battlog, $battcnt, $battpolls, $perltime);
 my %config = (proc => "l00http_periobattery_proc",
               desc => "l00http_periobattery_desc",
               perio => "l00http_periobattery_perio");
-my (%netstatout, %allsocksever, $savedpath);
-my (%ifsrx, %ifstx, $isp, %alwayson, %seennow);
+my ($savedpath, $battperc, $battvolts, $batttemp, $battmA, $lasttimestamp);
 my $interval = 0, $lastcalled = 0;
-$netifcnt = 0;
+$battcnt = 0;
 $perltime = 0;
 $savedpath = '';
-$totalifcon = 0;
-$netiflog = '';
-$netifnoln = 0;
-$isp = 0;
+$battlog = '';
+$battpolls = 0;
+$lasttimestamp = 0;
+$battperc = 0;
+$battvolts = 0;
+$batttemp = 0;
+$battmA = 0;
 
 sub l00http_periobattery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -37,37 +39,26 @@ sub l00http_periobattery_proc {
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
         $interval = $form->{"interval"};
     }
-    if (defined ($form->{"ispadj"})) {
-        $isp = $form->{"ispadj"};
-    }
     if (defined ($form->{"stop"})) {
         $interval = 0;
     }
     if (defined ($form->{"clear"})) {
-        $netifcnt = 0;
-        $netiflog = '';
-        $totalifcon = 0;
-        $netifnoln = 0;
+        $battcnt = 0;
+        $battlog = '';
+        $battpolls = 0;
         $savedpath = '';
-        undef %allsocksever;
-        undef %alwayson;
     }
     # save path
     if (defined ($form->{"save"}) && defined ($form->{'savepath'}) && (length ($form->{'savepath'}) > 0)) {
         if (open (OU, ">$form->{'savepath'}")) {
-            foreach $_ (keys %alwayson) {
-                if ($alwayson{$_} ne '') {
-                    print OU "$alwayson{$_}\n";
-                }
-            }
-            print OU $netiflog;
+            print OU $battlog;
             close (OU);
             $savedpath = $form->{'savepath'};
         }
     }
     if (defined ($form->{"overwrite"}) && defined ($form->{'owpath'}) && (length ($form->{'owpath'}) > 0)) {
         if (open (OU, ">$form->{'owpath'}")) {
-            print OU $netiflog;
+            print OU $battlog;
             close (OU);
             $savedpath = $form->{'owpath'};
         }
@@ -79,13 +70,13 @@ sub l00http_periobattery_proc {
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/periobattery.htm\">Refresh</a><p> \n";
 
-    print $sock "Battery. <a href=\"#end\">end</a>\n";
+    print $sock "${battperc}% ${battvolts}V ${batttemp}C ${battmA}mA. <a href=\"#end\">end</a>\n";
 
     print $sock "<form action=\"/periobattery.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>Run interval (sec):</td>\n";
+    print $sock "        <td>Run interval (sec, e.g. 30):</td>\n";
     print $sock "        <td><input type=\"text\" size=\"6\" name=\"interval\" value=\"$interval\"></td>\n";
     print $sock "    </tr>\n";
                                                 
@@ -122,20 +113,20 @@ sub l00http_periobattery_proc {
 
     print $sock "<pre>\n";
     $tmp = 0;
-    foreach $_ (split("\n", $netiflog)) {
+    foreach $_ (split("\n", $battlog)) {
         $tmp++;
         if ($tmp < 100) {
             printf $sock ("%3d: $_\n", $tmp);
         } elsif ($tmp == 100) {
             printf $sock ("%3d: $_\n", $tmp);
-            print $sock "\nskipping ".($netifnoln - 100 * 2)." lines\n\n";
-        } elsif ($tmp > ($netifnoln - 100)) {
+            print $sock "\nskipping ".($battcnt - 100 * 2)." lines\n\n";
+        } elsif ($tmp > ($battcnt - 100)) {
             printf $sock ("%3d: $_\n", $tmp);
         }
     }
     print $sock "</pre>\n";
     print $sock "<p><a href=\"#top\">Jump to top</a><p>\n";
-    print $sock "<p>Lines: $netifnoln\n";
+    print $sock "<p>Lines: $battcnt. Polls: $battpolls\n";
     print $sock "<a name=\"end\"></a>\n";
 
     # send HTML footer and ends
@@ -144,8 +135,8 @@ sub l00http_periobattery_proc {
 
 sub l00http_periobattery_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($buf, $tempe, $proto, $RxQ, $TxQ, $local, $remote, $sta, $key);
-    my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total, $ifoutput);
+    my ($tempe, $bstat);
+    my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
@@ -153,18 +144,44 @@ sub l00http_periobattery_perio {
 
         $tempe = '';
         if ($ctrl->{'os'} eq 'and') {
-            $netifnoln++;
-            $tempe = "$ctrl->{'now_string'}\n";
+            # This SL4A call doesn't work for my Slide:(
+            #$tmp = $ctrl->{'droid'}->batteryGetLevel();
+            #print $sock "batteryGetLevel $tmp\n";
+            #&l00httpd::dumphash ("tmp", $tmp);
+            #$tmp = $ctrl->{'droid'}->batteryGetStatus();
+            #print $sock "batteryGetStatus $tmp\n";
+            #&l00httpd::dumphash ("tmp", $tmp);
+
+            # On Slide, dmesg contains battery status:
+            #<6>[ 7765.397493] [BATT] ID=2, level=89, vol=4209, temp=326, curr=-214, dis_curr=0, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at 7765326083644 (2013-12-11 12:08:08.239292486 UTC)
+            $bstat = 'Only my Slide, dmesg contains a line with battery level: [BATT] ID=2, level=89, vol=4209, temp=326... If you see this line, either dmesg did not work, or the line format is different. Contact me to support it.';
+            foreach $_ (split("\n", `dmesg`)) {
+                if (/\[BATT\] ID=2/) {
+                    $bstat = $_;
+                }
+            }
+            if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
+                 = $bstat =~ /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+) at \d+ \((.+? UTC)\)/) {
+                if ($lasttimestamp ne $timestamp) {
+                    $lasttimestamp = $timestamp;
+                    $battperc = $level;
+                    $battvolts = $vol / 1000;
+                    $batttemp = $temp / 10;
+                    $battmA = $curr + $dis_curr;
+                    $tempe = "$ctrl->{'now_string'}: $bstat\n";
+                    $battcnt++;
+                }
+            }
         }
         if ($perltime != 0) {
             # subsequently
-            $netiflog .= $tempe;
+            $battlog .= $tempe;
         } else {
             # first time
-            $netiflog = $tempe;
+            $battlog = $tempe;
         }
         $perltime = time;
-        $netifcnt++;
+        $battpolls++;
     }
 
     $interval;

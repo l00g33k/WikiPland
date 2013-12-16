@@ -92,7 +92,7 @@ sub l00http_perionetifcon_proc {
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>Run interval (sec):</td>\n";
+    print $sock "        <td>Run interval (sec, e.g. 2):</td>\n";
     print $sock "        <td><input type=\"text\" size=\"6\" name=\"interval\" value=\"$interval\"></td>\n";
     print $sock "    </tr>\n";
                                                 
@@ -112,12 +112,12 @@ sub l00http_perionetifcon_proc {
     print $sock "        <td><input type=\"submit\" name=\"save\" value=\"Save new\"></td>\n";
     $tmp = "$ctrl->{'workdir'}del/$ctrl->{'now_string'}_netifcon.csv";
     $tmp =~ s/ /_/g;
-    print $sock "        <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"$tmp\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"12\" name=\"savepath\" value=\"$tmp\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"overwrite\" value=\"Overwrite\"></td>\n";
-    print $sock "        <td><input type=\"text\" size=\"16\" name=\"owpath\" value=\"$savedpath\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"12\" name=\"owpath\" value=\"$savedpath\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "</table>\n";
@@ -354,8 +354,8 @@ sub l00http_perionetifcon_perio {
                 if ($total > 0) {
                     $tempe .= "$ifoutput\n";
                     $totalifcon += $total;
+                    $netifnoln++;
                 }
-                $netifnoln++;
                 close (IN);
             }
         }

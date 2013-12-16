@@ -74,10 +74,16 @@ sub svg_curveXY2screenXY {
         $xx = ($xx - $svgparams{"$name:minx"}) / 
               ($svgparams{"$name:maxx"} - $svgparams{"$name:minx"}) *
               ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
-        $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
-              (($yy - $svgparams{"$name:$idx:miny"}) /
-               ($svgparams{"$name:$idx:maxy"} - $svgparams{"$name:$idx:miny"}) *
-               ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
+        if (($svgparams{"$name:$idx:maxy"} - $svgparams{"$name:$idx:miny"}) == 0) {
+            # a constant y
+            $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
+                  (0.5 * ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
+        } else {
+            $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
+                  (($yy - $svgparams{"$name:$idx:miny"}) /
+                   ($svgparams{"$name:$idx:maxy"} - $svgparams{"$name:$idx:miny"}) *
+                   ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
+        }
     } else {
         $xx = 0;
 		$yy = 0;
