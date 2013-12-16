@@ -98,19 +98,19 @@ sub l00http_rptbattery_proc {
         if ($lnno > 1) {
             if ($svgperc ne '') {
                 &l00svg::plotsvg ('battpercentage', $svgperc, 500, 300);
-                print $sock "<p>Level %:<br><a href=\"/svg.pl?graph=battpercentage&view=\"><img src=\"/svg.pl?graph=battpercentage\" alt=\"alt\"></a>\n";
+                print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"alt\"></a>\n";
             }
             if ($svgvolt ne '') {
                 &l00svg::plotsvg ('battvolt', $svgvolt, 500, 300);
-                print $sock "<p>Volts:<br><a href=\"/svg.pl?graph=battvolt&view=\"><img src=\"/svg.pl?graph=battvolt\" alt=\"alt\"></a>\n";
+                print $sock "<p>Volts:<br><a href=\"/svg.htm?graph=battvolt&view=\"><img src=\"/svg.htm?graph=battvolt\" alt=\"alt\"></a>\n";
             }
             if ($svgtemp ne '') {
                 &l00svg::plotsvg ('batttemp', $svgtemp, 500, 300);
-                print $sock "<p>Temp:<br><a href=\"/svg.pl?graph=batttemp&view=\"><img src=\"/svg.pl?graph=batttemp\" alt=\"alt\"></a>\n";
+                print $sock "<p>Temp:<br><a href=\"/svg.htm?graph=batttemp&view=\"><img src=\"/svg.htm?graph=batttemp\" alt=\"alt\"></a>\n";
             }
             if ($svgmA ne '') {
                 &l00svg::plotsvg ('battmA', $svgmA, 500, 300);
-                print $sock "<p>mA:<br><a href=\"/svg.pl?graph=battmA&view=\"><img src=\"/svg.pl?graph=battmA\" alt=\"alt\"></a>\n";
+                print $sock "<p>mA:<br><a href=\"/svg.htm?graph=battmA&view=\"><img src=\"/svg.htm?graph=battmA\" alt=\"alt\"></a>\n";
             }
         }
     }

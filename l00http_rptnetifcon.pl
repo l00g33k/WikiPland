@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 use l00backup;
@@ -203,11 +202,11 @@ sub l00http_rptnetifcon_proc {
 
         if ($svgifdt ne '') {
             &l00svg::plotsvg ('ifconfigdt', $svgifdt, 500, 300);
-            print $sock "<a href=\"/svg.pl?graph=ifconfigdt&view=\"><img src=\"/svg.pl?graph=ifconfigdt\" alt=\"alt\"></a>\n";
+            print $sock "<a href=\"/svg.htm?graph=ifconfigdt&view=\"><img src=\"/svg.htm?graph=ifconfigdt\" alt=\"alt\"></a>\n";
         }
         if ($svgifdt ne '') {
             &l00svg::plotsvg ('ifconfigacc', $svgifacc, 500, 300);
-            print $sock "<a href=\"/svg.pl?graph=ifconfigacc&view=\"><img src=\"/svg.pl?graph=ifconfigacc\" alt=\"alt\"></a>\n";
+            print $sock "<a href=\"/svg.htm?graph=ifconfigacc&view=\"><img src=\"/svg.htm?graph=ifconfigacc\" alt=\"alt\"></a>\n";
         }
 
         print $sock "<a name=\"local\"></a>\n";
