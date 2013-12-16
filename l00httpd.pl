@@ -50,7 +50,7 @@ my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
 $httpmax = 10240;
 my (@cmd_param_pairs, $timeout, $cnt);
-my (%ctrl, %FORM, %httpmods, %httpmodssort, %modsinfo, %moddesc, %ifnet);
+my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 
 
@@ -276,6 +276,8 @@ if ($ctrl{'quick'} =~ m|^/ls\.htm|) {
 
 
 sub loadmods {
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+        $size, $atime, $mtimea, $ctime, $blksize, $blocks);
     # scan directory
     if (opendir (DIR, $plpath)) {
         foreach $file (sort readdir (DIR)) {
@@ -288,30 +290,41 @@ sub loadmods {
     }
 
     # load modules
-    print "Loading modules from $plpath...\n";
+    print "(Re)Loading modules from $plpath...\n";
     foreach $mod (sort keys %httpmods) {
-        print "$mod ";
-        $rethash = do $httpmods{$mod};
-        if (!defined ($rethash)) {
-            if ($!) {
-                print "Can't read module '$httpmods{$mod}': $!\n";
-            } elsif ($@) {
-                print "Can't parse module '$httpmods{$mod}': $@\n";
+        ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+        $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+        = stat($httpmods{$mod});
+
+        if ((!defined($httpmodssig{$mod})) || 
+            ($httpmodssig{$mod} ne "$size $mtimea")) {
+            # never loaded or signature changed, reload
+            # remember file signature for smart reload
+            $httpmodssig{$mod} = "$size $mtimea";
+
+            print "$mod ";
+            $rethash = do $httpmods{$mod};
+            if (!defined ($rethash)) {
+                if ($!) {
+                    print "Can't read module '$httpmods{$mod}': $!\n";
+                } elsif ($@) {
+                    print "Can't parse module '$httpmods{$mod}': $@\n";
+                }
+            } else {
+                # default to disabled to non local clients
+                $modsinfo{"$mod:ena:checked"} = "";
+                $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
+                $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
+                $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
+                $subname = $modsinfo{"$mod:fn:desc"};
+                $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
+                $tmp = 'unknown:';
+                if ($moddesc{$mod} =~ /^( *[^ ]+ *[^ ]*)/) {
+                    $tmp = $1;
+                }
+                $tmp .= $mod;
+                $httpmodssort{$tmp} = $mod;
             }
-        } else {
-            # default to disabled to non local clients
-            $modsinfo{"$mod:ena:checked"} = "";
-            $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
-            $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
-            $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
-            $subname = $modsinfo{"$mod:fn:desc"};
-            $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
-            $tmp = 'unknown:';
-            if ($moddesc{$mod} =~ /^( *[^ ]+ *[^ ]*)/) {
-                $tmp = $1;
-            }
-            $tmp .= $mod;
-            $httpmodssort{$tmp} = $mod;
         }
     }
     print "\nReady\n";

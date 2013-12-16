@@ -87,10 +87,10 @@ sub l00http_edit_proc2 {
         if (($contextln < 1) || ($contextln > 100)) {
             $contextln = 1;
         }
-#       $blklineno = 0;     # cancel block mode
     }
     if (defined ($form->{'noblock'})) {
         $blklineno = 0;     # cancel block mode
+        $contextln = 1;
         # falls through all cases to else to reload
     }
     if (defined ($form->{'save'})) {
@@ -174,6 +174,7 @@ sub l00http_edit_proc2 {
                 $buffer = $outbuf;
             }
             $blklineno = 0;     # cancel block mode
+            $contextln = 1;
         }
     } elsif (defined ($form->{'tempsize'})) {
         $editsz = 1;

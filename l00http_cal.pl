@@ -166,7 +166,7 @@ sub l00http_cal_proc {
             $rpt = $2;
         } elsif ($len <= 3) {
 		    # color $todo
-		    $todo = "<font style=\"color:black;background-color:olive\">$todo</font>";
+		    $todo = "<font style=\"color:black;background-color:aqua\">$todo</font>";
 		} else {
 		    # color $todo
 		    $todo = "<font style=\"color:black;background-color:silver\">$todo</font>";

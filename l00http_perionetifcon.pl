@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -24,7 +23,7 @@ sub l00http_perionetifcon_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "perionetifcon: Periodic logging of netstat";
+    " C: perionetifcon: Periodic logging of netstat";
 }
 
 
@@ -54,8 +53,8 @@ sub l00http_perionetifcon_proc {
         undef %alwayson;
     }
     # save path
-    if (defined ($form->{"save"}) && defined ($form->{'path'}) && (length ($form->{'path'}) > 0)) {
-        if (open (OU, ">$form->{'path'}")) {
+    if (defined ($form->{"save"}) && defined ($form->{'savepath'}) && (length ($form->{'savepath'}) > 0)) {
+        if (open (OU, ">$form->{'savepath'}")) {
             foreach $_ (keys %alwayson) {
                 if ($alwayson{$_} ne '') {
                     print OU "$alwayson{$_}\n";
@@ -63,7 +62,7 @@ sub l00http_perionetifcon_proc {
             }
             print OU $netiflog;
             close (OU);
-            $savedpath = $form->{'path'};
+            $savedpath = $form->{'savepath'};
         }
     }
     if (defined ($form->{"overwrite"}) && defined ($form->{'owpath'}) && (length ($form->{'owpath'}) > 0)) {
@@ -86,7 +85,8 @@ sub l00http_perionetifcon_proc {
     $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
     print $sock "Rx/Tx: $tmp bytes. ";
     $tmp = $isp + int($totalifcon / 100000) / 10;
-    print $sock "ISP: $tmp MB. <a href=\"#end\">end</a>\n";
+    print $sock "ISP: $tmp MB ($netifnoln) <a href=\"#end\">end</a>\n";
+
 
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -112,7 +112,7 @@ sub l00http_perionetifcon_proc {
     print $sock "        <td><input type=\"submit\" name=\"save\" value=\"Save new\"></td>\n";
     $tmp = "$ctrl->{'workdir'}del/$ctrl->{'now_string'}_netifcon.csv";
     $tmp =~ s/ /_/g;
-    print $sock "        <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$tmp\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"$tmp\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
@@ -141,6 +141,7 @@ sub l00http_perionetifcon_proc {
     print $sock "Currently ESTABLISHED connections:<pre>\n";
     foreach $_ (sort keys %seennow) {
         if ($seennow{$_} eq 'ESTABLISHED') {
+		    s/::ffff://g;
             print $sock "$_\n";
         }
     }
@@ -181,7 +182,7 @@ sub l00http_perionetifcon_proc {
 sub l00http_perionetifcon_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($buf, $tempe, $proto, $RxQ, $TxQ, $local, $remote, $sta, $key);
-    my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total);
+    my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total, $ifoutput);
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
@@ -310,7 +311,8 @@ sub l00http_perionetifcon_perio {
 #gannet0:      0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
 #   tun:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
 #  eth0:32919217  366817    0    0    0     0          0         0 49776541  544949    0    0    0     0       0          0
-                $tempe .= "$ctrl->{'now_string'},if,rx,tx";
+                $ifoutput = "$ctrl->{'now_string'},if,rx,tx";
+#               $tempe .= "$ctrl->{'now_string'},if,rx,tx";
                 $total = 0;
                 while (<IN>) {
                     if (($if, $vals) = /^ *(\w+): *(.+)$/) {
@@ -335,7 +337,7 @@ sub l00http_perionetifcon_perio {
                             }
                             $tmp = ($val[0] - $ifbase{"rx_$if"}) - $ifrxtx{"rx_$if"};
                             $total += $tmp;
-                            $tempe .= ",$if,$tmp";
+                            $ifoutput .= ",$if,$tmp";
                             $ifrxtx{"rx_$if"} = $val[0] - $ifbase{"rx_$if"};
 
                             # accumulate tx bytes
@@ -344,13 +346,15 @@ sub l00http_perionetifcon_perio {
                             }
                             $tmp = ($val[8] - $ifbase{"tx_$if"}) - $ifrxtx{"tx_$if"};
                             $total += $tmp;
-                            $tempe .= ",$tmp";
+                            $ifoutput .= ",$tmp";
                             $ifrxtx{"tx_$if"} = $val[8] - $ifbase{"tx_$if"};
                         }
                     }
                 }
-                $totalifcon += $total;
-                $tempe .= "\n";
+                if ($total > 0) {
+                    $tempe .= "$ifoutput\n";
+                    $totalifcon += $total;
+                }
                 $netifnoln++;
                 close (IN);
             }
