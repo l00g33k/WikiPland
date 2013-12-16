@@ -10,7 +10,7 @@ my %config = (proc => "l00http_perionetifcon_proc",
               desc => "l00http_perionetifcon_desc",
               perio => "l00http_perionetifcon_perio");
 my (%netstatout, %allsocksever, $savedpath);
-my (%ifsrx, %ifstx);
+my (%ifsrx, %ifstx, $isp, %alwayson, %seennow);
 my $interval = 0, $lastcalled = 0;
 $netifcnt = 0;
 $perltime = 0;
@@ -18,6 +18,7 @@ $savedpath = '';
 $totalifcon = 0;
 $netiflog = '';
 $netifnoln = 0;
+$isp = 0;
 
 sub l00http_perionetifcon_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -37,6 +38,9 @@ sub l00http_perionetifcon_proc {
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
         $interval = $form->{"interval"};
     }
+    if (defined ($form->{"ispadj"})) {
+        $isp = $form->{"ispadj"};
+    }
     if (defined ($form->{"stop"})) {
         $interval = 0;
     }
@@ -47,10 +51,16 @@ sub l00http_perionetifcon_proc {
         $netifnoln = 0;
         $savedpath = '';
         undef %allsocksever;
+        undef %alwayson;
     }
     # save path
     if (defined ($form->{"save"}) && defined ($form->{'path'}) && (length ($form->{'path'}) > 0)) {
         if (open (OU, ">$form->{'path'}")) {
+            foreach $_ (keys %alwayson) {
+                if ($alwayson{$_} ne '') {
+                    print OU "$alwayson{$_}\n";
+                }
+            }
             print OU $netiflog;
             close (OU);
             $savedpath = $form->{'path'};
@@ -74,7 +84,9 @@ sub l00http_perionetifcon_proc {
     $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
     $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
     $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
-    print $sock "Total ifconfig $tmp bytes. Lines: $netifnoln : <a href=\"#end\">Jump to end</a>\n";
+    print $sock "Rx/Tx: $tmp bytes. ";
+    $tmp = $isp + int($totalifcon / 100000) / 10;
+    print $sock "ISP: $tmp MB. <a href=\"#end\">end</a>\n";
 
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -111,12 +123,36 @@ sub l00http_perionetifcon_proc {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"isp\" value=\"Set ISP\"></td>\n";
+    print $sock "        <td>offset to match ISP meter: <input type=\"text\" size=\"4\" name=\"ispadj\" value=\"$isp\"></td>\n";
+    print $sock "    </tr>\n";
+                                                
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
     if (length ($savedpath) > 5) {
         print $sock "Launcher to last saved: <a href=\"/launcher.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
 
-
+    print $sock "Currently ESTABLISHED connections:<pre>\n";
+    foreach $_ (sort keys %seennow) {
+        if ($seennow{$_} eq 'ESTABLISHED') {
+            print $sock "$_\n";
+        }
+    }
+    print $sock "</pre>Lines: $netifnoln : <a href=\"#end\">end</a>\n";
     print $sock "<pre>\n";
+
+    foreach $_ (keys %alwayson) {
+        if ($alwayson{$_} ne '') {
+            print $sock "     $alwayson{$_}\n";
+        }
+    }
+
     $tmp = 0;
     foreach $_ (split("\n", $netiflog)) {
         $tmp++;
@@ -144,19 +180,19 @@ sub l00http_perionetifcon_proc {
 
 sub l00http_perionetifcon_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($buf, $tempe, $proto, $RxQ, $TxQ, $local, $remote, $sta, $key, %seennow);
+    my ($buf, $tempe, $proto, $RxQ, $TxQ, $local, $remote, $sta, $key);
     my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total);
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $lastcalled = time;
 
-        # netstat
-
-        $tempe = '';
-        undef %netstatout;
-        undef %seennow;
         if ($ctrl->{'os'} eq 'and') {
+            # netstat
+
+            $tempe = '';
+            undef %netstatout;
+            undef %seennow;
 #netstat
 #Proto Recv-Q Send-Q Local Address          Foreign Address        State
 # tcp       0      0 127.0.0.1:55555        0.0.0.0:*              LISTEN
@@ -166,8 +202,6 @@ sub l00http_perionetifcon_perio {
 #tcp6       0      0 :::20339               :::*                   LISTEN
 #tcp6       0      0 ::ffff:127.0.0.1:8182  :::*                   LISTEN
 #tcp6       0      0 ::ffff:127.0.0.1:53171 ::ffff:127.0.0.1:53033 ESTABLISHED
-open(LG,">>/sdcard/l00httpd/del/0.log");
-print LG "--------\n";
             foreach $_ (split ("\n", `netstat`)) {
                 if (($proto, $RxQ, $TxQ, $local, $remote, $sta) = split (' ', $_)) {
                     #LISTEN
@@ -176,69 +210,65 @@ print LG "--------\n";
                     #TIME_WAIT
                     #FIN_WAIT1
                     #CLOSE_WAIT
-                    if ((!($local =~ /127\.0\.0\.1/) || 
-                        !($remote =~ /127\.0\.0\.1/)) && 
-                        (!($remote =~ /0\.0\.0\.0/)) &&
-                        (!($sta =~ /LISTEN/)) &&
-                        (!($sta =~ /CLOSE_WAIT/))) {
-print LG "$_\n";
+                    # process only these connections...
+                    if ((!($local =~ /127\.0\.0\.1/) || !($remote =~ /127\.0\.0\.1/)) &&        # either side not localhost
+                        (!(($local =~ /192\.168\.96\./) && ($remote =~ /192\.168\.96\./))) &&   # not hot spot connection
+                        (!($remote =~ /0\.0\.0\.0/)) &&     # not without remote IP
+                        (!($sta =~ /LISTEN/)) &&            # not listening
+                        (!($sta =~ /CLOSE_WAIT/)) &&        # not CLOSE_WAIT (what is it?)
+                        ($proto ne 'Proto')) {              # where does this come from?
                         $local =~ s/:(\d+)$/,$1/;
                         $remote =~ s/:(\d+)$/,$1/;
-                        $seennow{"$local->$remote"} = 1;    # remember socket pair reported in this loop
+                        $seennow{"$local->$remote"} = $sta;    # remember socket pair reported in this loop
 
-#                        if (($sta =~ /SYN_SENT/) ||
-#                            ($sta =~ /ESTABLISHED/) ||
-#                            ($sta =~ /TIME_WAIT/)) {
-                            # a socket is listed because it was connected, is connected, or just disconnected
-                            # for us just consider it being connected
-                            # socket is currently connected
-                            if (defined ($allsocksever{"$local->$remote"})) {
-                                # we have seen it before
-                                if ($allsocksever{"$local->$remote"} eq '') {
-                                    # it was disconnected, and now connected
-                                    $allsocksever{"$local->$remote"} = $_;    # connected state
-                                    # record as just connected
-                                    $buf = "$ctrl->{'now_string'},net,$proto,local,remote,$local,$remote,conn";
-                                    $netstatout{$buf} = 1;
-                                } else {
-                                    # it was connected, and still connected
-                                    # nothing changed, do nothing
-                                }
-                            } else {
-                                # never seen connected
+                        # a socket is listed because it was connected, is connected, or just disconnected
+                        # for us just consider it being connected
+                        # socket is currently connected
+                        if (defined ($allsocksever{"$local->$remote"})) {
+                            # we have seen it before
+                            if ($allsocksever{"$local->$remote"} eq '') {
+                                # it was disconnected, and now connected
                                 $allsocksever{"$local->$remote"} = $_;    # connected state
                                 # record as just connected
                                 $buf = "$ctrl->{'now_string'},net,$proto,local,remote,$local,$remote,conn";
                                 $netstatout{$buf} = 1;
+                            } else {
+                                # it was connected, and still connected
+                                # nothing changed, do nothing
                             }
-#                        } else {
-#                            # socket is currently not about to be connected
-#                            # socket is currently not connected
-#                            # socket is currently not just disconnected
-#                            if (defined ($allsocksever{"$local->$remote"})) {
-#                                # we have seen it before
-#                                if ($allsocksever{"$local->$remote"} eq '') {
-#                                    # it was disconnected, and still disconnected
-#                                    # not interested, do nothing
-#                                } else {
-#                                    # it was connected, and now not disconnected
-#                                    $allsocksever{"$local->$remote"} = '';    # disconnected state
-#                                    # record as just disconnected
-#                                    $buf = "$ctrl->{'now_string'},net,$proto,local,remote,$local,$remote,disc";
-#                                    $netstatout{$buf} = 0;
-#                                }
-#                            } else {
-#                                # not connected, and never seen connected
-#                                # not interested, do nothing
-#                            }
-#                        }
+                        } else {
+                            # never seen connected
+                            $allsocksever{"$local->$remote"} = $_;    # connected state
+                            # record as just connected
+                            $buf = "$ctrl->{'now_string'},net,$proto,local,remote,$local,$remote,conn";
+                            $netstatout{$buf} = 1;
+                        }
+                        # We want to identify socket pair that are always ESTABLISHED
+                        # and convey to rptnetifcon.pl so they can be removed from summary
+                        if ($netifcnt == 0) {
+                            # the very first time
+                            if ($sta =~ /ESTABLISHED/) {
+                                $alwayson{"$local->$remote"} = "$ctrl->{'now_string'},net,$proto,local,remote,$local,$remote,alwaysESTAB";
+                            }
+                        }
                     }
                 } else {
                     $tempe .= "LOCAL: $_\n";
                     $netifnoln++;
                 }
             }
-close(LG);
+            if ($netifcnt > 0) {
+                # now we remove from %alwayson if seennow != ESTABLISHED
+                foreach $tmp (keys %alwayson) {
+                    if (!defined($seennow{$tmp})) {
+                        # don't see it this time
+                        $alwayson{$tmp} = '';    # remove
+                    } elsif (!($seennow{$tmp} =~ /ESTABLISHED/)) {
+                        # not in ESTABLISHED state
+                        $alwayson{$tmp} = '';    # remove
+                    }
+                }
+            }
             foreach $key (keys %allsocksever) {
                 # %allsocksever remembers all socket pairs ever seen. "$_" denotes connected; '' otherwise
                 # key of the form {"$local->$remote"}
@@ -251,7 +281,6 @@ close(LG);
                     $allsocksever{"$key"} = '';    # disconnected state
                 }
             }
-
             foreach $key (sort keys %netstatout) {
                 $tempe .= "$key\n";
                 $netifnoln++;

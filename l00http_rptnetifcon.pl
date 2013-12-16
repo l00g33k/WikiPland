@@ -27,9 +27,9 @@ sub l00http_rptnetifcon_proc {
     my ($path, $fname, $tmp);
     my (@flds, $output);
     my ($rx, $tx, $rxtx, $now, $svgifdt, $svgifacc);
-    my ($yr, $mo, $da, $hr, $mi, $se, $data);
+    my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
     my ($lip, $lpt, $rip, $rpt, $conn, %connections, %hosts);
-    my ($timestart, $slotrxtx, %activeconn);
+    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson);
 
 
     if (defined ($form->{'path'})) {
@@ -61,15 +61,10 @@ sub l00http_rptnetifcon_proc {
         $svgifdt = '';
         $svgifacc = '';
         $timestart = 0;
+        $lnno = 0;
         undef %activeconn;
+        undef %alwayson;
         $output = '';
-        $output .= "<hr><a href=\"#top\">Jump to top</a>,\n";
-        $output .= "<a name=\"sum\"></a>\n";
-        $output .= "<a href=\"#sum\">summary</a>,\n";
-        $output .= "<a href=\"#local\">local ip</a>,\n";
-        $output .= "<a href=\"#remote\">remote ip</a>,\n";
-        $output .= "<a href=\"#socket\">socket pairs</a>\n";
-        $output .= "<p>Total traffic by time slot (${timeslot}s):<p>\n";
         $output .= "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
         $output .= "<tr>\n";
         $output .= "<td>timestamp</td>\n";
@@ -77,12 +72,11 @@ sub l00http_rptnetifcon_proc {
         $output .= "<td>sock pairs</td>\n";
         $output .= "</tr>\n";
         while (<IN>) {
-if (/62936/) {
-print $sock "$_<br>\n";
-}
             s/\r//;
             s/\n//;
+            $lnno++;
 
+            $timestamp = substr($_, 0, 15);
             if (($yr, $mo, $da, $hr, $mi, $se) = /^(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d),/) {
                 #20131213 214805,net,tcp6,local,remote,::ffff:10.72.6.54,56079,::ffff:173.194.79.108,993,conn
                 #20131213 214807,if,rx,tx,rmnet0,0,120
@@ -94,7 +88,8 @@ print $sock "$_<br>\n";
                     $timestart = $now;
                     $slotrxtx = 0;
                 }
-s/(\.\d+):(\d+,)/$1,$2/g;
+                # change : to ,
+                s/(\.\d+):(\d+,)/$1,$2/g;
                 @flds = split(',', $_);
                 if ($flds[1] eq 'if') {
                     $rx += $flds[5];
@@ -108,29 +103,31 @@ s/(\.\d+):(\d+,)/$1,$2/g;
                     }
                     $svgifacc .= "$now,$rxtx ";
                 } elsif ($flds[1] eq 'net') {
-if (!defined($flds[9])) {
-print $sock "flds[9] not def &gt;$_ &lt;<br>\n";
-} else {
-                    if ($flds[9] eq 'conn') {
-                        if (defined($connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"})) {
-                            $connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"}++;
-                        } else {
-                            $connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"} = 1;
+                    if (!defined($flds[9])) {
+                        # unexpected
+                        print $sock "$lnno: flds[9] not def &gt;$_ &lt;<br>\n";
+                    } else {
+                        if ($flds[9] eq 'conn') {
+                            if (defined($connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"})) {
+                                $connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"}++;
+                            } else {
+                                $connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"} = 1;
+                            }
+                            $activeconn{"$flds[7]:$flds[8]<=$flds[5]:$flds[6]"} = 1;
                         }
-                    }
-}
-                    if ($flds[9] eq 'conn') {
-                        $activeconn{"$flds[7]:$flds[8]<=$flds[5]:$flds[6]"} = 1;
-                    }
-                    if ($flds[9] eq 'disc') {
-                        $activeconn{"$flds[7]:$flds[8]<=$flds[5]:$flds[6]"} = 0;
+                        if ($flds[9] eq 'disc') {
+                            $activeconn{"$flds[7]:$flds[8]<=$flds[5]:$flds[6]"} = 0;
+                        }
+                        if ($flds[9] eq 'alwaysESTAB') {
+                            $alwayson{"$flds[7]:$flds[8]<=$flds[5]:$flds[6]"} = 0;
+                        }
                     }
                 }
                 # time slot
                 if (($now - $timestart) >= $timeslot) {
                     # end of time slot, print summary
                     $output .= "<tr>\n";
-                    $output .= "<td>".substr($_, 0, 15)."</td>\n";
+                    $output .= "<td>$timestamp</td>\n";
                     $output .= "<td>$slotrxtx</td>\n";
                     $output .= "<td>\n";
                     foreach $conn (sort keys %activeconn) {
@@ -149,6 +146,23 @@ print $sock "flds[9] not def &gt;$_ &lt;<br>\n";
                 }
             }
         }
+        # last (partial) time slot, print summary
+        $output .= "<tr>\n";
+        $output .= "<td>$timestamp</td>\n";
+        $output .= "<td>$slotrxtx</td>\n";
+        $output .= "<td>\n";
+        foreach $conn (sort keys %activeconn) {
+            if (defined($activeconn{$conn})) {
+                if ($activeconn{$conn} == 0) {
+                    # connect has been closed. forget it.
+                    $activeconn{$conn} = undef;
+                }
+                $conn =~ s/::ffff://g;
+                $output .= "$conn ";
+            }
+        }
+        $output .= "</td>\n";
+        $output .= "</tr>\n";
         $output .= "</table>\n";
         close (IN);
 
@@ -166,7 +180,26 @@ print $sock "flds[9] not def &gt;$_ &lt;<br>\n";
         $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
         $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
         $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
-        print $sock "rx+tx = $tmp<p>$output<p>\n";
+        print $sock "rx+tx = $tmp<p>\n";
+
+        print $sock "<hr><a href=\"#top\">Jump to top</a>,\n";
+        print $sock "<a name=\"sum\"></a>\n";
+        print $sock "<a href=\"#sum\">summary</a>,\n";
+        print $sock "<a href=\"#local\">local ip</a>,\n";
+        print $sock "<a href=\"#remote\">remote ip</a>,\n";
+        print $sock "<a href=\"#socket\">socket pairs</a><p>\n";
+        # print always on socket pairs
+        print $sock "Socket pairs always connected:<pre>\n";
+        foreach $_ (sort keys %alwayson) {
+            s/::ffff://g;
+            print $sock "$_\n";
+            # and remove from output
+            $output =~ s/$_//g;
+        }
+        print $sock "</pre>Total traffic by time slot (${timeslot}s):<p>\n";
+
+        print $sock "$output<p>\n";
+
 
         if ($svgifdt ne '') {
             &l00svg::plotsvg ('ifconfigdt', $svgifdt, 500, 300);
