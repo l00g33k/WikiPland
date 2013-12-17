@@ -10,6 +10,7 @@ my %config = (proc => "l00http_periobattery_proc",
               desc => "l00http_periobattery_desc",
               perio => "l00http_periobattery_perio");
 my ($savedpath, $battperc, $battvolts, $batttemp, $battmA, $lasttimestamp);
+my ($table, $tablehdr);
 my $interval = 0, $lastcalled = 0;
 $battcnt = 0;
 $perltime = 0;
@@ -21,6 +22,8 @@ $battperc = 0;
 $battvolts = 0;
 $batttemp = 0;
 $battmA = 0;
+$table = '';
+$tablehdr = "||#||level||vol||C||curr||chg src||chg en||over vchg||batt state||time stamp||\n";
 
 sub l00http_periobattery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -48,6 +51,7 @@ sub l00http_periobattery_proc {
         $battlog = '';
         $battpolls = 0;
         $savedpath = '';
+        $table = '';
     }
     # save path
     if (defined ($form->{"save"}) && defined ($form->{'savepath'}) && (length ($form->{'savepath'}) > 0)) {
@@ -112,6 +116,11 @@ sub l00http_periobattery_proc {
         print $sock "Launcher to last saved: <a href=\"/launcher.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
 
+    # print table
+    $tmp = $tablehdr . $table;
+    $tmp =~ s/(\.\d)\d+ UTC/ UTC/g;
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $tmp, 0);
+
     print $sock "<pre>\n";
     $tmp = 0;
     foreach $_ (split("\n", $battlog)) {
@@ -171,6 +180,15 @@ sub l00http_periobattery_perio {
                     $battmA = $curr + $dis_curr;
                     $tempe = "$ctrl->{'now_string'}: $bstat\n";
                     $battcnt++;
+
+                    # populate no save table
+                    $chg_src =~ s/0/0\/off/;
+                    $chg_src =~ s/1/1\/usb/;
+                    $chg_src =~ s/2/2\/wall/;
+                    $chg_en =~ s/0/0\/off/;
+                    $chg_en =~ s/1/1\/usb/;
+                    $chg_en =~ s/2/2\/wall/;
+                    $table = "||$battcnt||$level||$vol||$temp||$battmA||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
                 }
             }
         }
