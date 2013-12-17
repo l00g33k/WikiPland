@@ -138,7 +138,7 @@ sub l00http_perionetifcon_proc {
         print $sock "Launcher to last saved: <a href=\"/launcher.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
 
-    print $sock "Currently ESTABLISHED connections:<pre>\n";
+    print $sock "Currently ESTABLISHED connections (exclude hot spot connections):<pre>\n";
     foreach $_ (sort keys %seennow) {
         if ($seennow{$_} eq 'ESTABLISHED') {
 		    s/::ffff://g;
