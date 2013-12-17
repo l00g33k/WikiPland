@@ -945,6 +945,8 @@ print "sock timeout 3s\n";
                         $ip = '(unknown)';
                     }
                 }
+                $ip =~ s/ //g;
+                $ctrl{'myip'} = $ip;
                 print $sock "Phone IP: $ip, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns<p>\n";

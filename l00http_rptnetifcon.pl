@@ -23,12 +23,12 @@ sub l00http_rptnetifcon_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $tmp);
+    my ($path, $fname, $tmp, $patt, $name);
     my (@flds, $output);
     my ($rx, $tx, $rxtx, $now, $svgifdt, $svgifacc);
     my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
     my ($lip, $lpt, $rip, $rpt, $conn, %connections, %hosts);
-    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson);
+    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson, %poorwhois);
 
 
     if (defined ($form->{'path'})) {
@@ -195,8 +195,32 @@ sub l00http_rptnetifcon_proc {
             # and remove from output
             $output =~ s/$_//g;
         }
-        print $sock "</pre>Total traffic by time slot (${timeslot}s):<p>\n";
+        print $sock "</pre>\n";
 
+        print $sock "Poor man's whois look-up: $ctrl->{'workdir'}rptnetifcon.cfg:<br>\n";
+        if (open(IN, "<$ctrl->{'workdir'}rptnetifcon.cfg")) {
+            undef %poorwhois;
+            print $sock "<pre>\n";
+            print $sock "All '.' is translated to '\\.' before regex match\n";
+            while (<IN>) {
+                if (($patt, $name) = /(.*)=>(.*)/) {
+                    print $sock "$patt is $name\n";
+                    #all . is automatically translated to \.
+                    $patt =~ s/\./\\./g;
+                    $poorwhois{$patt} = $name;
+                }
+            }
+            print $sock "</pre>\n";
+            close(IN);
+        }
+        $output =~ s/$ctrl->{'myip'}/me/g;
+        foreach $_ (keys %poorwhois) {
+            $output =~ s/$_/$poorwhois{$_}/g;
+        }
+
+        print $sock "My IP is $ctrl->{'myip'} (me)<br>\n";
+
+        print $sock "Total traffic by time slot (${timeslot}s):<p>\n";
         print $sock "$output<p>\n";
 
 
