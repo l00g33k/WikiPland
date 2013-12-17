@@ -50,8 +50,8 @@ sub l00http_svg_proc {
                 }
                 ($xpix, $ypix) = &l00svg::svg_curveXY2screenXY (
                     $graphname, 0, $x, $y);
-#print "find #$off: ($x,$y) -> ($xpix, $ypix)\n";
-                if ($xpix < $form->{'x'}) {
+print "find #$off: ($x,$y) -> ($xpix, $ypix) : ($form->{'x'}, $form->{'y'})\n";
+                if ($xpix >= $form->{'x'}) {
                     last;
                 }
                 $off++;    
