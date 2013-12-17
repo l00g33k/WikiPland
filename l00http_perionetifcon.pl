@@ -103,7 +103,7 @@ sub l00http_perionetifcon_proc {
         $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
         print $sock "<br>Delta: $tmp bytes.";
 
-        $tmp = $isp + int(($totalifcon - $lastisp) / 100000) / 10;
+        $tmp = $isp + int($totalifcon / 100000) / 10 - $lastisp;
         print $sock " ISP: $tmp MB";
 
         $tmp = time - $lasttime;
