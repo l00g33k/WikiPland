@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -10,7 +9,7 @@ my %config = (proc => "l00http_periobattery_proc",
               desc => "l00http_periobattery_desc",
               perio => "l00http_periobattery_perio");
 my ($savedpath, $battperc, $battvolts, $batttemp, $battmA, $lasttimestamp);
-my ($table, $tablehdr);
+my ($table, $tablehdr, $firstdmesg, $lastdmesg);
 my $interval = 0, $lastcalled = 0;
 $battcnt = 0;
 $perltime = 0;
@@ -24,6 +23,8 @@ $batttemp = 0;
 $battmA = 0;
 $table = '';
 $tablehdr = "||#||level||vol||C||curr||chg src||chg en||over vchg||batt state||time stamp||\n";
+$firstdmesg = '';
+$lastdmesg = '';
 
 sub l00http_periobattery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -51,6 +52,8 @@ sub l00http_periobattery_proc {
         $battlog = '';
         $battpolls = 0;
         $savedpath = '';
+        $firstdmesg = '';
+        $lastdmesg = '';
         $table = '';
     }
     # save path
@@ -115,6 +118,7 @@ sub l00http_periobattery_proc {
     if (length ($savedpath) > 5) {
         print $sock "Report generator: <a href=\"/rptbattery.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
+    print $sock "<pre>$lastdmesg$firstdmesg</pre>\n";
 
     # print table
     $tmp = $tablehdr . $table;
@@ -180,6 +184,11 @@ sub l00http_periobattery_perio {
                     $battmA = $curr + $dis_curr;
                     $tempe = "$ctrl->{'now_string'}: $bstat\n";
                     $battcnt++;
+
+                    if ($firstdmesg eq '') {
+                        $firstdmesg = $tempe;
+					}
+                    $lastdmesg = $tempe;
 
                     # populate no save table
                     $chg_src =~ s/0/0\/off/;
