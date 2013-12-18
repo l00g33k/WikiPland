@@ -153,7 +153,7 @@ sub l00http_table_proc {
     $multitbl = 0;
     @alllines = split ("\n", $buffer);
     foreach $line (@alllines) {
-        if ($line =~ /^\|\|[^|]/) {
+        if ($line =~ /^\|\|[^|].*\|\|$/) {
             # seeing table
             if ($post ne '') {
                 $multitbl = 1;

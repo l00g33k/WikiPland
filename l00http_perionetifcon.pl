@@ -8,8 +8,8 @@ my ($lastcalled, $netiflog, $netifcnt, $netifnoln, $perltime, %ifrxtx, %ifbase, 
 my %config = (proc => "l00http_perionetifcon_proc",
               desc => "l00http_perionetifcon_desc",
               perio => "l00http_perionetifcon_perio");
-my (%netstatout, %allsocksever, $savedpath);
-my (%ifsrx, %ifstx, $isp, %alwayson, %seennow);
+my (%netstatout, %allsocksever, $savedpath, $marks);
+my (%ifsrx, %ifstx, $isp, %alwayson, %seennow, $lasttotalifcon, $lastisp, $lasttime);
 my $interval = 0, $lastcalled = 0;
 $netifcnt = 0;
 $perltime = 0;
@@ -18,6 +18,10 @@ $totalifcon = 0;
 $netiflog = '';
 $netifnoln = 0;
 $isp = 0;
+$marks = '';
+$lasttotalifcon = -1;
+$lastisp = -1;
+$lasttime = -1;
 
 sub l00http_perionetifcon_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -31,7 +35,7 @@ sub l00http_perionetifcon_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp);
+    my ($tmp, $buf);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -60,14 +64,19 @@ sub l00http_perionetifcon_proc {
                     print OU "$alwayson{$_}\n";
                 }
             }
-            print OU $netiflog;
+            print OU $marks.$netiflog;
             close (OU);
             $savedpath = $form->{'savepath'};
         }
     }
     if (defined ($form->{"overwrite"}) && defined ($form->{'owpath'}) && (length ($form->{'owpath'}) > 0)) {
         if (open (OU, ">$form->{'owpath'}")) {
-            print OU $netiflog;
+            foreach $_ (keys %alwayson) {
+                if ($alwayson{$_} ne '') {
+                    print OU "$alwayson{$_}\n";
+                }
+            }
+            print OU $marks.$netiflog;
             close (OU);
             $savedpath = $form->{'owpath'};
         }
@@ -87,6 +96,20 @@ sub l00http_perionetifcon_proc {
     $tmp = $isp + int($totalifcon / 100000) / 10;
     print $sock "ISP: $tmp MB ($netifnoln) <a href=\"#end\">end</a>\n";
 
+    if ($marks ne '') {
+        $tmp = $totalifcon - $lasttotalifcon;
+        $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
+        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+        print $sock "<br>Delta: $tmp bytes.";
+
+        $tmp = $isp + int(($totalifcon - $lastisp * 1000000) / 100000) / 10;
+        $tmp = sprintf("%.1f", $tmp);
+        print $sock " ISP: $tmp MB";
+
+        $tmp = time - $lasttime;
+        print $sock " (${tmp}s)\n";
+    }
 
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -135,10 +158,67 @@ sub l00http_perionetifcon_proc {
     print $sock "</form>\n";
 
     if (length ($savedpath) > 5) {
-        print $sock "Launcher to last saved: <a href=\"/launcher.htm?path=$savedpath\">$savedpath</a><p>\n";
+        print $sock "Report generator: <a href=\"/rptnetifcon.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
 
-    print $sock "Currently ESTABLISHED connections:<pre>\n";
+
+    print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"mark\" value=\"Mark\"></td>\n";
+    print $sock "        <td>Remark: <input type=\"text\" size=\"12\" name=\"remark\" value=\"\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"clrmark\" value=\"Clear\"></td>\n";
+    print $sock "    </tr>\n";
+                                                
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
+    if (defined($form->{"clrmark"})) {
+        $marks = '';
+    }
+    if (defined($form->{"mark"})) {
+        # allow annotation with marking of current readings and delta from last
+        $tmp = $totalifcon;
+        $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
+        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+        $buf .= "Rx/Tx: $tmp bytes.";
+
+        $tmp = $isp + int($totalifcon / 100000) / 10;
+        $buf .= " ISP: $tmp MB ($netifnoln)";
+
+        if ($lasttime > 0) {
+            $tmp = $totalifcon - $lasttotalifcon;
+            $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
+            $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+            $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+            $buf .= ". Delta: $tmp bytes.";
+
+            $tmp = $isp + int(($totalifcon - $lastisp) / 100000) / 10;
+            $buf .= " $tmp MB";
+
+            $tmp = time - $lasttime;
+            $buf .= " (${tmp}s):: ";
+        } else {
+            $buf .= ":: ";
+        }
+        $buf .= " $form->{'remark'}\n";
+
+        # newest at top
+        $marks = $buf . $marks;
+
+        $lastisp = $isp + int($totalifcon / 100000) / 10;
+        $lasttotalifcon = $totalifcon;
+        $lasttime = time;
+    }
+
+    if ($marks ne '') {
+        print $sock "Marks:<pre>\n";
+        print $sock "$marks</pre>\n";
+    }
+
+    print $sock "Currently ESTABLISHED connections (exclude hot spot connections):<pre>\n";
     foreach $_ (sort keys %seennow) {
         if ($seennow{$_} eq 'ESTABLISHED') {
 		    s/::ffff://g;

@@ -7,6 +7,54 @@ package l00httpd;
 #use l00httpd;      # used for findInBuf
 
 my ($readName, $readBuf, @readAllLines, $readIdx, $writeName, $writeBuf);
+my ($debuglog, $debuglogstate);
+
+$debuglog = '';
+$debuglogstate = 0;
+
+#debugprint("calling $cnt\n");
+
+sub dbp {
+    my ($desc, $msg) = @_;
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    if ($debuglogstate == 0) {
+        # get name
+        if ($desc =~ /l00http_(.+?)_desc/) {
+            $desc = $1;
+        } else {
+            $desc = '(???)';
+        }
+        # last line was completed, print date/time
+        $debuglog .= sprintf ("%4d%02d%02d %02d%02d%02d: $desc: ", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+        $debuglog .= $msg;
+        if (!($msg =~ "\n")) {
+            # not a complete line, remember
+            $debuglogstate = 1;
+        }
+    } else {
+        # last line was not completed, just append
+        $debuglog .= $msg;
+        if ($msg =~ "\n") {
+            # complete line, reset
+            $debuglogstate = 0;
+        }
+    }
+
+    if (length($debuglog) > 200000) {
+        $debuglog = substr($debuglog, length($debuglog) - 200000, 200000);
+    }
+
+    1;
+}
+sub dbpget {
+    $debuglog;
+}
+sub dbpclr {
+    $debuglog = '';
+}
+
 
 
 #$buf = &l00httpd::urlencode ($buf);

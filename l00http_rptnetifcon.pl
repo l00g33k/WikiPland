@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00backup;
+use l00httpd;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -23,12 +24,12 @@ sub l00http_rptnetifcon_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $tmp);
-    my (@flds, $output);
+    my ($path, $fname, $tmp, $patt, $name);
+    my (@flds, $output, $leading, $st, $en, $trailing);
     my ($rx, $tx, $rxtx, $now, $svgifdt, $svgifacc);
     my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
     my ($lip, $lpt, $rip, $rpt, $conn, %connections, %hosts);
-    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson);
+    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson, %poorwhois);
 
 
     if (defined ($form->{'path'})) {
@@ -195,8 +196,54 @@ sub l00http_rptnetifcon_proc {
             # and remove from output
             $output =~ s/$_//g;
         }
-        print $sock "</pre>Total traffic by time slot (${timeslot}s):<p>\n";
+        print $sock "</pre>\n";
 
+        print $sock "Poor man's whois look-up: $ctrl->{'workdir'}rptnetifcon.cfg:<br>\n";
+        if (open(IN, "<$ctrl->{'workdir'}rptnetifcon.cfg")) {
+            undef %poorwhois;
+            print $sock "<pre>\n";
+#l00httpd::dbpclr();
+            while (<IN>) {
+                if (/^#/) {
+                    next;
+                }
+                if (($patt, $name) = /(.*)=>(.*)/) {
+                    print $sock "$patt is $name\n";
+                    l00httpd::dbp($config{'desc'}, "$patt is $name\n");
+                    #46.51.248-254.*=>AMAZON_AWS
+                    if (($leading, $st, $en, $trailing) = ($patt =~ /(.+?)\.(\d+)-(\d+)\.(.*)/)) {
+                        l00httpd::dbp($config{'desc'}, "range: $patt ($st, $en) is $name\n");
+                        for ($st..$en) {
+                            $patt = "$leading.$_.$trailing";
+                            l00httpd::dbp($config{'desc'}, "expanded: $patt is $name\n");
+                            $patt =~ s/\./\\./g;
+                            $patt =~ s/\*/\\d+/g;
+                            $poorwhois{$patt} = $name;
+                        }
+                    } else {
+                        l00httpd::dbp($config{'desc'}, "full octet: $patt is $name\n");
+                        $patt =~ s/\./\\./g;
+                        $patt =~ s/\*/\\d+/g;
+                        $poorwhois{$patt} = $name;
+                    }
+                }
+            }
+            print $sock "</pre>\n";
+            close(IN);
+        }
+        $_ = $ctrl->{'myip'};
+        s/\./\\./g;
+        $output =~ s/$_/me/g;
+        foreach $_ (sort keys %poorwhois) {
+            l00httpd::dbp($config{'desc'}, "subst: $_ is $poorwhois{$_}\n");
+            $output =~ s/$_/$poorwhois{$_}/g;
+        }
+
+        $_ = $ctrl->{'myip'};
+        s/\./\\./g;
+        print $sock "My IP is $_ (me)<br>\n";
+
+        print $sock "Total traffic by time slot (${timeslot}s):<p>\n";
         print $sock "$output<p>\n";
 
 
