@@ -75,7 +75,7 @@ sub l00http_periobattery_proc {
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/periobattery.htm\">Refresh</a><p> \n";
 
-    print $sock "${battperc}% ${battvolts}V ${batttemp}C ${battmA}mA. <a href=\"#end\">end</a>\n";
+    print $sock "${battperc}% ${battvolts}V ${batttemp}C ${battmA}mA. ($battcnt) <a href=\"#end\">end</a>\n";
 
     print $sock "<form action=\"/periobattery.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -113,7 +113,7 @@ sub l00http_periobattery_proc {
     print $sock "</form>\n";
 
     if (length ($savedpath) > 5) {
-        print $sock "Launcher to last saved: <a href=\"/launcher.htm?path=$savedpath\">$savedpath</a><p>\n";
+        print $sock "Report generator: <a href=\"/rptbattery.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
 
     # print table

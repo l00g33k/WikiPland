@@ -158,7 +158,7 @@ sub l00http_perionetifcon_proc {
     print $sock "</form>\n";
 
     if (length ($savedpath) > 5) {
-        print $sock "Launcher to last saved: <a href=\"/launcher.htm?path=$savedpath\">$savedpath</a><p>\n";
+        print $sock "Report generator: <a href=\"/rptnetifcon.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
 
 
