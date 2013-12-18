@@ -19,7 +19,7 @@ sub l00http_battery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    " A: battery: print battery level";
+    " battery: print battery level";
 }
 
 sub l00http_battery_proc (\%) {

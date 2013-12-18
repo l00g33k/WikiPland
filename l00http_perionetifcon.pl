@@ -35,7 +35,7 @@ sub l00http_perionetifcon_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $buf);
+    my ($tmp, $buf, $key, $val);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -46,6 +46,113 @@ sub l00http_perionetifcon_proc {
     }
     if (defined ($form->{"stop"})) {
         $interval = 0;
+    }
+    if (defined ($form->{"suspend"})) {
+        # suspend to sdcard so it can be resumed after restart
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
+        &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
+        &l00httpd::l00fwriteBuf($ctrl, "netifcnt=$netifcnt\n");
+        &l00httpd::l00fwriteBuf($ctrl, "totalifcon=$totalifcon\n");
+        &l00httpd::l00fwriteBuf($ctrl, "netifnoln=$netifnoln\n");
+        &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
+        if (&l00httpd::l00fwriteClose($ctrl)) {
+            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved'<p>\n";
+        }
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+        &l00httpd::l00fwriteBuf($ctrl, $netiflog);
+        if (&l00httpd::l00fwriteClose($ctrl)) {
+            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved'<p>\n";
+        }
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+        foreach $_ (sort keys %allsocksever) {
+            &l00httpd::l00fwriteBuf($ctrl, "$_ => $allsocksever{$_}\n");
+        }
+        if (&l00httpd::l00fwriteClose($ctrl)) {
+            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved'<p>\n";
+        }
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+        foreach $_ (sort keys %alwayson) {
+            &l00httpd::l00fwriteBuf($ctrl, "$_ => $alwayson{$_}\n");
+        }
+        if (&l00httpd::l00fwriteClose($ctrl)) {
+            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved'<p>\n";
+        }
+
+        l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
+        l00httpd::dbp($config{'desc'}, "interval=$interval\n");
+        l00httpd::dbp($config{'desc'}, "netifcnt=$netifcnt\n");
+        l00httpd::dbp($config{'desc'}, "totalifcon=$totalifcon\n");
+        l00httpd::dbp($config{'desc'}, "netifnoln=$netifnoln\n");
+        l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+        l00httpd::dbp($config{'desc'}, "netiflog:\n");
+        l00httpd::dbp($config{'desc'}, $netiflog);
+        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+        foreach $_ (sort keys %allsocksever) {
+            l00httpd::dbp($config{'desc'}, "$_ => $allsocksever{$_}\n");
+        }
+        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+        foreach $_ (sort keys %alwayson) {
+            l00httpd::dbp($config{'desc'}, "$_ => $alwayson{$_}\n");
+        }
+    }
+    if (defined ($form->{"resume"})) {
+        $interval = 0;
+        $netifcnt = 0;
+        $netiflog = '';
+        $totalifcon = 0;
+        $netifnoln = 0;
+        $savedpath = '';
+        undef %allsocksever;
+        undef %alwayson;
+
+        # resume from sdcard after restart
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($interval) = /interval=(\d+)/;
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($netifcnt) = /netifcnt=(\d+)/;
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($totalifcon) = /totalifcon=(\d+)/;
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($netifnoln) = /netifnoln=(\d+)/;
+        $_ = &l00httpd::l00freadLine($ctrl);
+        if (!(($savedpath) = /savedpath=(.+)/)) {
+            $savedpath = '';
+        }
+
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+        $netiflog = &l00httpd::l00freadAll($ctrl);
+
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            if (($key, $val) = /(.+) => (.+)/) {
+                $allsocksever{$key} = $val;
+            }
+        }
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            if (($key, $val) = /(.+) => (.+)/) {
+                $alwayson{$key} = $val;
+            }
+        }
+
+
+        l00httpd::dbp($config{'desc'}, "Resumed from sdcard:\n");
+        l00httpd::dbp($config{'desc'}, "interval=$interval\n");
+        l00httpd::dbp($config{'desc'}, "netifcnt=$netifcnt\n");
+        l00httpd::dbp($config{'desc'}, "totalifcon=$totalifcon\n");
+        l00httpd::dbp($config{'desc'}, "netifnoln=$netifnoln\n");
+        l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+        l00httpd::dbp($config{'desc'}, "netiflog:\n");
+        l00httpd::dbp($config{'desc'}, $netiflog);
+        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+        foreach $_ (sort keys %allsocksever) {
+            l00httpd::dbp($config{'desc'}, "$_ => $allsocksever{$_}\n");
+        }
+        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+        foreach $_ (sort keys %alwayson) {
+            l00httpd::dbp($config{'desc'}, "$_ => $alwayson{$_}\n");
+        }
     }
     if (defined ($form->{"clear"})) {
         $netifcnt = 0;
@@ -86,7 +193,7 @@ sub l00http_perionetifcon_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/perionetifcon.htm\">Refresh</a><p> \n";
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/perionetifcon.htm\">Refresh</a><br>\n";
 
     $tmp = $totalifcon;
     $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
@@ -112,7 +219,7 @@ sub l00http_perionetifcon_proc {
     }
 
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
     print $sock "    <tr>\n";
     print $sock "        <td>Run interval (sec, e.g. 2):</td>\n";
@@ -129,7 +236,7 @@ sub l00http_perionetifcon_proc {
     print $sock "</form>\n";
 
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"save\" value=\"Save new\"></td>\n";
@@ -143,15 +250,26 @@ sub l00http_perionetifcon_proc {
     print $sock "        <td><input type=\"text\" size=\"12\" name=\"owpath\" value=\"$savedpath\"></td>\n";
     print $sock "    </tr>\n";
                                                 
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Suspend\"> to sdcard</td>\n";
+    print $sock "    </tr>\n";
+
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"isp\" value=\"Set ISP\"></td>\n";
     print $sock "        <td>offset to match ISP meter: <input type=\"text\" size=\"4\" name=\"ispadj\" value=\"$isp\"></td>\n";
+    print $sock "    </tr>\n";
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"mark\" value=\"Mark\"></td>\n";
+    print $sock "        <td>Remark: <input type=\"text\" size=\"12\" name=\"remark\" value=\"\">\n";
+    print $sock "        <input type=\"submit\" name=\"clrmark\" value=\"Clear\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "</table>\n";
@@ -160,19 +278,6 @@ sub l00http_perionetifcon_proc {
     if (length ($savedpath) > 5) {
         print $sock "Report generator: <a href=\"/rptnetifcon.htm?path=$savedpath\">$savedpath</a><p>\n";
     }
-
-
-    print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"mark\" value=\"Mark\"></td>\n";
-    print $sock "        <td>Remark: <input type=\"text\" size=\"12\" name=\"remark\" value=\"\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"clrmark\" value=\"Clear\"></td>\n";
-    print $sock "    </tr>\n";
-                                                
-    print $sock "</table>\n";
-    print $sock "</form>\n";
 
     if (defined($form->{"clrmark"})) {
         $marks = '';
