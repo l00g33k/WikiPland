@@ -105,27 +105,32 @@ sub l00http_edit_proc2 {
             }
             if ($blklineno > 0) {
                 $blkbuf = '';
-                if ($form->{'path'} =~ /^l00:\/\//) {
-                    if (defined($ctrl->{'l00file'})) {
-                        if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-                            $blkbuf = $ctrl->{'l00file'}->{$form->{'path'}};
-		                }
-		            }
-	            } elsif (open (IN, "<$form->{'path'}")) {
-                    local $/ = undef;
-                    $blkbuf = <IN>;
-                    close (IN);
+                if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                    $blkbuf = &l00httpd::l00freadAll($ctrl);
                 }
+#               if ($form->{'path'} =~ /^l00:\/\//) {
+#                   if (defined($ctrl->{'l00file'})) {
+#                       if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
+#                           $blkbuf = $ctrl->{'l00file'}->{$form->{'path'}};
+#   	                }
+#   	            }
+#               } elsif (open (IN, "<$form->{'path'}")) {
+#                   local $/ = undef;
+#                   $blkbuf = <IN>;
+#                   close (IN);
+#               }
             }
             if ((length ($buffer) == 0) &&
                ($blklineno == 0)) {
                 # remove if size 0
-                if (!($form->{'path'} =~ /^l00:\/\//)) {
-                    # only delete disk file
-                    unlink ($form->{'path'});
-                } else {
-                    $ctrl->{'l00file'}->{$form->{'path'}} = '';
-                }
+                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                &l00httpd::l00fwriteClose($ctrl);
+#               if (!($form->{'path'} =~ /^l00:\/\//)) {
+#                   # only delete disk file
+#                   unlink ($form->{'path'});
+#               } else {
+#                   $ctrl->{'l00file'}->{$form->{'path'}} = '';
+#               }
             } else {
                 $outbuf = '';
                 # http://www.perlmonks.org/?node_id=1952
@@ -163,14 +168,19 @@ sub l00http_edit_proc2 {
                 close (OUT);
 
 
-                if ($form->{'path'} =~ /^l00:\/\//) {
-                    $ctrl->{'l00file'}->{$form->{'path'}} = $outbuf;
-	            } elsif (open (OUT, ">$form->{'path'}")) {
-                    print OUT $outbuf;
-                    close (OUT);
-                } else {
+                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                &l00httpd::l00fwriteBuf($ctrl, $outbuf);
+                if (&l00httpd::l00fwriteClose($ctrl)) {
                     print $sock "Unable to write '$form->{'path'}'<p>\n";
                 }
+#               if ($form->{'path'} =~ /^l00:\/\//) {
+#                   $ctrl->{'l00file'}->{$form->{'path'}} = $outbuf;
+#               } elsif (open (OUT, ">$form->{'path'}")) {
+#                   print OUT $outbuf;
+#                   close (OUT);
+#               } else {
+#                   print $sock "Unable to write '$form->{'path'}'<p>\n";
+#               }
                 $buffer = $outbuf;
             }
             $blklineno = 0;     # cancel block mode
@@ -206,18 +216,21 @@ sub l00http_edit_proc2 {
     } else {
         if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
             $tmp = '';
-            if ($form->{'path'} =~ /^l00:\/\//) {
-                if (defined($ctrl->{'l00file'})) {
-                    if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-                        $tmp = $ctrl->{'l00file'}->{$form->{'path'}};
-		            }
-		        }
-            } elsif (open (IN, "<$form->{'path'}")) {
-                # http://www.perlmonks.org/?node_id=1952
-                local $/ = undef;
-                $tmp = <IN>;
-                close (IN);
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                $tmp = &l00httpd::l00freadAll($ctrl);
             }
+#           if ($form->{'path'} =~ /^l00:\/\//) {
+#               if (defined($ctrl->{'l00file'})) {
+#                   if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
+#                       $tmp = $ctrl->{'l00file'}->{$form->{'path'}};
+#                   }
+#               }
+#           } elsif (open (IN, "<$form->{'path'}")) {
+#               # http://www.perlmonks.org/?node_id=1952
+#               local $/ = undef;
+#               $tmp = <IN>;
+#               close (IN);
+#           }
             $lineno = 1;
             $buffer = '';
             foreach $_ (split ("\n", $tmp)) {
@@ -362,17 +375,20 @@ sub l00http_edit_proc2 {
     print $sock "<p><pre>\n";
     $lineno = 1;
     $buffer = '';
-    if ($form->{'path'} =~ /^l00:\/\//) {
-        if (defined($ctrl->{'l00file'})) {
-            if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-                $buffer = $ctrl->{'l00file'}->{$form->{'path'}};
-		    }
-		}
-	} elsif (open (IN, "<$form->{'path'}")) {
-        local $/ = undef;
-        $buffer = <IN>;
-        close (IN);
+    if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+        $buffer = &l00httpd::l00freadAll($ctrl);
     }
+#   if ($form->{'path'} =~ /^l00:\/\//) {
+#       if (defined($ctrl->{'l00file'})) {
+#           if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
+#               $buffer = $ctrl->{'l00file'}->{$form->{'path'}};
+#           }
+#       }
+#   } elsif (open (IN, "<$form->{'path'}")) {
+#       local $/ = undef;
+#       $buffer = <IN>;
+#       close (IN);
+#   }
     $buffer =~ s/\r//g;
     @alllines = split ("\n", $buffer);
     foreach $line (@alllines) {

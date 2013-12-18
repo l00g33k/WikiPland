@@ -206,8 +206,8 @@ sub findInBuf  {
     $found;
 }
 
-#&l00httpd::readOpen($ctrl, $fname);
-sub readOpen {
+#&l00httpd::l00freadOpen($ctrl, $fname);
+sub l00freadOpen {
     my ($ctrl, $fname) = @_;
     my ($ret);
 
@@ -241,15 +241,15 @@ sub readOpen {
     $ret;
 }
 
-#$buf = &l00httpd::readAll($ctrl);
-sub readAll {
+#$buf = &l00httpd::l00freadAll($ctrl);
+sub l00freadAll {
     my ($ctrl) = @_;
 
     $readBuf;
 }
 
-#$buf = &l00httpd::readLine($ctrl);
-sub readLine {
+#$buf = &l00httpd::l00freadLine($ctrl);
+sub l00freadLine {
     my ($ctrl) = @_;
     my ($buf);
 
@@ -275,8 +275,8 @@ sub readLine {
 
 #my ($readName, $readBuf, @readAllLines, $writeName, $writeBuf);
 #
-#&l00httpd::writeOpen($ctrl, $fname);
-sub writeOpen {
+#&l00httpd::l00fwriteOpen($ctrl, $fname);
+sub l00fwriteOpen {
     my ($ctrl, $fname) = @_;
 
     $writeName = $fname;
@@ -285,8 +285,8 @@ sub writeOpen {
     1;
 }
 
-#&l00httpd::writeBuf($ctrl, $buf);
-sub writeBuf {
+#&l00httpd::l00fwriteBuf($ctrl, $buf);
+sub l00fwriteBuf {
     my ($ctrl, $buf) = @_;
 
     $writeBuf .= $buf;
@@ -294,20 +294,30 @@ sub writeBuf {
     1;
 }
 
-#&l00httpd::writeClose($ctrl);
-sub writeClose {
+#&l00httpd::l00fwriteClose($ctrl);
+sub l00fwriteClose {
     my ($ctrl) = @_;
+    my ($ret);
+
+    $ret = 0;   # non zero error
 
     if ($writeName =~ /^l00:\/\/./) {
         # ram file
         $ctrl->{'l00file'}->{$writeName} = $writeBuf;
     } else {
-	    if (open(OU, ">$writeName ")) {
-            print OU $writeBuf;
-			close (OU);
-		}
+        if ($writeBuf eq '') {
+            # write 0 bytes file is delete file.
+            unlink ($writeName);
+        } else {
+	        if (open(OU, ">$writeName")) {
+                print OU $writeBuf;
+			    close (OU);
+		    } else {
+                $ret = 1;
+            }
+        }
     }
-    1;
+    $ret;
 }
 
 #

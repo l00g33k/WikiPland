@@ -69,7 +69,8 @@ sub l00http_find_search {
     if ($prefmt eq '') {
         $lineend = '';
         print $sock "<pre>\n";
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= "<pre>\n";
+#       $ctrl->{'l00file'}->{'l00://find.pl'} .= "<pre>\n";
+        &l00httpd::l00fwriteBuf($ctrl, "<pre>\n");
     }
 
 
@@ -248,15 +249,18 @@ sub l00http_find_search {
         ($prefmt eq '')) {
         $output2 = join("\n", sort findsort split("\n", $output));
         print $sock $output2;
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= $output2;
+#       $ctrl->{'l00file'}->{'l00://find.pl'} .= $output2;
+        &l00httpd::l00fwriteBuf($ctrl, $output2);
     } else {
         print $sock $output;
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= $output;
+#       $ctrl->{'l00file'}->{'l00://find.pl'} .= $output;
+        &l00httpd::l00fwriteBuf($ctrl, $output);
     }
 
     if ($prefmt eq '') {
         print $sock "</pre>\n";
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= "</pre>\n";
+#       $ctrl->{'l00file'}->{'l00://find.pl'} .= "</pre>\n";
+        &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
     }
 
     ($mypath) = @_;
@@ -445,11 +449,12 @@ sub l00http_find_proc {
     print $sock "!!: Prefix !! to regex to list files without matching pattern<p>\n";
 
     if ($content ne '!!') {
-        $ctrl->{'l00file'}->{'l00://find.pl'} = '';
+#       $ctrl->{'l00file'}->{'l00://find.pl'} = '';
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://find.pl');
         foreach $thispath (split ('\|\|\|', $path)) {
             &l00http_find_search ($thispath, $ctrl);
-#           &l00http_find_search ($thispath);
         }
+        &l00httpd::l00fwriteClose($ctrl);
     }
 
     print $sock "<a name=\"end\"></a>\n";

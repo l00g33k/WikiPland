@@ -99,7 +99,6 @@ sub l00http_table_proc {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         # create shell script for vi
         if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
-#            print OUT "$ctrl->{'bbox'}vi $form->{'path'}\n";
             print OUT "vim $form->{'path'}\n";
             close (OUT);
         }
@@ -123,12 +122,15 @@ sub l00http_table_proc {
     } else {
         # read from file
         if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
-            if (open (IN, "<$form->{'path'}")) {
-                # http://www.perlmonks.org/?node_id=1952
-                local $/ = undef;
-                $buffer = <IN>;
-                close (IN);
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                $buffer = &l00httpd::l00freadAll($ctrl);
             }
+#           if (open (IN, "<$form->{'path'}")) {
+#               # http://www.perlmonks.org/?node_id=1952
+#               local $/ = undef;
+#               $buffer = <IN>;
+#               close (IN);
+#           }
         }
     }
 
@@ -358,13 +360,18 @@ sub l00http_table_proc {
         } else {
             &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
         }
-        if (open (OUT, ">$form->{'path'}")) {
-            # http://www.perlmonks.org/?node_id=1952
-            print OUT $buffer;
-            close (OUT);
-        } else {
+        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+        &l00httpd::l00fwriteBuf($ctrl, $buffer);
+        if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$form->{'path'}'<p>\n";
         }
+#       if (open (OUT, ">$form->{'path'}")) {
+#           # http://www.perlmonks.org/?node_id=1952
+#           print OUT $buffer;
+#           close (OUT);
+#       } else {
+#           print $sock "Unable to write '$form->{'path'}'<p>\n";
+#       }
     }
 
         

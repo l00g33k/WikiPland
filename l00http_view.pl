@@ -78,14 +78,14 @@ sub l00http_view_proc {
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         $found = '';
 
-#&l00httpd::readOpen($ctrl, $form->{'path'});
-#$buffer = &l00httpd::readAll($ctrl);
-        if (&l00httpd::readOpen($ctrl, $form->{'path'})) {
+#&l00httpd::l00freadOpen($ctrl, $form->{'path'});
+#$buffer = &l00httpd::l00freadAll($ctrl);
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
 #       if (open (IN, "<$form->{'path'}")) {
 #           local $/ = undef;
 #           $buffer = <IN>;
 #           close (IN);
-            $buffer = &l00httpd::readAll($ctrl);
+            $buffer = &l00httpd::l00freadAll($ctrl);
 
             # Some has only \r as line endings. So convert DOS \r\n to Unix \n
             # then convert \r to Unix \n

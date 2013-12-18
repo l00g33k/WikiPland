@@ -206,49 +206,49 @@ sub l00http_ls_proc {
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
                     $editable = 1;
 
-                $httphdr = "Content-Type: text/html\r\n";
-                print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                if (!defined ($form->{'bare'})) {
-                    if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
-                        print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
-                        # not ending in / or \, not a dir
-                        # clip.pl with \ on Windows
-                        $tmp = $path;
-                        if ($ctrl->{'os'} eq 'win') {
-                            $tmp =~ s/\//\\/g;
+                    $httphdr = "Content-Type: text/html\r\n";
+                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                    if (!defined ($form->{'bare'})) {
+                        if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
+                            print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                            # not ending in / or \, not a dir
+                            # clip.pl with \ on Windows
+                            $tmp = $path;
+                            if ($ctrl->{'os'} eq 'win') {
+                                $tmp =~ s/\//\\/g;
+                            }
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>$fname<br>\n";
+                        } else {
+                            print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
+                            # clip.pl with \ on Windows
+                            $tmp = $path;
+                            if ($ctrl->{'os'} eq 'win') {
+                                $tmp =~ s/\//\\/g;
+                            }
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>$fname<br>\n";
-                    } else {
-                        print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
-                        # clip.pl with \ on Windows
-                        $tmp = $path;
-                        if ($ctrl->{'os'} eq 'win') {
-                            $tmp =~ s/\//\\/g;
+                        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
+                        print $sock "<a href=\"#end\">end</a>\n";
+                        print $sock "<a href=\"#__toc__\">toc</a>\n";
+                        if (defined ($form->{'bkvish'})) {
+                            print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
+                        } else {
+                            print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
-                    }
-                    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
-                    print $sock "<a href=\"#end\">end</a>\n";
-                    print $sock "<a href=\"#__toc__\">toc</a>\n";
-                    if (defined ($form->{'bkvish'})) {
-                        print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
+                        print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
+                        print $sock "<a href=\"/edit.htm?path=$path\">Edit</a><hr>\n";
+                        if (defined ($form->{'bkvish'})) {
+                            print $sock "<pre>\n";
+                            print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
+                            print $sock "c:\\x\\$fname\n";
+                            print $sock "adb push \"c:\\x\\$fname\" \"$pname$fname\"\n";
+						    print $sock "perl c:\\x\\adb.pl c:\\x\\adb.in\n";
+                            print $sock "</pre>\n";
+                            print $sock "<hr>\n";
+                        }
                     } else {
-                        print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
+                        ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
                     }
-                    print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                    print $sock "<a href=\"/edit.htm?path=$path\">Edit</a><hr>\n";
-                    if (defined ($form->{'bkvish'})) {
-                        print $sock "<pre>\n";
-                        print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
-                        print $sock "c:\\x\\$fname\n";
-                        print $sock "adb push \"c:\\x\\$fname\" \"$pname$fname\"\n";
-						print $sock "perl c:\\x\\adb.pl c:\\x\\adb.in\n";
-                        print $sock "</pre>\n";
-                        print $sock "<hr>\n";
-                    }
-                } else {
-                    ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
-                }
 #l00:
                     # rendering as wiki text
                     $buf = "";
@@ -880,7 +880,6 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         $dirout = '';
         $fileout = '';
         # list internal pseudo files too
-#$ctrl->{'l00file'}->{'l00://test'} = 'test content';
         if (defined($ctrl->{'l00file'})) {
             $tmp = $ctrl->{'l00file'};
             foreach $_ (sort keys %$tmp) {

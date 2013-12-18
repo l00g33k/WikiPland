@@ -292,20 +292,20 @@ sub l00http_search_search {
             (length ($form->{'savepath'}) > 1)) {
             print $sock "Results saved: <a href=\"/ls.htm?path=$form->{'savepath'}\">$form->{'savepath'}</a><br>\n";
 #           if (open (OU, ">$form->{'savepath'}")) {
-            if (&l00httpd::writeOpen($ctrl, $form->{'savepath'})) {
+            if (&l00httpd::l00fwriteOpen($ctrl, $form->{'savepath'})) {
                 foreach $line (@outputsorted) {
                     @cols = split('<`>', $line);
 #                   print OU "||";
-                    &l00httpd::writeBuf($ctrl, "||");
+                    &l00httpd::l00fwriteBuf($ctrl, "||");
                     foreach $item (@cols) {
 #                       print OU "$item||";
-                        &l00httpd::writeBuf($ctrl, "$item||");
+                        &l00httpd::l00fwriteBuf($ctrl, "$item||");
                     }
 #                   print OU "\n";
-                    &l00httpd::writeBuf($ctrl, "\n");
+                    &l00httpd::l00fwriteBuf($ctrl, "\n");
                 }
 #               close (OU);
-				&l00httpd::writeClose($ctrl);
+				&l00httpd::l00fwriteClose($ctrl);
             }
         }
 

@@ -190,16 +190,16 @@ sub l00http_reader_proc (\%) {
 
                         # special slashdot.org handling: download linked pages
                         # slashdot.org post often contains links. Let's cache those too.
-                        if (&l00httpd::readOpen($ctrl, $cachename)) {
-                            while ($_ = &l00httpd::readLine($ctrl)) {
+                        if (&l00httpd::l00freadOpen($ctrl, $cachename)) {
+                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
                                 if (/href='\/mobizoom\.htm\?.+slashdot\.org/) {
                                     undef %duplicate;
                                     $morepage = $cachename;
-                                    while ($_ = &l00httpd::readLine($ctrl)) {
+                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
                                         if (/Posted[\t ]+by/) {
                                             # skip first line, may have link to poster
-                                            &l00httpd::readLine($ctrl);
-                                            while ($_ = &l00httpd::readLine($ctrl)) {
+                                            &l00httpd::l00freadLine($ctrl);
+                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
                                                 if (/You may like to read/) {
                                                     # end of slashdot post/comment begins
                                                     last;

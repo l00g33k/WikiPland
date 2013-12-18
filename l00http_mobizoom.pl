@@ -147,9 +147,9 @@ sub l00http_mobizoom_proc {
 
     if (defined ($form->{'path'})) {
         $mode1online2offline4download = 4;
-    } elsif (&l00httpd::readOpen($ctrl, $url)) {
+    } elsif (&l00httpd::l00freadOpen($ctrl, $url)) {
         $mode1online2offline4download = 2;
-        $wget = &l00httpd::readAll($ctrl);
+        $wget = &l00httpd::l00freadAll($ctrl);
     } else {
         $mode1online2offline4download = 1;
     }
@@ -186,9 +186,9 @@ sub l00http_mobizoom_proc {
 			# must be reading locally cached file
             $form->{'paste'} = undef;
             $form->{'fetch'} = 1;
-            if (&l00httpd::readOpen($ctrl, $url)) {
+            if (&l00httpd::l00freadOpen($ctrl, $url)) {
                 $mode1online2offline4download = 2;
-                $wget = &l00httpd::readAll($ctrl);
+                $wget = &l00httpd::l00freadAll($ctrl);
 			}
 		}
         #print "From clipboard:\n$url\n", if ($ctrl->{'debug'} >= 3);
@@ -241,9 +241,9 @@ sub l00http_mobizoom_proc {
         $para = 1;
         $nextpage = $url;
         if ($mode1online2offline4download == 4) {
-            &l00httpd::writeOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         } else {
-            &l00httpd::writeOpen($ctrl, 'l00://mobizoom.pl');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.pl');
         }
         if ($mode1online2offline4download == 2) {
             # <span style="font-size : 144%;">
@@ -262,9 +262,9 @@ sub l00http_mobizoom_proc {
                 if ($mode1online2offline4download & 3) {
                     print $sock $wget;
                 }
-                &l00httpd::writeBuf($ctrl, $wget);
+                &l00httpd::l00fwriteBuf($ctrl, $wget);
             } while ($getmore);
-            &l00httpd::writeClose($ctrl);
+            &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
