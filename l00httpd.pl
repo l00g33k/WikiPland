@@ -66,6 +66,8 @@ $shutdown = 0;
 
 undef $timeout;
 
+
+
 sub dlog {
     my $logm = pop;
     if ($debug >= 2) {
