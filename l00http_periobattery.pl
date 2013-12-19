@@ -59,16 +59,19 @@ sub l00http_periobattery_proc {
         if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_vals.saved'<p>\n";
         }
+
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved");
         &l00httpd::l00fwriteBuf($ctrl, $battlog);
         if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_battlog.saved'<p>\n";
         }
+
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved");
         &l00httpd::l00fwriteBuf($ctrl, $table);
         if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_table.saved'<p>\n";
         }
+
         l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
         l00httpd::dbp($config{'desc'}, "interval=$interval\n");
         l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
@@ -109,10 +112,18 @@ sub l00http_periobattery_proc {
         $_ = &l00httpd::l00freadLine($ctrl);
         ($lastdmesg) = /lastdmesg=(.+)/;
         $lastdmesg .= "\n";
+
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved");
         $battlog = &l00httpd::l00freadAll($ctrl);
+        if (!defined($battlog)) {
+            $battlog = '';
+        }
+
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved");
         $table = &l00httpd::l00freadAll($ctrl);
+        if (!defined($table)) {
+            $table = '';
+        }
 
         l00httpd::dbp($config{'desc'}, "Resumed from sdcard:\n");
         l00httpd::dbp($config{'desc'}, "interval=$interval\n");

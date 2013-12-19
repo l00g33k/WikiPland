@@ -26,7 +26,7 @@ sub l00http_rptbattery_proc {
     my ($path, $fname, $tmp, $output, $table);
     my ($lnno, $svgperc, $svgvolt, $svgtemp, $svgmA, $battcnt);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
-    my ($yr, $mo, $da, $hr, $mi, $se, $now);
+    my ($yr, $mo, $da, $hr, $mi, $se, $now, $fpath, $fname);
 
 
     if (defined ($form->{'path'})) {
@@ -46,8 +46,11 @@ sub l00http_rptbattery_proc {
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: ";
-        print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        ($fpath, $fname) = $form->{'path'} =~ /(.+\/)([^\/]+)/;
+        print $sock "<a href=\"/ls.htm?path=$fpath\">$fpath</a>";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$fname</a>\n";
     }
+    print $sock "<a href=\"/periobattery.htm\">periobattery</a><br>\n";
 
 
     # get submitted name and print greeting

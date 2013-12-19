@@ -30,6 +30,7 @@ sub l00http_rptnetifcon_proc {
     my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
     my ($lip, $lpt, $rip, $rpt, $conn, %connections, %hosts);
     my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson, %poorwhois);
+    my ($fpath, $fname);
 
 
     if (defined ($form->{'path'})) {
@@ -49,8 +50,11 @@ sub l00http_rptnetifcon_proc {
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: ";
-        print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        ($fpath, $fname) = $form->{'path'} =~ /(.+\/)([^\/]+)/;
+        print $sock "<a href=\"/ls.htm?path=$fpath\">$fpath</a>";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$fname</a>\n";
     }
+    print $sock "<a href=\"/perionetifcon.htm\">perionetifcon</a><br>\n";
 
 
     # get submitted name and print greeting

@@ -58,11 +58,13 @@ sub l00http_perionetifcon_proc {
         if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved'<p>\n";
         }
+
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
         &l00httpd::l00fwriteBuf($ctrl, $netiflog);
         if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved'<p>\n";
         }
+
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
         foreach $_ (sort keys %allsocksever) {
             &l00httpd::l00fwriteBuf($ctrl, "$_ => $allsocksever{$_}\n");
@@ -70,6 +72,7 @@ sub l00http_perionetifcon_proc {
         if (&l00httpd::l00fwriteClose($ctrl)) {
             print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved'<p>\n";
         }
+
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
         foreach $_ (sort keys %alwayson) {
             &l00httpd::l00fwriteBuf($ctrl, "$_ => $alwayson{$_}\n");
@@ -122,6 +125,9 @@ sub l00http_perionetifcon_proc {
 
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
         $netiflog = &l00httpd::l00freadAll($ctrl);
+        if (!defined($netiflog)) {
+            $netiflog = '';
+        }
 
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
