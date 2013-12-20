@@ -36,6 +36,9 @@ sub l00http_perionetifcon_suspend {
     &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
     &l00httpd::l00fwriteBuf($ctrl, "perltime=$perltime\n");
     &l00httpd::l00fwriteBuf($ctrl, "isp=$isp\n");
+    &l00httpd::l00fwriteBuf($ctrl, "lastisp=$lastisp\n");
+    &l00httpd::l00fwriteBuf($ctrl, "lasttotalifcon=$lasttotalifcon\n");
+    &l00httpd::l00fwriteBuf($ctrl, "lasttime=$lasttime\n");
     if (&l00httpd::l00fwriteClose($ctrl)) {
         print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved'<p>\n";
     }
@@ -44,6 +47,11 @@ sub l00http_perionetifcon_suspend {
     &l00httpd::l00fwriteBuf($ctrl, $netiflog);
     if (&l00httpd::l00fwriteClose($ctrl)) {
         print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved'<p>\n";
+    }
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved");
+    &l00httpd::l00fwriteBuf($ctrl, $marks);
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved'<p>\n";
     }
 
     &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
@@ -116,10 +124,28 @@ sub l00http_perionetifcon_resume {
         $_ = &l00httpd::l00freadLine($ctrl);
         ($isp) = /isp=(\d+)/;
 
+        $_ = &l00httpd::l00freadLine($ctrl);
+        if ((!defined($_)) || (!(($lastisp) = /lastisp=(\d+)/))) {
+            $lastisp = 0;
+        }
+        $_ = &l00httpd::l00freadLine($ctrl);
+        if ((!defined($_)) || (!(($lasttotalifcon) = /lasttotalifcon=(\d+)/))) {
+            $lasttotalifcon = 0;
+        }
+        $_ = &l00httpd::l00freadLine($ctrl);
+        if ((!defined($_)) || (!(($lasttime) = /lasttime=(\d+)/))) {
+            $lasttime = 0;
+        }
+
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
         $netiflog = &l00httpd::l00freadAll($ctrl);
         if (!defined($netiflog)) {
             $netiflog = '';
+        }
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved");
+        $marks = &l00httpd::l00freadAll($ctrl);
+        if (!defined($marks)) {
+            $marks = '';
         }
 
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
