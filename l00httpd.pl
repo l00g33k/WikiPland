@@ -22,6 +22,7 @@ $plpath =~ s/\/\/+/\//g;
 
 #use l00base64;      # used for decoding authentication
 use l00base64;      # used for decoding authentication
+use l00httpd;
 use IO::Socket;     # for networking
 use IO::Select;     # for networking
 
@@ -326,6 +327,7 @@ sub loadmods {
                 }
                 $tmp .= $mod;
                 $httpmodssort{$tmp} = $mod;
+                l00httpd::dbp("l00httpd", "Loaded $mod\n");
             }
         }
     }
@@ -722,6 +724,7 @@ print "sock timeout 3s\n";
                 $modcalled = '';
                 $shutdown = 0;
                 # reload all modules
+                l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
                 &loadmods;
             }
             if ($shutdown == 1) {

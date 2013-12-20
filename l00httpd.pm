@@ -23,8 +23,6 @@ sub dbp {
         # get name
         if ($desc =~ /l00http_(.+?)_desc/) {
             $desc = $1;
-        } else {
-            $desc = '(???)';
         }
         # last line was completed, print date/time
         $debuglog .= sprintf ("%4d%02d%02d %02d%02d%02d: $desc: ", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
@@ -253,21 +251,25 @@ sub l00freadLine {
     my ($ctrl) = @_;
     my ($buf);
 
-    if ($readIdx < 0) {
-	    # split monolithic buffer into array
-        @readAllLines = split("\n", $readBuf);
-		# reset index
-        $readIdx = 0;
-    }
+    if (defined($readBuf)) {
+        if ($readIdx < 0) {
+	        # split monolithic buffer into array
+            @readAllLines = split("\n", $readBuf);
+		    # reset index
+            $readIdx = 0;
+        }
 
-    if ($readIdx <= $#readAllLines) {
-	    # index in range of array
-        $buf = "$readAllLines[$readIdx]\n";
-        $readIdx++;
-	} else {
-	    # EOF
+        if ($readIdx <= $#readAllLines) {
+	        # index in range of array
+            $buf = "$readAllLines[$readIdx]\n";
+            $readIdx++;
+	    } else {
+	        # EOF
+            $buf = undef;
+	    }
+    } else {
         $buf = undef;
-	}
+    }
 
     $buf;
 }

@@ -23,93 +23,82 @@ $lasttotalifcon = -1;
 $lastisp = -1;
 $lasttime = -1;
 
-sub l00http_perionetifcon_desc {
-    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    # Descriptions to be displayed in the list of modules table
-    # at http://localhost:20337/
-    " C: perionetifcon: Periodic logging of netstat";
+sub l00http_perionetifcon_suspend {
+    my ($ctrl) = @_;
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+
+    # suspend to sdcard so it can be resumed after restart
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
+    &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
+    &l00httpd::l00fwriteBuf($ctrl, "netifcnt=$netifcnt\n");
+    &l00httpd::l00fwriteBuf($ctrl, "totalifcon=$totalifcon\n");
+    &l00httpd::l00fwriteBuf($ctrl, "netifnoln=$netifnoln\n");
+    &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
+    &l00httpd::l00fwriteBuf($ctrl, "perltime=$perltime\n");
+    &l00httpd::l00fwriteBuf($ctrl, "isp=$isp\n");
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved'<p>\n";
+    }
+
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+    &l00httpd::l00fwriteBuf($ctrl, $netiflog);
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved'<p>\n";
+    }
+
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+    foreach $_ (sort keys %allsocksever) {
+        &l00httpd::l00fwriteBuf($ctrl, "$_ => $allsocksever{$_}\n");
+    }
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved'<p>\n";
+    }
+
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+    foreach $_ (sort keys %alwayson) {
+        &l00httpd::l00fwriteBuf($ctrl, "$_ => $alwayson{$_}\n");
+    }
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved'<p>\n";
+    }
+
+    l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
+    l00httpd::dbp($config{'desc'}, "interval=$interval\n");
+    l00httpd::dbp($config{'desc'}, "netifcnt=$netifcnt\n");
+    l00httpd::dbp($config{'desc'}, "totalifcon=$totalifcon\n");
+    l00httpd::dbp($config{'desc'}, "netifnoln=$netifnoln\n");
+    l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+    l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
+    l00httpd::dbp($config{'desc'}, "isp=$isp\n");
+    l00httpd::dbp($config{'desc'}, "netiflog:\n");
+    l00httpd::dbp($config{'desc'}, $netiflog);
+    l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+    foreach $_ (sort keys %allsocksever) {
+        l00httpd::dbp($config{'desc'}, "$_ => $allsocksever{$_}\n");
+    }
+    l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+    foreach $_ (sort keys %alwayson) {
+        l00httpd::dbp($config{'desc'}, "$_ => $alwayson{$_}\n");
+    }
 }
 
-
-sub l00http_perionetifcon_proc {
-    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+sub l00http_perionetifcon_resume {
+    my ($ctrl) = @_;
     my $sock = $ctrl->{'sock'};     # dereference network socket
-    my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $buf, $key, $val);
- 
-    # get submitted name and print greeting
-    if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
-        $interval = $form->{"interval"};
-    }
-    if (defined ($form->{"ispadj"})) {
-        $isp = $form->{"ispadj"};
-    }
-    if (defined ($form->{"stop"})) {
-        $interval = 0;
-    }
-    if (defined ($form->{"suspend"})) {
-        # suspend to sdcard so it can be resumed after restart
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
-        &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
-        &l00httpd::l00fwriteBuf($ctrl, "netifcnt=$netifcnt\n");
-        &l00httpd::l00fwriteBuf($ctrl, "totalifcon=$totalifcon\n");
-        &l00httpd::l00fwriteBuf($ctrl, "netifnoln=$netifnoln\n");
-        &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved'<p>\n";
-        }
+    my ($key, $val);
 
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
-        &l00httpd::l00fwriteBuf($ctrl, $netiflog);
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved'<p>\n";
-        }
-
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
-        foreach $_ (sort keys %allsocksever) {
-            &l00httpd::l00fwriteBuf($ctrl, "$_ => $allsocksever{$_}\n");
-        }
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved'<p>\n";
-        }
-
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
-        foreach $_ (sort keys %alwayson) {
-            &l00httpd::l00fwriteBuf($ctrl, "$_ => $alwayson{$_}\n");
-        }
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved'<p>\n";
-        }
-
-        l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
-        l00httpd::dbp($config{'desc'}, "interval=$interval\n");
-        l00httpd::dbp($config{'desc'}, "netifcnt=$netifcnt\n");
-        l00httpd::dbp($config{'desc'}, "totalifcon=$totalifcon\n");
-        l00httpd::dbp($config{'desc'}, "netifnoln=$netifnoln\n");
-        l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
-        l00httpd::dbp($config{'desc'}, "netiflog:\n");
-        l00httpd::dbp($config{'desc'}, $netiflog);
-        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
-        foreach $_ (sort keys %allsocksever) {
-            l00httpd::dbp($config{'desc'}, "$_ => $allsocksever{$_}\n");
-        }
-        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
-        foreach $_ (sort keys %alwayson) {
-            l00httpd::dbp($config{'desc'}, "$_ => $alwayson{$_}\n");
-        }
-    }
-    if (defined ($form->{"resume"})) {
+    # resume from sdcard after restart
+    if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved")) {
         $interval = 0;
         $netifcnt = 0;
         $netiflog = '';
         $totalifcon = 0;
         $netifnoln = 0;
         $savedpath = '';
+        $isp = 0;
         undef %allsocksever;
         undef %alwayson;
 
-        # resume from sdcard after restart
-        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
         $_ = &l00httpd::l00freadLine($ctrl);
         ($interval) = /interval=(\d+)/;
         $_ = &l00httpd::l00freadLine($ctrl);
@@ -122,6 +111,10 @@ sub l00http_perionetifcon_proc {
         if (!(($savedpath) = /savedpath=(.+)/)) {
             $savedpath = '';
         }
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($perltime) = /perltime=(\d+)/;
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($isp) = /isp=(\d+)/;
 
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
         $netiflog = &l00httpd::l00freadAll($ctrl);
@@ -149,19 +142,69 @@ sub l00http_perionetifcon_proc {
         l00httpd::dbp($config{'desc'}, "totalifcon=$totalifcon\n");
         l00httpd::dbp($config{'desc'}, "netifnoln=$netifnoln\n");
         l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+        l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
+        l00httpd::dbp($config{'desc'}, "isp=$isp\n");
         l00httpd::dbp($config{'desc'}, "netiflog:\n");
         l00httpd::dbp($config{'desc'}, $netiflog);
         l00httpd::dbp($config{'desc'}, "allsocksever:\n");
         foreach $_ (sort keys %allsocksever) {
             l00httpd::dbp($config{'desc'}, "$_ => $allsocksever{$_}\n");
         }
-        l00httpd::dbp($config{'desc'}, "allsocksever:\n");
+        l00httpd::dbp($config{'desc'}, "alwayson:\n");
         foreach $_ (sort keys %alwayson) {
             l00httpd::dbp($config{'desc'}, "$_ => $alwayson{$_}\n");
         }
+
+        # delete .saved once resumed
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+    }
+}
+
+sub l00http_perionetifcon_desc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+
+    # auto resume
+    &l00http_perionetifcon_resume($ctrl);
+
+    # Descriptions to be displayed in the list of modules table
+    # at http://localhost:20337/
+    " C: perionetifcon: Periodic logging of netstat";
+}
+
+
+sub l00http_perionetifcon_proc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+    my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my ($tmp, $buf, $key, $val);
+ 
+    # get submitted name and print greeting
+    if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
+        $interval = $form->{"interval"};
+    }
+    if ((defined ($form->{"ispadj"})) && ($form->{"ispadj"} >= 0)) {
+        $isp = $form->{"ispadj"};
+    }
+    if (defined ($form->{"stop"})) {
+        $interval = 0;
+    }
+    if (defined ($form->{"suspend"})) {
+        &l00http_perionetifcon_suspend($ctrl);
+    }
+    if (defined ($form->{"resume"})) {
+        &l00http_perionetifcon_resume($ctrl);
     }
     if (defined ($form->{"clear"})) {
+        $interval = 0;
         $netifcnt = 0;
+        $isp = 0;
         $netiflog = '';
         $totalifcon = 0;
         $netifnoln = 0;
@@ -209,6 +252,41 @@ sub l00http_perionetifcon_proc {
     $tmp = $isp + int($totalifcon / 100000) / 10;
     print $sock "ISP: $tmp MB ($netifnoln) <a href=\"#end\">end</a>\n";
 
+    if (defined($form->{"mark"})) {
+        # allow annotation with marking of current readings and delta from last
+        $tmp = $totalifcon;
+        $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
+        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+        $buf .= "Rx/Tx: $tmp bytes.";
+
+        $tmp = $isp + int($totalifcon / 100000) / 10;
+        $buf .= " ISP: $tmp MB ($netifnoln)";
+
+        if ($lasttime > 0) {
+            $tmp = $totalifcon - $lasttotalifcon;
+            $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
+            $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+            $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
+            $buf .= ". Delta: $tmp bytes.";
+
+            $tmp = $isp + int(($totalifcon - $lastisp) / 100000) / 10;
+            $buf .= " $tmp MB";
+
+            $tmp = time - $lasttime;
+            $buf .= " (${tmp}s):: ";
+        } else {
+            $buf .= ":: ";
+        }
+        $buf .= " $form->{'remark'}\n";
+
+        # newest at top
+        $marks = $buf . $marks;
+
+        $lastisp = $isp + int($totalifcon / 100000) / 10;
+        $lasttotalifcon = $totalifcon;
+        $lasttime = time;
+    }
     if ($marks ne '') {
         $tmp = $totalifcon - $lasttotalifcon;
         $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
@@ -257,8 +335,12 @@ sub l00http_perionetifcon_proc {
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Suspend\"> to sdcard</td>\n";
+    if (-e "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved") {
+        print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"></td>\n";
+    } else {
+        print $sock "        <td>Not Saved</td>\n";
+    }
+    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Save\"> to sdcard</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -282,46 +364,13 @@ sub l00http_perionetifcon_proc {
     print $sock "</form>\n";
 
     if (length ($savedpath) > 5) {
-        print $sock "Report generator: <a href=\"/rptnetifcon.htm?path=$savedpath\">$savedpath</a><p>\n";
+        #print $sock "Report generator: <a href=\"/rptnetifcon.htm?path=$savedpath\">$savedpath</a><p>\n";
+        $savedpath =~ /^(.+\/)([^\/]+)$/;
+        print $sock "Report generator: <a href=\"/ls.htm?path=$1\">$1</a><a href=\"/rptnetifcon.htm?path=$savedpath\">$2</a><p>\n";
     }
 
     if (defined($form->{"clrmark"})) {
         $marks = '';
-    }
-    if (defined($form->{"mark"})) {
-        # allow annotation with marking of current readings and delta from last
-        $tmp = $totalifcon;
-        $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
-        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
-        $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
-        $buf .= "Rx/Tx: $tmp bytes.";
-
-        $tmp = $isp + int($totalifcon / 100000) / 10;
-        $buf .= " ISP: $tmp MB ($netifnoln)";
-
-        if ($lasttime > 0) {
-            $tmp = $totalifcon - $lasttotalifcon;
-            $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
-            $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
-            $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;
-            $buf .= ". Delta: $tmp bytes.";
-
-            $tmp = $isp + int(($totalifcon - $lastisp) / 100000) / 10;
-            $buf .= " $tmp MB";
-
-            $tmp = time - $lasttime;
-            $buf .= " (${tmp}s):: ";
-        } else {
-            $buf .= ":: ";
-        }
-        $buf .= " $form->{'remark'}\n";
-
-        # newest at top
-        $marks = $buf . $marks;
-
-        $lastisp = $isp + int($totalifcon / 100000) / 10;
-        $lasttotalifcon = $totalifcon;
-        $lasttime = time;
     }
 
     if ($marks ne '') {

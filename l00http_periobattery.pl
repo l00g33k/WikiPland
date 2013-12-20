@@ -26,65 +26,56 @@ $tablehdr = "||#||level||vol||C||curr||chg src||chg en||over vchg||batt state||t
 $firstdmesg = '';
 $lastdmesg = '';
 
-sub l00http_periobattery_desc {
-    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    # Descriptions to be displayed in the list of modules table
-    # at http://localhost:20337/
-    " C: periobattery: Periodic logging of battery by dmesg";
+sub l00http_periobattery_suspend {
+    my ($ctrl) = @_;
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+
+    # suspend to sdcard so it can be resumed after restart
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved");
+    &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
+    &l00httpd::l00fwriteBuf($ctrl, "battcnt=$battcnt\n");
+    &l00httpd::l00fwriteBuf($ctrl, "battpolls=$battpolls\n");
+    &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
+    &l00httpd::l00fwriteBuf($ctrl, "perltime=$perltime\n");
+    &l00httpd::l00fwriteBuf($ctrl, "firstdmesg=$firstdmesg");
+    &l00httpd::l00fwriteBuf($ctrl, "lastdmesg=$lastdmesg");
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_vals.saved'<p>\n";
+    }
+
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved");
+    &l00httpd::l00fwriteBuf($ctrl, $battlog);
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_battlog.saved'<p>\n";
+    }
+
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved");
+    &l00httpd::l00fwriteBuf($ctrl, $table);
+    if (&l00httpd::l00fwriteClose($ctrl)) {
+        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_table.saved'<p>\n";
+    }
+
+    l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
+    l00httpd::dbp($config{'desc'}, "interval=$interval\n");
+    l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
+    l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
+    l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+    l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
+    l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
+    l00httpd::dbp($config{'desc'}, "lastdmesg=$lastdmesg");
+    l00httpd::dbp($config{'desc'}, "battlog:\n");
+    l00httpd::dbp($config{'desc'}, $battlog);
+    l00httpd::dbp($config{'desc'}, "table:\n");
+    l00httpd::dbp($config{'desc'}, $table);
 }
 
-
-sub l00http_periobattery_proc {
-    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+sub l00http_periobattery_resume {
+    my ($ctrl) = @_;
     my $sock = $ctrl->{'sock'};     # dereference network socket
-    my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp);
- 
-    # get submitted name and print greeting
-    if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
-        $interval = $form->{"interval"};
-    }
-    if (defined ($form->{"stop"})) {
-        $interval = 0;
-    }
-    if (defined ($form->{"suspend"})) {
-        # suspend to sdcard so it can be resumed after restart
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved");
-        &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
-        &l00httpd::l00fwriteBuf($ctrl, "battcnt=$battcnt\n");
-        &l00httpd::l00fwriteBuf($ctrl, "battpolls=$battpolls\n");
-        &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
-        &l00httpd::l00fwriteBuf($ctrl, "firstdmesg=$firstdmesg");
-        &l00httpd::l00fwriteBuf($ctrl, "lastdmesg=$lastdmesg");
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_vals.saved'<p>\n";
-        }
+    my ($key, $val);
 
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved");
-        &l00httpd::l00fwriteBuf($ctrl, $battlog);
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_battlog.saved'<p>\n";
-        }
-
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved");
-        &l00httpd::l00fwriteBuf($ctrl, $table);
-        if (&l00httpd::l00fwriteClose($ctrl)) {
-            print $sock "Unable to write '$ctrl->{'workdir'}del/l00_periobattery_table.saved'<p>\n";
-        }
-
-        l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
-        l00httpd::dbp($config{'desc'}, "interval=$interval\n");
-        l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
-        l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
-        l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
-        l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
-        l00httpd::dbp($config{'desc'}, "lastdmesg=$lastdmesg");
-        l00httpd::dbp($config{'desc'}, "battlog:\n");
-        l00httpd::dbp($config{'desc'}, $battlog);
-        l00httpd::dbp($config{'desc'}, "table:\n");
-        l00httpd::dbp($config{'desc'}, $table);
-    }
-    if (defined ($form->{"resume"})) {
+    # resume from sdcard after restart
+    if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved")) {
         $interval = 0;
         $battcnt = 0;
         $battlog = '';
@@ -94,8 +85,6 @@ sub l00http_periobattery_proc {
         $lastdmesg = '';
         $table = '';
 
-        # resume from sdcard after restart
-        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved");
         $_ = &l00httpd::l00freadLine($ctrl);
         ($interval) = /interval=(\d+)/;
         $_ = &l00httpd::l00freadLine($ctrl);
@@ -106,6 +95,8 @@ sub l00http_periobattery_proc {
         if (!(($savedpath) = /savedpath=(.+)/)) {
             $savedpath = '';
         }
+        $_ = &l00httpd::l00freadLine($ctrl);
+        ($perltime) = /perltime=(\d+)/;
         $_ = &l00httpd::l00freadLine($ctrl);
         ($firstdmesg) = /firstdmesg=(.+)/;
         $firstdmesg .= "\n";
@@ -130,14 +121,58 @@ sub l00http_periobattery_proc {
         l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
         l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
         l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+        l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
         l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
         l00httpd::dbp($config{'desc'}, "lastdmesg=$lastdmesg");
         l00httpd::dbp($config{'desc'}, "battlog:\n");
         l00httpd::dbp($config{'desc'}, $battlog);
         l00httpd::dbp($config{'desc'}, "table:\n");
         l00httpd::dbp($config{'desc'}, $table);
+
+        # delete .saved once resumed
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+    }
+}
+
+sub l00http_periobattery_desc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+
+    # auto resume
+    &l00http_periobattery_resume($ctrl);
+
+    # Descriptions to be displayed in the list of modules table
+    # at http://localhost:20337/
+    " C: periobattery: Periodic logging of battery by dmesg";
+}
+
+
+sub l00http_periobattery_proc {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+    my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my ($tmp);
+ 
+    # get submitted name and print greeting
+    if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
+        $interval = $form->{"interval"};
+    }
+    if (defined ($form->{"stop"})) {
+        $interval = 0;
+    }
+    if (defined ($form->{"suspend"})) {
+        &l00http_periobattery_suspend($ctrl);
+    }
+    if (defined ($form->{"resume"})) {
+        &l00http_periobattery_resume($ctrl);
     }
     if (defined ($form->{"clear"})) {
+        $interval = 0;
         $battcnt = 0;
         $battlog = '';
         $battpolls = 0;
@@ -203,15 +238,21 @@ sub l00http_periobattery_proc {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Suspend\"> to sdcard</td>\n";
+    if (-e "$ctrl->{'workdir'}del/l00_periobattery_vals.saved") {
+        print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"></td>\n";
+    } else {
+        print $sock "        <td>Not Saved</td>\n";
+    }
+    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Save\"> to sdcard</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
     print $sock "</form>\n";
 
     if (length ($savedpath) > 5) {
-        print $sock "Report generator: <a href=\"/rptbattery.htm?path=$savedpath\">$savedpath</a><br>\n";
+        #print $sock "Report generator: <a href=\"/rptbattery.htm?path=$savedpath\">$savedpath</a><br>\n";
+        $savedpath =~ /^(.+\/)([^\/]+)$/;
+        print $sock "Report generator: <a href=\"/ls.htm?path=$1\">$1</a><a href=\"/rptbattery.htm?path=$savedpath\">$2</a><p>\n";
     }
     print $sock "<pre>$lastdmesg$firstdmesg</pre>\n";
 

@@ -70,11 +70,16 @@ sub svg_curveXY2screenXY {
 
     # rescale
     if (defined ($svgparams{"$name"})) {
- 
-        $xx = ($xx - $svgparams{"$name:minx"}) / 
-              ($svgparams{"$name:maxx"} - $svgparams{"$name:minx"}) *
-              ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
-        if (($svgparams{"$name:$idx:maxy"} - $svgparams{"$name:$idx:miny"}) == 0) {
+        if ($svgparams{"$name:maxx"} == $svgparams{"$name:minx"}) {
+            # a constant x
+            $xx = 0.5 *
+                  ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
+        } else {
+            $xx = ($xx - $svgparams{"$name:minx"}) / 
+                  ($svgparams{"$name:maxx"} - $svgparams{"$name:minx"}) *
+                  ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
+        }
+        if ($svgparams{"$name:$idx:maxy"} == $svgparams{"$name:$idx:miny"}) {
             # a constant y
             $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
                   (0.5 * ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;

@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use l00backup;
 use l00httpd;
+use l00svg;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -26,11 +27,11 @@ sub l00http_rptnetifcon_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $fname, $tmp, $patt, $name);
     my (@flds, $output, $leading, $st, $en, $trailing);
-    my ($rx, $tx, $rxtx, $now, $svgifdt, $svgifacc);
+    my ($rx, $tx, $rxtx, $now, $nowlast, $svgifdt, $svgifdtlin, $svgifacc);
     my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
     my ($lip, $lpt, $rip, $rpt, $conn, %connections, %hosts);
     my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson, %poorwhois);
-    my ($fpath, $fname);
+    my ($fpath, $bytespers);
 
 
     if (defined ($form->{'path'})) {
@@ -63,6 +64,7 @@ sub l00http_rptnetifcon_proc {
         $tx = 0;
         $rxtx = 0;
         $svgifdt = '';
+        $svgifdtlin = '';
         $svgifacc = '';
         $timestart = 0;
         $lnno = 0;
@@ -73,8 +75,11 @@ sub l00http_rptnetifcon_proc {
         $output .= "<tr>\n";
         $output .= "<td>timestamp</td>\n";
         $output .= "<td>bytes</td>\n";
+        $output .= "<td>bytes/s</td>\n";
         $output .= "<td>sock pairs</td>\n";
         $output .= "</tr>\n";
+        $nowlast = 0;
+        $bytespers = 0;
         while (<IN>) {
             s/\r//;
             s/\n//;
@@ -83,6 +88,7 @@ sub l00http_rptnetifcon_proc {
             $timestamp = substr($_, 0, 15);
             if (($yr, $mo, $da, $hr, $mi, $se) = /^(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d),/) {
                 #20131213 214805,net,tcp6,local,remote,::ffff:10.72.6.54,56079,::ffff:173.194.79.108,993,conn
+                #0               1   2    3     4      5                 6     7                     8   9
                 #20131213 214807,if,rx,tx,rmnet0,0,120
                 # convert to seconds
                 $yr -= 1900;
@@ -102,8 +108,17 @@ sub l00http_rptnetifcon_proc {
                     $tmp = $flds[5]+$flds[6];
                     if ($tmp > 0) {
                         $slotrxtx += $tmp;
-                        $tmp = sprintf("%.2f", log($tmp) / log(10));
-                        $svgifdt .= "$now,$tmp ";
+                        $bytespers += $tmp;
+                        if ($nowlast > 0) {
+                            # compute bytes/sec
+                            if (($now - $nowlast) != 0) {
+                                $bytespers /= ($now - $nowlast);
+                                $svgifdtlin .= "$now,$bytespers ";
+                                $tmp = sprintf("%.2f", log($bytespers) / log(10));
+                                $svgifdt .= "$now,$tmp ";
+                                $bytespers = 0;
+                            }
+                        }
                     }
                     $svgifacc .= "$now,$rxtx ";
                 } elsif ($flds[1] eq 'net') {
@@ -133,6 +148,7 @@ sub l00http_rptnetifcon_proc {
                     $output .= "<tr>\n";
                     $output .= "<td>$timestamp</td>\n";
                     $output .= "<td>$slotrxtx</td>\n";
+                    $output .= "<td>". int($slotrxtx / ($now - $timestart)) ."</td>\n";
                     $output .= "<td>\n";
                     foreach $conn (sort keys %activeconn) {
                         if (defined($activeconn{$conn})) {
@@ -148,12 +164,18 @@ sub l00http_rptnetifcon_proc {
                     $output .= "</tr>\n";
                     $timestart = 0;
                 }
+                $nowlast = $now;
             }
         }
         # last (partial) time slot, print summary
         $output .= "<tr>\n";
         $output .= "<td>$timestamp</td>\n";
         $output .= "<td>$slotrxtx</td>\n";
+        if (($now - $timestart) == 0) {
+            $output .= "<td>$slotrxtx / 0 sec</td>\n";
+        } else {
+            $output .= "<td>". int($slotrxtx / ($now - $timestart)) ."</td>\n";
+        }
         $output .= "<td>\n";
         foreach $conn (sort keys %activeconn) {
             if (defined($activeconn{$conn})) {
@@ -189,6 +211,7 @@ sub l00http_rptnetifcon_proc {
         print $sock "<hr><a href=\"#top\">Jump to top</a>,\n";
         print $sock "<a name=\"sum\"></a>\n";
         print $sock "<a href=\"#sum\">summary</a>,\n";
+        print $sock "<a href=\"#graphs\">graphs</a>,\n";
         print $sock "<a href=\"#local\">local ip</a>,\n";
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a><p>\n";
@@ -202,7 +225,7 @@ sub l00http_rptnetifcon_proc {
         }
         print $sock "</pre>\n";
 
-        print $sock "Poor man's whois look-up: $ctrl->{'workdir'}rptnetifcon.cfg:<br>\n";
+        print $sock "Poor man's whois look-up: <a href=\"/ls.htm?path=$ctrl->{'workdir'}rptnetifcon.cfg\">$ctrl->{'workdir'}rptnetifcon.cfg</a><br>\n";
         if (open(IN, "<$ctrl->{'workdir'}rptnetifcon.cfg")) {
             undef %poorwhois;
             print $sock "<pre>\n";
@@ -211,6 +234,8 @@ sub l00http_rptnetifcon_proc {
                 if (/^#/) {
                     next;
                 }
+                s/\r//;
+                s/\n//;
                 if (($patt, $name) = /(.*)=>(.*)/) {
                     print $sock "$patt is $name\n";
                     l00httpd::dbp($config{'desc'}, "$patt is $name\n");
@@ -235,34 +260,44 @@ sub l00http_rptnetifcon_proc {
             print $sock "</pre>\n";
             close(IN);
         }
-        $_ = $ctrl->{'myip'};
-        s/\./\\./g;
-        $output =~ s/$_/me/g;
+        if (defined($ctrl->{'myip'})) {
+            $_ = $ctrl->{'myip'};
+            s/\./\\./g;
+            $output =~ s/$_/me/g;
+        }
         foreach $_ (sort keys %poorwhois) {
             l00httpd::dbp($config{'desc'}, "subst: $_ is $poorwhois{$_}\n");
             $output =~ s/$_/$poorwhois{$_}/g;
         }
 
-        $_ = $ctrl->{'myip'};
-        s/\./\\./g;
-        print $sock "My IP is $_ (me)<br>\n";
+        if (defined($ctrl->{'myip'})) {
+            $_ = $ctrl->{'myip'};
+            s/\./\\./g;
+            print $sock "My IP is $_ (me)\n";
+        }
 
-        print $sock "Total traffic by time slot (${timeslot}s):<p>\n";
+        print $sock "<br>Total traffic by time slot (${timeslot}s):<p>\n";
         print $sock "$output<p>\n";
 
 
+        print $sock "<a name=\"graphs\"></a>\n";
         if ($svgifdt ne '') {
             &l00svg::plotsvg ('ifconfigdt', $svgifdt, 500, 300);
-            print $sock "<a href=\"/svg.htm?graph=ifconfigdt&view=\"><img src=\"/svg.htm?graph=ifconfigdt\" alt=\"alt\"></a>\n";
+            print $sock "<a href=\"/svg.htm?graph=ifconfigdt&view=\"><img src=\"/svg.htm?graph=ifconfigdt\" alt=\"logarithmic bytes/sec over time\"></a>\n";
+        }
+        if ($svgifdtlin ne '') {
+            &l00svg::plotsvg ('ifconfigdtlin', $svgifdtlin, 500, 300);
+            print $sock "<a href=\"/svg.htm?graph=ifconfigdtlin&view=\"><img src=\"/svg.htm?graph=ifconfigdtlin\" alt=\"bytes/sec over time\"></a>\n";
         }
         if ($svgifdt ne '') {
             &l00svg::plotsvg ('ifconfigacc', $svgifacc, 500, 300);
-            print $sock "<a href=\"/svg.htm?graph=ifconfigacc&view=\"><img src=\"/svg.htm?graph=ifconfigacc\" alt=\"alt\"></a>\n";
+            print $sock "<a href=\"/svg.htm?graph=ifconfigacc&view=\"><img src=\"/svg.htm?graph=ifconfigacc\" alt=\"cumulative bytes over time\"></a>\n";
         }
 
         print $sock "<a name=\"local\"></a>\n";
         print $sock "<hr><a href=\"#top\">Jump to top</a>,\n";
         print $sock "<a href=\"#sum\">summary</a>,\n";
+        print $sock "<a href=\"#graphs\">graphs</a>,\n";
         print $sock "<a href=\"#local\">local ip</a>,\n";
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a>\n";
@@ -286,6 +321,7 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a name=\"remote\"></a>\n";
         print $sock "<hr><a href=\"#top\">Jump to top</a>,\n";
         print $sock "<a href=\"#sum\">summary</a>,\n";
+        print $sock "<a href=\"#graphs\">graphs</a>,\n";
         print $sock "<a href=\"#local\">local ip</a>,\n";
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a>\n";
@@ -309,6 +345,7 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a name=\"socket\"></a>\n";
         print $sock "<hr><a href=\"#top\">Jump to top</a>,\n";
         print $sock "<a href=\"#sum\">summary</a>,\n";
+        print $sock "<a href=\"#graphs\">graphs</a>,\n";
         print $sock "<a href=\"#local\">local ip</a>,\n";
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a>\n";
@@ -320,6 +357,7 @@ sub l00http_rptnetifcon_proc {
     }
 
     print $sock "<hr><a href=\"#top\">Jump to top</a>,\n";
+    print $sock "<a href=\"#graphs\">graphs</a>,\n";
     print $sock "<a href=\"#local\">local ip</a>,\n";
     print $sock "<a href=\"#remote\">remote ip</a>,\n";
     print $sock "<a href=\"#socket\">socket pairs</a>\n";

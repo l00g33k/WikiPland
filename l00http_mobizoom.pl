@@ -250,6 +250,7 @@ sub l00http_mobizoom_proc {
             $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/g;
             print $sock $wget;
         } else {
+            &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
             do {
                 $getmore = 0;
                 $wget = &l00http_mobizoom_wget ($nextpage, $zoom);
