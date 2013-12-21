@@ -85,6 +85,9 @@ sub makeanchor {
     my ($jump, $url, $anchor, $tag);
 
     $tag = $ttl;
+    # $ttl, title, may include font control. remove all HTML tags
+    #  <font style="color:black;background-color:silver">Buy</font>
+    $tag =~ s/<.+?>//g;
     $tag =~ s/[^0-9A-Za-z]/_/g;
 
     if ($lvl > 0) {
