@@ -130,10 +130,13 @@ sub l00http_periobattery_resume {
         l00httpd::dbp($config{'desc'}, $table);
 
         # delete .saved once resumed
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_vals.saved");
         &l00httpd::l00fwriteClose($ctrl);
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_battlog.saved");
         &l00httpd::l00fwriteClose($ctrl);
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_periobattery_table.saved");
         &l00httpd::l00fwriteClose($ctrl);
     }

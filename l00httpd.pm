@@ -7,7 +7,7 @@ package l00httpd;
 #use l00httpd;      # used for findInBuf
 
 my ($readName, $readBuf, @readAllLines, $readIdx, $writeName, $writeBuf);
-my ($debuglog, $debuglogstate);
+my ($debuglog, $debuglogstate, %poorwhois);
 
 $debuglog = '';
 $debuglogstate = 0;
@@ -322,11 +322,57 @@ sub l00fwriteClose {
     $ret;
 }
 
-#
-#&l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
-#
 
 
+#&l00httpd::l00npoormanrdns($ctrl, $myname, $fullpath);
+sub l00npoormanrdns {
+    my ($ctrl, $myname, $fullpath) = @_;
+    my ($ret, $patt, $name);
+    my ($leading, $st, $en, $trailing);
+
+    $ret = '';
+
+    &dbp($myname.'l00httpd.pm', "reading '$fullpath'\n");
+    if (open(IN, "<$fullpath")) {
+        undef %poorwhois;
+        while (<IN>) {
+            if (/^#/) {
+                next;
+            }
+            s/\r//;
+            s/\n//;
+            if (($patt, $name) = /(.*)=>(.*)/) {
+                $ret .= "$patt is $name\n";
+                &dbp($myname.'l00httpd.pm', "$patt is $name\n");
+                #46.51.248-254.*=>AMAZON_AWS
+                if (($leading, $st, $en, $trailing) = ($patt =~ /(.+?)\.(\d+)-(\d+)\.(.*)/)) {
+                    &dbp($myname.'l00httpd.pm', "range: $patt ($st, $en) is $name\n");
+                    for ($st..$en) {
+                        $patt = "$leading.$_.$trailing";
+                        &dbp($myname.'l00httpd.pm', "expanded: $patt is $name\n");
+                        $patt =~ s/\./\\./g;
+                        $patt =~ s/\*/\\d+/g;
+                        $poorwhois{$patt} = $name;
+                    }
+                } else {
+                    &dbp($myname.'l00httpd.pm', "full octet: $patt is $name\n");
+                    $patt =~ s/\./\\./g;
+                    $patt =~ s/\*/\\d+/g;
+                    $poorwhois{$patt} = $name;
+                }
+            }
+        }
+        close(IN);
+    }
+
+
+    $ret;
+}
+
+#&l00httpd::l00npoormanrdnshash($ctrl);
+sub l00npoormanrdnshash {
+
+    \%poorwhois
+}
 
 1;
-

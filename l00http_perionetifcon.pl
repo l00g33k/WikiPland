@@ -182,12 +182,19 @@ sub l00http_perionetifcon_resume {
         }
 
         # delete .saved once resumed
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
         &l00httpd::l00fwriteClose($ctrl);
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
         &l00httpd::l00fwriteClose($ctrl);
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved", 0, 0);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
         &l00httpd::l00fwriteClose($ctrl);
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved", 0, 0);
         &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
         &l00httpd::l00fwriteClose($ctrl);
     }
@@ -209,7 +216,7 @@ sub l00http_perionetifcon_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $buf, $key, $val);
+    my ($tmp, $buf, $key, $val, $poorwhois);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -405,9 +412,14 @@ sub l00http_perionetifcon_proc {
     }
 
     print $sock "Currently ESTABLISHED connections (exclude hot spot connections):<pre>\n";
+    &l00httpd::l00npoormanrdns($ctrl, $config{'desc'}, "$ctrl->{'workdir'}rptnetifcon.cfg");
+    $poorwhois = &l00httpd::l00npoormanrdnshash($ctrl);
     foreach $_ (sort keys %seennow) {
         if ($seennow{$_} eq 'ESTABLISHED') {
 		    s/::ffff://g;
+            foreach $tmp (sort keys %$poorwhois) {
+                s/($tmp)/$poorwhois->{$tmp}($1)/g;
+            }
             print $sock "$_\n";
         }
     }
