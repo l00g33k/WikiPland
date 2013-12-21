@@ -122,7 +122,7 @@ sub l00http_perionetifcon_resume {
         $_ = &l00httpd::l00freadLine($ctrl);
         ($perltime) = /perltime=(\d+)/;
         $_ = &l00httpd::l00freadLine($ctrl);
-        ($isp) = /isp=(\d+)/;
+        ($isp) = /isp=([0-9\.]+)/;
 
         $_ = &l00httpd::l00freadLine($ctrl);
         if ((!defined($_)) || (!(($lastisp) = /lastisp=(\d+)/))) {
