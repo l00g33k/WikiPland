@@ -230,44 +230,10 @@ sub l00http_rptnetifcon_proc {
 #l00httpd::dbpclr();
         $tmp = &l00httpd::l00npoormanrdns($ctrl, $config{'desc'}, "$ctrl->{'workdir'}rptnetifcon.cfg");
         if ($tmp ne '') {
-            print $sock ".pm <pre>\n";
+            print $sock "<pre>\n";
             print $sock "$tmp";
             print $sock "</pre>\n";
         }
-#        if (open(IN, "<$ctrl->{'workdir'}rptnetifcon.cfg")) {
-#            undef %poorwhois;
-#            print $sock "<pre>\n";
-##l00httpd::dbpclr();
-#            while (<IN>) {
-#                if (/^#/) {
-#                    next;
-#                }
-#                s/\r//;
-#                s/\n//;
-#                if (($patt, $name) = /(.*)=>(.*)/) {
-#                    print $sock "$patt is $name\n";
-#                    l00httpd::dbp($config{'desc'}, "$patt is $name\n");
-#                    #46.51.248-254.*=>AMAZON_AWS
-#                    if (($leading, $st, $en, $trailing) = ($patt =~ /(.+?)\.(\d+)-(\d+)\.(.*)/)) {
-#                        l00httpd::dbp($config{'desc'}, "range: $patt ($st, $en) is $name\n");
-#                        for ($st..$en) {
-#                            $patt = "$leading.$_.$trailing";
-#                            l00httpd::dbp($config{'desc'}, "expanded: $patt is $name\n");
-#                            $patt =~ s/\./\\./g;
-#                            $patt =~ s/\*/\\d+/g;
-#                            $poorwhois{$patt} = $name;
-#                        }
-#                    } else {
-#                        l00httpd::dbp($config{'desc'}, "full octet: $patt is $name\n");
-#                        $patt =~ s/\./\\./g;
-#                        $patt =~ s/\*/\\d+/g;
-#                        $poorwhois{$patt} = $name;
-#                    }
-#                }
-#            }
-#            print $sock "</pre>\n";
-#            close(IN);
-#        }
         if (defined($ctrl->{'myip'})) {
             $_ = $ctrl->{'myip'};
             s/\./\\./g;
@@ -278,14 +244,11 @@ sub l00http_rptnetifcon_proc {
             l00httpd::dbp($config{'desc'}, "subst: $_ is $tmp->{$_}\n");
             $output =~ s/$_/$tmp->{$_}/g;
         }
-#        foreach $_ (sort keys %poorwhois) {
-#            l00httpd::dbp($config{'desc'}, "subst: $_ is $poorwhois{$_}\n");
-#            $output =~ s/$_/$poorwhois{$_}/g;
-#        }
 
         if (defined($ctrl->{'myip'})) {
             $_ = $ctrl->{'myip'};
             s/\./\\./g;
+            s/\\\././g;
             print $sock "My IP is $_ (me)\n";
         }
 
