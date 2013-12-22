@@ -284,7 +284,7 @@ sub getsvg {
 }
 
 sub plotsvgmapoverlay {
-    my ($name, $data, $wd, $ht) = @_;
+    my ($name, $data, $wd, $ht, $path) = @_;
     my ($svg, $div, $ii, $svg_xy2, $color, $date, $x1, $x2, $y1, $y2);
     my ($se,$mi,$hr,$da,$mo,$yr,$dummy);
     my (@tracks);
@@ -302,14 +302,30 @@ sub plotsvgmapoverlay {
             $svg .= "<polyline fill=\"none\" stroke=\"navy\" stroke-width=\"2\" points=\"$svg_xy2\" />";
         }
     }
-    
-
     $svg .= "</svg>";
+    $svggraphs{$name} = $svg;
+
+    l00httpd::dbp(__FILE__, "Tracks\n");
+    $svg =~ s/</&lt;/g;
+    $svg =~ s/>/&gt;/g;
+    l00httpd::dbp(__FILE__, "$svg\n");
 
     # restore plot margin
     ($mgl, $mgr, $mgt, $mgb) = (70, 10, 10, 60);
 
-    $svggraphs{$name} = $svg;
+    $svg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+    $svg .= "<svg  x=\"0\" y=\"0\" width=\"$wd\" height=\"$ht\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $wd $ht\" preserveAspectRatio=\"xMidYMid meet\">";
+    $svg .= "<g id=\"bitmap\" style=\"display:online\"> ";
+    $svg .= "<image x=\"0\" y=\"0\" width=\"$wd\" height=\"$ht\" xlink:href=\"/ls.htm/$name?path=$path\" /> ";
+    $svg .= "</g> ";
+    $svg .= "<g id=\"$name\" style=\"display:online\"> <g transform=\"translate(0 0)\"> <g transform=\"scale(1.0)\"> <image x=\"0\" y=\"0\" width=\"$wd\" height=\"$ht\" xlink:href=\"/svg.htm?graph=$name\"/> </g> </g> </g>";
+    $svg .= "</svg>";
+    $svggraphs{"${name}.ovly.svg"} = $svg;
+
+    l00httpd::dbp(__FILE__, "Overlay\n");
+    $svg =~ s/</&lt;/g;
+    $svg =~ s/>/&gt;/g;
+    l00httpd::dbp(__FILE__, "$svg\n");
 }
 
 

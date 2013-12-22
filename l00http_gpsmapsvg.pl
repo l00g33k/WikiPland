@@ -34,6 +34,7 @@ my $maptllat = 1;
 my $mapbrlon = 1;
 my $mapbrlat = -1;
 
+my ($fname);
 
 my %config = (proc => "l00http_gpsmapsvg_proc",
               desc => "l00http_gpsmapsvg_desc");
@@ -88,7 +89,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
     my ($mapwd, $mapht, $lond, $lonm, $lonc, $latd, $latm, $latc);
-    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $fname, $state);
+    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -292,26 +293,28 @@ sub l00http_gpsmapsvg_proc (\%) {
                 }
             }
             close (WAY);
-        }
 
-        &l00svg::plotsvgmapoverlay ("$fname", $svg, $mapwd, $mapht);
-        $svgout = '';
-        $svgout .= "<svg  x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\"xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $mapwd $mapht\" preserveAspectRatio=\"xMidYMid meet\">";
-        $svgout .= "<g id=\"bitmap\" style=\"display:online\"> ";
-        $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm$path?path=$path\" /> ";
-        $svgout .= "</g> ";
-        if (-e $waypts) {
+            &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path);
+            $svgout = '';
+            $svgout .= "<svg  x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\"xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $mapwd $mapht\" preserveAspectRatio=\"xMidYMid meet\">";
+            $svgout .= "<g id=\"bitmap\" style=\"display:online\"> ";
+            $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm$path?path=$path\" /> ";
+            $svgout .= "</g> ";
             $svgout .= "<g id=\"$fname\" style=\"display:online\"> <g transform=\"translate(0 0)\"> <g transform=\"scale(1.0)\"> <image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/svg.htm?graph=$fname\"/> </g> </g> </g>";
-        }
-        $svgout .= "</svg>\n";
-        print $sock "$svgout<br>\n";
+            $svgout .= "</svg>\n";
+            print $sock "$svgout<br>\n";
+            # the following doesn't work (see l00svg.pm)
+            #print $sock "<img src=\"/svg.htm/svg.svg?graph=${fname}.ovly.svg\"><br>\n";
 
-        print $sock "<hr>";
-        print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
-        print $sock "Click map below to move cursor:<br>\n";
-        print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
-        print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
-        print $sock "</form>\n";
+            print $sock "<hr>";
+            print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
+            print $sock "Click map below to move cursor:<br>\n";
+            print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
+            print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
+            # the following doesn't work (see l00svg.pm)
+            #print $sock "<input type=image width=$mapwd height=$mapht src=\"/svg.htm/svg.svg?graph=singapore.png.ovly.svg\">\n";
+            print $sock "</form>\n";
+        }
     }
 
     print $sock "<p>pixel (x,y): $pixx,$pixy<br>\n";
