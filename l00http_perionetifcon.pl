@@ -404,6 +404,9 @@ sub l00http_perionetifcon_proc {
 
     if (defined($form->{"clrmark"})) {
         $marks = '';
+        $lasttotalifcon = 0;
+        $lastisp = 0;
+        $lasttime = 0;
     }
 
     if ($marks ne '') {

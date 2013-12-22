@@ -163,6 +163,35 @@ sub svg_convert_xy {
     $svg_xy2;
 }
 
+sub svg_convert_xy_mapoverlay {
+    my ($name, $svgxy, $idx, $wd, $ht) = (@_);
+    my ($svg_xy2, $xx, $yy, $cnt);
+    my (@flds);
+
+
+    # save data
+    $svgparams{"$name"} = $svgxy;
+    $svgparams{"$name:wd"} = $wd;
+    $svgparams{"$name:ht"} = $ht;
+    $svgparams{"$name:maxx"} = $wd;
+    $svgparams{"$name:minx"} = 0;
+    $svgparams{"$name:$idx:maxy"} = $ht;
+    $svgparams{"$name:$idx:miny"} = 0;
+
+    $svg_xy2 = '';
+    foreach $_ (split (' ', $svgxy)) {
+        if (($xx, $yy)  = split (',', $_)) {
+            # $xx,$yy is curve x,y
+            # rescale from curve x,y to screen x,y
+            ($xx, $yy) = &svg_curveXY2screenXY ($name, $idx, $xx, $yy);
+            # $xx,$yy has bene converted to screen x,y
+            $svg_xy2 .= "$xx,$yy ";
+        }
+    }
+
+    $svg_xy2;
+}
+
 # $data looks like '0,1 1,4 2,2 3,19'
 # or '0,1,2,4 1,4,4,1 2,2,5,8 3,19,11,3'
 # $wd, $ht is size of svg
@@ -253,5 +282,35 @@ sub getsvg {
 
     $svggraphs{$name};
 }
+
+sub plotsvgmapoverlay {
+    my ($name, $data, $wd, $ht) = @_;
+    my ($svg, $div, $ii, $svg_xy2, $color, $date, $x1, $x2, $y1, $y2);
+    my ($se,$mi,$hr,$da,$mo,$yr,$dummy);
+    my (@tracks);
+
+    # overwrite with no plot margin
+    ($mgl, $mgr, $mgt, $mgb) = (0, 0, 0, 0);
+
+    $svg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+    $svg .= "<svg width=\"$wd"."px\" height=\"$ht"."px\" viewBox=\"0 0 $wd $ht\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"> ";
+
+    @tracks = split("::", $data);
+    foreach $data (@tracks) {
+        $svg_xy2 = &svg_convert_xy_mapoverlay ($name, $data, 0, $wd, $ht);
+        if ($svg_xy2 ne '') {
+            $svg .= "<polyline fill=\"none\" stroke=\"navy\" stroke-width=\"2\" points=\"$svg_xy2\" />";
+        }
+    }
+    
+
+    $svg .= "</svg>";
+
+    # restore plot margin
+    ($mgl, $mgr, $mgt, $mgb) = (70, 10, 10, 60);
+
+    $svggraphs{$name} = $svg;
+}
+
 
 1;
