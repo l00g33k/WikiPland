@@ -298,15 +298,13 @@ sub l00http_gpsmapsvg_proc (\%) {
         $svgout = '';
         $svgout .= "<svg  x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\"xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $mapwd $mapht\" preserveAspectRatio=\"xMidYMid meet\">";
         $svgout .= "<g id=\"bitmap\" style=\"display:online\"> ";
-#      $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm/singapore.png?path=/sdcard/l00httpd/maps/singapore.png\" /> ";
         $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm$path?path=$path\" /> ";
         $svgout .= "</g> ";
         if (-e $waypts) {
             $svgout .= "<g id=\"$fname\" style=\"display:online\"> <g transform=\"translate(0 0)\"> <g transform=\"scale(1.0)\"> <image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/svg.htm?graph=$fname\"/> </g> </g> </g>";
         }
         $svgout .= "</svg>\n";
-        print $sock "<br>$svgout<br>\n";
-# /svg.htm?graph=singapore.png
+        print $sock "$svgout<br>\n";
 
         print $sock "<hr>";
         print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
