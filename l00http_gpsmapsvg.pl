@@ -270,8 +270,6 @@ sub l00http_gpsmapsvg_proc (\%) {
                     #print "$pcx5mk $pixx $pixy $notclip\n";
                     if ($notclip) {
                         if (($skipxgpstrk == 0) || ($nogpstrks > $skipxgpstrk)) {
-#                            print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-#                            print $sock "<font color=\"$waycolor\">$pcx5mk</font></div>\n";
                             $pixy = $mapht - $pixy;     # y axis inverted
                             $svg .= "$pixx,$pixy ";
                         }
