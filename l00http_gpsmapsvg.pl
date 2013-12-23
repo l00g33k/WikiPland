@@ -303,16 +303,19 @@ sub l00http_gpsmapsvg_proc (\%) {
             print $sock "$svgout<br>\n";
             # the following doesn't work (see l00svg.pm)
             #print $sock "<img src=\"/svg.htm/svg.svg?graph=${fname}.ovly.svg\"><br>\n";
-
-            print $sock "<hr>";
-            print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
-            print $sock "Click map below to move cursor:<br>\n";
-            print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
-            print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
-            # the following doesn't work (see l00svg.pm)
-            #print $sock "<input type=image width=$mapwd height=$mapht src=\"/svg.htm/svg.svg?graph=singapore.png.ovly.svg\">\n";
-            print $sock "</form>\n";
+        } else {
+            # no overlaid track. .png will do
+            print $sock "<img src=\"/ls.htm$path?path=$path".'&'."raw=on\"><br>\n";
         }
+
+        print $sock "<hr>";
+        print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
+        print $sock "Click map below to move cursor:<br>\n";
+        print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
+        print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
+        # the following doesn't work (see l00svg.pm)
+        #print $sock "<input type=image width=$mapwd height=$mapht src=\"/svg.htm/svg.svg?graph=singapore.png.ovly.svg\">\n";
+        print $sock "</form>\n";
     }
 
     print $sock "<p>pixel (x,y): $pixx,$pixy<br>\n";
