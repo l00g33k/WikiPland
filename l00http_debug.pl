@@ -11,8 +11,8 @@ my %config = (proc => "l00http_debug_proc",
 my ($jmpintv);
 $jmpintv = 100;
 
-#l00httpd::dbp(config{'desc'}, "test\n");
 #l00httpd::dbpclr();
+#l00httpd::dbp($config{'desc'}, "test\n");
 
 sub l00http_debug_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition

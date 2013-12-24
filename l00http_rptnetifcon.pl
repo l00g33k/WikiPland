@@ -30,8 +30,8 @@ sub l00http_rptnetifcon_proc {
     my ($rx, $tx, $rxtx, $now, $nowlast, $svgifdt, $svgifdtlin, $svgifacc);
     my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
     my ($lip, $lpt, $rip, $rpt, $conn, %connections, %hosts);
-    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson, %poorwhois);
-    my ($fpath, $bytespers);
+    my ($timestart, $slotrxtx, %activeconn, $lnno, %alwayson);
+    my ($fpath, $bytespers, $ii, $hostip, $hostiporg);
 
 
     if (defined ($form->{'path'})) {
@@ -317,10 +317,16 @@ sub l00http_rptnetifcon_proc {
 				$hosts{$flds[0]} = 1;
 			}
         }
-		$tmp = 0;
-        foreach $_ (sort keys %hosts) {
-			$tmp++;
-            print $sock "<tr><td>$tmp:</td><td>$_</td><td>$hosts{${_}}</td></tr>\n";
+		$ii = 0;
+        foreach $hostip (sort keys %hosts) {
+			$ii++;
+            $hostiporg = $hostip;
+            $hostip =~ s/::ffff://;
+            $tmp = &l00httpd::l00npoormanrdnshash($ctrl);
+            foreach $_ (sort keys %$tmp) {
+                $hostip =~ s/$_/$tmp->{$_}($hostip)/g;
+            }
+            print $sock "<tr><td>$ii:</td><td>$hostip</td><td>$hosts{${hostiporg}}</td></tr>\n";
         }
         print $sock "</table>\n";
 

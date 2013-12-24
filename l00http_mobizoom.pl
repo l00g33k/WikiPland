@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use l00httpd;
+
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # this is a simple bookmark
@@ -139,6 +141,7 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
+	my ($skip, $tmp);
 
     $url = '';
     if (defined ($form->{'url'})) {
@@ -246,6 +249,35 @@ sub l00http_mobizoom_proc {
             &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.pl');
         }
         if ($mode1online2offline4download == 2) {
+		    # <head> and <form> mess with my <span font-size> so drop them
+			$tmp = '';
+			$skip = 0;
+			foreach $_ (split("\n", $wget)) {
+			    if (/<\/form.*>/) {
+					$skip = 0;
+					next;
+				}
+			    if (/<form.*>/) {
+					$skip = 1;
+					next;
+				}
+			    if (/<\/head.*>/) {
+					$skip = 0;
+					next;
+				}
+			    if (/<head.*>/) {
+					$skip = 1;
+					next;
+				}
+				if ($skip) {
+					next;
+				}
+			    if (/<\?xml.*>/ || /<!DOCTYPE.*>/) {
+					next;
+				}
+			    $tmp .= "$_\n";
+			}
+			$wget = $tmp;
             # <span style="font-size : 144%;">
             $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/g;
             print $sock $wget;
