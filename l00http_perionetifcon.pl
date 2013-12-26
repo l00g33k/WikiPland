@@ -368,12 +368,12 @@ sub l00http_perionetifcon_proc {
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Save\"></td>\n";
     if (-e "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved") {
-        print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"></td>\n";
+        print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"> from sdcard</td>\n";
     } else {
         print $sock "        <td>Not Saved</td>\n";
     }
-    print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Save\"> to sdcard</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";

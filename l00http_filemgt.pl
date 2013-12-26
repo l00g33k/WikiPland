@@ -27,16 +27,16 @@ sub l00http_filemgt_proc {
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
     if ((defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
-        $_ = $form->{'path'};
-        # keep path only
-        s/\/[^\/]+$/\//;
-        print $sock " Path: <a href=\"/ls.htm?path=$_\">$_</a><br>\n";
         $form->{'path'} =~ s/\r//g;
         $form->{'path'} =~ s/\n//g;
         $_ = $form->{'path'};
+        # keep path only
+        s/\/[^\/]+$/\//;
+        print $sock " Path: <a href=\"/ls.htm?path=$_\">$_</a>";
+        $_ = $form->{'path'};
         # keep name only
-        s/\/([^\/]+)$/$1/;
-        print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$_</a>\n";
+        s/^.+\/([^\/]+)$/$1/;
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$_</a>\n";
     }
     print $sock "<p>\n";
 
