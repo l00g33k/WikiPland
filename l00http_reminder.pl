@@ -7,7 +7,8 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($lastcalled, $percnt, $interval, $starttime, $msg, $vibra, $vibracnt, $wake, $vmsec, $pause);
+my ($lastcalled, $percnt, $interval, $starttime, $msg, $vibra, $vibracnt, 
+    $utcoffsec, $wake, $vmsec, $pause);
 my %config = (proc => "l00http_reminder_proc",
               desc => "l00http_reminder_desc",
               perio => "l00http_reminder_perio");
@@ -39,11 +40,29 @@ sub l00http_reminder_date2j {
     
     $secs;
 }
+
 sub l00http_reminder_find {
 # find active reminder (oldest)
     my $ctrl = pop;
     my ($st, $it, $mg, $st0, $it0, $mg0);
-    my ($vb, $vs, $vb0, $vs0);
+    my ($vb, $vs, $vb0, $vs0, $secs);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+
+    # compute UTC and localtime offset in seconds
+	# Compute all times in UTC but the time to display is in local time
+	# so we need to know the difference UTC and local time. Stackoverflow says 
+	# to compute the difference between gmtime and localtime to avoid module 
+	# dependency. We use noon today UTC to avoid rolling over midnight
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    $secs = &l00mktime::mktime ($year, $mon, $mday, 12, 0, 0);
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($secs);
+    $utcoffsec = $hour * 3600 + $min * 60;
+    #print sprintf ("utc gmtime: %04d/%02d/%02d %2d:%02d:%02d<br>\n", $year+1900, $mon+1, $mday, $hour, $min, $sec);
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime ($secs);
+    $utcoffsec -= $hour * 3600 + $min * 60;
+    #print sprintf ("utc localtime: %04d/%02d/%02d %2d:%02d:%02d<br>\n", $year+1900, $mon+1, $mday, $hour, $min, $sec);
+    #print "utcoffsec $utcoffsec\n";
+
 
     if (open (IN, "<$ctrl->{'workdir'}l00_reminder.txt")) {
         # "TIME:$form->{'starttime'}\nITV:$interval\nMSG:$msg\n";
@@ -52,6 +71,7 @@ sub l00http_reminder_find {
             chop;
             if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
                 $st = &l00http_reminder_date2j ($st);
+		        print "st $st $_\n";
                 if (($st0 == 0) || ($st < $st0)) {
                     ($st0, $it0, $vb0, $vs0, $mg0) = ($st, $it, $vb, $vs, $mg);
                 }
@@ -85,7 +105,9 @@ sub l00http_reminder_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $temp, $timstr);
     my ($yr, $mo, $da, $hr, $mi, $se, $pausewant);
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time);
+    # see notes in l00http_reminder_find() about time + $utcoffsec
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
+#   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
     # get submitted name and print greeting
     if (defined ($form->{"vibra"})) {
@@ -118,7 +140,8 @@ sub l00http_reminder_proc {
         if (defined ($form->{"starttime"})) {
             $starttime = &l00http_reminder_date2j ($form->{"starttime"});
             if (($starttime != 0) && ($interval > 0)) {
-                $temp = $starttime - time;
+                # see notes in l00http_reminder_find() about time + $utcoffsec
+                $temp = $starttime - time + $utcoffsec;
                 print "Starting in $temp secs\n";
                 if (open (OU, ">>$ctrl->{'workdir'}l00_reminder.txt")) {
                     print OU "$form->{'starttime'}:$interval:$vibra:$vmsec:$msg\n";
@@ -134,6 +157,7 @@ sub l00http_reminder_proc {
         $percnt = 0;
         $interval = 0;
         $starttime = 0x7fffffff;
+        $lastcalled = 0;
         $pause = 0;
         if ($wake != 0) {
             $wake = 0;
@@ -146,6 +170,7 @@ sub l00http_reminder_proc {
         $percnt = 0;
         $interval = 0;
         $starttime = 0x7fffffff;
+        $lastcalled = 0;
         if ($wake != 0) {
             $wake = 0;
             $ctrl->{'droid'}->wakeLockRelease();
@@ -268,8 +293,15 @@ sub l00http_reminder_proc {
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($starttime);
     print $sock sprintf ("Start: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($lastcalled + $pause + $interval);
-    print $sock sprintf ("Next: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
+    if (($lastcalled > 0) && ($lastcalled < 0x7fffffff)) {
+        ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($lastcalled + $pause + $interval * 2);
+        print $sock sprintf ("Next: %04d/%02d/%02d %2d:%02d:%02d<br>\n", $year+1900, $mon+1, $mday, $hour, $min, $sec);
+    } else {
+        print $sock sprintf ("Not running<br>\n");
+    }
+    # see notes in l00http_reminder_find() about time + $utcoffsec
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
+    print $sock sprintf ("Now: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
     print $sock "Count: $percnt<br>\n";
 
@@ -291,10 +323,11 @@ sub l00http_reminder_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($retval);
 
-    if (time >= $starttime) {
+    # see notes in l00http_reminder_find() about time + $utcoffsec
+    if (time - $utcoffsec>= $starttime) {
         if (($interval > 0) && 
-            (($lastcalled == 0) || (time >= ($lastcalled + $pause + $interval)))) {
-            $lastcalled = time;
+            (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
+            $lastcalled = time - $utcoffsec;
             $pause = 0;
 
             $ctrl->{'reminder'} = $msg;
@@ -319,7 +352,7 @@ sub l00http_reminder_perio {
         }
         $retval = $interval;
     } else {
-        $retval = $starttime - time;
+        $retval = $starttime - time + $utcoffsec;
         # time not due yet, clear title banner message
         undef $ctrl->{'reminder'};
     }
