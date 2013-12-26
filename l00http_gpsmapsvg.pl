@@ -204,9 +204,17 @@ sub l00http_gpsmapsvg_proc (\%) {
         $_ = <IN>; s/\n//; s/\r//; ($mapbry) = / *([^ ]+) */;
         $_ = <IN>; s/\n//; s/\r//; ($mapbrlon) = / *([^ ]+) */;
         $_ = <IN>; s/\n//; s/\r//; ($mapbrlat) = / *([^ ]+) */;
+        $_ = <IN>; s/\n//; s/\r//;
+        if (/^IMG_WD_HT/) {
+            ($mapwd, $mapht) = /^IMG_WD_HT=(\d+),(\d+)/;
+            $mapwd = int ($mapwd * $scale / 100);
+            $mapht = int ($mapht * $scale / 100);
+		} else {
+            $mapwd = int (($mapbrx + 1) * $scale / 100);
+            $mapht = int (($mapbry + 1) * $scale / 100);
+		}
         close (IN);
-        $mapwd = int (($mapbrx + 1) * $scale / 100);
-        $mapht = int (($mapbry + 1) * $scale / 100);
+        l00httpd::dbp($config{'desc'}, "mapwd $mapwd mapht $mapht\n");
     }
 
 

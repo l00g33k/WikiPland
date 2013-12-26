@@ -182,9 +182,17 @@ sub l00http_gps_proc {
                 }
             }
         }
-    }
-
-    if (defined ($form->{"getgps"})) {
+    } elsif (defined ($form->{"markloc"})) {
+        if (!defined ($form->{"locremark"})) {
+            $form->{"locremark"} = '';
+	    }
+        if ($ctrl->{'os'} eq 'and') {
+            $buf = &android_get_gps ($ctrl);
+            open (OUT, ">>$ctrl->{'workdir'}gps.way");
+			print OUT "$lon,$lat $buf $form->{'locremark'}\n";
+			close(OUT);
+        }
+    } elsif (defined ($form->{"getgps"})) {
         if ($ctrl->{'os'} eq 'and') {
             $buf = &android_get_gps ($ctrl);
             $ctrl->{'droid'}->setClipboard ("$lon,$lat\n$buf");
@@ -263,6 +271,19 @@ sub l00http_gps_proc {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"getgps\" value=\"Get GPS\"></td>\n";
     print $sock "        <td>paste to clipboard ($lastcoor)</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
+    print $sock "<p>Mark current location in ";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}gps.way\">$ctrl->{'workdir'}gps.way</a>:\n";
+    print $sock "<form action=\"/gps.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"markloc\" value=\"Mark\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"12\" name=\"locremark\" value=\"\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
