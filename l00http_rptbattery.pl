@@ -8,9 +8,11 @@ use l00backup;
 
 my %config = (proc => "l00http_rptbattery_proc",
               desc => "l00http_rptbattery_desc");
-my ($buffer, $lastbuf, $timeslot);
+my ($buffer, $lastbuf, $timeslot, $skip, $len);
 $lastbuf = '';
 $timeslot = 60 * 1;
+$skip = 0;
+$len = 100000;
 
 sub l00http_rptbattery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -35,6 +37,12 @@ sub l00http_rptbattery_proc {
     } else {
         $path = '(none)';
         $fname = '(none)';
+    }
+    if ((defined ($form->{'skip'})) && ($form->{'skip'} =~ /(\d+)/)) {
+        $skip = $1;
+    }
+    if ((defined ($form->{'len'})) && ($form->{'len'} =~ /(\d+)/)) {
+        $len = $1;
     }
 
     # Send HTTP and HTML headers
@@ -77,20 +85,23 @@ sub l00http_rptbattery_proc {
                     $yr -= 1900;
                     $mo--;
                     $now = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                    $svgperc .= "$now,$level ";
-                    $svgvolt .= "$now,$vol ";
-                    $svgtemp .= "$now,$temp ";
-                    $tmp = $curr + $dis_curr;
-                    $svgmA .= "$now,$tmp ";
                     $lnno++;
+                    if (($lnno >= $skip) && ($lnno <= $skip + $len)) {
+					    # within skip and len (poor man's zoom in)
+                        $svgperc .= "$now,$level ";
+                        $svgvolt .= "$now,$vol ";
+                        $svgtemp .= "$now,$temp ";
+                        $tmp = $curr + $dis_curr;
+                        $svgmA .= "$now,$tmp ";
 
-                    $chg_src =~ s/0/0 (off)/;
-                    $chg_src =~ s/1/1 (usb)/;
-                    $chg_src =~ s/2/2 (wall)/;
-                    $chg_en =~ s/0/0 (off)/;
-                    $chg_en =~ s/1/1 (usb)/;
-                    $chg_en =~ s/2/2 (wall)/;
-                    $table = "||$lnno||$level||$vol||$temp||$curr||$dis_curr||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
+                        $chg_src =~ s/0/0 (off)/;
+                        $chg_src =~ s/1/1 (usb)/;
+                        $chg_src =~ s/2/2 (wall)/;
+                        $chg_en =~ s/0/0 (off)/;
+                        $chg_en =~ s/1/1 (usb)/;
+                        $chg_en =~ s/2/2 (wall)/;
+                        $table = "||$lnno||$level||$vol||$temp||$curr||$dis_curr||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
+                    }
                 }
             }
         }
@@ -99,6 +110,19 @@ sub l00http_rptbattery_proc {
         close (IN);
 
         if ($lnno > 1) {
+            print $sock "<form action=\"/rptbattery.htm\" method=\"get\">\n";
+            print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+
+            print $sock "    <tr>\n";
+            print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Skip\"> \n";
+            print $sock "        <td><input type=\"text\" size=\"6\" name=\"skip\" value=\"$skip\"></td>\n";
+            print $sock "        <td>length <input type=\"text\" size=\"6\" name=\"len\" value=\"$len\"></td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "</table>\n";
+            print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+            print $sock "</form>\n";
+
             if ($svgvolt ne '') {
                 &l00svg::plotsvg ('battvolt', $svgvolt, 500, 300);
                 print $sock "<p>Volts:<br><a href=\"/svg.htm?graph=battvolt&view=\"><img src=\"/svg.htm?graph=battvolt\" alt=\"voltage over time\"></a>\n";

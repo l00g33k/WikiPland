@@ -50,13 +50,11 @@ sub l00http_svg_proc {
                 }
                 ($xpix, $ypix) = &l00svg::svg_curveXY2screenXY (
                     $graphname, 0, $x, $y);
-#print "find #$off: ($x,$y) -> ($xpix, $ypix) : ($form->{'x'}, $form->{'y'})\n";
                 if ($xpix >= $form->{'x'}) {
                     last;
                 }
                 $off++;    
             }
-#           print $sock "<div style=\"position: absolute; left:$form->{'x'}px; top:$form->{'y'}px;\">\n";
             print $sock "<div style=\"position: absolute; left:$xpix"."px; top:$ypix"."px;\">\n";
             print $sock "<font color=\"red\">X</font></div>\n";
         }
@@ -76,9 +74,9 @@ sub l00http_svg_proc {
                 # 1577865600 is 2020/1/1 00:00:00, must be a date
                 ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($x);
                 $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
-                print $sock "Values: ($date, $y)<br>\n";
+                print $sock "Values: ($date, $y) [#$off]<br>\n";
             } else {
-                print $sock "Values: ($x, $y)<br>\n";
+                print $sock "Values: ($x, $y) [#$off]<br>\n";
             }
         }
         print $sock "<p><a href=\"/svg.htm\">List of all graphs</a><br>\n";
