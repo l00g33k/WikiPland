@@ -10,9 +10,10 @@ use l00svg;
 
 my %config = (proc => "l00http_rptnetifcon_proc",
               desc => "l00http_rptnetifcon_desc");
-my ($buffer, $lastbuf, $timeslot);
+my ($buffer, $lastbuf, $timeslot, $taillen);
 $lastbuf = '';
-$timeslot = 60 * 1;
+$timeslot = 60 * 1; # seconds
+$taillen = 20;
 
 sub l00http_rptnetifcon_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -25,7 +26,7 @@ sub l00http_rptnetifcon_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $tmp, $patt, $name);
+    my ($path, $fname, $tmp, $patt, $name, $buf, $tablelen);
     my (@flds, $output, $leading, $st, $en, $trailing);
     my ($rx, $tx, $rxtx, $now, $nowlast, $svgifdt, $svgifdtlin, $svgifacc);
     my ($yr, $mo, $da, $hr, $mi, $se, $data, $timestamp);
@@ -40,6 +41,9 @@ sub l00http_rptnetifcon_proc {
     } else {
         $path = '(none)';
         $fname = '(none)';
+    }
+    if ((defined ($form->{'taillen'})) && ($form->{'taillen'} =~ /(\d+)/)) {
+        $taillen = $1;
     }
 
     # Send HTTP and HTML headers
@@ -70,16 +74,18 @@ sub l00http_rptnetifcon_proc {
         $lnno = 0;
         undef %activeconn;
         undef %alwayson;
-        $output = '';
-        $output .= "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
-        $output .= "<tr>\n";
-        $output .= "<td>timestamp</td>\n";
-        $output .= "<td>bytes</td>\n";
-        $output .= "<td>bytes/s</td>\n";
-        $output .= "<td>sock pairs</td>\n";
-        $output .= "</tr>\n";
+#       $output = '';
+#       $output .= "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
+#       $output .= "<tr>\n";
+#       $output .= "<td>timestamp</td>\n";
+#       $output .= "<td>bytes</td>\n";
+#       $output .= "<td>bytes/s</td>\n";
+#       $output .= "<td>sock pairs</td>\n";
+#       $output .= "</tr>\n";
+        $output = "||timestamp ||bytes ||bytes/s ||sock pairs ||\n";
         $nowlast = 0;
         $bytespers = 0;
+        $tablelen = 0;
         while (<IN>) {
             s/\r//;
             s/\n//;
@@ -145,11 +151,7 @@ sub l00http_rptnetifcon_proc {
                 # time slot
                 if (($now - $timestart) >= $timeslot) {
                     # end of time slot, print summary
-                    $output .= "<tr>\n";
-                    $output .= "<td>$timestamp</td>\n";
-                    $output .= "<td>$slotrxtx</td>\n";
-                    $output .= "<td>". int($slotrxtx / ($now - $timestart)) ."</td>\n";
-                    $output .= "<td>\n";
+                    $output .= "||$timestamp ||$slotrxtx ||". int($slotrxtx / ($now - $timestart)) ."||";
                     foreach $conn (sort keys %activeconn) {
                         if (defined($activeconn{$conn})) {
                             if ($activeconn{$conn} == 0) {
@@ -160,23 +162,20 @@ sub l00http_rptnetifcon_proc {
                             $output .= "$conn ";
                         }
                     }
-                    $output .= "</td>\n";
-                    $output .= "</tr>\n";
+                    $output .= "||\n";
+                    $tablelen++;
                     $timestart = 0;
                 }
                 $nowlast = $now;
             }
         }
         # last (partial) time slot, print summary
-        $output .= "<tr>\n";
-        $output .= "<td>$timestamp</td>\n";
-        $output .= "<td>$slotrxtx</td>\n";
+        $output .= "||$timestamp ||$slotrxtx ||";
         if (($now - $timestart) == 0) {
-            $output .= "<td>$slotrxtx / 0 sec</td>\n";
+            $output .= "$slotrxtx / 0 sec ||";
         } else {
-            $output .= "<td>". int($slotrxtx / ($now - $timestart)) ."</td>\n";
+            $output .= "||". int($slotrxtx / ($now - $timestart)) ."||";
         }
-        $output .= "<td>\n";
         foreach $conn (sort keys %activeconn) {
             if (defined($activeconn{$conn})) {
                 if ($activeconn{$conn} == 0) {
@@ -187,9 +186,8 @@ sub l00http_rptnetifcon_proc {
                 $output .= "$conn ";
             }
         }
-        $output .= "</td>\n";
-        $output .= "</tr>\n";
-        $output .= "</table>\n";
+        $output .= "||\n";
+        $tablelen++;
         close (IN);
 
         $tmp = $rx;
@@ -215,8 +213,21 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a href=\"#local\">local ip</a>,\n";
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a><p>\n";
+
+        print $sock "<form action=\"/rptnetifcon.htm\" method=\"get\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+
+        print $sock "    <tr>\n";
+        print $sock "        <td><input type=\"submit\" name=\"settail\" value=\"Set\"></td>\n";
+        print $sock "        <td>Display <input type=\"text\" size=\"4\" name=\"taillen\" value=\"$taillen\"> lines head and tail and skip rest</td>\n";
+        print $sock "    </tr>\n";
+
+        print $sock "</table>\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+        print $sock "</form><p>\n";
+
         # print always on socket pairs
-        print $sock "Socket pairs always connected:<pre>\n";
+        print $sock "<p>Socket pairs always connected:<pre>\n";
         foreach $_ (sort keys %alwayson) {
             s/::ffff://g;
             print $sock "$_\n";
@@ -253,7 +264,21 @@ sub l00http_rptnetifcon_proc {
         }
 
         print $sock "<br>Total traffic by time slot (${timeslot}s):<p>\n";
-        print $sock "$output<p>\n";
+
+        $buf = '';
+        $tmp = 0;
+        foreach $_ (split("\n", $output)) {
+            $tmp++;
+            if ($tmp < $taillen) {
+                $buf .= "$_\n";
+            } elsif ($tmp == $taillen) {
+                $buf .= "$_\n";
+                $buf .= "\nskipping ".($tablelen - $taillen * 2)." lines\n\n";
+            } elsif ($tmp > ($tablelen - $taillen)) {
+                $buf .= "$_\n";
+            }
+        }
+        print $sock &l00wikihtml::wikihtml ($ctrl, "", $buf, 0);
 
 
         print $sock "<a name=\"graphs\"></a>\n";
@@ -338,9 +363,26 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a>\n";
         print $sock "<p>List of all socket pairs:<br>\n<pre>\n";
+        $output = '';
+        $tablelen = 0;
         foreach $_ (sort keys %connections) {
-            print $sock "$connections{${_}},$_\n";
+            $tablelen++;
+            $output .= "$connections{${_}},$_\n";
         }
+        $buf = '';
+        $tmp = 0;
+        foreach $_ (split("\n", $output)) {
+            $tmp++;
+            if ($tmp < $taillen) {
+                $buf .= "$_\n";
+            } elsif ($tmp == $taillen) {
+                $buf .= "$_\n";
+                $buf .= "\nskipping ".($tablelen - $taillen * 2)." lines\n\n";
+            } elsif ($tmp > ($tablelen - $taillen)) {
+                $buf .= "$_\n";
+            }
+        }
+        print $sock $buf;
         print $sock "</pre>\n";
     }
 

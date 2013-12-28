@@ -28,7 +28,7 @@ sub l00http_perionetifcon_suspend {
     my $sock = $ctrl->{'sock'};     # dereference network socket
 
     # suspend to sdcard so it can be resumed after restart
-    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved");
     &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
     &l00httpd::l00fwriteBuf($ctrl, "netifcnt=$netifcnt\n");
     &l00httpd::l00fwriteBuf($ctrl, "totalifcon=$totalifcon\n");
@@ -40,34 +40,34 @@ sub l00http_perionetifcon_suspend {
     &l00httpd::l00fwriteBuf($ctrl, "lasttotalifcon=$lasttotalifcon\n");
     &l00httpd::l00fwriteBuf($ctrl, "lasttime=$lasttime\n");
     if (&l00httpd::l00fwriteClose($ctrl)) {
-        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved'<p>\n";
+        print $sock "Unable to write '$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved'<p>\n";
     }
 
-    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved");
     &l00httpd::l00fwriteBuf($ctrl, $netiflog);
     if (&l00httpd::l00fwriteClose($ctrl)) {
-        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved'<p>\n";
+        print $sock "Unable to write '$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved'<p>\n";
     }
-    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved");
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved");
     &l00httpd::l00fwriteBuf($ctrl, $marks);
     if (&l00httpd::l00fwriteClose($ctrl)) {
-        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved'<p>\n";
+        print $sock "Unable to write '$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved'<p>\n";
     }
 
-    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved");
     foreach $_ (sort keys %allsocksever) {
         &l00httpd::l00fwriteBuf($ctrl, "$_ => $allsocksever{$_}\n");
     }
     if (&l00httpd::l00fwriteClose($ctrl)) {
-        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved'<p>\n";
+        print $sock "Unable to write '$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved'<p>\n";
     }
 
-    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+    &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved");
     foreach $_ (sort keys %alwayson) {
         &l00httpd::l00fwriteBuf($ctrl, "$_ => $alwayson{$_}\n");
     }
     if (&l00httpd::l00fwriteClose($ctrl)) {
-        print $sock "Unable to write '$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved'<p>\n";
+        print $sock "Unable to write '$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved'<p>\n";
     }
 
     l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
@@ -96,7 +96,7 @@ sub l00http_perionetifcon_resume {
     my ($key, $val);
 
     # resume from sdcard after restart
-    if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved")) {
+    if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved")) {
         $interval = 0;
         $netifcnt = 0;
         $netiflog = '';
@@ -137,24 +137,24 @@ sub l00http_perionetifcon_resume {
             $lasttime = 0;
         }
 
-        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved");
         $netiflog = &l00httpd::l00freadAll($ctrl);
         if (!defined($netiflog)) {
             $netiflog = '';
         }
-        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved");
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved");
         $marks = &l00httpd::l00freadAll($ctrl);
         if (!defined($marks)) {
             $marks = '';
         }
 
-        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved");
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             if (($key, $val) = /(.+) => (.+)/) {
                 $allsocksever{$key} = $val;
             }
         }
-        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+        &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved");
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             if (($key, $val) = /(.+) => (.+)/) {
                 $alwayson{$key} = $val;
@@ -182,20 +182,20 @@ sub l00http_perionetifcon_resume {
         }
 
         # delete .saved once resumed
-        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved", 0, 0);
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved");
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved", 0, 0);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved");
         &l00httpd::l00fwriteClose($ctrl);
-        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved", 0, 0);
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_netiflog.saved");
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved", 0, 0);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved");
         &l00httpd::l00fwriteClose($ctrl);
-        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved", 0, 0);
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_marks.saved");
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved", 0, 0);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved");
         &l00httpd::l00fwriteClose($ctrl);
-        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved", 0, 0);
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_allsocksever.saved");
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved", 0, 0);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved");
         &l00httpd::l00fwriteClose($ctrl);
-        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved", 0, 0);
-        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}del/l00_perionetifcon_alwayson.saved");
+        &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved", 0, 0);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved");
         &l00httpd::l00fwriteClose($ctrl);
     }
 }
@@ -224,6 +224,37 @@ sub l00http_perionetifcon_proc {
     }
     if ((defined ($form->{"ispadj"})) && ($form->{"ispadj"} >= 0)) {
         $isp = $form->{"ispadj"};
+    }
+    if (defined ($form->{"restore"})) {
+        &l00httpd::l00freadOpen($ctrl,  "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved.-.bak");
+        $tmp = &l00httpd::l00freadAll($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved");
+        &l00httpd::l00fwriteBuf($ctrl, $tmp);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        &l00httpd::l00freadOpen($ctrl,  "$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved.-.bak");
+        $tmp = &l00httpd::l00freadAll($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_netiflog.saved");
+        &l00httpd::l00fwriteBuf($ctrl, $tmp);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        &l00httpd::l00freadOpen($ctrl,  "$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved.-.bak");
+        $tmp = &l00httpd::l00freadAll($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_marks.saved");
+        &l00httpd::l00fwriteBuf($ctrl, $tmp);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        &l00httpd::l00freadOpen($ctrl,  "$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved.-.bak");
+        $tmp = &l00httpd::l00freadAll($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_allsocksever.saved");
+        &l00httpd::l00fwriteBuf($ctrl, $tmp);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        &l00httpd::l00freadOpen($ctrl,  "$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved.-.bak");
+        $tmp = &l00httpd::l00freadAll($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_perionetifcon_alwayson.saved");
+        &l00httpd::l00fwriteBuf($ctrl, $tmp);
+        &l00httpd::l00fwriteClose($ctrl);
     }
     if (defined ($form->{"stop"})) {
         $interval = 0;
@@ -357,7 +388,7 @@ sub l00http_perionetifcon_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"save\" value=\"Save new\"></td>\n";
-    $tmp = "$ctrl->{'workdir'}del/$ctrl->{'now_string'}_netifcon.csv";
+    $tmp = "$ctrl->{'workdir'}tmp/$ctrl->{'now_string'}_netifcon.csv";
     $tmp =~ s/ /_/g;
     print $sock "        <td><input type=\"text\" size=\"12\" name=\"savepath\" value=\"$tmp\"></td>\n";
     print $sock "    </tr>\n";
@@ -369,7 +400,7 @@ sub l00http_perionetifcon_proc {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"suspend\" value=\"Save\"></td>\n";
-    if (-e "$ctrl->{'workdir'}del/l00_perionetifcon_vals.saved") {
+    if (-e "$ctrl->{'workdir'}tmp/l00_perionetifcon_vals.saved") {
         print $sock "        <td><input type=\"submit\" name=\"resume\" value=\"Resume\"> from sdcard</td>\n";
     } else {
         print $sock "        <td>Not Saved</td>\n";
@@ -438,17 +469,29 @@ sub l00http_perionetifcon_proc {
     $tmp = 0;
     foreach $_ (split("\n", $netiflog)) {
         $tmp++;
-        if ($tmp < 100) {
+        if ($tmp < 60) {
             printf $sock ("%3d: $_\n", $tmp);
-        } elsif ($tmp == 100) {
+        } elsif ($tmp == 60) {
             printf $sock ("%3d: $_\n", $tmp);
-            print $sock "\nskipping ".($netifnoln - 100 * 2)." lines\n\n";
-        } elsif ($tmp > ($netifnoln - 100)) {
+            print $sock "\nskipping ".($netifnoln - 60 * 2)." lines\n\n";
+        } elsif ($tmp > ($netifnoln - 60)) {
             printf $sock ("%3d: $_\n", $tmp);
         }
     }
     print $sock "</pre>\n";
     print $sock "<p><a href=\"#top\">Jump to top</a><p>\n";
+
+    print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"restore\" value=\"Restore\"></td>\n";
+    print $sock "        <td>Restore *.saved from *.saved.-.bak</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
     $tmp = $totalifcon;
     $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
     $tmp =~ s/(\d)(\d\d\d,)/$1,$2/;

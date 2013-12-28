@@ -71,7 +71,7 @@ sub l00http_reminder_find {
             chop;
             if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
                 $st = &l00http_reminder_date2j ($st);
-		        print "st $st $_\n";
+		        #print "st $st $_\n";
                 if (($st0 == 0) || ($st < $st0)) {
                     ($st0, $it0, $vb0, $vs0, $mg0) = ($st, $it, $vb, $vs, $mg);
                 }
@@ -142,7 +142,7 @@ sub l00http_reminder_proc {
             if (($starttime != 0) && ($interval > 0)) {
                 # see notes in l00http_reminder_find() about time + $utcoffsec
                 $temp = $starttime - time + $utcoffsec;
-                print "Starting in $temp secs\n";
+                #print "Starting in $temp secs\n";
                 if (open (OU, ">>$ctrl->{'workdir'}l00_reminder.txt")) {
                     print OU "$form->{'starttime'}:$interval:$vibra:$vmsec:$msg\n";
                     close (OU);

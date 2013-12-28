@@ -8,11 +8,12 @@ use l00backup;
 
 my %config = (proc => "l00http_rptbattery_proc",
               desc => "l00http_rptbattery_desc");
-my ($buffer, $lastbuf, $timeslot, $skip, $len);
+my ($buffer, $lastbuf, $timeslot, $skip, $len, $taillen);
 $lastbuf = '';
 $timeslot = 60 * 1;
 $skip = 0;
 $len = 100000;
+$taillen = 60;
 
 sub l00http_rptbattery_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -25,7 +26,7 @@ sub l00http_rptbattery_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $tmp, $output, $table);
+    my ($path, $fname, $tmp, $output, $table, $buf);
     my ($lnno, $svgperc, $svgvolt, $svgtemp, $svgmA, $battcnt);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
     my ($yr, $mo, $da, $hr, $mi, $se, $now, $fpath);
@@ -43,6 +44,9 @@ sub l00http_rptbattery_proc {
     }
     if ((defined ($form->{'len'})) && ($form->{'len'} =~ /(\d+)/)) {
         $len = $1;
+    }
+    if ((defined ($form->{'taillen'})) && ($form->{'taillen'} =~ /(\d+)/)) {
+        $taillen = $1;
     }
 
     # Send HTTP and HTML headers
@@ -125,6 +129,8 @@ sub l00http_rptbattery_proc {
 
             if ($svgvolt ne '') {
                 &l00svg::plotsvg ('battvolt', $svgvolt, 500, 300);
+                $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
+                print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
                 print $sock "<p>Volts:<br><a href=\"/svg.htm?graph=battvolt&view=\"><img src=\"/svg.htm?graph=battvolt\" alt=\"voltage over time\"></a>\n";
             }
             if ($svgmA ne '') {
@@ -143,10 +149,49 @@ sub l00http_rptbattery_proc {
     }
 
     print $sock "<p>\n";
-    $table =~ s/(\.\d)\d+ UTC/ UTC/g;
-    print $sock &l00wikihtml::wikihtml ($ctrl, "", $table, 0);
 
-    print $sock "$output<hr><a href=\"#top\">Jump to top</a>,\n";
+    print $sock "<form action=\"/rptbattery.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"settail\" value=\"Set\"></td>\n";
+    print $sock "        <td>Display <input type=\"text\" size=\"4\" name=\"taillen\" value=\"$taillen\"> lines head and tail and skip rest</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+    print $sock "</form><p>\n";
+
+    $table =~ s/(\.\d)\d+ UTC/ UTC/g;
+    $tmp = 0;
+    $buf = '';
+    foreach $_ (split("\n", $table)) {
+        $tmp++;
+        if ($tmp < $taillen) {
+            $buf .= "$_\n";
+        } elsif ($tmp == $taillen) {
+            $buf .= "$_\n";
+            $buf .= "\nskipping ".($lnno - $taillen * 2)." lines\n\n";
+        } elsif ($tmp > ($lnno - $taillen)) {
+            $buf .= "$_\n";
+        }
+    }
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $buf, 0);
+
+    $tmp = 0;
+    $buf = '';
+    foreach $_ (split("\n", $output)) {
+        $tmp++;
+        if ($tmp < $taillen) {
+            $buf .= "$_\n";
+        } elsif ($tmp == $taillen) {
+            $buf .= "$_\n";
+            $buf .= "\nskipping ".($lnno - $taillen * 2)." lines\n\n";
+        } elsif ($tmp > ($lnno - $taillen)) {
+            $buf .= "$_\n";
+        }
+    }
+    print $sock "$buf<hr><a href=\"#top\">Jump to top</a>,\n";
     print $sock "<p><a name=\"end\">end</a>\n";
 
     # send HTML footer and ends
