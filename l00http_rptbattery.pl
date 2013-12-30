@@ -137,13 +137,13 @@ sub l00http_rptbattery_proc {
                 &l00svg::plotsvg ('battmA', $svgmA, 500, 300);
                 print $sock "<p>mA:<br><a href=\"/svg.htm?graph=battmA&view=\"><img src=\"/svg.htm?graph=battmA\" alt=\"charge/discharge current over time\"></a>\n";
             }
-            if ($svgtemp ne '') {
-                &l00svg::plotsvg ('batttemp', $svgtemp, 500, 300);
-                print $sock "<p>Temp:<br><a href=\"/svg.htm?graph=batttemp&view=\"><img src=\"/svg.htm?graph=batttemp\" alt=\"temperature over time\"></a>\n";
-            }
             if ($svgperc ne '') {
                 &l00svg::plotsvg ('battpercentage', $svgperc, 500, 300);
                 print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
+            }
+            if ($svgtemp ne '') {
+                &l00svg::plotsvg ('batttemp', $svgtemp, 500, 300);
+                print $sock "<p>Temp:<br><a href=\"/svg.htm?graph=batttemp&view=\"><img src=\"/svg.htm?graph=batttemp\" alt=\"temperature over time\"></a>\n";
             }
         }
     }
