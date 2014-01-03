@@ -33,8 +33,8 @@ sub l00http_periobattery_suspend {
     # suspend to sdcard so it can be resumed after restart
     &l00httpd::l00fwriteOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_periobattery_vals.saved");
     &l00httpd::l00fwriteBuf($ctrl, "interval=$interval\n");
-    &l00httpd::l00fwriteBuf($ctrl, "battcnt=$battcnt\n");
-    &l00httpd::l00fwriteBuf($ctrl, "battpolls=$battpolls\n");
+    #&l00httpd::l00fwriteBuf($ctrl, "battcnt=$battcnt\n");
+    #&l00httpd::l00fwriteBuf($ctrl, "battpolls=$battpolls\n");
     &l00httpd::l00fwriteBuf($ctrl, "savedpath=$savedpath\n");
     &l00httpd::l00fwriteBuf($ctrl, "perltime=$perltime\n");
     &l00httpd::l00fwriteBuf($ctrl, "firstdmesg=$firstdmesg");
@@ -57,8 +57,8 @@ sub l00http_periobattery_suspend {
 
     l00httpd::dbp($config{'desc'}, "Suspend to sdcard:\n");
     l00httpd::dbp($config{'desc'}, "interval=$interval\n");
-    l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
-    l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
+    #l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
+    #l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
     l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
     l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
     l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
@@ -85,24 +85,32 @@ sub l00http_periobattery_resume {
         $lastdmesg = '';
         $table = '';
 
-        $_ = &l00httpd::l00freadLine($ctrl);
-        ($interval) = /interval=(\d+)/;
-        $_ = &l00httpd::l00freadLine($ctrl);
-        ($battcnt) = /battcnt=(\d+)/;
-        $_ = &l00httpd::l00freadLine($ctrl);
-        ($battpolls) = /battpolls=(\d+)/;
-        $_ = &l00httpd::l00freadLine($ctrl);
-        if (!(($savedpath) = /savedpath=(.+)/)) {
-            $savedpath = '';
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            if (/interval=(\d+)/) {
+                $interval = $1;
+            }
+#           if (/battcnt=(\d+)/) {
+#               $battcnt = $1;
+#           }
+#           if (/battpolls=(\d+)/) {
+#               $battpolls = $1;
+#           }
+            if (/savedpath=(.+)/) {
+                $savedpath = $1;
+            } else {
+                $savedpath = '';
+            }
+
+            if (/perltime=(\d+)/) {
+                $perltime = $1;
+            }
+            if (/firstdmesg=(.+)/) {
+                $firstdmesg = "$1\n";
+            }
+            if (/lastdmesg=(.+)/) {
+                $lastdmesg = "$1\n";
+            }
         }
-        $_ = &l00httpd::l00freadLine($ctrl);
-        ($perltime) = /perltime=(\d+)/;
-        $_ = &l00httpd::l00freadLine($ctrl);
-        ($firstdmesg) = /firstdmesg=(.+)/;
-        $firstdmesg .= "\n";
-        $_ = &l00httpd::l00freadLine($ctrl);
-        ($lastdmesg) = /lastdmesg=(.+)/;
-        $lastdmesg .= "\n";
 
         &l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}tmp/l00_periobattery_battlog.saved");
         $battlog = &l00httpd::l00freadAll($ctrl);
@@ -114,20 +122,25 @@ sub l00http_periobattery_resume {
         $table = &l00httpd::l00freadAll($ctrl);
         if (!defined($table)) {
             $table = '';
+        } else {
+            $battcnt = 0;
+            foreach $_ (split("\n", $table)) {
+                $battcnt++;
+            }
         }
 
-        l00httpd::dbp($config{'desc'}, "Resumed from sdcard:\n");
-        l00httpd::dbp($config{'desc'}, "interval=$interval\n");
-        l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
-        l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
-        l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
-        l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
-        l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
-        l00httpd::dbp($config{'desc'}, "lastdmesg=$lastdmesg");
         l00httpd::dbp($config{'desc'}, "battlog:\n");
         l00httpd::dbp($config{'desc'}, $battlog);
         l00httpd::dbp($config{'desc'}, "table:\n");
         l00httpd::dbp($config{'desc'}, $table);
+        l00httpd::dbp($config{'desc'}, "Resumed from sdcard:\n");
+        l00httpd::dbp($config{'desc'}, "interval=$interval\n");
+        l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
+        #l00httpd::dbp($config{'desc'}, "battpolls=$battpolls\n");
+        l00httpd::dbp($config{'desc'}, "savedpath=$savedpath\n");
+        l00httpd::dbp($config{'desc'}, "perltime=$perltime\n");
+        l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
+        l00httpd::dbp($config{'desc'}, "lastdmesg=$lastdmesg");
 
         # delete .saved once resumed
         &l00backup::backupfile  ($ctrl, "$ctrl->{'workdir'}tmp/l00_periobattery_vals.saved", 0, 0);
@@ -159,7 +172,7 @@ sub l00http_periobattery_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $lnno);
+    my ($tmp, $lnno, $keep);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -192,6 +205,36 @@ sub l00http_periobattery_proc {
     }
     if (defined ($form->{"resume"})) {
         &l00http_periobattery_resume($ctrl);
+    }
+    if ((defined ($form->{"keep"})) && ($form->{"keep"} =~ /(\d+)/)) {
+        $keep = $1;
+        $tmp = '';
+        $lnno = 0;
+        foreach $_ (split("\n", $table)) {
+            if ($lnno == 0) {
+                $tmp = "$_\n";
+            }
+            if ($lnno > ($battcnt - $keep)) {
+                $tmp .= "$_\n";
+            }
+            $lnno++;
+        }
+        $table = $tmp;
+
+        $tmp = '';
+        $lnno = 0;
+        foreach $_ (split("\n", $battlog)) {
+            if ($lnno == 0) {
+                $tmp = "$_\n";
+            }
+            if ($lnno > ($battcnt - $keep)) {
+                $tmp .= "$_\n";
+            }
+            $lnno++;
+        }
+        $battlog = $tmp;
+
+        $battcnt = $keep;
     }
     if (defined ($form->{"clear"})) {
         $interval = 0;
@@ -322,6 +365,19 @@ sub l00http_periobattery_proc {
 
     print $sock "</table>\n";
     print $sock "</form>\n";
+
+
+    print $sock "<br><form action=\"/periobattery.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"trim\" value=\"Trim\"></td>\n";
+    print $sock "        <td>and keep last <input type=\"text\" size=\"6\" name=\"keep\" value=\"$battcnt\"></td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
 
     print $sock "<p>Lines: $battcnt. Polls: $battpolls\n";
     print $sock "<a name=\"end\"></a>\n";
