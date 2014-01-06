@@ -29,7 +29,7 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite);
+    my ($lineno, $buffer, $pname, $fname, $hilite, $clip);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -141,10 +141,18 @@ sub l00http_view_proc {
                         print $sock "$_\n";
                     }
                 } else {
+                    $clip = &l00httpd::urlencode ($_);
+					# = "clip.htm?update=Copy+to+clipboard&clip=$tmp
                     if ($hilite == $lineno) {
-                        print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#line%d\">%04d</a>: ", $lineno, $lineno, $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
+                        print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
+                        print $sock $clip;
+                        print $sock sprintf ("\">%04d</a>: ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
+#                       print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#line%d\">%04d</a>: ", $lineno, $lineno, $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
-                        print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#line%d\">%04d</a>: ", $lineno, $lineno, $lineno) . "$_\n";
+                        print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
+                        print $sock $clip;
+                        print $sock sprintf ("\">%04d</a>: ", $lineno) . "$_\n";
+#                       print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#line%d\">%04d</a>: ", $lineno, $lineno, $lineno) . "$_\n";
                     }
                 }
             }

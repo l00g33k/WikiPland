@@ -236,6 +236,16 @@ sub l00http_crypt_proc (\%) {
         $buffer = $ctrl->{'droid'}->getClipboard();
         $buffer = $buffer->{'result'};
     }
+    if (defined ($form->{'toram'})) {
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');
+        &l00httpd::l00fwriteBuf($ctrl, $buffer);
+        &l00httpd::l00fwriteClose($ctrl);
+    }
+    if (defined ($form->{'fromram'})) {
+        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.pl")) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+		}
+    }
 
     print $sock "<hr><a name=\"end\"></a>\n";
 
@@ -269,6 +279,12 @@ sub l00http_crypt_proc (\%) {
         print $sock "<input type=\"submit\" name=\"cbtoedit\" value=\"CB to edit\">\n";
         print $sock "</td></tr>\n";
     }
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"toram\" value=\"edit to ram\">\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"submit\" name=\"fromram\" value=\"ram to edit\">\n";
+    print $sock "<a href=\"/edit.htm?path=l00://crypt.pl\">edit ram</a> \n";
+    print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 

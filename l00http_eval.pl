@@ -34,17 +34,22 @@ sub l00http_eval_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>eval</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 
 
-    if (defined ($form->{'submit'})) {
-        if (defined ($form->{'eval'})) {
-#            $eval = "$form->{'eval'} ";
-            $eval = $form->{'eval'};
+    if (defined ($form->{'eval'})) {
+        $eval = $form->{'eval'};
+    }
+    if (defined ($form->{'clear'})) {
+        $eval = '';
+    }
+    if (defined ($form->{'paste'})) {
+        if ($ctrl->{'os'} eq 'and') {
+            $eval = $ctrl->{'droid'}->getClipboard();
+            $eval = $eval->{'result'};
         }
     }
-    print $sock "<hr>\n";
     $lncn = 0;
     if (defined ($eval) && (length ($eval) > 1)) {
         foreach $line (split ("\n", $eval)) {
@@ -58,8 +63,10 @@ sub l00http_eval_proc {
     }
 
     print $sock "<form action=\"/eval.htm\" method=\"post\">\n";
-    print $sock "<p><input type=\"submit\" name=\"submit\" value=\"Eval\">\n";
-    print $sock "<p><textarea name=\"eval\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$eval</textarea>\n";
+    print $sock "<input type=\"submit\" name=\"submit\" value=\"Eval\">\n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
+    print $sock "<br><textarea name=\"eval\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$eval</textarea>\n";
     print $sock "</form>\n";
 
     print $sock "<a name=\"end\"></a>\n";

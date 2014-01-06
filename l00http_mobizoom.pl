@@ -233,7 +233,16 @@ sub l00http_mobizoom_proc {
 
     if ($mode1online2offline4download & 3) {
     print $sock "<hr>\n";
-    print $sock "URL: <a href=\"$url\">original</a> \n";
+    $tmp = $url;
+    $tmp =~ s/ /+/g;
+    $tmp =~ s/:/%3A/g;
+    $tmp =~ s/&/%26/g;
+    $tmp =~ s/=/%3D/g;
+    $tmp =~ s/"/%22/g;
+    $tmp =~ s/\//%2F/g;
+    $tmp =~ s/\|/%7C/g;
+    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
+    print $sock "<a href=\"$url\">original</a> \n";
     print $sock "<a href=\"$mobiurl\">Google Mobilizer</a> \n";
     print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
     print $sock "<hr>\n";
