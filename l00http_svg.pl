@@ -11,6 +11,7 @@ use l00svg;
 
 my %config = (proc => "l00http_svg_proc",
               desc => "l00http_svg_desc");
+my ($lastx, $lasty, $lastoff);
 
 sub l00http_svg_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -78,6 +79,16 @@ sub l00http_svg_proc {
             } else {
                 print $sock "Values: ($x, $y) [#$off]<br>\n";
             }
+            if (defined($lastx)) {
+                if (($x > 946713600) && ($x < 1577865600)) {
+                    print $sock "Delta: (", ($x - $lastx) / 3600, " hr, ", $y - $lasty, " ) [#", $off - $lastoff, "]<br>\n";
+                } else {
+                    print $sock "Delta: (", $x - $lastx, ", ", $y - $lasty, " ) [#", $off - $lastoff, "]<br>\n";
+                }
+            }
+            $lastx = $x;
+            $lasty = $y;
+            $lastoff = $off;
         }
         print $sock "<p><a href=\"/svg.htm\">List of all graphs</a><br>\n";
 
