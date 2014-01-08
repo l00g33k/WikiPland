@@ -62,6 +62,7 @@ sub l00http_txtdopl_proc (\%) {
             $oldfile = '';
             print "txtdopl: sel=>$sel<\n", if ($ctrl->{'debug'} >= 3);
             while (<IN>) {
+                s/\r//;
                 $oldfile .= $_;
                 if (/^\%TXTDOPL$sel\%/) {
                     if ($dolncnt == -1) {
@@ -77,6 +78,7 @@ sub l00http_txtdopl_proc (\%) {
                 } elsif (/^\%TXTDOPL.*\%/) {
                     # %TXTDOPLother% not selected
                     while (<IN>) {
+                        s/\r//;
                         $oldfile .= $_;
                         # skip not selected do lines
                         if (/^\%TXTDOPL.*\%/) {
@@ -109,14 +111,17 @@ sub l00http_txtdopl_proc (\%) {
                 undef $this;
                 undef $next;
                 while (<IN>) {
+                    s/\r//;
                     $dolncnt++;
                     if (/^\%TXTDOPL$sel\%/) {
                         $perl .= $_;
                         while (<IN>) {
+                            s/\r//;
                             $dolncnt++;
                             $perl .= $_;
                             if (/^\%TXTDOPL$sel\%/) {
                                 $_ = <IN>;
+                                s/\r//;
                                 $dolncnt++;
                                 $perladd = 1;
                                 last;
@@ -126,10 +131,12 @@ sub l00http_txtdopl_proc (\%) {
                         # %TXTDOPLother% not selected
                         $perl .= $_;
                         while (<IN>) {
+                            s/\r//;
                             $perl .= $_;
                             # skip not selected do lines
                             if (/^\%TXTDOPL.*\%/) {
                                 $_ = <IN>;
+                                s/\r//;
                                 $perladd = 1;
                                 last;
                             }
@@ -158,6 +165,21 @@ sub l00http_txtdopl_proc (\%) {
                 $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
                 close (IN);
                 if ($newfile ne $oldfile) {
+#print $sock "<hr><hr><hr>\n";
+#print $sock length($newfile) . "bytes\n";
+#print $sock "<hr><hr><hr><pre>";
+#foreach $_ (split("\n", $newfile)) {
+#    print $sock ">$_<\n";
+#}
+#print $sock "</pre><hr><hr><hr>\n\n";
+#print $sock "<hr><hr><hr>\n";
+#print $sock length($oldfile) . "bytes\n";
+#print $sock "<hr><hr><hr><pre>";
+#foreach $_ (split("\n", $oldfile)) {
+#    print $sock ">$_<\n";
+#}
+#print $sock "</pre><hr><hr><hr>\n\n";
+
                     # write new file only if changed
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
                     open (OU, ">$form->{'path'}");
