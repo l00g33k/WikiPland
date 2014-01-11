@@ -710,9 +710,7 @@ print "sock timeout 3s\n";
                 if (defined($ctrl{'screenbrightness'})) {
                     $tmp = $ctrl{'droid'}->getScreenBrightness ();
                     $tmp = $tmp->{'result'};
-                    if (($tmp != $ctrl{'screenbrightness'}) &&
-                        ($tmp != 255)) {
-                       # 255 is Fastbright, don't over write
+                    if ($tmp != $ctrl{'screenbrightness'}) {
                        $ctrl{'droid'}->makeToast("Resetting brightness from $tmp to $ctrl{'screenbrightness'}");
                        $ctrl{'droid'}->setScreenBrightness ($ctrl{'screenbrightness'});
                     }

@@ -7,8 +7,6 @@
 
 my %config = (proc => "l00http_eval_proc",
               desc => "l00http_eval_desc");
-my ($eval);
-$eval = '';
 
 sub l00http_eval_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -22,6 +20,7 @@ sub l00http_eval_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($line, $lncn, $rst);
+    my ($eval);
 
 #    my ($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$l,$m);
 #    my ($n,$o,$p,$q,$r,$s,$t,$u,$v,$w,$x,$y,$z);
@@ -34,12 +33,14 @@ sub l00http_eval_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>eval</title>" . $ctrl->{'htmlhead2'};
+    print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 
-
     if (defined ($form->{'eval'})) {
         $eval = $form->{'eval'};
+    } else {
+        $eval = '';
     }
     if (defined ($form->{'clear'})) {
         $eval = '';
@@ -70,6 +71,12 @@ sub l00http_eval_proc {
     print $sock "</form>\n";
 
     print $sock "<a name=\"end\"></a>\n";
+    print $sock "<a href=\"#top\">Jump to top</a><p>\n";
+
+    print $sock "<a href=\"/eval.htm?eval=%24ctrl-%3E%7B%27droid%27%7D-%3EmakeToast%28%27Making+a+toast%27%29%3B\">Example to invoke</a>:<p>\n";
+    print $sock "<pre>\n";
+    print $sock "\$ctrl->{'droid'}->makeToast('Making a toast');\n";
+    print $sock "</pre>\n";
 
     if (defined ($eval) && (length ($eval) > 1)) {
         print $sock "<hr><pre>$eval</pre>\n";
@@ -80,6 +87,5 @@ sub l00http_eval_proc {
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
 }
-
 
 \%config;
