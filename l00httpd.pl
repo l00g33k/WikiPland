@@ -757,8 +757,19 @@ print "sock timeout 3s\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">Home</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
                 if (defined($ctrl{'reminder'})) {
                     # put reminder.pl message on title banner too
-                    $ctrl{'home'} = "<p><center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center><p> $ctrl{'home'}";
+                    $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center><p>$ctrl{'home'}";
                 }
+
+                # a generic scheme to support system wide banner
+                # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
+                # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
+                foreach $_ (sort keys %ctrl) {
+                    if (/^BANNER:(.+)/) {
+                        #print "key $_\n";
+                        $ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                    }
+                }
+
                 # invoke module
                 if (defined ($modsinfo{"$modcalled:fn:proc"})) {
                     $subname = $modsinfo{"$modcalled:fn:proc"};
