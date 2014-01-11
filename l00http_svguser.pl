@@ -21,25 +21,35 @@ sub l00http_svguser_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $svgdata, $tmp);
+    my (@alllines, $line, $svgdata, $tmp, $buf);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
 
-    $svgdata = '';
+    $buf = '';
     if (defined ($form->{'paste'})) {
         if ($ctrl->{'os'} eq 'and') {
-            $svgdata = $ctrl->{'droid'}->getClipboard();
-            $svgdata = $svgdata->{'result'};
+            $buf = $ctrl->{'droid'}->getClipboard();
+            $buf = $buf->{'result'};
         }
     } elsif (defined ($form->{'plot'})) {
-        $svgdata = $form->{'svgdata'};
+        $buf = $form->{'svgdata'};
+    }
+    if ((defined ($form->{'gwd'})) && ($form->{'gwd'} =~ /(\d+)/)) {
+        $gwd = $1;
+    }
+    if ((defined ($form->{'ght'})) && ($form->{'ght'} =~ /(\d+)/)) {
+        $ght = $1;
     }
 
-    $svgdata =~ s/\r/ /g;
-    $svgdata =~ s/\n/ /g;
-    $svgdata =~ s/ +/ /g;
+    $svgdata = $buf;
+    # conversions
+    $svgdata =~ s/\t/,/g; # tab to ,
+    $svgdata =~ s/\r/ /g; # \r to space
+    $svgdata =~ s/\n/ /g; # \n to space
+    $svgdata =~ s/,+/,/g; # multiple ,, to single ,
+    $svgdata =~ s/ +/ /g; # multiple spaces to single space
 
     print $sock "<form action=\"/svguser.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"plot\" value=\"Plot\"> \n";
@@ -48,7 +58,7 @@ sub l00http_svguser_proc {
     }
     print $sock "Width: <input type=\"text\" size=\"6\" name=\"gwd\" value=\"$gwd\">\n";
     print $sock "Height: <input type=\"text\" size=\"6\" name=\"ght\" value=\"$ght\">\n";
-    print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\">$svgdata</textarea>\n";
+    print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\">$buf</textarea>\n";
     print $sock "</form>\n";
 
     &l00svg::plotsvg ('svguser', $svgdata, $gwd, $ght);

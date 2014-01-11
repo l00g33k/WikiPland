@@ -1,0 +1,10 @@
+* eval.pl examples:
+
+<pre>
+$ctrl->{'droid'}->launch('com.dolphin.browser.BrowserActivity');
+$ctrl->{'droid'}->startActivity("android.intent.action.MAIN", undef, undef, undef, 0, "com.twitter.android", "com.twitter.android.StartActivity"); 
+$perf = $ctrl->{'droid'}->getLaunchableApplications();
+print $sock "<pre>" . &l00httpd::dumphashbuf ("perf", $perf) . "</pre>";
+
+
+</pre>

@@ -1,0 +1,7 @@
+Plots user supplied data as X-Y graph.
+* X/Y data are separated by ',' or single tab.
+* Each pair are separated by either space or newline.
+For example:
+<pre>
+1,2 2,4 3,9 4,16
+</pre>
