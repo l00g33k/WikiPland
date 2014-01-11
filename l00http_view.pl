@@ -199,9 +199,10 @@ sub l00http_view_proc {
     print $sock "</form>\n";
     print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
-    print $sock "<p>Send $form->{'path'} to <a href=\"/launcher.htm?path=$form->{'path'}\">launcher</a>\n";
+    print $sock "<p><a href=\"#top\">Jump to top</a> \n";
+    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">launcher</a>\n";
+    print $sock "<p>Send $form->{'path'} to launcher\n";
 
-    print $sock "<a href=\"#top\">Jump to top</a><p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

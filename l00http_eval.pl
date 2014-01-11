@@ -35,7 +35,7 @@ sub l00http_eval_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>eval</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
-    print $sock "<a href=\"#end\">Jump to end</a>\n";
+    print $sock "<a href=\"#end\">Jump to end</a><br>\n";
 
     if (defined ($form->{'eval'})) {
         $eval = $form->{'eval'};
@@ -73,9 +73,13 @@ sub l00http_eval_proc {
     print $sock "<a name=\"end\"></a>\n";
     print $sock "<a href=\"#top\">Jump to top</a><p>\n";
 
-    print $sock "<a href=\"/eval.htm?eval=%24ctrl-%3E%7B%27droid%27%7D-%3EmakeToast%28%27Making+a+toast%27%29%3B\">Example to invoke</a>:<p>\n";
+    print $sock "<a href=\"/eval.htm?eval=%24ctrl-%3E%7B%27droid%27%7D-%3EmakeToast%28%27Making+a+toast%27%29%3B\">Example to invoke</a>:<br>\n";
     print $sock "<pre>\n";
     print $sock "\$ctrl->{'droid'}->makeToast('Making a toast');\n";
+    print $sock "</pre>\n";
+    print $sock "<a href=\"/eval.htm?eval=%24ctrl-%3E%7B%27droid%27%7D-%3EgenerateDtmfTones%28%27%23%27%2C100%29%3B\">Example to invoke</a>:<br>\n";
+    print $sock "<pre>\n";
+    print $sock "\$ctrl->{'droid'}->generateDtmfTones('#',100);\n";
     print $sock "</pre>\n";
 
     if (defined ($eval) && (length ($eval) > 1)) {
