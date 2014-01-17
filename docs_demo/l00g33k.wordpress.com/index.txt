@@ -1,39 +1,62 @@
 %TOC%
 =Phase 0: Preparing=
 * Notations:
-** *l*Todo now*l*
-** *y*Todo next*y*
-** *r*Todo when*r*
-** *g*Done*g*
+** *l*Todo now**
+** *y*Todo next**
+** *r*Todo when**
+** *g*Done**
 * WhatIsAndWhereAreMyWikiPlandSites
-** *r*Why is this interesting*r*
-** *r*How can I see a demo*r*
-** *r*Where is everything*r*
-** *r*What do I do next*r*
+** *y*!WikiPland Overview**
+** *r*Why is this interesting**
+** *r*How can I see a demo**
+** *r*Where is everything**
+** *r*What do I do next**
 * AAShare2Clip
-** *r*Rebuild on Asus*r*
-** *r*README.md*r*
+** *g*Rebuild on Asus**
+** *y*README.md**
 *** How to use
 *** How to build
-** *r*Sourceforge repo*r*
-** *r*List in master list*r*
+** *r*Sourceforge repo**
+** *r*List in master list**
 * RHC Wikipland
-** *r*README.md*r*
+** *y*README.md**
 *** How to use
 *** How to setup
-** *r*Sourceforge repo*r*
-** *r*List in master list*r*
+** *r*Sourceforge repo**
+** *r*List in master list**
 * Wikipland APK
-** *r*Rebuild on Asus*r*
-** *r*README.md*r*
+** *r*Rebuild on Asus**
+** *y*README.md**
 *** How to use
 *** How to build
-** *r*Sourceforge repo*r*
-** *r*List in master list*r*
+** *r*Sourceforge repo**
+** *r*List in master list**
 * l00httpd
-** *r*README.md*r*
+** *y*README.md**
 *** How to use
 *** How to build
+** *r*Other useful notes**
+*** authorizedkeys for dropbear
+=Phase A: WikiPlandOverview=
+* What is !WikiPland
+* How to take a test drive
+* Getting the source code
+=Phase B: README.md=
+* How to make use of this git repository
+* WikiPlandReadme
+* WikiPlandApkReadme
+* WikiPlandRhcReadme
+* AAShare2ClipReadme
+=Phase C: Wordpress=
+* DenseBookmarks: bookmarks, copy to clipboard, and Blowfish encryption
+* MyReadingScheme: reader.pl, mobizoom.pl
+=Phase D: Publication=
+* Wordpress
+* Slashdot
+* Twitter
+* Wikispaces
+
+
 =Phase 1: Getting People Intrested=
 * WhatIsWikiPland: What is !WikiPland?
 * WikiPland Web Footprint:
