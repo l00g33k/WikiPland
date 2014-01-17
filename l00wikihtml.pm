@@ -114,7 +114,8 @@ sub wikihtml {
     my ($jump, $anchor, $last, $tmp, $color, $tag, $bareclip);
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
-    my ($lnnoinfo, @lnnoall, $leadcolor);
+    my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx);
+    my ($markdownmode, $markdownparanobr);
 
     undef @chlvls;
     undef $lastchlvl;
@@ -275,7 +276,12 @@ sub wikihtml {
     $lnno = 0;
     $flaged = '';
     $postsit = '';
-    foreach $_  (split ("\n", $inbuf)) {
+    $markdownmode = 0;
+    $markdownparanobr = 0;
+    @inputcache = split ("\n", $inbuf); # allows look forward
+#    foreach $_  (split ("\n", $inbuf)) {
+    for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
+        $_ = $inputcache[$cacheidx];
         if (/%l00httpd:lnno:([0-9,]+)%/) {
             $lnnoinfo = $1;
             s/%l00httpd:lnno:([0-9,]+)%//;
@@ -284,6 +290,30 @@ sub wikihtml {
         }
         s/\r//g;
         $lnno++;
+
+
+        # MARKDOWN compatibility
+        # http://daringfireball.net/projects/markdown/basics
+        # ## headings
+        if (/^(#+) (\S.*)$/) {
+            $_ = '=' x length($1) . $2 . '=' x length($1) . "\n";
+            $markdownmode = 1;
+        }
+        # images
+        # ![alt text](/path/to/img.jpg "Title")
+        s/!\[.+?\]\((.+?) *"(.+?)"\)/<img src="$1">$2/g;
+        s/!\[.+?\]\((.+?)\)/<img src="$1">$2/g;
+        # links
+        # This is an [example link](http://example.com/).
+        s/\[(.+?)\]\((.+?)\)/<a href="$2">$1<\/a>/g;
+        # mutiple line paragraphs
+        if ($markdownmode) {
+            # if line start with word, then it must be 
+            # normal paragraph. Don't put <br> at the end
+            $markdownparanobr = /^\w/;
+        }
+
+
 
         # %DATETIME% expansion
         if (/%DATETIME%/) {
@@ -334,6 +364,9 @@ sub wikihtml {
             $oubuf .=  "<hr>\n";
             next;
         }
+
+
+
 
         # lines ending in ??? gets a colored Highlight link before TOC
         # aka post it note
@@ -736,7 +769,12 @@ sub wikihtml {
             if ($ispre) {
                 $oubuf .=  "$_\n";
             } else {
-                $oubuf .=  "$_<br>\n";
+                if ($markdownparanobr) {
+                    # MARKDOWN mode, paragraph not ended yet
+                    $oubuf .=  "$_\n";
+                } else {
+                    $oubuf .=  "$_<br>\n";
+                }
             }
             if (/<\/pre>/) {
                 $ispre = 0;
