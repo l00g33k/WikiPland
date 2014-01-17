@@ -29,7 +29,7 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $clip);
+    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -59,13 +59,6 @@ sub l00http_view_proc {
     if (defined ($form->{'skip'})) {
         $skip = $form->{'skip'};
     }
-    print $sock "<form action=\"/view.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"update\" value=\"Skip\">\n";
-    print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
-    print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number\n";
-    print $sock "</form>\n";
 
     $hilite = 0;
     if (defined ($form->{'hiliteln'})) {
@@ -74,6 +67,36 @@ sub l00http_view_proc {
     if (defined ($form->{'hilite'})) {
         $hilite = $form->{'hilite'};
     }
+    # bring high lighted line into view
+    if ($hilite > 0) {
+        # we are highlighting
+        if (($hilite < $skip) || ($hilite > $skip + $maxln)) {
+            # but it won't be in view. adjust skip and maxln
+            $skip = $hilite - 500;
+            if ($skip < 0) {
+                $skip = 0;
+            }
+            $maxln = 1000;
+        }
+    }
+
+    print $sock "<form action=\"/view.htm\" method=\"get\">\n";
+    print $sock "<input type=\"submit\" name=\"update\" value=\"Skip\">\n";
+    print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
+    print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number\n";
+    print $sock "</form>\n";
+    if ($hilite > 0) {
+        # and now we add a jump to link
+        $tmp = $hilite - 10;
+        if ($tmp < 1) {
+            $tmp = 1;
+        }
+        print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>\n";
+    }
+
+
     $lineno = 0;
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         $found = '';
@@ -147,12 +170,10 @@ sub l00http_view_proc {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
                         print $sock sprintf ("\">%04d</a>: ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
-#                       print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#line%d\">%04d</a>: ", $lineno, $lineno, $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
                         print $sock sprintf ("\">%04d</a>: ", $lineno) . "$_\n";
-#                       print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#line%d\">%04d</a>: ", $lineno, $lineno, $lineno) . "$_\n";
                     }
                 }
             }
