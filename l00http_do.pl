@@ -7,8 +7,6 @@
 
 my %config = (proc => "l00http_do_proc",
               desc => "l00http_do_desc");
-my($doplpath);
-$doplpath = '';
 
 sub l00http_do_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -17,7 +15,12 @@ sub l00http_do_desc {
     "do: Perl 'do' the destination file";
 }
 
-my ($arg1, $arg2, $arg3);
+my ($arg1, $arg2, $arg3, $doplpath, $doplpathset);
+$arg1 = '';
+$arg2 = '';
+$arg3 = '';
+$doplpath = '';
+$doplpathset = 0;
 
 sub l00http_do_proc {
     my ($main);
@@ -25,7 +28,7 @@ sub l00http_do_proc {
     $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($rethash, $mypath, $refresh, $refreshtag, $notbare, $fname);
-    my ($quickon, $doplpathnow);
+    my ($doplpathnow);
 
     $notbare = 1;
     if (defined ($form->{'bare'})) {
@@ -53,24 +56,24 @@ sub l00http_do_proc {
     $mypath = $form->{'path'};
 
     # a lone /do.htm?path=c:/x/del5.pl sets $doplpath
-    if (( defined ($form->{'path'})) &&
-        (!defined ($form->{'arg1'})) &&
-        (!defined ($form->{'arg2'})) &&
-        (!defined ($form->{'arg3'})) &&
-        ($form->{'path'} =~ /\.pl$/)) {
-        $doplpath = $mypath;
+    if ((defined ($form->{'set'})) &&
+        (defined ($form->{'path'}))) {
+        $doplpath = $form->{'path'};
+        $doplpathset = 1;
+print "doplpath = $doplpath\n"
+    }
+    if (defined ($form->{'clear'})) {
+        $doplpath = '';
+        $doplpathset = 0;
+print "clear doplpath = $doplpath\n"
     }
 
-    # handling shortcut
-    if ((!($mypath =~ /\.pl$/)) && ($doplpath ne '')) {
-        # not supplying a .pl
-        # copy path to arg1
+    # handling Quick URL
+    if ($doplpathset) {
         $form->{'arg1'} = $mypath;
         $doplpathnow = $doplpath;
-        $quickon = 1;
     } else {
         $doplpathnow = $mypath;
-        $quickon = 0;
     }
 
     # Send HTTP and HTML headers
@@ -96,9 +99,17 @@ sub l00http_do_proc {
         if ($refresh eq '') {
             print $sock "<form action=\"/do.htm\" method=\"get\">\n";
             print $sock "<input type=\"submit\" name=\"do\" value=\"Do\">\n";
-            print $sock "Path:<input type=\"text\" name=\"path\" size=\"6\" value=\"$mypath\"> \n";
+            if ($doplpathset) {
+                print $sock "Arg1:<input type=\"text\" name=\"arg1\" size=\"6\" value=\"$form->{'arg1'}\"> \n";
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$doplpath\">\n";
+            } else {
+                print $sock "Path:<input type=\"text\" name=\"path\" size=\"6\" value=\"$mypath\"> \n";
+            }
             print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec<br>\n";
             print $sock "</form>\n";
+            if ($doplpathset) {
+                print $sock "Using Quick URL: $doplpath<p>\n";
+            }
         }
     }
 
@@ -128,11 +139,18 @@ sub l00http_do_proc {
         print $sock "Arg3: <input type=\"text\" name=\"arg3\" size=\"12\" value=\"$arg3\"> \n";
         print $sock "</form>\n";
 
-        if ($quickon) {
-            print $sock "Quick path is active. Permanent line:<br>\n";
+        if ($doplpathset) {
+            print $sock "Quick URL is active. Full URL is:<br>\n";
             $tmp = "/do.htm?do=Do+more&path=$doplpath&arg1=$form->{'arg1'}";
             print $sock "<a href=\"$tmp\">$tmp</a><br>\n";
         }
+
+        print $sock "<form action=\"/do.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+        print $sock "<input type=\"submit\" name=\"set\" value=\"Set\">\n";
+        print $sock "Quck URL to: $form->{'path'}\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "</form>\n";
 
         print $sock "<a name=\"end\"></a>\n";
 
