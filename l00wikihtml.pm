@@ -111,11 +111,11 @@ sub wikihtml {
     my ($ctrl, $pname, $inbuf, $flags) = @_;
     my ($oubuf, $bulvl, $tx, $lvn, $desc, $http, $toc, $toccol);
     my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els);
-    my ($jump, $anchor, $last, $tmp, $color, $tag, $bareclip);
+    my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $tag, $bareclip);
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
     my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx);
-    my ($markdownmode, $markdownparanobr);
+    my ($markdownmode, $markdownparanobr, $loop);
 
     undef @chlvls;
     undef $lastchlvl;
@@ -294,6 +294,24 @@ sub wikihtml {
 
         # MARKDOWN compatibility
         # http://daringfireball.net/projects/markdown/basics
+        # ====  or ---- style heading
+        if ($cacheidx < $#inputcache) {
+            $tmp = $inputcache[$cacheidx + 1];
+            if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+            }
+            if (length($_) == length($tmp)) {
+                # Making my life simple by requiring heading and == or -- equal length
+                $cacheidx++; # skip a line
+                if ($tmp eq "=" x length($_)) {
+                    $_ = "# $_";
+                }
+                if ($tmp eq "-" x length($_)) {
+                    $_ = "## $_";
+                }
+            }
+        }
+
         # ## headings
         if (/^(#+) (\S.*)$/) {
             $_ = '=' x length($1) . $2 . '=' x length($1) . "\n";
@@ -311,6 +329,41 @@ sub wikihtml {
             # if line start with word, then it must be 
             # normal paragraph. Don't put <br> at the end
             $markdownparanobr = /^\w/;
+
+            # code, 4 or more indents make <pre>code</pre>
+            $tmp = $_;
+            $tmp =~ s/&nbsp;/ /g;
+            if ($tmp =~ /^    /) {
+                # currnet line is indented
+                $tbuf = "$tmp\n";
+                $ahead = $cacheidx + 1;
+                # look forward
+                $loop = 1;
+                while ($loop) {
+                    $tmp = $inputcache[$ahead];
+                    if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                        $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                    }
+                    $tmp =~ s/&nbsp;/ /g;
+                    if ($tmp =~ /^    /) {
+                        $tbuf .= "$tmp\n";
+                        $ahead++;
+                    } else {
+                        $loop = 0;
+                    }
+                }
+                $tbuf =~ s/</&lt;/g;
+                $tbuf =~ s/>/&gt;/g;
+                $tbuf =~ s/&/&amp;/g;
+                $tbuf = "<pre>$tbuf</pre>";
+                # line $ahead isn't indented and wasn't included
+                #print "first     indented is line $cacheidx >$inputcache[$cacheidx]<\n";
+                #print "first not indented is line $ahead >$inputcache[$ahead]<\n";
+                #print "Proposed changes:\n$tbuf\n";
+                $cacheidx = $ahead - 1;
+                $oubuf .= $tbuf;
+                next;
+            }
         }
 
 
