@@ -224,8 +224,21 @@ sub l00http_crypt_proc (\%) {
     }
 
     # Render HTML with found text and translated plain2
-    $buffer = "$found$pre\n$cryptbound:$method:\n$plain2\n$cryptbound:$method:\n$post";
-    print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+    if ((defined ($form->{'savedecrypt'})) && 
+        (length($form->{'savedecrypt'}) > 0) &&
+        (!($form->{'savedecrypt'} =~ /^ *$/))) {
+        # save decrypted to file
+        if (open(OU, ">$form->{'savedecrypt'}")) {
+            binmode (OU);
+            print OU $plain;
+            close (OU);
+            print $sock "Decrypted content saved to: $form->{'savedecrypt'}<p>\n";
+        }
+    } else {
+        $buffer = "$found$pre\n$cryptbound:$method:\n$plain2\n$cryptbound:$method:\n$post";
+        print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+    }
+
     $buffer = "$pre\n$cryptbound:$method:\n$plain\n$cryptbound:$method:\n$post";
     # copy to clipboard
     if ((defined ($form->{'edittocb'})) && ($ctrl->{'os'} eq 'and')) {
@@ -311,6 +324,11 @@ sub l00http_crypt_proc (\%) {
     print $sock "Path:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Save decrypt:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"16\" name=\"savedecrypt\" value=\"\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
