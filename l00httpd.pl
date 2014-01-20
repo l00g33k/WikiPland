@@ -1141,7 +1141,7 @@ print "sock timeout 3s\n";
 
                 print $sock "</table>\n";
                 print $sock "<hr><a name=\"end\"></a>\n";
-                print $sock "<a href=\"#top\">top</a> \n";
+                print $sock "Scroll up for wiki/wake control. Jump to <a href=\"#top\">top</a> \n";
 
                 if ($ishost) {
                     print $sock "<a name=\"wifi\"></a>\n";
