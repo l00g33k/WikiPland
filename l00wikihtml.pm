@@ -304,12 +304,13 @@ sub wikihtml {
             if ((length($_) > 0) && (length($_) == length($tmp))) {
                 # Making my life simple by requiring heading and == or -- equal length
                 # At least one char long
-                $cacheidx++; # skip a line
                 if ($tmp eq "=" x length($_)) {
                     $_ = "# $_";
+                    $cacheidx++; # skip a line
                 }
                 if ($tmp eq "-" x length($_)) {
                     $_ = "## $_";
+                    $cacheidx++; # skip a line
                 }
             }
         }
