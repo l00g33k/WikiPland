@@ -854,10 +854,10 @@ print "sock timeout 3s\n";
                             }
                         }
                         if (defined ($FORM{'wifion'}) && ($FORM{'wifion'} eq 'on')) {
-                            $ctrl{'droid'}->wakeLockAcquirePartial();
+                            $ctrl{'droid'}->toggleWifiState (1);
                         }
                         if (defined ($FORM{'wifiof'}) && ($FORM{'wifiof'} eq 'on')) {
-                            $ctrl{'droid'}->wakeLockRelease();
+                            $ctrl{'droid'}->toggleWifiState (0);
                         }
                     }
 
