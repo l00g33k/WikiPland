@@ -816,24 +816,48 @@ print "sock timeout 3s\n";
                         (int ($FORM{'noclinav'}) <= 1)) {
                         $ctrl{'noclinav'} = $FORM{'noclinav'};
                     }
+                    if (defined ($FORM{'noclinavon'}) && ($FORM{'noclinavon'} eq 'on')) {
+                        $ctrl{'noclinav'} = 1;
+                    }
+                    if (defined ($FORM{'noclinavof'}) && ($FORM{'noclinavof'} eq 'on')) {
+                        $ctrl{'noclinav'} = 0;
+                    }
                     if (defined ($FORM{'clipath'}) &&
                         (length ($FORM{'clipath'}) > 0)) {
                         $ctrl{'clipath'} = $FORM{'clipath'};
                     }
-                    if ((defined ($FORM{'wake'})) && ($ctrl{'os'} eq 'and')) {
-                        if ($FORM{'wake'} eq 'on') {
+                    if (defined ($FORM{'clipathset'}) &&
+                        ($FORM{'clipathset'} =~ /(\S+)/)) {
+                        $ctrl{'clipath'} = $1;
+                    }
+                    if ($ctrl{'os'} eq 'and') {
+                        if ((defined ($FORM{'wake'})) && ($ctrl{'os'} eq 'and')) {
+                            if ($FORM{'wake'} eq 'on') {
+                                $ctrl{'droid'}->wakeLockAcquirePartial();
+                            }
+                            if ($FORM{'wake'} eq 'off') {
+                                $ctrl{'droid'}->wakeLockRelease();
+                            }
+                        }
+                        if (defined ($FORM{'wakeon'}) && ($FORM{'wakeon'} eq 'on')) {
                             $ctrl{'droid'}->wakeLockAcquirePartial();
                         }
-                        if ($FORM{'wake'} eq 'off') {
+                        if (defined ($FORM{'wakeof'}) && ($FORM{'wakeof'} eq 'on')) {
                             $ctrl{'droid'}->wakeLockRelease();
                         }
-                    }
-                    if ((defined ($FORM{'wifi'})) && ($ctrl{'os'} eq 'and')) {
-                        if ($FORM{'wifi'} eq 'on') {
-                            $ctrl{'droid'}->toggleWifiState (1);
+                        if (defined ($FORM{'wifi'})) {
+                            if ($FORM{'wifi'} eq 'on') {
+                                $ctrl{'droid'}->toggleWifiState (1);
+                            }
+                            if ($FORM{'wifi'} eq 'off') {
+                                $ctrl{'droid'}->toggleWifiState (0);
+                            }
                         }
-                        if ($FORM{'wifi'} eq 'off') {
-                            $ctrl{'droid'}->toggleWifiState (0);
+                        if (defined ($FORM{'wifion'}) && ($FORM{'wifion'} eq 'on')) {
+                            $ctrl{'droid'}->wakeLockAcquirePartial();
+                        }
+                        if (defined ($FORM{'wifiof'}) && ($FORM{'wifiof'} eq 'on')) {
+                            $ctrl{'droid'}->wakeLockRelease();
                         }
                     }
 
@@ -981,6 +1005,9 @@ print "sock timeout 3s\n";
                 print $sock "<a href=\"/httpd.htm\">Home</a> <a href=\"$ctrl{'quick'}\">Quick</a> \n";
                 print $sock "<a href=\"/ls.htm/QuickStart.htm?path=$plpath"."docs_demo/QuickStart.txt\">QuickStart</a>\n";
                 print $sock "<a href=\"#end\">end</a> \n";
+                if ($ctrl{'os'} eq 'and') {
+                    print $sock "<a href=\"#wifi\">wifi</a> \n";
+                }
                 print $sock "<a href=\"#ram\">ram</a> \n";
                 print $sock "<p>\n";
  
@@ -1009,17 +1036,15 @@ print "sock timeout 3s\n";
                         }
                     }
                     print $sock "<tr>";
-                    print $sock "<td><input type=\"text\" size=\"5\" name=\"nopw\" value=\"$tmp\"></td>\n";
+                    print $sock "<td><input type=\"text\" size=\"4\" name=\"nopw\" value=\"$tmp\"></td>\n";
                     print $sock "<td>&nbsp;</td><td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath')</td>\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappson\">Apps on</td>\n";
-#                   print $sock "<td>&nbsp;</td><td>Enable all Applets for external clients</td>\n";
                     print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients. <a href=\"/httpd.htm?defaulton=on\">Default only</a></td>\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappsoff\">Apps off</td>\n";
-#                   print $sock "<td>&nbsp;</td><td>Disable all Applets for external clients</td>\n";
                     print $sock "<td><a href=\"/shutdown.htm\">(Shutdown)</a></td><td>Disable all Applets for external clients</td>\n";
 
                     $tmp = "stopped";
@@ -1046,11 +1071,11 @@ print "sock timeout 3s\n";
                         # on the server, display controls
                         print $sock "<tr>";
                         $checked = $modsinfo{"$mod:ena:checked"};
-#                       print $sock "<td><input type=\"checkbox\" name=\"$mod\" $checked>$mod</td>\n";
                         print $sock "<td><input type=\"checkbox\" name=\"$mod\" $checked>".
                             "<a href=\"/view.htm/$mod.htm?path=$plpath"."l00http_$mod.pl\">".
                             "$mod</a></td>\n";
                         print $sock "<td><a href=\"/$mod.htm\">$mod</a></td><td>$moddesc{$mod}</td>\n";
+                        print $sock "</tr>\n";
                     } else {
                         # on client, enable links if enabled
                         if ($modsinfo{"$mod:ena:checked"} eq "checked") {
@@ -1058,6 +1083,7 @@ print "sock timeout 3s\n";
                         } else {
                             print $sock "<tr><td>$mod</td><td>$moddesc{$mod}</td>\n";
                         }
+                        print $sock "</tr>\n";
                     }
                 }
                 # list clients
@@ -1085,12 +1111,40 @@ print "sock timeout 3s\n";
                     }
                     print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
                 }
+                if ($ishost) {
+                    print $sock "<tr>";
+                    print $sock "<td><input type=\"checkbox\" name=\"noclinavon\">on</td>\n";
+                    print $sock "<td><input type=\"checkbox\" name=\"noclinavof\">off</td>\n";
+                    print $sock "<td>noclinav: on to restrict client directory navigation</td>\n";
+                    print $sock "</tr>\n";
+
+                    print $sock "<tr>";
+                    print $sock "<td>clipath:</td>\n";
+                    print $sock "<td><input type=\"text\" size=\"2\" name=\"clipathset\" value=\"\"></td>\n";
+                    print $sock "<td>clipath: restrict client to directory below this</td>\n";
+                    print $sock "</tr>\n";
+
+                    if ($ctrl{'os'} eq 'and') {
+                        print $sock "<tr>";
+                        print $sock "<td><input type=\"checkbox\" name=\"wakeon\">on</td>\n";
+                        print $sock "<td><input type=\"checkbox\" name=\"wakeof\">off</td>\n";
+                        print $sock "<td>wake: on to prevent Android from sleeping</td>\n";
+                        print $sock "</tr>\n";
+
+                        print $sock "<tr>";
+                        print $sock "<td><input type=\"checkbox\" name=\"wifion\">on</td>\n";
+                        print $sock "<td><input type=\"checkbox\" name=\"wifiof\">off</td>\n";
+                        print $sock "<td>wifi: turn wifi on/off</td>\n";
+                        print $sock "</tr>\n";
+                    }
+                }
 
                 print $sock "</table>\n";
                 print $sock "<hr><a name=\"end\"></a>\n";
                 print $sock "<a href=\"#top\">top</a> \n";
 
                 if ($ishost) {
+                    print $sock "<a name=\"wifi\"></a>\n";
                     # on server: display submit button
                     print $sock "</form>\n";
 
