@@ -279,7 +279,6 @@ sub wikihtml {
     $markdownmode = 0;
     $markdownparanobr = 0;
     @inputcache = split ("\n", $inbuf); # allows look forward
-#    foreach $_  (split ("\n", $inbuf)) {
     for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
         $_ = $inputcache[$cacheidx];
         if (/%l00httpd:lnno:([0-9,]+)%/) {
@@ -296,12 +295,15 @@ sub wikihtml {
         # http://daringfireball.net/projects/markdown/basics
         # ====  or ---- style heading
         if ($cacheidx < $#inputcache) {
+            # checking up to the second last line in the source
             $tmp = $inputcache[$cacheidx + 1];
             if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                # remove internal tag
                 $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
             }
-            if (length($_) == length($tmp)) {
+            if ((length($_) > 0) && (length($_) == length($tmp))) {
                 # Making my life simple by requiring heading and == or -- equal length
+                # At least one char long
                 $cacheidx++; # skip a line
                 if ($tmp eq "=" x length($_)) {
                     $_ = "# $_";
