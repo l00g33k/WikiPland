@@ -355,9 +355,9 @@ sub wikihtml {
                         $loop = 0;
                     }
                 }
-                $tbuf =~ s/</&lt;/g;
-                $tbuf =~ s/>/&gt;/g;
-                $tbuf =~ s/&/&amp;/g;
+#                $tbuf =~ s/</&lt;/g;
+#                $tbuf =~ s/>/&gt;/g;
+#                $tbuf =~ s/&/&amp;/g;
                 $tbuf = "<pre>$tbuf</pre>";
                 # line $ahead isn't indented and wasn't included
                 #print "first     indented is line $cacheidx >$inputcache[$cacheidx]<\n";
