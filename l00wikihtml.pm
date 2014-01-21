@@ -115,7 +115,7 @@ sub wikihtml {
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
     my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx);
-    my ($markdownmode, $markdownparanobr, $loop);
+    my ($mode0unknown1twiki2markdown, $mdChanged2Tw, $markdownparanobr, $loop);
 
     undef @chlvls;
     undef $lastchlvl;
@@ -276,7 +276,7 @@ sub wikihtml {
     $lnno = 0;
     $flaged = '';
     $postsit = '';
-    $markdownmode = 0;
+    $mode0unknown1twiki2markdown = 0;
     $markdownparanobr = 0;
     @inputcache = split ("\n", $inbuf); # allows look forward
     for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
@@ -291,6 +291,7 @@ sub wikihtml {
         $lnno++;
 
 
+        $mdChanged2Tw = 0;
         # MARKDOWN compatibility
         # http://daringfireball.net/projects/markdown/basics
         # ====  or ---- style heading
@@ -307,19 +308,26 @@ sub wikihtml {
                 if ($tmp eq "=" x length($_)) {
                     $_ = "# $_";
                     $cacheidx++; # skip a line
+                    # occurance of this form of header say we are markdown
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
                 }
                 if ($tmp eq "-" x length($_)) {
                     $_ = "## $_";
                     $cacheidx++; # skip a line
+                    # occurance of this form of header say we are markdown
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
                 }
             }
         }
-
         # ## headings
-        if (/^(#+) (\S.*)$/) {
+        if (($mode0unknown1twiki2markdown == 2) && (/^(#+) (\S.*)$/)) {
+            # convert only if we are in markdown mode
             $_ = '=' x length($1) . $2 . '=' x length($1) . "\n";
-            $markdownmode = 1;
+            $mdChanged2Tw = 1;
         }
+
         # images
         # ![alt text](/path/to/img.jpg "Title")
         s/!\[.+?\]\((.+?) *"(.+?)"\)/<img src="$1">$2/g;
@@ -328,7 +336,7 @@ sub wikihtml {
         # This is an [example link](http://example.com/).
         s/\[(.+?)\]\((.+?)\)/<a href="$2">$1<\/a>/g;
         # mutiple line paragraphs
-        if ($markdownmode) {
+        if ($mode0unknown1twiki2markdown == 2) {
             # if line start with word, then it must be 
             # normal paragraph. Don't put <br> at the end
             $markdownparanobr = /^\w/;
@@ -351,6 +359,7 @@ sub wikihtml {
                     if ($tmp =~ /^    /) {
                         $tbuf .= "$tmp\n";
                         $ahead++;
+                        $mdChanged2Tw = 1;
                     } else {
                         $loop = 0;
                     }
@@ -479,6 +488,12 @@ sub wikihtml {
         # process headings
         if (@el = /^(=+)([^=]+?)(=+)(.*)$/) {
             if ($el[0] eq $el[2]) {
+                # is this ==twiki== heading original or from markdown?
+                if ($mdChanged2Tw == 0) {
+                    # original, we are in Twiki mode
+                    $mode0unknown1twiki2markdown = 1;
+                }
+
                 $el[1] =~ s/____EqSg____/=/g;
                 # left === must match right ===
                 # headings must start from column 0
