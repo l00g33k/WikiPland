@@ -17,6 +17,7 @@ sub copytree {
 
     #print "($fr, $to)\n";
 
+    $treedircnt++;
     if ((!($to =~ /^\./)) && (!-d $to)) {
         # assume target doesn't exist, make it
         # and not hidden .*
@@ -37,20 +38,19 @@ sub copytree {
                 }
                 if (-d $fr.$file) {
                     #print "dir >$file<\n";
-                    $treedircnt++;
                     &copytree($ctrl, "$fr$file/", "$to$file/");
                 } else {
                     print "cp $to$file\n";
                     # This is not available on Android: use File::Copy qw(copy); 
                     # manually copying...
                     if (open(IN, "<$fr$file")) {
-                        $treefilecnt++;
                         if (open(OU, ">$to$file")) {
                             local ($/);
                             $/ = undef;
                             $buf = <IN>;
                             print OU $buf;
                             close(OU);
+                            $treefilecnt++;
                         }
                         close(IN);
                     }
