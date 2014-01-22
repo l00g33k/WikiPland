@@ -14,6 +14,11 @@ wifi/wake cli off | /httpd?wifi=off&noclinav=1&allappsoff=on&timeout=0&path=%L00
 off | /gps.pl?interval=0&submit=Submit
 refresh | /gps.pl
 
+* System control:
+Enable all modules and remove directory access restriction will allow any one connected to this server full access including write access. Correct ID and password are still required, but since there is no HTTPS, everything is in plain sight.
+Yes, open it up for 1 hour | /httpd?Submit=Submit&allappson=on&timeout=3600&noclinavof=on
+OK, close it down now | /httpd?Submit=Submit&allappsoff=on&noclinavon=on
+
 * Sample wiki word and link:
 ExLink1
  **- ExLink2 -**

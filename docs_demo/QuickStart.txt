@@ -4,22 +4,21 @@
 ** Personalization copies the 'l00httpd' directory tree to the !SDcard at /sdcard/l00httpd
 ** This makes the directory visible to your desktop computer when you connect your phone in 'Disk drive' mode so you can copy all your data files to your desktop for backup
 ** The 'l00httpd' directory is the default location holding all the wiki pages you made
-** Click [[/|this link]] to personalize
+** Click [[/filemgt.htm?path=/sdcard/sl4a/scripts/l00httpd/l00httpd/&treeto=/sdcard/l00httpd/|this link]] to personalize by copying the template directory to /sdcard/l00httpd/. You can change the destination directory in the 'to:' field below 'Copy Tree'. Click 'Copy Tree' to copy.
 ** Once you have personalized, you should restart l00httpd
 *** If you are using SL4A, goto Notification and look for 'SL4A Service'.  Touch it and you will see the 'Script Monitor'.  Look for 00rumeAndroid.pl and touch it.  Hit the Back button when you see the console log to 'Kill process'.  Then go to Sl4A and launch the 'l00httpd/00rumeAndroid.pl' script again
 *** If you are using 'A !PerlAPK for l00httpd', goto 'Manage apps' and 'Force stop' it and relaunch
 ** To see this page again after personalization, click 'Home' and then 'QuickStart'
-
+* If you later decided to install [[https://code.google.com/p/android-scripting/|SL4A]], you will need to copy the !WikiPland source code to the Perl script directory. You could download the source from the git repository, but here's a quicker way if you have already installed !WikiPlandApk by copying it from its data directory at /data/data/com.android.perl/files/l00httpd/:
+** Click [[/filemgt.htm?path=/data/data/com.android.perl/files/l00httpd/&treeto=/sdcard/sl4a/scripts/l00httpd//sdcard/sl4a/scripts/l00httpd/|this link]] to the source code to SL4A directory. You can change the destination directory in the 'to:' field below 'Copy Tree'. Click 'Copy Tree' to copy.
 =What's for you=
 * Casual users
 * Perl users
 =Quick Start=
 * Click 'QUICK' above to visit the home page 
 ** This link can be customized
-
 =Update=
 * To update, you must uninstall previous version before installing newer version
-
 =Release Notes=
 ==Major changes in version 1.03==
 * 2012/12/09  0:17:59 Sun

@@ -8,14 +8,13 @@ use l00backup;
 
 my %config = (proc => "l00http_filemgt_proc",
               desc => "l00http_filemgt_desc");
-my ($treeto, $treefilecnt);
+my ($treeto, $treefilecnt, $treedircnt);
 $treeto = '';
 
 sub copytree {
     my ($ctrl, $fr, $to) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($buf, $file);
 
-    $treefilecnt++;
     #print "($fr, $to)\n";
 
     if ((!($to =~ /^\./)) && (!-d $to)) {
@@ -38,12 +37,14 @@ sub copytree {
                 }
                 if (-d $fr.$file) {
                     #print "dir >$file<\n";
+                    $treedircnt++;
                     &copytree($ctrl, "$fr$file/", "$to$file/");
                 } else {
                     print "cp $to$file\n";
                     # This is not available on Android: use File::Copy qw(copy); 
                     # manually copying...
                     if (open(IN, "<$fr$file")) {
+                        $treefilecnt++;
                         if (open(OU, ">$to$file")) {
                             local ($/);
                             $/ = undef;
@@ -169,7 +170,9 @@ sub l00http_filemgt_proc {
         ((!defined ($form->{'urlonly2'})) || ($form->{'urlonly2'} ne 'on')) &&
         (length ($form->{'treeto'}) > 0))) {
         $treefilecnt = 0;
-        &copytree($ctrl, $form->{'path'}, $form->{'treeto'})
+        $treedircnt = 0;
+        &copytree($ctrl, $form->{'path'}, $form->{'treeto'});
+        print $sock "<p>Tree copied $treedircnt directories and $treefilecnt files<p>\n";
     }
     # copy tree paste target
     if (defined ($form->{'pasteto'})) {
@@ -272,7 +275,7 @@ sub l00http_filemgt_proc {
     print $sock "</td></tr>\n";
     if ((defined ($form->{'urlonly2'})) && ($form->{'urlonly2'} eq 'on')) {
         print $sock "<tr><td>\n";
-        print $sock "<a href=\"/filemgt.htm?&path=$form->{'path'}&treeto=$form->{'treeto'}&urlonly2=on\">Copy tree URL</a>\n";
+        print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}&treeto=$form->{'treeto'}&urlonly2=on\">Copy tree URL</a>\n";
         print $sock "</td></tr>\n";
     }
     print $sock "</table><br>\n";
