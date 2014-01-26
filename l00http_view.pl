@@ -85,8 +85,18 @@ sub l00http_view_proc {
     print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
     print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number\n";
+    print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
+    # skip backward $maxln
+    $tmp = $skip - $maxln;
+    if ($tmp < 0) {
+        $tmp = 0;
+    }
+    print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
+    # skip forward $maxln
+    $tmp = $skip + $maxln;
+    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
     print $sock "</form>\n";
+
     if ($hilite > 0) {
         # and now we add a jump to link
         $tmp = $hilite - 10;
