@@ -28,20 +28,25 @@ sub l00http_screen_proc (\%) {
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><p>\n";
 
     if ($ctrl->{'os'} eq 'and') {
+        l00httpd::dbp($config{'desc'}, "FORM:\n" . &l00httpd::dumphashbuf ("form", $form) . "\n");
         if (defined ($form->{'setmax'})) {
             $ctrl->{'droid'}->setScreenBrightness (255);
         } elsif (defined ($form->{'setmin'})) {
             $ctrl->{'droid'}->setScreenBrightness (0);
+        } elsif (defined ($form->{'dec10'})) {
+            $vol = $ctrl->{'droid'}->getScreenBrightness ();
+            l00httpd::dbp($config{'desc'}, "'dec10' was $vol->{'result'} ");
+            $vol = $vol->{'result'} - 10;
+            l00httpd::dbp($config{'desc'}, "new $vol\n");
+            $ctrl->{'droid'}->setScreenBrightness ($vol);
+        } elsif (defined ($form->{'inc10'})) {
+            $vol = $ctrl->{'droid'}->getScreenBrightness ();
+            l00httpd::dbp($config{'desc'}, "'inc10' was $vol->{'result'} ");
+            $vol = $vol->{'result'} + 10;
+            l00httpd::dbp($config{'desc'}, "new $vol\n");
+            $ctrl->{'droid'}->setScreenBrightness ($vol);
         } elsif (defined ($form->{'bright'})) {
             $ctrl->{'droid'}->setScreenBrightness ($form->{'bright'});
-        } elsif (defined ($form->{'-10'})) {
-            $vol = $ctrl->{'droid'}->getScreenBrightness ();
-            $vol = $vol->{'result'} - 10;
-            $ctrl->{'droid'}->setScreenBrightness ($vol);
-        } elsif (defined ($form->{'+10'})) {
-            $vol = $ctrl->{'droid'}->getScreenBrightness ();
-            $vol = $vol->{'result'} + 10;
-            $ctrl->{'droid'}->setScreenBrightness ($vol);
         }
         $vol = $ctrl->{'droid'}->getScreenBrightness ();
         $vol = $vol->{'result'};
@@ -74,8 +79,8 @@ sub l00http_screen_proc (\%) {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"+10\" value=\"+10\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"-10\" value=\"-10\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"inc10\" value=\"+10\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"dec10\" value=\"-10\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
