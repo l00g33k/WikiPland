@@ -201,12 +201,14 @@ sub wikihtml {
                 $clip =~ s/ /+/g;
                 #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=
                 #%3A%2F
-                $clip =~ s/:/%3A/g;
-                $clip =~ s/&/%26/g;
-                $clip =~ s/=/%3D/g;
-                $clip =~ s/"/%22/g;
-                $clip =~ s/\//%2F/g;
-                $clip =~ s/\|/%7C/g;
+#               $clip =~ s/:/%3A/g;
+#               $clip =~ s/&/%26/g;
+#               $clip =~ s/=/%3D/g;
+#               $clip =~ s/"/%22/g;
+#               $clip =~ s/\//%2F/g;
+#               $clip =~ s/\|/%7C/g;
+#               $clip =~ s/#/%23/g;
+                $clip = &l00httpd::urlencode ($clip);
                 $url = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
                 $url = "[[$url|$desc]]";
                 if ($bareclip) {
