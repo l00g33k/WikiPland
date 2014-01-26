@@ -144,7 +144,10 @@ sub wikihtml {
         $bullet = 0;
         $bkmking = 0;
         $lnnoinfo = '';
-        foreach $_  (split ("\n", $oubuf)) {
+#       foreach $_  (split ("\n", $oubuf)) {
+        @inputcache = split ("\n", $oubuf); # allows look forward
+        for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
+            $_ = $inputcache[$cacheidx];
             # tags like %l00httpd:lnno:(\d+)% records original line number
             # there may be multiple line nummbers per line due to drop line, etc.
             if (@lnnoall = /%l00httpd:lnno:(\d+)%/g) {
@@ -197,8 +200,53 @@ sub wikihtml {
 		            $desc = $clip;
                     $bareclip = 1;
 		        }
+if(1){
+                # look ahead. If the the current line ends in:
+                # \r\n
+                # and the next line starts with:
+                # ||
+                # then we append it as an extended line
+                while ($cacheidx < $#inputcache) {
+                    # get the next line and remove internal tag
+                    $tmp = $inputcache[$cacheidx + 1];
+                    if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                        # remove internal tag
+                        $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                    }
+#print "\n\nTHIS: $_\n";
+#print "NEXT: $tmp\n";
+                    # so $tmp is the next line
+                    # Does it look line extended line?
+                    if ((/\\r\\n$/) && ($tmp =~ /^\|\|(.*)/)) {
+                        # yes
+                        $_ = $inputcache[$cacheidx + 1];
+                        if (@lnnoall = /%l00httpd:lnno:(\d+)%/g) {
+                            # save for use later so we can remove the tags for normal processing
+                            if ($lnnoinfo eq '') {
+                                $lnnoinfo = join(',', @lnnoall);
+                            } else {
+                                $lnnoinfo .= ',' . join(',', @lnnoall);
+                            }
+                        }
+
+#print "EXT0: >$clip<\n";
+                        # drop ending \r\n
+                        $clip =~ s/\\r\\n$//;
+                        # append extension line
+                        $clip .= "\n$tmp";
+                        # skip forward
+#print "EXT1: >$clip<\n";
+                        $cacheidx++;
+                    } else {
+                        # no extension line
+                        last;
+                    }
+                }        
+#print "END\n\n";
+}
+
                 #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=Asd+ddf
-                $clip =~ s/ /+/g;
+#               $clip =~ s/ /+/g;
                 #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=
                 #%3A%2F
 #               $clip =~ s/:/%3A/g;
