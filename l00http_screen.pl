@@ -87,7 +87,7 @@ sub l00http_screen_proc (\%) {
     print $sock "</form>\n";
 
     for ($ii = 0; $ii < 15; $ii++) {
-        print $sock "&nbsp;<p>\n";
+#        print $sock " <p>\n";
     }
 
     # send HTML footer and ends
