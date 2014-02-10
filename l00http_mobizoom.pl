@@ -34,9 +34,13 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
         $wget2 = '';
         foreach $_ (split("\n", $wget)) {
-            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__para$para\__">$para<\/a><\/small> /;
+            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__top__">^<\/a>:<a href="#__para$para\__">$para<\/a><\/small> /;
             $para++;
             $wget2 .= "$_\n";
+#l00httpd::dbpclr();
+s/</&lt;/g;
+s/>/&gt;/g;
+&l00httpd::dbp($config{'desc'}, "$_\n");
         }
         $wget = $wget2;
 
