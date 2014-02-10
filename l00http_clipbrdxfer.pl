@@ -86,7 +86,8 @@ sub l00http_clipbrdxfer_proc (\%) {
 		$geturl = "http://$url/$tmp";
         if ((!defined ($form->{'nofetch'})) ||
             ($form->{'nofetch'} ne 'on')) {
-            print $sock "<br>Fetching '$geturl'<br>\n";
+            print $sock "<br>Pushing:<pre>$buf</pre>\n";
+            #print $sock "<br>Fetching '$geturl'<br>\n";
 
             if (($name ne '') || ($pw ne '')) {
                 ($hdr, $bdy) = &l00wget::wget ($geturl, "$name:$pw");
@@ -102,6 +103,8 @@ sub l00http_clipbrdxfer_proc (\%) {
                 $bdy =~ s/</&lt;/g;
                 $bdy =~ s/>/&gt;/g;
                 print $sock "<pre>$bdy</pre>\n";
+            } else {
+                print $sock "<p>Failed to push clipboard content to $url<p>\n";
             }
         } else {
             print $sock "<p>Failed to fetch '$geturl'\n";
