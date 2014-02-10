@@ -72,7 +72,7 @@ sub l00http_debug_proc (\%) {
             $output .= "<a href=\"#end\">end</a>\n";
             $output .= "<pre>\n";
         }
-        $output .= sprintf ("%04d: $_\n", $lnno);
+        $output .= sprintf ("%04d: %s\n", $lnno, $_);
         $lnno++;
     }
 
