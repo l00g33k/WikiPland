@@ -26,7 +26,7 @@ my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $linemode, $linemark);
 my ($fmatch, $condition, $content, $fullname, $lineno, $maxlines, $sock);
-my ($wday, $yday, $year, @cols, @el, @els, $sendto, $sort, @sorts, $tableout);
+my ($wday, $yday, $year, @cols, @el, @els, $sendto, $sort, @sorts, $tableout, $pretext);
 
 my $path;
 
@@ -40,7 +40,7 @@ $sort = '';
 $linemode = 0;
 $linemark = '^=';
 $tableout = 'checked';
-
+$pretext = 'checked';
 
 sub l00http_search_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -161,7 +161,6 @@ sub l00http_search_search {
                                 while (<IN>) {
                                     # for each line in the file
                                     $lineno++;
-#                                   if (/^=+(.+?)=+$/ || $linemode) {
                                     if (/$linemark/i || $linemode) {
                                         # new heading, terminate and output last search
                                         $conditionsFoundCnt = -1;
@@ -200,7 +199,7 @@ sub l00http_search_search {
                                     }
 
                                     if (/^=+(.+?)=+$/) {
-#                                   if (/($linemark)/i) {
+#                                   if (/($linemark)/i) 
                                         # save anchor
                                         $anchor = $1;
                                         $anchor =~ s/[^0-9A-Za-z]/_/g;
@@ -309,7 +308,7 @@ sub l00http_search_search {
             }
         }
 
-        if ($tableout eq '') {
+        if ($tableout eq 'checked') {
             # print output table
             print $sock "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
             $line = $outputsorted[0];
@@ -331,16 +330,30 @@ sub l00http_search_search {
             print $sock "</table>\n";
         } else {
             foreach $line (@outputsorted) {
+#print ">>>>$line<<<<\n\n";
                 @cols = split('<`>', $line);
-#                print $sock "<p><font style=\"color:black;background-color:lime\">Found:</font><br>\n";
                 $tmp = 0;
                 foreach $item (@cols) {
+#print ">$item<\n";
                     if ($tmp == 0) {
                         print $sock "<p><font style=\"color:black;background-color:lime\">$item</font><br>\n";
+                        if ($pretext eq 'checked') {
+                            print $sock "<pre>";
+                        }
                     } else {
-                        print $sock "$item<br>\n";
+                        if ($pretext eq 'checked') {
+                            $item =~ s/</&lt;/g;
+                            $item =~ s/>/&gt;/g;
+                            $item =~ s/\|\|\|/\n/g;
+                            print $sock "$item\n";
+                        } else {
+                            print $sock "$item<br>\n";
+                        }
                     }
                     $tmp++;
+                }
+                if ($pretext eq 'checked') {
+                    print $sock "</pre>";
                 }
             }
         }
@@ -405,10 +418,15 @@ sub l00http_search_proc {
     if (defined ($form->{'sort'})) {
         $sort = $form->{'sort'};
     }
-    if (defined ($form->{'tableout'})) {
+    if (defined ($form->{'tableout'}) && ($form->{'tableout'} eq 'on')) {
         $tableout = "checked";
     } else {
         $tableout = '';
+    }
+    if (defined ($form->{'pretext'}) && ($form->{'pretext'} eq 'on')) {
+        $pretext = 'checked';
+    } else {
+        $pretext = '';
     }
 
     # if $path is a file, use its path and filename
@@ -510,7 +528,7 @@ sub l00http_search_proc {
 
     print $sock "        <tr>\n";
     print $sock "            <td><input type=\"checkbox\" name=\"tableout\" $tableout>Tabulate</td>\n";
-    print $sock "            <td>Tabulate results</td>\n";
+    print $sock "            <td><input type=\"checkbox\" name=\"pretext\" $pretext>Preformatted text</td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
