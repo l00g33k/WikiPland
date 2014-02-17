@@ -10,14 +10,14 @@ use l00httpd;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here);
+my ($url, $zoom, $para, $here, $threads);
 $url = '';
 $zoom = 120;
 $para = 1;
 
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
-    my ($wget, $wget2, $pre, $gurl, $post, $hdr);
+    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $line, $subj);
 
     $wget = '';
     if (length ($url) > 6) {
@@ -34,13 +34,26 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
         $wget2 = '';
         foreach $_ (split("\n", $wget)) {
-            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__top__">^<\/a>:<a href="#__para$para\__">$para<\/a><\/small> /;
-            $para++;
+            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a>:<a href="#__para$para\__">$para<\/a><\/small> /;
             $wget2 .= "$_\n";
 #l00httpd::dbpclr();
+$line = $_;
+if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
+&l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
+if(!($subj =~ /^Re:/)) {
+$threads .= "<a href=\"#__para${para}__\">$para: $subj</a><br>\n";
+}
+}
+$_ = $line;
+            $para++;
 s/</&lt;/g;
 s/>/&gt;/g;
 &l00httpd::dbp($config{'desc'}, "$_\n");
+#<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+#
+#<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
+#<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
+#<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
         }
         $wget = $wget2;
 
@@ -255,6 +268,7 @@ sub l00http_mobizoom_proc {
     }
 
 	$here = 1;
+	$threads = "Threads:<br>\n";
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
         $para = 1;
         $nextpage = $url;
@@ -317,7 +331,9 @@ sub l00http_mobizoom_proc {
     }
 
     if ($mode1online2offline4download & 3) {
-    print $sock "<hr><a name=\"__end__\"></a>Goto sections:\n";
+    print $sock "<hr><a name=\"__end__\"></a>";
+    print $sock "$threads\n";
+    print $sock "<p>Goto sections:\n";
     for (1..$here){
         print $sock "<a href=\"#__here$_\__\">$_</a> ";
     }
