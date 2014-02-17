@@ -37,6 +37,11 @@
 * The special section is declared by placing the keyword %BOOKMARK% alone on a line and is terminated by the keyword %END%.  For example see:
 ** [[/view.pl?path=%L00HTTP<plpath>%l00httpd/index.txt|sample %BOOKMARK% shorthand]]
 * Font markups shown above work for simple wiki words.  See the above link for example
+=SHOWTAG Filtering=
+* When ls.htm displays a page and encounters a special SHOWON/SHOWOFF tag, it presents an additional section to display sections bracket by the special SHOWON/SHOWOFF tags:
+** %SHOWON:anyname%
+** %SHOWOFF:anyname%
+** These tags must be on a line by itself and without any leading or trailing spaces.
 =Wiki Expansions=
 ==Table of Content==
 * Starting in column 1:
