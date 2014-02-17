@@ -50,6 +50,12 @@
 =Phase C: Wordpress=
 * DenseBookmarks: bookmarks, copy to clipboard, and Blowfish encryption
 * MyReadingScheme: reader.pl, mobizoom.pl
+* Why wrote it:
+I code instead of playing Angry Bird
+Coding is also creating writing
+To stay away of commercial cloud services
+Independent of apps I don't control. Control of my destiny
+
 =Phase D: Publication=
 * Wordpress
 * Slashdot
