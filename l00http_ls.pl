@@ -184,6 +184,10 @@ sub l00http_ls_proc {
     } else {
         $sortfind = '';
     }
+    if (defined ($form->{'timestamp'}) &&
+        ($form->{'timestamp'} eq 'on')) {
+        $form->{'hilite'} = '^\d{8,8} \d{6,6} ';
+    }
     
     $editable = 0;
     $htmlend = 1;
@@ -1020,13 +1024,18 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         } else {
             $buf = "";
         }
-        print $sock "        <td><input type=\"checkbox\" $buf name=\"sort\">sort by time</td>\n";
+        print $sock "        <td><input type=\"checkbox\" $buf name=\"sort\">dir sort by time</td>\n";
 
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" $buf name=\"chno\">Show chapter #</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #</td>\n";
         print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
+        print $sock "    </tr>\n";
+
+        print $sock "    <tr>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"newnew\">for future</td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
