@@ -29,6 +29,9 @@ sub mktime  {
     #   local variables
     local ($gstime, $i);
     local ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst);
+    local ($ldebug);
+    
+    $ldebug = 0;
 
     #   retrieve arguments
     local ($sec)    = pop(@_);
@@ -38,7 +41,7 @@ sub mktime  {
     local ($mon)    = pop(@_);
     local ($year)   = pop(@_);
 
-    #print "mktime $year $mon $mday\n";
+    print "mktime input: $year $mon $mday $hour $min $sec\n", if ($ldebug);
 
     #   first guest
     $gstime = ($year - 70) * 365.25;
@@ -56,7 +59,7 @@ sub mktime  {
         # gmtime yields correct results on a Saturday night 8pm at GMT + 8
         # on a Windows set to GMT - 8 time zone
         # on a phone set to GMT + 8 time zone
-        #print "$gstime:$gsyear,$gsmon,$gsmday,$gshour,$gsmin,$gssec\n";
+        print "$gstime:$gsyear,$gsmon,$gsmday,$gshour,$gsmin,$gssec\n", if ($ldebug);
 
         if ($year != $gsyear) {
             #   refine year
@@ -66,7 +69,8 @@ sub mktime  {
 
         if ($mon != $gsmon) {
             #   refine month
-            $gstime += ($mon - $gsmon) * 30 * 24 * 3600;
+            # 28 for Febuary. I guess if we didn't add enough, it repeats
+            $gstime += ($mon - $gsmon) * 28 * 24 * 3600;
             next;
         }
 
@@ -99,7 +103,7 @@ sub mktime  {
     }
 
     #   return value
-    #print "mktime $gstime\n";
+    print "mktime $gstime\n", if ($ldebug);
     $gstime;
 
 }# mktime
