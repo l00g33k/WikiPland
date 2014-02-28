@@ -35,6 +35,7 @@ sub l00http_mobizoom_wget {
         $wget2 = '';
         foreach $_ (split("\n", $wget)) {
             s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a>:<a href="#__para$para\__">$para<\/a><\/small> /;
+            s/span><span/span> <span/g;
             $wget2 .= "$_\n";
 #l00httpd::dbpclr();
 $line = $_;
@@ -42,6 +43,8 @@ if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
 &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
 if(!($subj =~ /^Re:/)) {
 $threads .= "<a href=\"#__para${para}__\">$para: $subj</a><br>\n";
+$wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
+$wget2 .= " FOUND THREAD \n";
 }
 }
 $_ = $line;
