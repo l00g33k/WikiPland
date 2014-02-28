@@ -390,11 +390,13 @@ if(1){
             # if line start with word, then it must be 
             # normal paragraph. Don't put <br> at the end
             $markdownparanobr = /^\w/;
-
-            # code, 4 or more indents make <pre>code</pre>
+}
+# make ^    <pre> for all
+{
+            # code, 2 or more indents make <pre>code</pre>
             $tmp = $_;
             $tmp =~ s/&nbsp;/ /g;
-            if ($tmp =~ /^    /) {
+            if ($tmp =~ /^  /) {
                 # currnet line is indented
                 $tbuf = "$tmp\n";
                 $ahead = $cacheidx + 1;
@@ -406,7 +408,7 @@ if(1){
                         $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
                     }
                     $tmp =~ s/&nbsp;/ /g;
-                    if ($tmp =~ /^    /) {
+                    if ($tmp =~ /^  /) {
                         $tbuf .= "$tmp\n";
                         $ahead++;
                         $mdChanged2Tw = 1;
@@ -424,11 +426,13 @@ if(1){
                 #print "Proposed changes:\n$tbuf\n";
                 $cacheidx = $ahead - 1;
                 $oubuf .= $tbuf;
+                $_ = '';
                 next;
             }
         }
-
-
+        if ($_ eq '') {
+            next;
+        }
 
         # %DATETIME% expansion
         if (/%DATETIME%/) {

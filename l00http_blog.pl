@@ -35,6 +35,7 @@ sub l00http_blog_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blog</title>" .$ctrl->{'htmlhead2'};
+    print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
@@ -219,7 +220,18 @@ sub l00http_blog_proc {
             print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">View full formatted text</a><br>\n";
         }
     }
-    print $sock "<hr><a name=\"end\">end</a>\n";
+    print $sock "<hr><a name=\"end\"></a>";
+    print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\"># quick mark</a>\n";
+# [[/blogtag.pl?path=./sample.txt|log blogtag]] 
+# [[/ls.pl?path=./sample.txt#blogtag|view blogtag]] 
+# [[/tableedit.pl?edit=Edit&path=./sample.txt|tableedit]] 
+# [[/do.pl?do=Do&path=./l00_donow.pl|Filtered]]
+# [[/table.pl?path=$&sort=Sort&keys=1%7C%7C0|@+$+]] 
+# [[/table.pl?path=$&sort=Sort&keys=0%7C%7C1|$+@+]]
+    print $sock " - <a href=\"#__top__\">top</a>\n";
+    print $sock "<br>\n";
+    print $sock "<br>\n";
+    print $sock "<br>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
