@@ -38,6 +38,15 @@ sub l00http_scratch_proc {
             $scratch = $scratch->{'result'};
             #&l00httpd::dumphash ("key", $scratch);
         }
+    } elsif (defined ($form->{'prepend'})) {
+        $scratch = '';
+        if ($ctrl->{'os'} eq 'and') {
+            $scratch = $ctrl->{'droid'}->getClipboard();
+            $scratch = $scratch->{'result'};
+        }
+        if (defined ($form->{'scratchbuf'})) {
+            $scratch = "$scratch $form->{'scratchbuf'}";
+        }
     } elsif (defined ($form->{'append'})) {
         $scratch = '';
         if ($ctrl->{'os'} eq 'and') {
@@ -79,13 +88,14 @@ sub l00http_scratch_proc {
 #    $tmp =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
     print $sock "<form action=\"/scratch.htm\" method=\"post\">\n";
     print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$tmp</textarea>\n";
-    print $sock "<p><input type=\"submit\" name=\"update\" value=\"Update\"> \n";
-    print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"CB paste\"> \n";
-    print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"CB copy\"> \n";
+    print $sock "<p><input type=\"submit\" name=\"update\" value=\"Set\"> \n";
+    print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"paste CB\"> \n";
+    print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"cp2CB\"> \n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clr\">\n";
     print $sock "<br>\n";
     print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
-    print $sock "<input type=\"submit\" name=\"cburl\" value=\"CB cp URL\">\n";
-    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+    print $sock "<input type=\"submit\" name=\"prepend\" value=\"Prepend\">\n";
+    print $sock "<input type=\"submit\" name=\"cburl\" value=\"cp URL 2CB\">\n";
 
     print $sock "<br><input type=\"text\" size=\"10\" name=\"eval\" value=\"$eval\">\n";
     print $sock "The whole content of the scratch buffer is put in \$_ and then this string is \"eval'ed\", e.g. 'print \$sock \$_' prints the content to this HTML page\n";
