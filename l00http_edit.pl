@@ -192,6 +192,11 @@ sub l00http_edit_proc2 {
         $editht = $form->{'editht'};
     } elsif (defined ($form->{'defsize'})) {
         $editsz = 0;
+    } elsif (defined ($form->{'cut'})) {
+        if ($ctrl->{'os'} eq 'and') {
+            $ctrl->{'droid'}->setClipboard ($buffer);
+        }
+        $buffer = '';
     } elsif (defined ($form->{'edittocb'})) {
         if ($ctrl->{'os'} eq 'and') {
             $ctrl->{'droid'}->setClipboard ($buffer);
@@ -295,6 +300,7 @@ sub l00http_edit_proc2 {
     print $sock "<input type=\"submit\" name=\"edittotxt\" value=\"CB append to edit\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"submit\" name=\"txttoedit\" value=\"Append ||\">\n";
+    print $sock "<input type=\"submit\" name=\"cut\" value=\"Cut\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"tempsize\" value=\"Edit box size\"><br>\n";
