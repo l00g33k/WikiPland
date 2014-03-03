@@ -59,7 +59,7 @@ sub l00http_screen_proc (\%) {
     print $sock "<form action=\"/screen.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
-    print $sock "            <td>New brightness:</td>\n";
+    print $sock "            <td>Brightness:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"bright\" value=\"$vol\"></td>\n";
     print $sock "        </tr>\n";
                                                 
@@ -78,16 +78,11 @@ sub l00http_screen_proc (\%) {
     print $sock "        <td>0</td>\n";
     print $sock "    </tr>\n";
 
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"inc10\" value=\"+10\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"dec10\" value=\"-10\"></td>\n";
-    print $sock "    </tr>\n";
-
     print $sock "</table>\n";
-    print $sock "</form>\n";
+    print $sock "</form><br>\n";
 
-    for ($ii = 0; $ii < 15; $ii++) {
-#        print $sock " <p>\n";
+    for ($ii = 10; $ii < 255; $ii += 10) {
+        print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
     }
 
     # send HTML footer and ends
