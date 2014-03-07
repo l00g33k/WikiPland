@@ -39,7 +39,7 @@ sub l00http_blog_proc {
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> %BLOG:key% quick save link:<br>\n";
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> %BLOG:key%:<br>\n";
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
     }
@@ -218,7 +218,7 @@ sub l00http_blog_proc {
             $output .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">View full formatted text</a><br>\n";
         }
         if ($keys > 0) {
-            print $sock "<br>\n";
+            print $sock "<p>\n";
         }
     }
 
