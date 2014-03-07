@@ -24,6 +24,7 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $fname);
+    my ($output, $keys, $key);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -38,7 +39,9 @@ sub l00http_blog_proc {
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> %BLOG:key% quick save link:<br>\n";
+    } else {
+        print $sock "%BLOG:key% quick save link:<br>\n";
     }
 
     $buffer = '';
@@ -173,6 +176,52 @@ sub l00http_blog_proc {
         $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
     }
 
+    # dump content of file in formatted text
+    $output = '';
+    $keys = 0;
+    if (open (IN, "<$form->{'path'}")) {
+        $lineno = 1;
+        $output .= "<pre>\n";
+        while (<IN>) {
+            s/\r//g;
+            s/\n//g;
+            # extract special keywords
+            if (($key) = /^%BLOG:([^%]+)%/) {
+                if ($keys == 0) {
+                    print $sock "<br>";
+                } else {
+                    print $sock " - ";
+                }
+                $key =~ s/ /+/g;
+                # /blog.htm?timesave=&buffer=20140307+135828+key&save=Save&path=C%3A%2Fx%2Fdel.txt
+                print $sock "<a href=\"/blog.htm?timesave=&buffer=20140101+000000+$key&save=Save&path=$form->{'path'}\">$key</a>\n";
+                $keys++;
+            }
+            # trim width
+            if ($lineno < $ctrl->{'blogmaxln'}) {
+                if (length($_) > $ctrl->{'blogwd'}) {
+                    $_ = substr($_, 0, $ctrl->{'blogwd'});
+                }
+                $output .= sprintf ("%04d: ", $lineno) . "$_\n";
+            } else {
+                $line = $_;
+            }
+            $lineno++;
+        }
+        close (IN);
+        if ($lineno >= $ctrl->{'blogmaxln'}) {
+            $output .= sprintf ("(lines skipped)\n");
+            $output .= sprintf ("%04d: ", $lineno) . "$line\n";
+        }
+        $output .= "</pre>\n";
+        if ($lineno >= $ctrl->{'blogmaxln'}) {
+            $output .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">View full formatted text</a><br>\n";
+        }
+        if ($keys > 0) {
+            print $sock "<br>\n";
+        }
+    }
+
     print $sock "<form action=\"/blog.htm\" method=\"get\">\n";
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
     print $sock "<p>\n";
@@ -193,33 +242,9 @@ sub l00http_blog_proc {
     }
     print $sock "</form><br>Append '&blog=' to URL for bare style\n";
 
-    # get submitted name and print greeting
-    if (open (IN, "<$form->{'path'}")) {
-        $lineno = 1;
-        print $sock "<pre>\n";
-        while (<IN>) {
-            s/\r//g;
-            s/\n//g;
-            if ($lineno < $ctrl->{'blogmaxln'}) {
-                if (length($_) > $ctrl->{'blogwd'}) {
-                    $_ = substr($_, 0, $ctrl->{'blogwd'});
-                }
-                print $sock sprintf ("%04d: ", $lineno) . "$_\n";
-            } else {
-                $line = $_;
-            }
-            $lineno++;
-        }
-        close (IN);
-        if ($lineno >= $ctrl->{'blogmaxln'}) {
-            print $sock sprintf ("(lines skipped)\n");
-            print $sock sprintf ("%04d: ", $lineno) . "$line\n";
-        }
-        print $sock "</pre>\n";
-        if ($lineno >= $ctrl->{'blogmaxln'}) {
-            print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">View full formatted text</a><br>\n";
-        }
-    }
+
+    print $sock $output;
+
     print $sock "<hr><a name=\"end\"></a>";
     print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\"># quick mark</a>\n";
 # [[/blogtag.pl?path=./sample.txt|log blogtag]] 
