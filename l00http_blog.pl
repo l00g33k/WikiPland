@@ -96,38 +96,50 @@ sub l00http_blog_proc {
                 $lastbuf = $buffer;
                 # don't backup when just appending
                 local $/ = undef;
-                if (open (IN, "<$form->{'path'}")) {
-                    # http://www.perlmonks.org/?node_id=1952
-                    local $/ = undef;
-                    $buforg = <IN>;
-                    close (IN);
+#               if (open (IN, "<$form->{'path'}")) {
+#                   # http://www.perlmonks.org/?node_id=1952
+#                   local $/ = undef;
+#                   $buforg = <IN>;
+#                   close (IN);
+                if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                    $buforg = &l00httpd::l00freadAll($ctrl);
                 } else {
                     $buforg = '';
                     print $sock "Unable to read original '$form->{'path'}'<p>\n";
                 }
                 &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 9);
-                if (open (OUT, ">$form->{'path'}")) {
+#               &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+#               &l00httpd::l00fwriteBuf($ctrl, $outbuf);
+#               &l00httpd::l00fwriteClose($ctrl);
+#               if (open (OUT, ">$form->{'path'}")) {
+                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path'})) {
                     @alllines = split ("\n", $buffer);
                     foreach $line (@alllines) {
                         $line =~ s/\r//g;
                         $line =~ s/\n//g;
                         if (defined ($form->{'blog'})) {
                             if ($form->{'blog'} eq "on") {
-                                print OUT "$line\n";
+#                               print OUT "$line\n";
+                                &l00httpd::l00fwriteBuf($ctrl, "$line\n");
                             } else {
                                 # all on one line
-                                print OUT "$line ";
+#                               print OUT "$line ";
+                                &l00httpd::l00fwriteBuf($ctrl, "$line ");
                             }
                         } else {
                             # all on one line
-                            print OUT "$line ";
+#                           print OUT "$line ";
+                            &l00httpd::l00fwriteBuf($ctrl, "$line ");
                         }
                     }
                     if (!defined ($form->{'blog'}) || ($form->{'blog'} ne "on")) {
-                        print OUT "\n";
+#                       print OUT "\n";
+                        &l00httpd::l00fwriteBuf($ctrl, "\n");
                     }
-                    print OUT $buforg;
-                    close (OUT);
+#                   print OUT $buforg;
+                    &l00httpd::l00fwriteBuf($ctrl, $buforg);
+#                   close (OUT);
+                    &l00httpd::l00fwriteClose($ctrl);
                 } else {
                     print $sock "Unable to write '$form->{'path'}'<p>\n";
                 }
@@ -179,10 +191,12 @@ sub l00http_blog_proc {
     # dump content of file in formatted text
     $output = '';
     $keys = 0;
-    if (open (IN, "<$form->{'path'}")) {
+#   if (open (IN, "<$form->{'path'}")) {
+    if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $lineno = 1;
         $output .= "<pre>\n";
-        while (<IN>) {
+#       while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
             s/\r//g;
             s/\n//g;
             # extract special keywords
@@ -208,7 +222,7 @@ sub l00http_blog_proc {
             }
             $lineno++;
         }
-        close (IN);
+#       close (IN);
         if ($lineno >= $ctrl->{'blogmaxln'}) {
             $output .= sprintf ("(lines skipped)\n");
             $output .= sprintf ("%04d: ", $lineno) . "$line\n";
