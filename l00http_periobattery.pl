@@ -28,7 +28,7 @@ $firstdmesg = '';
 $lastdmesg = '';
 $maxreclen = 60 * 24 * 7;
 $skip = -1;
-$len = 60 * 6;
+$len = 60 * 12;
 $graphwd = 500;
 $graphht = 300;
 
