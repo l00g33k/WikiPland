@@ -314,28 +314,39 @@ sub l00http_ls_proc {
             }
             if ($read0raw1 == 0) {
                 # auto raw for reading
-                if (($path =~ /\.zip$/i) ||
-                    ($path =~ /\.kmz$/i) ||
-                    ($path =~ /\.kml$/i) ||
-                    ($path =~ /\.apk$/i) ||
-                    ($path =~ /\.jpeg$/i) ||
-                    ($path =~ /\.jpg$/i) ||
-                    ($path =~ /\.wma$/i) ||
-                    ($path =~ /\.3gp$/i) ||
-                    ($path =~ /\.mp3$/i) ||
-                    ($path =~ /\.mp4$/i) ||
-                    ($path =~ /\.gif$/i) ||
-                    ($path =~ /\.svg$/i) ||
-                    ($path =~ /\.png$/i) ||
-                    ($path =~ /\.pdf$/i) ||
-                    ($path =~ /\.html$/i) ||
-                    ($path =~ /\.htm$/i)) {
+                # if not usual text file extension, make it raw
+                if (!($path =~ /\.txt$/i) &&
+                    !($path =~ /\.csv$/i) &&
+                    !($path =~ /\.log$/i) &&
+                    !($path =~ /\.pl$/i) &&
+                    !($path =~ /\.h$/i) &&
+                    !($path =~ /\.c$/i) &&
+                    !($path =~ /\.cpp$/i) &&
+                    !($path =~ /\.htm$/i) &&
+                    !($path =~ /\.html$/i)) {
                     $urlraw = 1;
                 }
+#                if (($path =~ /\.zip$/i) ||
+#                    ($path =~ /\.kmz$/i) ||
+#                    ($path =~ /\.kml$/i) ||
+#                    ($path =~ /\.apk$/i) ||
+#                    ($path =~ /\.jpeg$/i) ||
+#                    ($path =~ /\.jpg$/i) ||
+#                    ($path =~ /\.wma$/i) ||
+#                    ($path =~ /\.3gp$/i) ||
+#                    ($path =~ /\.mp3$/i) ||
+#                    ($path =~ /\.mp4$/i) ||
+#                    ($path =~ /\.gif$/i) ||
+#                    ($path =~ /\.svg$/i) ||
+#                    ($path =~ /\.png$/i) ||
+#                    ($path =~ /\.pdf$/i) ||
+#                    ($path =~ /\.html$/i) ||
+#                    ($path =~ /\.htm$/i)) {
+#                    $urlraw = 1;
+#                }
             }
             # auto raw for
             if (($read0raw1 == 1) || ($urlraw == 1)) {
-
                 # 2.1) If in raw mode, send raw binary
 
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
