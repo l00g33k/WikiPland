@@ -1020,7 +1020,8 @@ print "sock timeout 3s\n";
                     # on server: display debug option
                     print $sock "<tr>";
                     print $sock "<td><input type=\"text\" size=\"2\" name=\"debug\" value=\"$debug\"></td>\n";
-                    print $sock "<td>&nbsp;</td><td>Print debug messages to console</td>\n";
+                    print $sock "<td><a href=\"/view.htm?path=${plpath}l00httpd.pl\">l00httpd.pl</a></td>\n";
+                    print $sock "<td>Print debug messages to console</td>\n";
 
                     if ($nopwtimeout =~ /^ *\d+ *$/) {
                         if ($nopwtimeout > time) {
@@ -1037,11 +1038,12 @@ print "sock timeout 3s\n";
                     }
                     print $sock "<tr>";
                     print $sock "<td><input type=\"text\" size=\"4\" name=\"nopw\" value=\"$tmp\"></td>\n";
-                    print $sock "<td>&nbsp;</td><td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath')</td>\n";
+                    print $sock "<td><a href=\"/httpd?allappson=on&timeout=43200&noclinavof=on\">wide open</a></td>\n";
+                    print $sock "<td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath'.) <a href=\"/httpd.htm?defaulton=on&allappoff=on&timeout=300&noclinavon=on\">Default only</a></td>\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappson\">Apps on</td>\n";
-                    print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients. <a href=\"/httpd.htm?defaulton=on\">Default only</a></td>\n";
+                    print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients.\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappsoff\">Apps off</td>\n";
