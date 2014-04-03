@@ -105,7 +105,8 @@ sub l00http_wget_proc (\%) {
            ($form->{'nofetch'} ne 'on')) {
             print $sock "Fetching '$url'<p>\n";
             print $sock "<a href=\"/ls.htm?path=$wgetpath\">ls $wgetpath</a><p>\n";
-            print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a><p>\n";
+            print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a> - ";
+            print $sock "<a href=\"/view.htm?path=l00%3A%2F%2Fwget.hdr\">l00://wget.hdr</a><p>\n";
             print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a><br>\n";
 
             if (($name ne '') || ($pw ne '')) {
@@ -130,6 +131,10 @@ sub l00http_wget_proc (\%) {
 #                   print $sock "<p>Fisrt 2000 bytes of body<p>\n";
 #                   print $sock "<pre>$bdy</pre>\n";
 #               }
+                if (&l00httpd::l00fwriteOpen($ctrl, 'l00://wget.hdr')) {
+                    &l00httpd::l00fwriteBuf($ctrl, "$hdr");
+                    &l00httpd::l00fwriteClose($ctrl);
+                }
                 if (&l00httpd::l00fwriteOpen($ctrl, $wgetpath)) {
                     &l00httpd::l00fwriteBuf($ctrl, "$bdy");
                     &l00httpd::l00fwriteClose($ctrl);
