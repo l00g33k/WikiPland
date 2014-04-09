@@ -24,7 +24,7 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $fname);
-    my ($output, $keys, $key);
+    my ($output, $keys, $key, $space);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -114,6 +114,7 @@ sub l00http_blog_proc {
 #               if (open (OUT, ">$form->{'path'}")) {
                 if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path'})) {
                     @alllines = split ("\n", $buffer);
+                    $space = '';
                     foreach $line (@alllines) {
                         $line =~ s/\r//g;
                         $line =~ s/\n//g;
@@ -124,12 +125,14 @@ sub l00http_blog_proc {
                             } else {
                                 # all on one line
 #                               print OUT "$line ";
-                                &l00httpd::l00fwriteBuf($ctrl, "$line ");
+                                &l00httpd::l00fwriteBuf($ctrl, "$space$line");
+                                $space = ' ';
                             }
                         } else {
                             # all on one line
 #                           print OUT "$line ";
-                            &l00httpd::l00fwriteBuf($ctrl, "$line ");
+                            &l00httpd::l00fwriteBuf($ctrl, "$space$line");
+                            $space = ' ';
                         }
                     }
                     if (!defined ($form->{'blog'}) || ($form->{'blog'} ne "on")) {
