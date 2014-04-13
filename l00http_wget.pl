@@ -57,7 +57,6 @@ sub l00http_wget_proc (\%) {
             $url = "http://$url";
         }
         print $sock "URL from clipboard:<br>$url<br>\n";
-#       $form->{'submit'} = 1;
     }
     if (defined ($form->{'name'})) {
         $name = $form->{'name'}
@@ -120,17 +119,6 @@ sub l00http_wget_proc (\%) {
                 print $sock "Body length ",length($bdy), " bytes<br>\n";
 
                 print $sock "<p><pre>$hdr</pre>\n";
-#               if (open (OU, ">$wgetpath")) {
-#                   binmode (OU);
-#                   print OU $bdy;
-#                   close (OU);
-#                   $bdy = substr($bdy, 0, 2000);
-#                   $bdy =~ s/</&lt;/g;
-#                   $bdy =~ s/>/&gt;/g;
-#                   print $sock "<hr>\n";
-#                   print $sock "<p>Fisrt 2000 bytes of body<p>\n";
-#                   print $sock "<pre>$bdy</pre>\n";
-#               }
                 if (&l00httpd::l00fwriteOpen($ctrl, 'l00://wget.hdr')) {
                     &l00httpd::l00fwriteBuf($ctrl, "$hdr");
                     &l00httpd::l00fwriteClose($ctrl);
