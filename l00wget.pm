@@ -9,7 +9,7 @@ package l00wget;
 
 #($hdr, $bdy) = &l00wget::wget ($url);
 sub wget {
-    my ($url, $nmpw) = @_;
+    my ($url, $nmpw, $opentimeout, $readtimeout) = @_;
     my ($hdr, $bdy);
     my ($buf);
     my ($server_socket, $cnt, $hdrlen, $bdylen);
@@ -18,6 +18,10 @@ sub wget {
 
     $hdr = undef;
     $bdy = undef;
+    $mode = '';
+    if (!defined($readtimeout)) {
+        $readtimeout = 20;
+    }
 
     $port = 80;
     if (($host, $path) = $url =~ m|http://(.+?)(/.*)|i) {
@@ -29,11 +33,19 @@ sub wget {
         $host = 'www.google.com';
         $path = '/';
     }
-    $server_socket = IO::Socket::INET->new(
-        PeerAddr => $host,
-        PeerPort => $port,
-        Proto    => 'tcp');
-    if ($server_socket != 0) {
+    if (defined($opentimeout)) {
+        $server_socket = IO::Socket::INET->new(
+            PeerAddr => $host,
+            PeerPort => $port,
+            Timeout  => $opentimeout,
+            Proto    => 'tcp');
+    } else {
+        $server_socket = IO::Socket::INET->new(
+            PeerAddr => $host,
+            PeerPort => $port,
+            Proto    => 'tcp');
+    }
+    if (defined($server_socket)) {
         if (defined($nmpw) && (length($nmpw) > 1)) {
             $nmpw = "Authorization: Basic " . &l00base64::b64encode ($nmpw) . "\r\n";
         } else {
@@ -51,13 +63,13 @@ sub wget {
         $bdy = '';
         $cnt = 0;
         $hdrlen = 0;
-        while (1){
-            my ($ready) = IO::Select->select($readable, undef, undef, 20);
-            $ret = 0;
+        while (1) {
+            my ($ready) = IO::Select->select($readable, undef, undef, $readtimeout);
+            $ret = undef;
             foreach my $curr_socket (@$ready) {
                 $ret = sysread ($curr_socket, $_, 4 * 1024 * 1024);
             }
-            if ($ret == 0) {
+            if ((!defined($ret)) || ($ret == 0)) {
                 last;
             }
             $cnt += $ret;
@@ -78,6 +90,9 @@ sub wget {
                         $mode = 'chunked';
                         $chunksz = -1;
                     }
+                } else {
+                    # not finding HTTP header; 
+                    $hdrlen = 1;    # anything > 0
                 }
             }
             if ($hdrlen > 0) {
