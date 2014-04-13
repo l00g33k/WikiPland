@@ -33,7 +33,7 @@ if ($ctrl->{'os'} eq 'and') {
     $url = $url->{'result'};
 
     print $sock "URL:<br><a href=\"$url\">$url</a>\n";
-    if (($a,$b,$c,$d) = $url =~ /^(.+lost-)(\d+)(\.html#post)(\d+)$/) {
+    if (($a,$b,$c,$d) = $url =~ /^(.+-)(\d+)(\.html#post)(\d+)$/) {
         print $sock "($a,$b,$c,$d)<br>\n";
         print $sock "Target post: $d<br>\n";
         print $sock "Target page: $b<br>\n";
