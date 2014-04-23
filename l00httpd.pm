@@ -140,16 +140,24 @@ sub findInBuf  {
     # $block    : text block marker
     # $buf      : find string in $buf
     my ($findtext, $block, $buf) = @_;
-    my ($hit, $found, $blocktext, $line, $pattern);
+    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno);
 
  
     # find them
     $hit = 0;
     $found = '';
     $blocktext = '';
+    $llnno = 1;
     foreach $line (split ("\n", $buf)) {
         # remove %l00httpd:lnno:$lnno% metadata
-		$line =~ s/^%l00httpd:lnno:\d+%//;
+        # extract $lnno line number or count locally if not available
+		if (($lnno) = $line =~ /^%l00httpd:lnno:(\d+)%/) {
+            $lnno = sprintf("%04d: ", $lnno);
+		    $line =~ s/^%l00httpd:lnno:\d+%//;
+        } else {
+            $lnno = sprintf("%04d: ", $llnno);
+            $llnno++;
+        }
         if ($line =~ /$block/i) {
             # found new block
             if ($hit) {
@@ -176,7 +184,7 @@ sub findInBuf  {
         if (($blocktext eq '') && ($block ne '.')) {
             # block header and not line mode
             $blocktext .= "<font style=\"color:black;background-color:silver\">\n";
-            $blocktext .= "$line\n";
+            $blocktext .= "$lnno$line\n";
             $blocktext .= "</font>\n";
 #        } elsif ($block ne '.') {
 #            # not line mode, highlight hits
@@ -189,7 +197,7 @@ sub findInBuf  {
             foreach $pattern (split ('\|\|\|', $findtext)) {
                 $line =~ s/($pattern)/<font style=\"color:black;background-color:yellow\">$1<\/font>/gi;
             }
-            $blocktext .= "$line\n";
+            $blocktext .= "$lnno$line\n";
         }
     }
     if ($hit) {
