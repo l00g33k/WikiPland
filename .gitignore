@@ -8,3 +8,6 @@ vssver.scc
 desktop.ini
 l00httpd.log
 *.orig
+.*.swp
+.gitgit
+.gitall

@@ -4,7 +4,7 @@ echo a : l00httpd source codes aa: Part 2 aaa: ed aaaa: ed
 echo b : l00http_cmdedit.sh edit same file
 echo c : l00_tr.txt .......... cc: l00_reminder.txt
 echo d : NtHappenings.txt .... dd: LgStopWatch.txt ddd: Phrases
-echo e : l00_notify.txt
+echo e : l00_notify.txt ...... ee: LgNexus.txt
 echo f : l00_cal.txt ......... ff: l00_reminder.txt
 echo g : index.txt ........... gg: sl4a l00httpd script
 echo h : TmpTodoInc.txt ...... hh: TmpMoreTodoInc.txt
@@ -53,6 +53,9 @@ vim /sdcard/l00httpd/NtStopWatchPhrases.txt; fi
 
 if [ $sel = "e" ]; then
 vim /sdcard/l00httpd/l00_notify.txt; fi
+
+if [ $sel = "ee" ]; then
+vim /sdcard/l00httpd/LgNexus.txt; fi
 
 if [ $sel = "f" ]; then
 vim /sdcard/l00httpd/l00_cal.txt; fi
