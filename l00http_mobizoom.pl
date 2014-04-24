@@ -10,7 +10,7 @@ use l00httpd;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here, $threads);
+my ($url, $zoom, $para, $here, $threads, $prolog);
 $url = '';
 $zoom = 120;
 $para = 1;
@@ -18,6 +18,7 @@ $para = 1;
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
     my ($wget, $wget2, $pre, $gurl, $post, $hdr, $line, $subj);
+
 
     $wget = '';
     if (length ($url) > 6) {
@@ -48,6 +49,10 @@ $wget2 .= " FOUND THREAD \n";
 }
 }
 $_ = $line;
+    if(/Create a custom date range/) {
+        $wget2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
+        $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
+    }
             $para++;
 s/</&lt;/g;
 s/>/&gt;/g;
@@ -161,7 +166,7 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
-	my ($skip, $tmp);
+	my ($skip, $tmp, $wgetall);
 
     $url = '';
     if (defined ($form->{'url'})) {
@@ -315,6 +320,8 @@ sub l00http_mobizoom_proc {
             print $sock $wget;
         } else {
             &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
+            $prolog = '';
+            $wgetall = '';
             do {
                 $getmore = 0;
                 $wget = &l00http_mobizoom_wget ($nextpage, $zoom);
@@ -324,11 +331,17 @@ sub l00http_mobizoom_proc {
                     #print "$nextpage \nNext page\n";
                     $getmore = 1;
                 }
-                if ($mode1online2offline4download & 3) {
-                    print $sock $wget;
-                }
-                &l00httpd::l00fwriteBuf($ctrl, $wget);
+                $wgetall .= $wget;
+#               if ($mode1online2offline4download & 3) {
+#                   print $sock $wget;
+#               }
+#               &l00httpd::l00fwriteBuf($ctrl, $wget);
             } while ($getmore);
+            $wgetall = "$prolog$wgetall";
+            if ($mode1online2offline4download & 3) {
+                print $sock $wgetall;
+            }
+            &l00httpd::l00fwriteBuf($ctrl, $wgetall);
             &l00httpd::l00fwriteClose($ctrl);
         }
     }
