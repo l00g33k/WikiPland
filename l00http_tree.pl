@@ -1,6 +1,8 @@
 use strict;
 use warnings;
+use l00httpd;
 use l00backup;
+use l00crc32;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -47,7 +49,9 @@ sub l00http_tree_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buffer, $path2, $path, $file, $cnt);
+    my ($buffer, $path2, $path, $file, $cnt, $crc32, $export, $buf);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0,
+        $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -78,6 +82,9 @@ sub l00http_tree_proc {
     &l00http_tree_list ($sock, $form->{'path'});
     print $sock "<pre>";
 	$cnt = 0;
+	$export = '';
+	$time0 = time;
+    $nobytes = 0;
     foreach $file (sort @list) {
         if (!($file =~ /\.bak$/)) {
 		    $cnt++;
@@ -87,6 +94,26 @@ sub l00http_tree_proc {
                 sprintf("%3d",$cnt)."</a> ";
 		    $_ = $file;
 			($path, $file) = /^(.+\/)([^\/]+)$/;
+            ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                = stat($path.$file);
+            $nobytes += $size;
+            if (defined($form->{'crc32'}) && ($form->{'crc32'} eq 'on')) {
+                local $/ = undef;
+                if(open(IN, "<$path$file")) {
+                    binmode (IN);
+                    $buf = <IN>;
+                    close(IN);
+                } else {
+                    $buf = '';
+                }
+                $crc32 = &l00crc32::crc32($buf);
+                print $sock sprintf("%8d %08x ", $size, $crc32);
+                $export .= sprintf("%4d %8d %08x %s\n",$cnt, $size, $crc32, $path.$file);
+            } else {
+                print $sock sprintf("%8d ", $size);
+                $export .= sprintf("%4d %8d %s\n",$cnt, $size, $path.$file);
+            }
             # show path from base down only
 			$path2 = $path;
 			$path2 =~ s/^$form->{'path'}//;
@@ -96,11 +123,19 @@ sub l00http_tree_proc {
     }
     print $sock "</pre>";
 
+    print $sock "<p>There are $nobytes bytes in $cnt files\n";
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
+    &l00httpd::l00fwriteBuf($ctrl, $export);
+    &l00httpd::l00fwriteClose($ctrl);
+    print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw listing</a><p>\n";
+    print $sock sprintf("Computed %d bytes in %d seconds for %d bytes/sec.<p>", $nobytes, time - $time0, $nobytes / (time - $time0 + 1));
 
     print $sock "<hr><form action=\"/tree.htm\" method=\"post\">\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+$form->{'filter'} = 'not implemented';
     print $sock "Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
+    print $sock "<input type=\"checkbox\" name=\"crc32\">computer CRC32 (pure Perl CRC32 is very slow)\n";
     print $sock "</form>\n";
 
     print $sock "<a name=\"__end__\"></a>\n";
