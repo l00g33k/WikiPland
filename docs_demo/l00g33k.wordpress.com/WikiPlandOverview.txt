@@ -1,0 +1,50 @@
+%TOC%
+=Introduction=
+!WikiPland is a Perl based cross platform wiki web server. It runs on Android devices, Linux desktop computers, and Microsoft Windows computers. It does not use Perl add-on module so it runs any where Perl interpreter is available. Since it is a web server, you can use any web browser as its GUI. Further more, the browser does not have to be on the same host. Hence you could run the server on the Android phone and browse from your desktop using its larger screen and full keyboard, or from your big screen TV for comfortable reading from your couch.
+
+I created !WikiPland as my personal information organizer, but I have also added many useful features. Since it is Perl based and is modular by design, it can easily be extended, even right on the Android phone. I will give a short overview here. But to do it justice, I have written additional articles explaining its many diversed usages, and I will continue to add to the collection.
+=What's So Interesting About !WikiPland=
+I have written a few articles on my !WikiPland wordpress.com blog:
+* http://wordpress.com
+Dense bookmark
+* http://wordpress.com
+Reading scheme
+* http://wordpress.com
+Time logging
+* Dropbox cloud sync
+=How To See A Demonstration?=
+There are several demonstrations available, from a Red Hat Openshift hosted crippled version (write to file system disabled,) to a non Androd Play Store APK (so you must enable third party app,) to download and run the Perl source code.
+==On Red Hat Openshift==
+http://WikiPlandRhc-l00g33k.rhcloud.com
+
+This is hosted on the Red Hat Openshift DIY Gear. Note that for security reason all features that write to the file system are disabled. Furthermore, Android specific features are also disabled. But you will still able to get a taste and see the browser interfce as well as how the pages are rendered. You can also see all the help files that are currently available.
+
+Note that this is not the intented use case for !WikiPland. There are weird behavors due to my lack of understanding of the Red Hat HTTP proxy. I have created it simply as a zero friction path to quickly see a !WikiPland demonstration. And I get a chance to learn about the Red Hat Cloud.
+==Install An Android APK On An Android Device==
+http://l00g33k.github.com/WikiPlandApk
+
+This is an Android APK. It is implemented using the xys from http://. The xys includes the Perl interpreter as well as the !WikiPland source code in its data. The first time it run, it installs the Perl interpreter. Note that you must enable third party software on the Android devices to run this program. I have not used this implementation much but I have already noticed that the clipboard feature isn't working. I do not plan to have frequent update to this implementation.
+==On A Desktop/Laptop Computer==
+http://l00g33k.github.com/WikiPland
+
+On any computer where you already have a Perl interpreter, simply download the source code and issue the command:
+<pre>
+  perl l00httpd.pl
+</pre>
+Then simply browse to http://127.0.0.1:20337 and then click the !QuickStart link.
+==A Full On Installation On An Android Device==
+http://sl4a
+http://l00g33k.github.com/WikiPland
+
+This is how I use it on my Android phone. You will need to first install SL4A and the Perl interpreter. Then you need to fetch the !WikiPland source code. To launch it, start the SL4A Perl interpreter and navigate to !WikiPland snd run 00runonAndroid.pl.
+=What To Do With The Demo?=
+* 
+* 
+* 
+* 
+=What To Do With The Demo?=
+There are a million things you could do, just like what can you do with a Perl interpreter? That is why I plan to write articles on specific topics.
+
+Here's the 'Hello, World' version:
+* 
+

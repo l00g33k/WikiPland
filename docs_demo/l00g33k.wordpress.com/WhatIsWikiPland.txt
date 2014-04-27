@@ -1,0 +1,12 @@
+WikiPland is a Perl scripts based portable ”wiki” engine web server. I started writing it soon after I figured put how to code a listen socket in Perl so I can write a crude web server from scratch. It just grew and grew and I have become dependent on it. I figure there may be others who might be interested so I am sharing it.
+
+First I have to get you interested so you would spend a little time reading about its capabilities. It is a little bit hard to summarize the power in a few words because this is basically a coder gone wild; I simply code what are useful to me. A Perl hacker might find some interesting stuffs here, but I think sysadmin types and other IT workers might also find something useful. So here is a short list of what I think
+might interest you:
+
+* First of all I wrote it to run on my Android phone so I can store and manage everything on the phone.
+* Since it is a web server, there is no UI. You favourite web browser is the GUI. Since it is HTTP, you can access it from your desktop or laptop with a bigger screen and proper keyboard.
+** You can even share it to the public web if you configure a home computer with public IP and port forward to your phone. I have used it to share KML file to Google Maps which fetches your KML file from a URL you specify.
+** There are rudimentary access control to only modules and directory you allowed..
+* You can make a super high density bookmark page. There is a way to make a link, one per line, with a name and the URL seperate by a | bar. If you make the name 4-8 characters long, you can make a web page full of names with as many links. You can then also access this bookmark page from your desktop or laptop. Yeah, you can keep them in the cloud, but my solution give you the greatest privacy.
+* There is rumentary encryption using the Blowfish algorithm. But I am no security expert so I won't vouch how secure it is
+* There is also a shortcut way to send text to the clipboard, so you can store id/password in the encrypted file and quickly copy the id/password for pasting into a web page or ssh console. The same shortcut can also push one or more lines of phrases into the console, so you can shortcuts of dozen and dozen of command lines for pasting into ssh console.
