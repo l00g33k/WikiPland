@@ -993,7 +993,8 @@ $oubuf =~ s|(href="[^ ]+path=)\.\/([^ ]+)|$1$pname$2|g;
 
     # make all links to open in 'newwin'
     if (($flags & 8) != 0) {
-        $oubuf =~ s|<a href=|<a target="newwin" href=|g;
+        # make all non local anchor link to open in 'newwin'
+        $oubuf =~ s|<a (href="[^#])|<a target="newwin" $1|g;
     }
 
 
