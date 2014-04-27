@@ -316,6 +316,7 @@ sub l00http_ls_proc {
                 # auto raw for reading
                 # if not usual text file extension, make it raw
                 if (!($path =~ /\.txt$/i) &&
+                    !($path =~ /\.bak$/i) &&
                     !($path =~ /\.csv$/i) &&
                     !($path =~ /\.log$/i) &&
                     !($path =~ /\.pl$/i) &&
@@ -397,6 +398,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                     $httphdr = "Content-Type: image/png\r\n";
                 } elsif (($path =~ /\.html$/i) ||
                          ($path =~ /\.htm$/i) ||
+                         ($path =~ /\.bak$/i) ||
                          ($path =~ /\.txt$/i)) {
                     $httphdr = "Content-Type: text/html\r\n";
                 } else {

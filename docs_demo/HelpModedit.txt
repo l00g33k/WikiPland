@@ -13,10 +13,10 @@
 * * Level 1
 * ** Level 2
 ==Bullets, !TWiki compatibility==
-* &nbsp;&nbsp;&nbsp;* Level 1 (3 leading spaces)
-* &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Level 2 (6 leading spaces)
+*    * Level 1 (3 leading spaces)
+*       * Level 2 (6 leading spaces)
 ==Leading spaces==
-* Leading spaces are preserved (as &amp;nbsp;)
+* Leading spaces are preserved (as  )
     Like so
         And so
 ==Font==
@@ -33,7 +33,7 @@
 ** {{fix}}
 ** **//__all__//**
 =Wiki %BOOKMARK% Shorthand=
-* To make a high density bookmark page to put as much links onto the small screen on the Androids devices requires one to make lots of hyper links.  Even though the &#x5b;[URL|desc]&#x5d; shorthand helps, another link management friendly and even simpler shorthand is available
+* To make a high density bookmark page to put as much links onto the small screen on the Androids devices requires one to make lots of hyper links.  Even though the [[URL|desc]] shorthand helps, another link management friendly and even simpler shorthand is available
 * The special section is declared by placing the keyword %BOOKMARK% alone on a line and is terminated by the keyword %END%.  For example see:
 ** [[/view.pl?path=%L00HTTP<plpath>%l00httpd/index.txt|sample %BOOKMARK% shorthand]]
 * Font markups shown above work for simple wiki words.  See the above link for example
@@ -49,7 +49,7 @@
 ==Index to ::text::==
 * Starting in column 1:
 * You can use it like book index
-&#37;::INDEX::%
+%::INDEX::%
 ===Indexing using ::text::===
 ::example1::
 * The line above creates a link in the ::INDEX:: to it
@@ -59,16 +59,16 @@
 =l00httpd substitutions=
 * Specially formatted text can be replaced by their l00httpd environment variable values
 ** Example, to accomodate arbitrary script installation path:
-*** /do.pl?path=%L00HTTP&lt;plpath&gt;%docs_demo/l00_camera.pl 
+*** /do.pl?path=%L00HTTP<plpath>%docs_demo/l00_camera.pl 
 ** becomes
 *** /do.pl?path=/sdcard/sl4a/scripts/l00httpd/l00httpd/l00_camera.pl 
 * For a full list of l00httpd environment variable values see the 'ctrl data' table at the bottom of [[/httpd.pl|Home]]
 =Inclusion=
 * A file can be included into another file when rendering wiki pgae:
 ** The following directive includes the content of the specified file into the current page being rendered:
-*** %INCLUDE&lt;./TmpTodoInc.txt&gt;%
-** The '&lt;./' notation instructs l00httpd to find it in the same directory as the page being rendered
-** An absolute path may also be used, but it fails when the wiki directory is duplicated in another environment having different path.  Using the '&lt;./' notation allows one to duplicate the content of the wiki directory on say PC as a backup and still have most features functional; certainly functions unique to the Android devices will not be available
+*** %INCLUDE<./TmpTodoInc.txt>%
+** The '<./' notation instructs l00httpd to find it in the same directory as the page being rendered
+** An absolute path may also be used, but it fails when the wiki directory is duplicated in another environment having different path.  Using the '<./' notation allows one to duplicate the content of the wiki directory on say PC as a backup and still have most features functional; certainly functions unique to the Android devices will not be available
 =Bookmarks=
 * All line ending in '!!!' becomes an anchor and gets an entry in the BOOKMARKS section in the TOC
 * An example of bookmark!!! !!!
@@ -78,13 +78,14 @@
 * An example of posts-it note???
 * Color may be specified for posts-it notes
 ** Note '???' are entered twice because the feature removes the action '???'
-** red     when ending in ???r ???r
-** yellow  when ending in ???y ???y
-** lime    when ending in ???l ???l
-** silver  when ending in ???s ???s
-** aqua    when ending in ???a ???a
-** fuchsia when ending in ???f ???f
-** gray    when ending in ???g ???g
-** olive   when ending in ???o ???o
+** red____ when ending in ???r (not done) ???r
+** yellow_ when ending in ???y (working on it) ???y
+** lime___ when ending in ???l (done) ???l
+** silver_ when ending in ???s (keep notes) ???s
+** aqua___ when ending in ???a (look soon) ???a
+** fuchsia when ending in ???f (KIV) ???f
+** gray___ when ending in ???g (put away) ???g
+** olive__ when ending in ???o (higher than put away) ???o
+** silver_ when ending in ??? ???
 
 %::INDEX::%
