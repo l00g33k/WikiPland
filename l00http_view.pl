@@ -36,6 +36,9 @@ sub l00http_view_proc {
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
     print $sock "<a name=\"top\"></a>\n";
+
+    $form->{'path'} =~ s/\r//g;
+    $form->{'path'} =~ s/\n//g;
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}\">Path</a>: ";
         if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
@@ -47,9 +50,6 @@ sub l00http_view_proc {
         }
         print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>\n";
     }
-
-    $form->{'path'} =~ s/\r//g;
-    $form->{'path'} =~ s/\n//g;
 
 
     print $sock "<p>\n";
@@ -111,13 +111,7 @@ sub l00http_view_proc {
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         $found = '';
 
-#&l00httpd::l00freadOpen($ctrl, $form->{'path'});
-#$buffer = &l00httpd::l00freadAll($ctrl);
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-#       if (open (IN, "<$form->{'path'}")) {
-#           local $/ = undef;
-#           $buffer = <IN>;
-#           close (IN);
             $buffer = &l00httpd::l00freadAll($ctrl);
 
             # Some has only \r as line endings. So convert DOS \r\n to Unix \n
