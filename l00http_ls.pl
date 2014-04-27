@@ -103,10 +103,9 @@ sub l00http_ls_proc {
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
-    my ($showchno, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
-#   $showleadingspaces, 
+    my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
 
-    $showchno = 0;
+    $wikihtmlflags = 0;
 
     # 1) Determine operating path and mode
 
@@ -155,10 +154,13 @@ sub l00http_ls_proc {
         $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
     }
     if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
-        $showchno = 2;      # flags for &l00wikihtml::wikihtml
+        $wikihtmlflags = 2;      # flags for &l00wikihtml::wikihtml
     }
     if (defined ($form->{'bare'})) {
-        $showchno += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
+        $wikihtmlflags += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
+    }
+    if (defined ($form->{'newwin'})) {
+        $wikihtmlflags += 8;      # flags for &l00wikihtml::wikihtml for 'newwin'
     }
 
     if ((defined ($form->{'target'})) && (defined ($form->{'setlaunch'})) && (length ($form->{'setlaunch'}) > 0)) {
@@ -283,7 +285,7 @@ sub l00http_ls_proc {
                         $buf .= $_;
 			            }
                 
-                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $showchno);
+                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
                     if (defined ($form->{'hiliteln'})) {
                         foreach $_ (split ("\n", $buf)) {
                             if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
@@ -752,52 +754,17 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # render found results
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $showchno);
+                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags);
                         }
                         
                         if ((defined ($form->{'find'})) &&
                             ($showpage ne 'checked')) {
                             # find without displaying page
                         } else {
-#                            if (defined ($form->{'lineno'})) {
-#                                # display with line numbers
-#                                $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $showchno);
-#                                $ln = 1;
-#                                $intoc = 0; # counting line here is not precise, in fact, poor
-#                                foreach $_ (split ("\n", $buf)) {
-#                                    if (/"__toc__"/) {
-#                                        # we encounter TOC, no line number
-#                                        $intoc = 1;
-#                                    }
-#                                    if (/"__tocend__"/) {
-#                                        # we encounter TOC end, resume line number
-#                                        $intoc = 0;
-#                                    }
-#                                    if ($intoc || /^<\/ul>$/) {
-#								        # special case at end of bullet list
-#                                        print $sock "$_\n";
-#                                    } else {
-##if($ln<9999){
-##print "$ln :: " . substr($_,0,50)."\n";
-##}
-##                                        if (defined ($form->{'hiliteln'}) && ($form->{'hiliteln'} == $ln)) {
-##									        # make all non tags text lime
-##                                            s/>([^<]+)</><font style="color:black;background-color:lime">$1<\/font></g;
-##                                            print $sock "<a name=\"line$ln\"></a>$_\n";
-##									    } else {
-##                                            print $sock "<a name=\"line$ln\"></a>$_\n";
-##									    }
-#                                        print $sock "$_\n";
-#                                        $ln++;
-#                                    }
-#                                }
-#                            } else {
-#                                # normal display without line numbers
-                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $showchno);
+                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
                             if (defined ($form->{'hiliteln'})) {
                                 foreach $_ (split ("\n", $buf)) {
                                     if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
-#                                       print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                                         s/>(.+)</><font style="color:black;background-color:lime">$1<\/font></g;
                                         print $sock "$_\n";
                                     } else {
@@ -807,7 +774,6 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             } else {
                                 print $sock $buf;
                             }
-#                            }
                         }
                     } else {
                         # rendering as raw text
@@ -836,7 +802,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # rendering as raw text
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $showchno);
+                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags);
                         }
 
                         $ln = 1;
@@ -1032,7 +998,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
 #       print $sock "        <td>&nbsp;</td>\n";
         print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
 
-        if ($showchno == 2) {
+        if ($wikihtmlflags == 2) {
             $buf = "checked";
         } else {
             $buf = "";
@@ -1048,7 +1014,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
 
         print $sock "    <tr>\n";
         print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"newnew\">for future</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";

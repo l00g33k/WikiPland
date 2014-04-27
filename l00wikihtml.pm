@@ -106,6 +106,7 @@ sub wikihtml {
     # flags: 1='bookmark' is on
     #        2=prefix chapter number
     #        4=bare, no header/footer
+    #        8=open link in 'newwin'
     # $ctrl: system variables
     # $pname: current path for relateive wikiword links
     my ($ctrl, $pname, $inbuf, $flags) = @_;
@@ -989,6 +990,11 @@ $oubuf =~ s|(href="[^ ]+path=)\.\/([^ ]+)|$1$pname$2|g;
 
     # expand img src="./ to current dir
     $oubuf =~ s|(img src=")\.\/([^ ]+)|$1$pname$2|g;
+
+    # make all links to open in 'newwin'
+    if (($flags & 8) != 0) {
+        $oubuf =~ s|<a href=|<a target="newwin" href=|g;
+    }
 
 
     $oubuf;
