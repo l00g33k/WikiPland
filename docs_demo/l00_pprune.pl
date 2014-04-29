@@ -59,7 +59,7 @@ if ($ctrl->{'os'} eq 'and') {
 					    $lt = 0;
                 	}
                     print $sock "$lt $gt: ";
-                    print $sock "<a href=\"$a$b$c$1\">page $b post $1</a>\n";
+                    print $sock "<a target=\"pprune\" href=\"$a$b$c$1\">page $b post $1</a>\n";
             	}
            	}
             print $sock "</pre>\n";
