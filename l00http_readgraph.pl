@@ -90,21 +90,6 @@ sub l00http_readgraph_proc {
     }
     print $sock "<p><a href=\"/svg.htm\">List of all graphs</a><br>\n";
 
-# <svg  x="0" y="0" width="875" height="532"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" viewBox="0 0 875 532" preserveAspectRatio="xMidYMid meet"> <g id="bitmap" style="display:online"> <image x="0" y="0" width="875" height="532" xlink:href="/ls.htm/singapore.png?path=/sdcard/l00httpd/maps/cy.png" /> </g> <g id="PajekSVG" style="display:online"> <g transform="translate(0 0)"> <g transform="scale(1.0)"> <image x="0" y="0" width="875" height="532" xlink:href="/svg.htm?graph=battvolt"/> </g> </g> </g> </svg>
-
-#<svg  x="0" y="0" width="875" height="532" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" viewBox="0 0 875 532" preserveAspectRatio="xMidYMid meet">
-# <g id="bitmap" style="display:online">
-#   <image x="0" y="0" width="875" height="532" xlink:href="/ls.htm/singapore.png?path=/sdcard/l00httpd/maps/cy.png" />
-# </g>
-# <g id="PajekSVG" style="display:online">
-#   <g transform="translate(0 0)">
-#     <g transform="scale(1.0)">
-#       <image x="0" y="0" width="875" height="532" xlink:href="/svg.htm?graph=battvolt"/>
-#     </g>
-#   </g>
-# </g>
-#</svg>
-
 #           &l00svg::plotsvg ('battvolt', $svgvolt, $graphwd, $graphht);
 $bkgnd = '/ls.htm?path=/sdcard/l00httpd/maps/cy.png';
 $ovly = '/svg.htm?graph=battvolt';

@@ -209,6 +209,7 @@ sub l00http_ls_proc {
         if ($form->{'path'} =~ /^l00:\/\//) {
             if (defined($ctrl->{'l00file'})) {
                 if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
+#::heremark::
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
                     $editable = 1;
 
@@ -317,11 +318,13 @@ sub l00http_ls_proc {
             if ($read0raw1 == 0) {
                 # auto raw for reading
                 # if not usual text file extension, make it raw
+#::heremark::
                 if (!($path =~ /\.txt$/i) &&
                     !($path =~ /\.bak$/i) &&
                     !($path =~ /\.csv$/i) &&
                     !($path =~ /\.log$/i) &&
                     !($path =~ /\.pl$/i) &&
+                    !($path =~ /\.pm$/i) &&
                     !($path =~ /\.h$/i) &&
                     !($path =~ /\.c$/i) &&
                     !($path =~ /\.cpp$/i) &&
@@ -329,6 +332,7 @@ sub l00http_ls_proc {
                     !($path =~ /\.html$/i)) {
                     $urlraw = 1;
                 }
+#::heremark::
 #                if (($path =~ /\.zip$/i) ||
 #                    ($path =~ /\.kmz$/i) ||
 #                    ($path =~ /\.kml$/i) ||
