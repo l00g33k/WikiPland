@@ -106,6 +106,7 @@ sub l00http_scratch_proc {
     print $sock "<input type=\"submit\" name=\"mobi\" value=\"Mobilize\">\n";
     print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
     print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
+    print $sock "<input type=\"submit\" name=\"formatted\" value=\"Formatted\">\n";
     print $sock "</form><p>\n";
 
 
@@ -118,6 +119,15 @@ sub l00http_scratch_proc {
         $scratchhtml =~ s/\r/<br>/g;
         $scratchhtml =~ s/\n/<br>/g;
         $scratchhtml =~ s/<br>/<br>\n/g;
+    } elsif (defined ($form->{'formatted'})) {
+        $scratchhtml = $scratch;
+        $scratchhtml =~ s/</&lt;/g;
+        $scratchhtml =~ s/>/&gt;/g;
+        $scratchhtml =~ s/\r\n/<br>/g;
+        $scratchhtml =~ s/\r/<br>/g;
+        $scratchhtml =~ s/\n/<br>/g;
+        $scratchhtml =~ s/<br>/<br>\n/g;
+        $scratchhtml = "<pre>\n$scratchhtml\n</pre>\n";
     } else {
         $scratchhtml = $scratch;
         $scratchhtml =~ s/\r//g;
