@@ -34,6 +34,8 @@ sub l00http_readgraph_proc {
 
     print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
     print $sock "<input type=image style=\"float:none\" src=\"/svg.htm?graph=$graphname\"><br>\n";
+#   print $sock "<input type=image style=\"float:none\" src=\"/ls.htm?path=l00://readgraph.svg\"><br>\n";
+#l00://readgraph.svg
 
     if (defined ($form->{'x'})) {
         $off = 0;
@@ -126,6 +128,9 @@ $graph .= "</svg>";
 #	$graph =~ s/</&lt;/g;
 #	$graph =~ s/>/&gt;/g;
 print $sock $graph;
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://readgraph.svg');
+    &l00httpd::l00fwriteBuf($ctrl, $graph);
+    &l00httpd::l00fwriteClose($ctrl);
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
