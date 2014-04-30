@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 use l00wikihtml;
@@ -25,7 +24,7 @@ sub l00http_readgraph_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $data, $svg, $size, $graphname, $x, $xpix, $y, $ypix, $off);
-    my ($se,$mi,$hr,$da,$mo,$yr,$dummy, $date);
+    my ($se,$mi,$hr,$da,$mo,$yr,$dummy, $date, $graph, $grx, $gry, $bkgnd, $ovly);
 
 
     # Send HTTP and HTML headers
@@ -88,6 +87,45 @@ sub l00http_readgraph_proc {
         $lastoff = $off;
     }
     print $sock "<p><a href=\"/svg.htm\">List of all graphs</a><br>\n";
+
+# <svg  x="0" y="0" width="875" height="532"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" viewBox="0 0 875 532" preserveAspectRatio="xMidYMid meet"> <g id="bitmap" style="display:online"> <image x="0" y="0" width="875" height="532" xlink:href="/ls.htm/singapore.png?path=/sdcard/l00httpd/maps/cy.png" /> </g> <g id="PajekSVG" style="display:online"> <g transform="translate(0 0)"> <g transform="scale(1.0)"> <image x="0" y="0" width="875" height="532" xlink:href="/svg.htm?graph=battvolt"/> </g> </g> </g> </svg>
+
+#<svg  x="0" y="0" width="875" height="532" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" viewBox="0 0 875 532" preserveAspectRatio="xMidYMid meet">
+# <g id="bitmap" style="display:online">
+#   <image x="0" y="0" width="875" height="532" xlink:href="/ls.htm/singapore.png?path=/sdcard/l00httpd/maps/cy.png" />
+# </g>
+# <g id="PajekSVG" style="display:online">
+#   <g transform="translate(0 0)">
+#     <g transform="scale(1.0)">
+#       <image x="0" y="0" width="875" height="532" xlink:href="/svg.htm?graph=battvolt"/>
+#     </g>
+#   </g>
+# </g>
+#</svg>
+
+#           &l00svg::plotsvg ('battvolt', $svgvolt, $graphwd, $graphht);
+$bkgnd = '/ls.htm?path=/sdcard/l00httpd/maps/cy.png';
+$ovly = '/svg.htm?graph=battvolt';
+$ovly = '/svg.htm?graph=readgraph';
+$grx = 875;
+$gry = 532;
+            &l00svg::plotsvg ('readgraph', '0,3 1,6 2,3 3,5', $grx, $gry);
+$graph = '';
+$graph .= "<svg  x=\"0\" y=\"0\" width=\"$grx\" height=\"$gry\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $grx $gry\" preserveAspectRatio=\"xMidYMid meet\">";
+$graph .= " <g id=\"bitmap\" style=\"display:online\">";
+$graph .= "   <image x=\"0\" y=\"0\" width=\"$grx\" height=\"$gry\" xlink:href=\"$bkgnd\" />";
+$graph .= " </g>";
+$graph .= " <g id=\"PajekSVG\" style=\"display:online\">";
+$graph .= "   <g transform=\"translate(0 0)\">";
+$graph .= "     <g transform=\"scale(1.0)\">";
+$graph .= "       <image x=\"0\" y=\"0\" width=\"$grx\" height=\"$gry\" xlink:href=\"$ovly\"/>";
+$graph .= "     </g>";
+$graph .= "   </g>";
+$graph .= " </g>";
+$graph .= "</svg>";
+#	$graph =~ s/</&lt;/g;
+#	$graph =~ s/>/&gt;/g;
+print $sock $graph;
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
