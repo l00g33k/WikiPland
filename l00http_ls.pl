@@ -103,9 +103,10 @@ sub l00http_ls_proc {
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
-    my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
+    my ($showchno, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
+#   $showleadingspaces, 
 
-    $wikihtmlflags = 0;
+    $showchno = 0;
 
     # 1) Determine operating path and mode
 
@@ -154,13 +155,10 @@ sub l00http_ls_proc {
         $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
     }
     if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
-        $wikihtmlflags = 2;      # flags for &l00wikihtml::wikihtml
+        $showchno = 2;      # flags for &l00wikihtml::wikihtml
     }
     if (defined ($form->{'bare'})) {
-        $wikihtmlflags += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
-    }
-    if (defined ($form->{'newwin'})) {
-        $wikihtmlflags += 8;      # flags for &l00wikihtml::wikihtml for 'newwin'
+        $showchno += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
     }
 
     if ((defined ($form->{'target'})) && (defined ($form->{'setlaunch'})) && (length ($form->{'setlaunch'}) > 0)) {
@@ -186,10 +184,6 @@ sub l00http_ls_proc {
     } else {
         $sortfind = '';
     }
-    if (defined ($form->{'timestamp'}) &&
-        ($form->{'timestamp'} eq 'on')) {
-        $form->{'hilite'} = '^\d{8,8} \d{6,6} ';
-    }
     
     $editable = 0;
     $htmlend = 1;
@@ -209,53 +203,52 @@ sub l00http_ls_proc {
         if ($form->{'path'} =~ /^l00:\/\//) {
             if (defined($ctrl->{'l00file'})) {
                 if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-#::heremark::
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
                     $editable = 1;
 
-                    $httphdr = "Content-Type: text/html\r\n";
-                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                    if (!defined ($form->{'bare'})) {
-                        if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
-                            print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
-                            # not ending in / or \, not a dir
-                            # clip.pl with \ on Windows
-                            $tmp = $path;
-                            if ($ctrl->{'os'} eq 'win') {
-                                $tmp =~ s/\//\\/g;
-                            }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
-                        } else {
-                            print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
-                            # clip.pl with \ on Windows
-                            $tmp = $path;
-                            if ($ctrl->{'os'} eq 'win') {
-                                $tmp =~ s/\//\\/g;
-                            }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
+                $httphdr = "Content-Type: text/html\r\n";
+                print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                if (!defined ($form->{'bare'})) {
+                    if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
+                        print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                        # not ending in / or \, not a dir
+                        # clip.pl with \ on Windows
+                        $tmp = $path;
+                        if ($ctrl->{'os'} eq 'win') {
+                            $tmp =~ s/\//\\/g;
                         }
-                        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
-                        print $sock "<a href=\"#end\">end</a>\n";
-                        print $sock "<a href=\"#__toc__\">toc</a>\n";
-                        if (defined ($form->{'bkvish'})) {
-                            print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
-                        } else {
-                            print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
-                        }
-                        print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                        print $sock "<a href=\"/edit.htm?path=$path\">Edit</a><hr>\n";
-                        if (defined ($form->{'bkvish'})) {
-                            print $sock "<pre>\n";
-                            print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
-                            print $sock "c:\\x\\$fname\n";
-                            print $sock "adb push \"c:\\x\\$fname\" \"$pname$fname\"\n";
-						    print $sock "perl c:\\x\\adb.pl c:\\x\\adb.in\n";
-                            print $sock "</pre>\n";
-                            print $sock "<hr>\n";
-                        }
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>$fname<br>\n";
                     } else {
-                        ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                        print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
+                        # clip.pl with \ on Windows
+                        $tmp = $path;
+                        if ($ctrl->{'os'} eq 'win') {
+                            $tmp =~ s/\//\\/g;
+                        }
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
                     }
+                    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
+                    print $sock "<a href=\"#end\">end</a>\n";
+                    print $sock "<a href=\"#__toc__\">toc</a>\n";
+                    if (defined ($form->{'bkvish'})) {
+                        print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
+                    } else {
+                        print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
+                    }
+                    print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
+                    print $sock "<a href=\"/edit.htm?path=$path\">Edit</a><hr>\n";
+                    if (defined ($form->{'bkvish'})) {
+                        print $sock "<pre>\n";
+                        print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
+                        print $sock "c:\\x\\$fname\n";
+                        print $sock "adb push \"c:\\x\\$fname\" \"$pname$fname\"\n";
+						print $sock "perl c:\\x\\adb.pl c:\\x\\adb.in\n";
+                        print $sock "</pre>\n";
+                        print $sock "<hr>\n";
+                    }
+                } else {
+                    ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                }
 #l00:
                     # rendering as wiki text
                     $buf = "";
@@ -286,7 +279,7 @@ sub l00http_ls_proc {
                         $buf .= $_;
 			            }
                 
-                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
+                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $showchno);
                     if (defined ($form->{'hiliteln'})) {
                         foreach $_ (split ("\n", $buf)) {
                             if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
@@ -317,43 +310,28 @@ sub l00http_ls_proc {
             }
             if ($read0raw1 == 0) {
                 # auto raw for reading
-                # if not usual text file extension, make it raw
-#::heremark::
-                if (!($path =~ /\.txt$/i) &&
-                    !($path =~ /\.bak$/i) &&
-                    !($path =~ /\.csv$/i) &&
-                    !($path =~ /\.log$/i) &&
-                    !($path =~ /\.pl$/i) &&
-                    !($path =~ /\.pm$/i) &&
-                    !($path =~ /\.h$/i) &&
-                    !($path =~ /\.c$/i) &&
-                    !($path =~ /\.cpp$/i) &&
-                    !($path =~ /\.htm$/i) &&
-                    !($path =~ /\.html$/i)) {
+                if (($path =~ /\.zip$/i) ||
+                    ($path =~ /\.kmz$/i) ||
+                    ($path =~ /\.kml$/i) ||
+                    ($path =~ /\.apk$/i) ||
+                    ($path =~ /\.jpeg$/i) ||
+                    ($path =~ /\.jpg$/i) ||
+                    ($path =~ /\.wma$/i) ||
+                    ($path =~ /\.3gp$/i) ||
+                    ($path =~ /\.mp3$/i) ||
+                    ($path =~ /\.mp4$/i) ||
+                    ($path =~ /\.gif$/i) ||
+                    ($path =~ /\.svg$/i) ||
+                    ($path =~ /\.png$/i) ||
+                    ($path =~ /\.pdf$/i) ||
+                    ($path =~ /\.html$/i) ||
+                    ($path =~ /\.htm$/i)) {
                     $urlraw = 1;
                 }
-#::heremark::
-#                if (($path =~ /\.zip$/i) ||
-#                    ($path =~ /\.kmz$/i) ||
-#                    ($path =~ /\.kml$/i) ||
-#                    ($path =~ /\.apk$/i) ||
-#                    ($path =~ /\.jpeg$/i) ||
-#                    ($path =~ /\.jpg$/i) ||
-#                    ($path =~ /\.wma$/i) ||
-#                    ($path =~ /\.3gp$/i) ||
-#                    ($path =~ /\.mp3$/i) ||
-#                    ($path =~ /\.mp4$/i) ||
-#                    ($path =~ /\.gif$/i) ||
-#                    ($path =~ /\.svg$/i) ||
-#                    ($path =~ /\.png$/i) ||
-#                    ($path =~ /\.pdf$/i) ||
-#                    ($path =~ /\.html$/i) ||
-#                    ($path =~ /\.htm$/i)) {
-#                    $urlraw = 1;
-#                }
             }
             # auto raw for
             if (($read0raw1 == 1) || ($urlraw == 1)) {
+
                 # 2.1) If in raw mode, send raw binary
 
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
@@ -404,7 +382,6 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                     $httphdr = "Content-Type: image/png\r\n";
                 } elsif (($path =~ /\.html$/i) ||
                          ($path =~ /\.htm$/i) ||
-                         ($path =~ /\.bak$/i) ||
                          ($path =~ /\.txt$/i)) {
                     $httphdr = "Content-Type: text/html\r\n";
                 } else {
@@ -446,7 +423,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         if ($ctrl->{'os'} eq 'win') {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>$fname<br>\n";
                     } else {
                         print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                         # clip.pl with \ on Windows
@@ -547,7 +524,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             if (defined ($form->{'editline'})) {
 							    s/\r//;
 							    s/\n//;
-                                $_ = "$_ <a href=\"/edit.htm?path=$path&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
+                                $_ = "$_ <a href=\"/edit.htm?path=$path&contextln=0&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
 							}
 
                             # highlighting
@@ -704,13 +681,13 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                                 $found .= "* :ALWAYS:";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on\">no header/footer</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=&bare=on\">no header/footer</a>";
                                 $found .= "\n";
                                 foreach $_ (sort keys %showdir) {
                                     $found .= "* $_:";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on\">no header/footer</a>";
+                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=&bare=on\">no header/footer</a>";
                                     $found .= "\n";
                                 }
                                 $buf = "$found$buf";
@@ -758,17 +735,52 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # render found results
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags);
+                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $showchno);
                         }
                         
                         if ((defined ($form->{'find'})) &&
                             ($showpage ne 'checked')) {
                             # find without displaying page
                         } else {
-                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
+#                            if (defined ($form->{'lineno'})) {
+#                                # display with line numbers
+#                                $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $showchno);
+#                                $ln = 1;
+#                                $intoc = 0; # counting line here is not precise, in fact, poor
+#                                foreach $_ (split ("\n", $buf)) {
+#                                    if (/"__toc__"/) {
+#                                        # we encounter TOC, no line number
+#                                        $intoc = 1;
+#                                    }
+#                                    if (/"__tocend__"/) {
+#                                        # we encounter TOC end, resume line number
+#                                        $intoc = 0;
+#                                    }
+#                                    if ($intoc || /^<\/ul>$/) {
+#								        # special case at end of bullet list
+#                                        print $sock "$_\n";
+#                                    } else {
+##if($ln<9999){
+##print "$ln :: " . substr($_,0,50)."\n";
+##}
+##                                        if (defined ($form->{'hiliteln'}) && ($form->{'hiliteln'} == $ln)) {
+##									        # make all non tags text lime
+##                                            s/>([^<]+)</><font style="color:black;background-color:lime">$1<\/font></g;
+##                                            print $sock "<a name=\"line$ln\"></a>$_\n";
+##									    } else {
+##                                            print $sock "<a name=\"line$ln\"></a>$_\n";
+##									    }
+#                                        print $sock "$_\n";
+#                                        $ln++;
+#                                    }
+#                                }
+#                            } else {
+#                                # normal display without line numbers
+                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $showchno);
                             if (defined ($form->{'hiliteln'})) {
                                 foreach $_ (split ("\n", $buf)) {
                                     if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
+#                                       print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                                         s/>(.+)</><font style="color:black;background-color:lime">$1<\/font></g;
                                         print $sock "$_\n";
                                     } else {
@@ -778,6 +790,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             } else {
                                 print $sock $buf;
                             }
+#                            }
                         }
                     } else {
                         # rendering as raw text
@@ -806,7 +819,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # rendering as raw text
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags);
+                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $showchno);
                         }
 
                         $ln = 1;
@@ -867,6 +880,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         $dirout = '';
         $fileout = '';
         # list internal pseudo files too
+#$ctrl->{'l00file'}->{'l00://test'} = 'test content';
         if (defined($ctrl->{'l00file'})) {
             $tmp = $ctrl->{'l00file'};
             foreach $_ (sort keys %$tmp) {
@@ -1002,23 +1016,18 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
 #       print $sock "        <td>&nbsp;</td>\n";
         print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
 
-        if ($wikihtmlflags == 2) {
+        if ($showchno == 2) {
             $buf = "checked";
         } else {
             $buf = "";
         }
-        print $sock "        <td><input type=\"checkbox\" $buf name=\"sort\">dir sort by time</td>\n";
+        print $sock "        <td><input type=\"checkbox\" $buf name=\"sort\">sort by time</td>\n";
 
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #</td>\n";
+        print $sock "        <td><input type=\"checkbox\" $buf name=\"chno\">Show chapter #</td>\n";
         print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
-        print $sock "    </tr>\n";
-
-        print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
