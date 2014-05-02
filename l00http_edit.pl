@@ -12,8 +12,8 @@ my ($buffer, $editwd, $editht, $editsz);
 my ($hostpath, $contextln, $blklineno);
 $hostpath = "c:\\x\\";
 $editsz = 0;
-$editwd = 320;
-$editht = 7;
+$editwd = 240;
+$editht = 30;
 $contextln = 1;
 $blklineno = 0;
 

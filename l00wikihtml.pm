@@ -501,7 +501,7 @@ if(1){
             } elsif ($2 eq 'f') { $color = 'fuchsia';
             } elsif ($2 eq 'g') { $color = 'gray';
             } elsif ($2 eq 'o') { $color = 'olive';
-            } else              { $color = 'yellow';
+            } else              { $color = 'white';
             }
             
             # drops *
