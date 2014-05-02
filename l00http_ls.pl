@@ -264,8 +264,8 @@ sub l00http_ls_proc {
                     undef %showdir;
                     $lnno = 0;
                     $searchtag = 1;
-                        foreach $_ (split ("\n", $filedata)) {
-                             $_ .= "\n";
+                    foreach $_ (split ("\n", $filedata)) {
+                         $_ .= "\n";
                         $lnno++;
 
                         # highlighting
@@ -284,7 +284,7 @@ sub l00http_ls_proc {
 
                         $_ = "%l00httpd:lnno:$lnno%$_";
                         $buf .= $_;
-			            }
+			        }
                 
                     $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
                     if (defined ($form->{'hiliteln'})) {
@@ -332,25 +332,6 @@ sub l00http_ls_proc {
                     !($path =~ /\.html$/i)) {
                     $urlraw = 1;
                 }
-#::heremark::
-#                if (($path =~ /\.zip$/i) ||
-#                    ($path =~ /\.kmz$/i) ||
-#                    ($path =~ /\.kml$/i) ||
-#                    ($path =~ /\.apk$/i) ||
-#                    ($path =~ /\.jpeg$/i) ||
-#                    ($path =~ /\.jpg$/i) ||
-#                    ($path =~ /\.wma$/i) ||
-#                    ($path =~ /\.3gp$/i) ||
-#                    ($path =~ /\.mp3$/i) ||
-#                    ($path =~ /\.mp4$/i) ||
-#                    ($path =~ /\.gif$/i) ||
-#                    ($path =~ /\.svg$/i) ||
-#                    ($path =~ /\.png$/i) ||
-#                    ($path =~ /\.pdf$/i) ||
-#                    ($path =~ /\.html$/i) ||
-#                    ($path =~ /\.htm$/i)) {
-#                    $urlraw = 1;
-#                }
             }
             # auto raw for
             if (($read0raw1 == 1) || ($urlraw == 1)) {

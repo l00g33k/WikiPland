@@ -33,8 +33,8 @@ sub l00http_readgraph_proc {
     $graphname = 'demo';
 
     print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
-    print $sock "<input type=image style=\"float:none\" src=\"/svg.htm?graph=$graphname\"><br>\n";
-#   print $sock "<input type=image style=\"float:none\" src=\"/ls.htm?path=l00://readgraph.svg\"><br>\n";
+   print $sock "<input type=image style=\"float:none\" src=\"/svg.htm?graph=$graphname\"><br>\n";
+#    print $sock "<input type=image style=\"float:none\" src=\"/ls.htm?path=l00://readgraph.svg&bare=\"><br>\n";
 #l00://readgraph.svg
 
     if (defined ($form->{'x'})) {
