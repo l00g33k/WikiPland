@@ -194,18 +194,16 @@ sub l00http_blog_proc {
     # dump content of file in formatted text
     $output = '';
     $keys = 0;
-#   if (open (IN, "<$form->{'path'}")) {
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $lineno = 1;
         $output .= "<pre>\n";
-#       while (<IN>) {
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             s/\r//g;
             s/\n//g;
             # extract special keywords
             if (($key) = /^%BLOG:([^%]+)%/) {
                 if ($keys == 0) {
-                    print $sock "<br>";
+#                   print $sock "<br>";
                 } else {
                     print $sock " - ";
                 }
@@ -225,7 +223,6 @@ sub l00http_blog_proc {
             }
             $lineno++;
         }
-#       close (IN);
         if ($lineno >= $ctrl->{'blogmaxln'}) {
             $output .= sprintf ("(lines skipped)\n");
             $output .= sprintf ("%04d: ", $lineno) . "$line\n";
@@ -235,7 +232,7 @@ sub l00http_blog_proc {
             $output .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">View full formatted text</a><br>\n";
         }
         if ($keys > 0) {
-            print $sock "<p>\n";
+            print $sock "<br>\n";
         }
     }
 
