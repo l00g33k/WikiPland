@@ -342,8 +342,54 @@ if(1){
         $lnno++;
 
 
-        $mdChanged2Tw = 0;
+
+        # Twiki compatibility
+        ## convert '   * '
+        ## ls.pl converts leading spaces to &nbsp;
+        ## undo for this conversion
+        $tmp = $_;
+        $tmp =~ s/&nbsp;/ /g;
+        if (($lv,$tx) = $tmp =~ /^( +)\* (.*)$/) {
+            $lv = length ($lv);
+            if (($lv % 3) == 0) {
+                $lv /= 3;
+                $_ = '*' x $lv . " $tx";
+            }
+        }
+        ## convert ---+++
+        if (($lv,$tx) = /^---(\++) (.*)$/) {
+            $lv = length ($lv);
+            $_ = '=' x $lv . "$tx" . '=' x $lv;
+        }
+        ## convert [[][]] to [[|]]
+        s/\[\[(.*?)\]\[(.*?)\]\]/[[$1|$2]]/g;
+        # end Twiki compatibility
+
+        # processing each line
+        s/\[\[toc\]\]/%TOC%/;   # converts wikispaces' [toc] to %TOC%
+
+        # --- for <hr>
+        if (/^---+ *$/) {
+            if ($lnnoinfo ne '') {
+                # we have saved tags, now put back as line1 anchors
+                if($lnnoinfo =~ /,/) {
+                    foreach $tmp (split(',', $lnnoinfo)) {
+                        $oubuf .=  "<a name=\"line$tmp\"></a>";
+                    }
+                } else {
+                    $oubuf .=  "<a name=\"line$lnnoinfo\"></a>";
+                }
+            }
+            $oubuf .=  "<hr>\n";
+            next;
+        }
+
+
+
+
+
         # MARKDOWN compatibility
+        $mdChanged2Tw = 0;
         # http://daringfireball.net/projects/markdown/basics
         # ====  or ---- style heading
         if ($cacheidx < $#inputcache) {
@@ -443,50 +489,6 @@ if(1){
                 s/%DATETIME%/$tmp/g;
                 $inbuf .= "$_\n";
         }
-
-        # Twiki compatibility
-        ## convert '   * '
-        ## ls.pl converts leading spaces to &nbsp;
-        ## undo for this conversion
-        $tmp = $_;
-        $tmp =~ s/&nbsp;/ /g;
-        if (($lv,$tx) = $tmp =~ /^( +)\* (.*)$/) {
-            $lv = length ($lv);
-            if (($lv % 3) == 0) {
-                $lv /= 3;
-                $_ = '*' x $lv . " $tx";
-            }
-        }
-        ## convert ---+++
-        if (($lv,$tx) = /^---(\++) (.*)$/) {
-            $lv = length ($lv);
-            $_ = '=' x $lv . "$tx" . '=' x $lv;
-        }
-        ## convert [[][]] to [[|]]
-        s/\[\[(.*?)\]\[(.*?)\]\]/[[$1|$2]]/g;
-        # end Twiki compatibility
-
-        # processing each line
-        s/\[\[toc\]\]/%TOC%/;   # converts wikispaces' [toc] to %TOC%
-
-        # --- for <hr>
-        if (/^---+ *$/) {
-            if ($lnnoinfo ne '') {
-                # we have saved tags, now put back as line1 anchors
-                if($lnnoinfo =~ /,/) {
-                    foreach $tmp (split(',', $lnnoinfo)) {
-                        $oubuf .=  "<a name=\"line$tmp\"></a>";
-                    }
-                } else {
-                    $oubuf .=  "<a name=\"line$lnnoinfo\"></a>";
-                }
-            }
-            $oubuf .=  "<hr>\n";
-            next;
-        }
-
-
-
 
         # lines ending in ??? gets a colored Highlight link before TOC
         # aka post it note
