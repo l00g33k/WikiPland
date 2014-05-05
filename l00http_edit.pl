@@ -9,13 +9,14 @@ use l00backup;
 my %config = (proc => "l00http_edit_proc2",
               desc => "l00http_edit_desc2");
 my ($buffer, $editwd, $editht, $editsz);
-my ($hostpath, $contextln, $blklineno);
+my ($hostpath, $contextln, $blklineno, $blkfname);
 $hostpath = "c:\\x\\";
 $editsz = 0;
 $editwd = 240;
 $editht = 30;
 $contextln = 1;
 $blklineno = 0;
+$blkfname = '';
 
 
 sub l00http_edit_desc2 {
@@ -47,11 +48,19 @@ sub l00http_edit_proc2 {
     $form->{'path'} =~ s/\r//g;
     $form->{'path'} =~ s/\n//g;
 
+    if ($blkfname ne $form->{'path'}) {
+        # cancel block mode because we are on different file
+        $blklineno = 0;
+   		$contextln = 1;
+		$blkfname = '';
+	}
+
     $buffer = '';
     if (defined ($form->{'buffer'})) {
         $buffer = $form->{'buffer'};
     }
     if (defined ($form->{'blklineno'})) {
+		$blkfname = $form->{'path'};
         if (defined ($form->{'editline'})) {
             # edit line from ls.pl
             $contextln = 1;
@@ -63,19 +72,19 @@ sub l00http_edit_proc2 {
 		    # in block mode
             if ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
-                $contextln += ($blklineno - $form->{'blklineno'});
-                $blklineno = $form->{'blklineno'};
+       	        $contextln += ($blklineno - $form->{'blklineno'});
+           	    $blklineno = $form->{'blklineno'};
             } elsif ($form->{'blklineno'} > ($blklineno + $contextln - 1)) {
 			    # selected line after end, expand end
-                $contextln += ($form->{'blklineno'} - ($blklineno + $contextln - 1));
-            } elsif ($form->{'blklineno'} < ($blklineno + $contextln / 2)) {
-			    # selected line after start but before half, move start
+       	        $contextln += ($form->{'blklineno'} - ($blklineno + $contextln - 1));
+           	} elsif ($form->{'blklineno'} < ($blklineno + $contextln / 2)) {
+		    	# selected line after start but before half, move start
                 $contextln -= $form->{'blklineno'} - $blklineno;
-                $blklineno = $form->{'blklineno'};
-            } else {
+   	            $blklineno = $form->{'blklineno'};
+       	    } else {
 			    # selected line after start and after  half, move end
-                $contextln -= ($blklineno + $contextln - 1) - $form->{'blklineno'};
-            }
+               	$contextln -= ($blklineno + $contextln - 1) - $form->{'blklineno'};
+           	}
         }
     }
     if (defined ($form->{'context'})) {
@@ -91,6 +100,7 @@ sub l00http_edit_proc2 {
     if (defined ($form->{'noblock'})) {
         $blklineno = 0;     # cancel block mode
         $contextln = 1;
+		$blkfname = '';
         # falls through all cases to else to reload
     }
     if (defined ($form->{'save'})) {
@@ -185,6 +195,7 @@ sub l00http_edit_proc2 {
             }
             $blklineno = 0;     # cancel block mode
             $contextln = 1;
+			$blkfname = '';
         }
     } elsif (defined ($form->{'tempsize'})) {
         $editsz = 1;
