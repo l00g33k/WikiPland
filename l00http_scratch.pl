@@ -123,10 +123,8 @@ sub l00http_scratch_proc {
         $scratchhtml = $scratch;
         $scratchhtml =~ s/</&lt;/g;
         $scratchhtml =~ s/>/&gt;/g;
-        $scratchhtml =~ s/\r\n/<br>/g;
-        $scratchhtml =~ s/\r/<br>/g;
-        $scratchhtml =~ s/\n/<br>/g;
-        $scratchhtml =~ s/<br>/<br>\n/g;
+        $scratchhtml =~ s/\r\n/\n/g;
+        $scratchhtml =~ s/\r/\n/g;
         $scratchhtml = "<pre>\n$scratchhtml\n</pre>\n";
     } else {
         $scratchhtml = $scratch;

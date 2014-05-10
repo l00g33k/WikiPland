@@ -59,6 +59,19 @@ sub l00http_edit_proc2 {
     if (defined ($form->{'buffer'})) {
         $buffer = $form->{'buffer'};
     }
+    if (defined ($form->{'clip'})) {
+        # A non-interactive feature. Allow [[/edit.htm?path=$&clip=30-45|edit.htm]]
+        # to copy specified lines directly to clipboard
+        if (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)-(\d+)/) {
+            # but $contextln is provided as line number
+            $contextln -= $blklineno - 1;
+        } else {
+            $blklineno = 0;     # cancel block mode
+            $contextln = 1;
+		    $blkfname = '';
+            $form->{'clip'} = undef;
+        }
+    }
     if (defined ($form->{'blklineno'})) {
 		$blkfname = $form->{'path'};
         if (defined ($form->{'editline'})) {
@@ -88,6 +101,7 @@ sub l00http_edit_proc2 {
         }
     }
     if (defined ($form->{'context'})) {
+        # setting number of lines as context
         $contextln = $form->{'contextln'};
         if ($contextln =~ /^\.\.(\d+)/) {
 		    # ..last line
@@ -103,6 +117,7 @@ sub l00http_edit_proc2 {
 		$blkfname = '';
         # falls through all cases to else to reload
     }
+
     if (defined ($form->{'save'})) {
         if ((defined ($form->{'path'}) && 
             (length ($form->{'path'}) > 0))) {
@@ -118,29 +133,12 @@ sub l00http_edit_proc2 {
                 if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
                     $blkbuf = &l00httpd::l00freadAll($ctrl);
                 }
-#               if ($form->{'path'} =~ /^l00:\/\//) {
-#                   if (defined($ctrl->{'l00file'})) {
-#                       if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-#                           $blkbuf = $ctrl->{'l00file'}->{$form->{'path'}};
-#   	                }
-#   	            }
-#               } elsif (open (IN, "<$form->{'path'}")) {
-#                   local $/ = undef;
-#                   $blkbuf = <IN>;
-#                   close (IN);
-#               }
             }
             if ((length ($buffer) == 0) &&
                ($blklineno == 0)) {
                 # remove if size 0
                 &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
                 &l00httpd::l00fwriteClose($ctrl);
-#               if (!($form->{'path'} =~ /^l00:\/\//)) {
-#                   # only delete disk file
-#                   unlink ($form->{'path'});
-#               } else {
-#                   $ctrl->{'l00file'}->{$form->{'path'}} = '';
-#               }
             } else {
                 $outbuf = '';
                 # http://www.perlmonks.org/?node_id=1952
@@ -183,14 +181,6 @@ sub l00http_edit_proc2 {
                 if (&l00httpd::l00fwriteClose($ctrl)) {
                     print $sock "Unable to write '$form->{'path'}'<p>\n";
                 }
-#               if ($form->{'path'} =~ /^l00:\/\//) {
-#                   $ctrl->{'l00file'}->{$form->{'path'}} = $outbuf;
-#               } elsif (open (OUT, ">$form->{'path'}")) {
-#                   print OUT $outbuf;
-#                   close (OUT);
-#               } else {
-#                   print $sock "Unable to write '$form->{'path'}'<p>\n";
-#               }
                 $buffer = $outbuf;
             }
             $blklineno = 0;     # cancel block mode
@@ -235,18 +225,6 @@ sub l00http_edit_proc2 {
             if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
                 $tmp = &l00httpd::l00freadAll($ctrl);
             }
-#           if ($form->{'path'} =~ /^l00:\/\//) {
-#               if (defined($ctrl->{'l00file'})) {
-#                   if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-#                       $tmp = $ctrl->{'l00file'}->{$form->{'path'}};
-#                   }
-#               }
-#           } elsif (open (IN, "<$form->{'path'}")) {
-#               # http://www.perlmonks.org/?node_id=1952
-#               local $/ = undef;
-#               $tmp = <IN>;
-#               close (IN);
-#           }
             $lineno = 1;
             $buffer = '';
             foreach $_ (split ("\n", $tmp)) {
@@ -268,6 +246,11 @@ sub l00http_edit_proc2 {
         $buffer = '';
     }
 
+    if (defined ($form->{'clip'})) {
+        if ($ctrl->{'os'} eq 'and') {
+            $ctrl->{'droid'}->setClipboard ($buffer);
+        }
+    }
 
 
     print $sock "<form action=\"/edit.htm\" method=\"post\">\n";
@@ -395,17 +378,6 @@ sub l00http_edit_proc2 {
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $buffer = &l00httpd::l00freadAll($ctrl);
     }
-#   if ($form->{'path'} =~ /^l00:\/\//) {
-#       if (defined($ctrl->{'l00file'})) {
-#           if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
-#               $buffer = $ctrl->{'l00file'}->{$form->{'path'}};
-#           }
-#       }
-#   } elsif (open (IN, "<$form->{'path'}")) {
-#       local $/ = undef;
-#       $buffer = <IN>;
-#       close (IN);
-#   }
     $buffer =~ s/\r//g;
     @alllines = split ("\n", $buffer);
     foreach $line (@alllines) {
