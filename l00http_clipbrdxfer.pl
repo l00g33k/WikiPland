@@ -87,6 +87,7 @@ sub l00http_clipbrdxfer_proc (\%) {
         if ((!defined ($form->{'nofetch'})) ||
             ($form->{'nofetch'} ne 'on')) {
             print $sock "<br>Pushing:<pre>$buf</pre>\n";
+            l00httpd::dbp($config{'desc'}, "Fetching '$geturl'\n");
             #print $sock "<br>Fetching '$geturl'<br>\n";
 
             if (($name ne '') || ($pw ne '')) {

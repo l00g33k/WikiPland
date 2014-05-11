@@ -80,6 +80,10 @@ sub l00http_scratch_proc {
     if (defined ($form->{'cbcopy'})) {
         if ($ctrl->{'os'} eq 'and') {
             $ctrl->{'droid'}->setClipboard ($scratch); 
+            print $sock "<br>Clipboard copied to <a href=\"/launcher.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard');
+            &l00httpd::l00fwriteBuf($ctrl, $scratch);
+            &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
@@ -109,6 +113,9 @@ sub l00http_scratch_proc {
     print $sock "<input type=\"submit\" name=\"formatted\" value=\"Formatted\">\n";
     print $sock "</form><p>\n";
 
+
+    print $sock "Send l00://clipboard to <a href=\"/launcher.htm?path=l00://clipboard\">launcher</a>. \n";
+    print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard<p>\n";
 
     # get submitted name and print greeting
     if (defined ($form->{'text'})) {
