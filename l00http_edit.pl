@@ -6,6 +6,7 @@ use l00backup;
 
 # this is a simple template, a good starting point to make your own modules
 
+#l00httpd::dbp($config{'desc'}, "2 contextln $contextln\n");
 my %config = (proc => "l00http_edit_proc2",
               desc => "l00http_edit_desc2");
 my ($buffer, $editwd, $editht, $editsz);
@@ -83,7 +84,13 @@ sub l00http_edit_proc2 {
             $blklineno = $form->{'blklineno'};
         } else {
 		    # in block mode
-            if ($form->{'blklineno'} < $blklineno) {
+            if (($form->{'blklineno'} == $blklineno) && ($contextln > 1)) {
+                # when a block has been selected, selecting the first line clears block
+                $form->{'noblock'} = 1;
+            } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
+			    $contextln > 1)) {
+                # when a block has been selected, selecting the last line clears block
+            } elsif ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
        	        $contextln += ($blklineno - $form->{'blklineno'});
            	    $blklineno = $form->{'blklineno'};
@@ -239,6 +246,13 @@ sub l00http_edit_proc2 {
                     }
                 }
                 $lineno++;
+            }
+            if (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
+			    $contextln > 1)) {
+                # when a block has been selected, selecting the last line clears block
+                if ($ctrl->{'os'} eq 'and') {
+                    $ctrl->{'droid'}->setClipboard ($buffer);
+                }
             }
         }
     }
