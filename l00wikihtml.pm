@@ -163,6 +163,21 @@ sub wikihtml {
                 #line_anchor_debug:
                 #Print to show that every source line number has a tag
                 #print"$lnnoinfo\n";
+
+                # process %__LINE__%
+                s/%__LINE__%/$lnnoall[0]/g;
+                # process %__LINE__+1%
+                if (($tmp) = /%__LINE__\+(\d+)%/) {
+                    # doesn't correctly handle multiple instances per line
+                    $tmp = $lnnoall[0] + $tmp;
+                    s/%__LINE__\+(\d+)%/$tmp/g;
+                }
+                # process %__LINE__-1%
+                if (($tmp) = /%__LINE__-(\d+)%/) {
+                    # doesn't correctly handle multiple instances per line
+                    $tmp = $lnnoall[0] - $tmp;
+                    s/%__LINE__-(\d+)%/$tmp/g;
+                }
             }
 
             s/\r//g;
