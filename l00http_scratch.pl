@@ -80,7 +80,7 @@ sub l00http_scratch_proc {
     if (defined ($form->{'cbcopy'})) {
         if ($ctrl->{'os'} eq 'and') {
             $ctrl->{'droid'}->setClipboard ($scratch); 
-            print $sock "<br>Clipboard copied to <a href=\"/launcher.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
+            print $sock "<br>Scratch copied to <a href=\"/view.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
             &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard');
             &l00httpd::l00fwriteBuf($ctrl, $scratch);
             &l00httpd::l00fwriteClose($ctrl);
