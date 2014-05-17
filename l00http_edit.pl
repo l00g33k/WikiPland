@@ -66,6 +66,8 @@ sub l00http_edit_proc2 {
         if (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)-(\d+)/) {
             # but $contextln is provided as line number
             $contextln -= $blklineno - 1;
+        } elsif (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)_(\d+)/) {
+            # $contextln is provided as number of lines
         } else {
             $blklineno = 0;     # cancel block mode
             $contextln = 1;
