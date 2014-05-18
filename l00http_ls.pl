@@ -265,7 +265,7 @@ sub l00http_ls_proc {
                     $lnno = 0;
                     $searchtag = 1;
                     foreach $_ (split ("\n", $filedata)) {
-                         $_ .= "\n";
+                        $_ .= "\n";
                         $lnno++;
 
                         # highlighting
@@ -273,6 +273,8 @@ sub l00http_ls_proc {
                             s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
                         }
 
+						# path=$ substitution
+                        s/path=\$/path=$path/g;
 
                         # convert leading spaces to no break spaces
                         # but not leading */_{ which are font formatting (//})

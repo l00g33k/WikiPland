@@ -111,7 +111,7 @@ sub wikihtml {
     # $pname: current path for relateive wikiword links
     my ($ctrl, $pname, $inbuf, $flags) = @_;
     my ($oubuf, $bulvl, $tx, $lvn, $desc, $http, $toc, $toccol);
-    my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els);
+    my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els, $__lineno__);
     my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $tag, $bareclip);
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
@@ -145,7 +145,6 @@ sub wikihtml {
         $bullet = 0;
         $bkmking = 0;
         $lnnoinfo = '';
-#       foreach $_  (split ("\n", $oubuf)) {
         @inputcache = split ("\n", $oubuf); # allows look forward
         for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
             $_ = $inputcache[$cacheidx];
@@ -163,21 +162,6 @@ sub wikihtml {
                 #line_anchor_debug:
                 #Print to show that every source line number has a tag
                 #print"$lnnoinfo\n";
-
-                # process %__LINE__%
-                s/%__LINE__%/$lnnoall[0]/g;
-                # process %__LINE__+1%
-                if (($tmp) = /%__LINE__\+(\d+)%/) {
-                    # doesn't correctly handle multiple instances per line
-                    $tmp = $lnnoall[0] + $tmp;
-                    s/%__LINE__\+(\d+)%/$tmp/g;
-                }
-                # process %__LINE__-1%
-                if (($tmp) = /%__LINE__-(\d+)%/) {
-                    # doesn't correctly handle multiple instances per line
-                    $tmp = $lnnoall[0] - $tmp;
-                    s/%__LINE__-(\d+)%/$tmp/g;
-                }
             }
 
             s/\r//g;
@@ -352,9 +336,27 @@ if(1){
             s/%l00httpd:lnno:([0-9,]+)%//;
             #line_anchor_debug:
             #print"$lnnoinfo\n";
+
+            if (($__lineno__) = $lnnoinfo =~ /^(\d+)/) {
+                # process %__LINE__%
+                s/%__LINE__%/$__lineno__/g;
+                # process %__LINE__+1%
+                if (($tmp) = /%__LINE__\+(\d+)%/) {
+                    # doesn't correctly handle multiple instances per line
+                    $tmp = $__lineno__ + $tmp;
+                    s/%__LINE__\+(\d+)%/$tmp/g;
+                }
+                # process %__LINE__-1%
+                if (($tmp) = /%__LINE__-(\d+)%/) {
+                    # doesn't correctly handle multiple instances per line
+                    $tmp = $__lineno__ - $tmp;
+                    s/%__LINE__-(\d+)%/$tmp/g;
+                }
+            }
         }
         s/\r//g;
         $lnno++;
+
 
 
 
