@@ -190,7 +190,10 @@ sub l00http_ls_proc {
         ($form->{'timestamp'} eq 'on')) {
         $form->{'hilite'} = '^\d{8,8} \d{6,6} ';
     }
-    
+    if (defined($form->{'lineno'})) {
+        $form->{'SHOWLINENO'} = 1;
+    }
+
     $editable = 0;
     $htmlend = 1;
     # try to open as a directory
@@ -995,7 +998,8 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #.\n";
+        print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
         print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
         print $sock "    </tr>\n";
 
