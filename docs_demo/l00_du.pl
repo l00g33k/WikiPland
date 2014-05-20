@@ -14,8 +14,9 @@ $base = '\/sdcard\/';
 
 $base2 = $base;
 $base2 =~ s/\\//g;
+print $sock "du -h reports the size of each sub-directories. This Perl script sums all the reported size in each of the top level sub-directry.<br>\n";
 print $sock "Create du.dir:<br>\n";
-print $sock "du -h $bases > /sdcard/du.dir<br>\n";
+print $sock "du -h $bases > <a href=\"/view.htm?path=/sdcard/du.dir\">/sdcard/du.dir</a><br>\n";
 
 if (open (IN, "</sdcard/du.dir")) {
     $cnt = 0;
