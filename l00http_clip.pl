@@ -13,7 +13,7 @@ sub l00http_clip_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "clip: Copy to Android clipboard";
+    " A: clip: Copy to Android clipboard";
 }
 
 sub l00http_clip_proc {
