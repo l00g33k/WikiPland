@@ -39,12 +39,12 @@ sub l00http_clip_proc {
     } elsif (defined ($form->{'clip'})) {
         $clip = $form->{'clip'};
         if (defined ($form->{'update'})) {
+            print $sock "<br>Also copied to <a href=\"/launcher.htm?path=l00://clip\">l00://clip</a><p>\n";
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://clip');
+            &l00httpd::l00fwriteBuf($ctrl, $clip);
+            &l00httpd::l00fwriteClose($ctrl);
             if ($ctrl->{'os'} eq 'and') {
                 $ctrl->{'droid'}->setClipboard ($clip);
-                print $sock "<br>Copied to Android clipboard and <a href=\"/launcher.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
-                &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard');
-                &l00httpd::l00fwriteBuf($ctrl, $clip);
-                &l00httpd::l00fwriteClose($ctrl);
             }
             if ($ctrl->{'os'} eq 'win') {
                 `echo $clip | clip`;
@@ -60,8 +60,8 @@ sub l00http_clip_proc {
     print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\">$clip</textarea>\n";
     print $sock "</form>\n";
 
-    print $sock "Send l00://clipboard to <a href=\"/launcher.htm?path=l00://clipboard\">launcher</a>. \n";
-    print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard<p>\n";
+    print $sock "View <a href=\"/view.htm?path=l00://clip\">l00://clip</a>. \n";
+    print $sock "<a href=\"/launcher.htm?path=l00://clip\">launcher</a>.<p>\n";
 
 #   print $sock "Paste text that you want to be copied to ".
 #     "the clipboard into the text area and click ".
