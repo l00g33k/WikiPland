@@ -6,6 +6,7 @@ use l00backup;
 
 # this is a simple template, a good starting point to make your own modules
 
+#l00httpd::dbp($config{'desc'}, "2 contextln $contextln\n");
 my %config = (proc => "l00http_edit_proc2",
               desc => "l00http_edit_desc2");
 my ($buffer, $editwd, $editht, $editsz);
@@ -65,6 +66,8 @@ sub l00http_edit_proc2 {
         if (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)-(\d+)/) {
             # but $contextln is provided as line number
             $contextln -= $blklineno - 1;
+        } elsif (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)_(\d+)/) {
+            # $contextln is provided as number of lines
         } else {
             $blklineno = 0;     # cancel block mode
             $contextln = 1;
@@ -83,7 +86,13 @@ sub l00http_edit_proc2 {
             $blklineno = $form->{'blklineno'};
         } else {
 		    # in block mode
-            if ($form->{'blklineno'} < $blklineno) {
+            if (($form->{'blklineno'} == $blklineno) && ($contextln > 1)) {
+                # when a block has been selected, selecting the first line clears block
+                $form->{'noblock'} = 1;
+            } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
+			    $contextln > 1)) {
+                # when a block has been selected, selecting the last line clears block
+            } elsif ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
        	        $contextln += ($blklineno - $form->{'blklineno'});
            	    $blklineno = $form->{'blklineno'};
@@ -240,6 +249,13 @@ sub l00http_edit_proc2 {
                 }
                 $lineno++;
             }
+            if (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
+			    $contextln > 1)) {
+                # when a block has been selected, selecting the last line clears block
+                if ($ctrl->{'os'} eq 'and') {
+                    $ctrl->{'droid'}->setClipboard ($buffer);
+                }
+            }
         }
     }
     if (defined ($form->{'clear'})) {
@@ -262,7 +278,9 @@ sub l00http_edit_proc2 {
     print $sock "<p>\n";
 
     if ($blklineno > 0) {
-        print $sock "In block editing mode: editing line ", $blklineno, 
+        print $sock "In block editing mode: editing line ", 
+#	$blklineno, 
+"<a href=\"#line$blklineno\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".<p>\n";
     }
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";

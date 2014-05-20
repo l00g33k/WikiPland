@@ -115,7 +115,7 @@ sub l00http_reader_proc (\%) {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
-    print $sock "<p><a href=\"/mobizoom.htm\">mobiz</a>\n";
+    print $sock "<p><a target=\"reader\" href=\"/mobizoom.htm\">mobiz</a>\n";
 
     print $sock "<a href=\"#line\">Line $readln</a>:";
     if ($curr =~ /^(\d{8,8} \d{6,6}) /) {

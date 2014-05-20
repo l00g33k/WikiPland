@@ -77,13 +77,15 @@ sub l00http_scratch_proc {
         }
     }
     $tmp = $scratch;
+    if (defined ($form->{'2l00'})) {
+        print $sock "<br>Scratch copied to <a href=\"/view.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard');
+        &l00httpd::l00fwriteBuf($ctrl, $scratch);
+        &l00httpd::l00fwriteClose($ctrl);
+    }
     if (defined ($form->{'cbcopy'})) {
         if ($ctrl->{'os'} eq 'and') {
             $ctrl->{'droid'}->setClipboard ($scratch); 
-            print $sock "<br>Clipboard copied to <a href=\"/launcher.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard');
-            &l00httpd::l00fwriteBuf($ctrl, $scratch);
-            &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
@@ -100,6 +102,7 @@ sub l00http_scratch_proc {
     print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
     print $sock "<input type=\"submit\" name=\"prepend\" value=\"Prepend\">\n";
     print $sock "<input type=\"submit\" name=\"cburl\" value=\"cp URL 2CB\">\n";
+    print $sock "<input type=\"submit\" name=\"2l00\" value=\"2 ram file\">\n";
 
     print $sock "<br><input type=\"text\" size=\"10\" name=\"eval\" value=\"$eval\">\n";
     print $sock "The whole content of the scratch buffer is put in \$_ and then this string is \"eval'ed\", e.g. 'print \$sock \$_' prints the content to this HTML page\n";
