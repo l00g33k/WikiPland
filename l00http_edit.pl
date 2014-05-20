@@ -278,7 +278,9 @@ sub l00http_edit_proc2 {
     print $sock "<p>\n";
 
     if ($blklineno > 0) {
-        print $sock "In block editing mode: editing line ", $blklineno, 
+        print $sock "In block editing mode: editing line ", 
+#	$blklineno, 
+"<a href=\"#line$blklineno\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".<p>\n";
     }
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
