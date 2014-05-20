@@ -21,7 +21,7 @@ sub l00http_clipbrdxfer_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    " A: clipbrdxfer: Transfer clipboard between 2 WikiPland servers";
+    "clipbrdxfer: Transfer clipboard between 2 WikiPland servers";
 }
 
 
