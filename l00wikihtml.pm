@@ -343,6 +343,11 @@ if(1){
                 # process %__LINE__+1%
                 if (($tmp) = /%__LINE__\+(\d+)%/) {
                     # doesn't correctly handle multiple instances per line
+                    # print "lnnoinfo $lnnoinfo __lineno__ $__lineno__ tmp $tmp\n";
+					# There is no easy answer here because multiple lines were combined
+					# into one line. l00httpd:lnno:* does record all the original line 
+					# numbers that made up the single line, but we don't know which 
+					# line contains the %__LINE__% code
                     $tmp = $__lineno__ + $tmp;
                     s/%__LINE__\+(\d+)%/$tmp/g;
                 }
