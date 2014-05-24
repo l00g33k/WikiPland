@@ -463,6 +463,66 @@ while(1) {
                 $ishost = 0;
             }
             $ctrl{'ishost'} = $ishost;
+            if ($ctrl{'os'} eq 'and') {
+                if ($ctrl{'machine'} eq 'Morrison') {
+                    $ip = `busybox ifconfig`;
+#               } elsif ($ctrl{'machine'} eq 'doubleshot') {
+                } else {
+                    $ip = `ip addr show`;
+                    undef %ifnet;
+                    foreach $_ (split ("\n", $ip)) {
+                        #1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
+                        if (/^\d+: *(\w+):/) {
+                            $tmp = $1;
+                        }
+                        #    inet 127.0.0.1/8 scope host lo
+                        if (/inet *(\d+\.\d+\.\d+\.\d+)\//) {
+                            $ifnet {$tmp} = $1;;
+                        }
+                    }
+                    $ip = '';
+                    foreach $_ (keys %ifnet) {
+                        if (/wlan/) {
+                            $ip .= "$ifnet{$_} ";
+                        } elsif (/eth/) {
+                            $ip .= "$ifnet{$_} ";
+                        }
+                    }
+                    if ($ip eq '') {
+                        # didn't find wifi, try mobile net
+                        foreach $_ (keys %ifnet) {
+                            if (/rmnet/) {
+                                $ip .= "$ifnet{$_} ";
+                            }
+                        }
+                    }
+#               } else {
+#                   # don't know how to find self IP yet
+#                   $ip = undef;
+                }
+            } elsif ($ctrl{'os'} eq 'win') {
+                $ip = `ipconfig`;
+            } else {
+                $ip = `/sbin/ifconfig`;
+            }
+            if ($ctrl{'os'} eq 'win') {
+                $ip = `ipconfig`;
+                if ($ip =~ /(192\.168\.\d+\.\d+)/) {
+                    $ip = $1;
+                }
+            } else {
+                if (defined ($ip)) {
+                    if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
+                        $ip = $1;
+                    } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
+                        $ip = $1;
+                    }
+                } else {
+                    $ip = '(unknown)';
+                }
+            }
+            $ip =~ s/ //g;
+            $ctrl{'myip'} = $ip;
             if (defined ($connected{$client_ip})) {
                 $connected{$client_ip}++;
             } else {
@@ -925,66 +985,6 @@ print "sock timeout 3s\n";
                 # Send HTTP and HTML headers
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: $client_ip connected to the Android phone. \n";
-                if ($ctrl{'os'} eq 'and') {
-                    if ($ctrl{'machine'} eq 'Morrison') {
-                        $ip = `busybox ifconfig`;
-#                   } elsif ($ctrl{'machine'} eq 'doubleshot') {
-                    } else {
-                        $ip = `ip addr show`;
-                        undef %ifnet;
-                        foreach $_ (split ("\n", $ip)) {
-                            #1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
-                            if (/^\d+: *(\w+):/) {
-                                $tmp = $1;
-                            }
-                            #    inet 127.0.0.1/8 scope host lo
-                            if (/inet *(\d+\.\d+\.\d+\.\d+)\//) {
-                                $ifnet {$tmp} = $1;;
-                            }
-                        }
-                        $ip = '';
-                        foreach $_ (keys %ifnet) {
-                            if (/wlan/) {
-                                $ip .= "$ifnet{$_} ";
-                            } elsif (/eth/) {
-                                $ip .= "$ifnet{$_} ";
-                            }
-                        }
-                        if ($ip eq '') {
-                            # didn't find wifi, try mobile net
-                            foreach $_ (keys %ifnet) {
-                                if (/rmnet/) {
-                                    $ip .= "$ifnet{$_} ";
-                                }
-                            }
-                        }
-#                   } else {
-#                       # don't know how to find self IP yet
-#                       $ip = undef;
-                    }
-                } elsif ($ctrl{'os'} eq 'win') {
-                    $ip = `ipconfig`;
-                } else {
-                    $ip = `/sbin/ifconfig`;
-                }
-                if ($ctrl{'os'} eq 'win') {
-                    $ip = `ipconfig`;
-                    if ($ip =~ /(192\.168\.\d+\.\d+)/) {
-                        $ip = $1;
-                    }
-                } else {
-                    if (defined ($ip)) {
-                        if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
-                            $ip = $1;
-                        } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
-                            $ip = $1;
-                        }
-                    } else {
-                        $ip = '(unknown)';
-                    }
-                }
-                $ip =~ s/ //g;
-                $ctrl{'myip'} = $ip;
                 print $sock "Phone IP: $ip, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns<p>\n";
