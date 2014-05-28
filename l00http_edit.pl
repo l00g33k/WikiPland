@@ -43,6 +43,7 @@ sub l00http_edit_proc2 {
         (defined($form->{'pathorg'})) &&
         ($contextln > 1) &&
         ($blklineno > 0)) {
+print "\n\nEDITSORTED\n\n\n";
         $form->{'path'} = $form->{'pathorg'};
         &l00httpd::l00freadLine($ctrl);
         $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
@@ -261,7 +262,8 @@ sub l00http_edit_proc2 {
                 }
                 $lineno++;
             }
-            if (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
+            if (defined($form->{'blklineno'}) &&
+                ($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
 			    $contextln >= 1)) {
                 # when a block has been selected, selecting the last line clears block
                 if ($ctrl->{'os'} eq 'and') {
