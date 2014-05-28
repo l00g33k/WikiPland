@@ -9,8 +9,10 @@ use l00backup;
 #l00httpd::dbp($config{'desc'}, "2 contextln $contextln\n");
 my %config = (proc => "l00http_editsort_proc",
               desc => "l00http_editsort_desc");
-my ($linessorted, @sortbuf);
+my ($linessorted, @sortbuf, $pathorg, $orgbuf);
 $linessorted = 0;
+$pathorg = '';
+$orgbuf = '';
 
 sub l00http_editsort_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -34,9 +36,23 @@ sub l00http_editsort_proc {
     print $sock "<br>\n";
 
 
+    if (defined ($form->{'init'})) {
+        $linessorted = 0;
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+            $orgbuf = &l00httpd::l00freadAll($ctrl);
+        }
+    }
+    if (defined ($form->{'pathorg'})) {
+        $pathorg = $form->{'pathorg'};
+    }
+
     if (defined ($form->{'reset'})) {
         $linessorted = 0;
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+        &l00httpd::l00fwriteBuf($ctrl, $orgbuf);
+        &l00httpd::l00fwriteClose($ctrl);
     }
+
 
     if (defined ($form->{'pick'})) {
         undef @inbuf;
@@ -47,29 +63,15 @@ sub l00http_editsort_proc {
             $outbuf = '';
             # skip first $linessorted line already sorted
             for ($ii = 0; $ii < $linessorted; $ii++) {
-print "$ii\n";
                 $outbuf .= $inbuf[$ii];
             }
             # insert picked line
             $outbuf .= $inbuf[$form->{'pick'} - 1];
             for ($ii = $linessorted; $ii <= $#inbuf; $ii++) {
                 if ($ii != ($form->{'pick'} - 1)) {
-print "$ii\n";
                     $outbuf .= $inbuf[$ii];
                 }
             }
-$lineno = 1;
-print $sock "<p><pre>\n";
-foreach $_ (split("\n", $outbuf)) {
-    print $sock "<a name=\"line$lineno\"></a>";
-    s/\r//g;
-    s/\n//g;
-    s/</&lt;/g;
-    s/>/&gt;/g;
-    print $sock sprintf ("<a href=\"/editsort.htm?pick=$lineno\">%04d</a>: ", $lineno) . "$_\n";
-    $lineno++;
-}
-print $sock "</pre>\n";
             &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
@@ -100,17 +102,24 @@ print $sock "</pre>\n";
     }
 
 
-    print $sock "<form action=\"/editsort.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"cbtoedit\" value=\"CB to edit\">\n";
-    print $sock "</td><td>\n";
-    print $sock "<input type=\"submit\" name=\"reset\" value=\"Reset\">\n";
-    print $sock "</td></tr>\n";
-    print $sock "</table><br>\n";
-    print $sock "</form>\n";
 
-    print $sock "<hr><a name=\"end\"></a>";
+    print $sock "<tr><td>\n";
+    print $sock "<form action=\"/edit.htm\" method=\"post\">\n";
+    print $sock "<input type=\"submit\" name=\"editsorted\" value=\"Back to Edit\">\n";
+    print $sock "<input type=\"hidden\" name=\"pathorg\" value=\"$pathorg\">\n";
+    print $sock "</form>\n";
+    print $sock "</td>\n";
+
+    print $sock "<td>\n";
+    print $sock "<form action=\"/editsort.htm\" method=\"post\">\n";
+    print $sock "<input type=\"submit\" name=\"reset\" value=\"Reset\">\n";
+    print $sock "</form>\n";
+    print $sock "</td></tr>\n";
+
+    print $sock "</table><br>\n";
+
+    print $sock "<a name=\"end\"></a>";
     print $sock "<a href=\"#top\">top</a>\n";
 
     # send HTML footer and ends

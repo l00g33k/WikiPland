@@ -38,6 +38,17 @@ sub l00http_edit_proc2 {
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
+
+    if ((defined($form->{'editsorted'})) &&
+        (defined($form->{'pathorg'})) &&
+        ($contextln > 1) &&
+        ($blklineno > 0)) {
+        $form->{'path'} = $form->{'pathorg'};
+        &l00httpd::l00freadLine($ctrl);
+        $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
+        $form->{'save'} = 1;    # fake a save from buffer
+    }
+
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
         print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
@@ -281,7 +292,7 @@ sub l00http_edit_proc2 {
     if ($blklineno > 0) {
         print $sock "In block editing mode: editing line ", $blklineno, 
                     " through line ", $blklineno + $contextln - 1, ".\n";
-        print $sock "<a href=\"/editsort.htm?reset=on\">Sort selected block.</a><p>\n";
+        print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
 
     }
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
