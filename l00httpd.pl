@@ -178,7 +178,7 @@ while ($_ = shift) {
 
 $conf = "l00httpd.cfg";
 $tmp = $plpath; # first time, find in l00httpd script directory
-for ($cnt = 0; $cnt < 2; $cnt++) {
+for ($cnt = 0; $cnt < 3; $cnt++) {
     if (open (IN, "<$tmp$conf")) {
         print "Reading $tmp$conf...\n";;
         while (<IN>) {
@@ -209,7 +209,15 @@ for ($cnt = 0; $cnt < 2; $cnt++) {
         }
         close (IN);
     }
-    $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+    if ($cnt == 0) {
+        $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+	} else {
+        if (defined($ctrl{'altcfg'})) {
+            $tmp = $ctrl{'altcfg'};
+		} else {
+            last;
+		}
+	}
 }
 
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^[0-5]$/)) {
