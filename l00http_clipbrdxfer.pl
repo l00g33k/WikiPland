@@ -86,7 +86,6 @@ sub l00http_clipbrdxfer_proc (\%) {
 		$geturl = "http://$url/$tmp";
         if ((!defined ($form->{'nofetch'})) ||
             ($form->{'nofetch'} ne 'on')) {
-            print $sock "<br>Pushing:<pre>$buf</pre>\n";
             l00httpd::dbp($config{'desc'}, "Fetching '$geturl'\n");
             #print $sock "<br>Fetching '$geturl'<br>\n";
 
@@ -99,6 +98,7 @@ sub l00http_clipbrdxfer_proc (\%) {
             if (defined ($hdr)) {
                 print $sock "<p>Header length ",length($hdr), " bytes<br>\n";
                 print $sock "Body length ",length($bdy), " bytes<br>\n";
+                print $sock "<br>Pushing:<pre>$buf</pre>\n";
 
                 print $sock "<p><pre>$hdr</pre>\n";
                 $bdy =~ s/</&lt;/g;
@@ -106,9 +106,11 @@ sub l00http_clipbrdxfer_proc (\%) {
                 print $sock "<pre>$bdy</pre>\n";
             } else {
                 print $sock "<p>Failed to push clipboard content to $url<p>\n";
+                print $sock "<br>Pushing:<pre>$buf</pre>\n";
             }
         } else {
             print $sock "<p>Failed to fetch '$geturl'\n";
+            print $sock "<br>Pushing:<pre>$buf</pre>\n";
         }
     }
 
