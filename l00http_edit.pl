@@ -90,8 +90,9 @@ sub l00http_edit_proc2 {
                 # when a block has been selected, selecting the first line clears block
                 $form->{'noblock'} = 1;
             } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
-			    $contextln > 1)) {
+			    $contextln >= 1)) {
                 # when a block has been selected, selecting the last line clears block
+				# skip to below
             } elsif ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
        	        $contextln += ($blklineno - $form->{'blklineno'});
@@ -250,7 +251,7 @@ sub l00http_edit_proc2 {
                 $lineno++;
             }
             if (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
-			    $contextln > 1)) {
+			    $contextln >= 1)) {
                 # when a block has been selected, selecting the last line clears block
                 if ($ctrl->{'os'} eq 'and') {
                     $ctrl->{'droid'}->setClipboard ($buffer);
