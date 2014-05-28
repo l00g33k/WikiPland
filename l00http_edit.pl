@@ -279,10 +279,10 @@ sub l00http_edit_proc2 {
     print $sock "<p>\n";
 
     if ($blklineno > 0) {
-        print $sock "In block editing mode: editing line ", 
-#	$blklineno, 
-"<a href=\"#line$blklineno\">$blklineno</a>", 
-                    " through line ", $blklineno + $contextln - 1, ".<p>\n";
+        print $sock "In block editing mode: editing line ", $blklineno, 
+                    " through line ", $blklineno + $contextln - 1, ".\n";
+        print $sock "<a href=\"/editsort.htm?reset=on\">Sort selected block.</a><p>\n";
+
     }
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
@@ -399,7 +399,16 @@ sub l00http_edit_proc2 {
     }
     $buffer =~ s/\r//g;
     @alllines = split ("\n", $buffer);
+    if ($blklineno > 0) {
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+    }
     foreach $line (@alllines) {
+        if ($blklineno != 0) {
+            if (($lineno >= $blklineno) && ($lineno < ($blklineno + $contextln))) {
+                # also send selected lines to ram file
+                &l00httpd::l00fwriteBuf($ctrl, "$line\n");
+            }
+        }
         print $sock "<a name=\"line$lineno\"></a>";
 	    if (($lineno % 100) == 1) {
             print $sock "    jump to line ";
@@ -431,6 +440,9 @@ sub l00http_edit_proc2 {
             }
         }
         $lineno++;
+    }
+    if ($blklineno > 0) {
+        &l00httpd::l00fwriteClose($ctrl);
     }
 
     print $sock "</pre>\n";
