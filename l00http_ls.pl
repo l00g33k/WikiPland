@@ -29,7 +29,7 @@ my ($ino, $intbl, $isdst, $editable, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els);
-my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
+my ($fileout, $dirout, $clipfile, $clipdir, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
 
 
@@ -852,6 +852,8 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         $bakout = '';
         $dirout = '';
         $fileout = '';
+        $clipfile = '';
+        $clipdir = '';
         # list internal pseudo files too
         if (defined($ctrl->{'l00file'})) {
             $tmp = $ctrl->{'l00file'};
@@ -885,7 +887,14 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         $fullpath = "";
                     }
                 }
-                
+
+                # clip path listing
+                $tmp = $fullpath;
+                if ($ctrl->{'os'} eq 'win') {
+                    $tmp =~ s/\//\\/g;
+                }
+                $clipdir .= "<a href=\"/clip.htm?update=on&clip=$tmp\">&lt;$file&gt;</a> - ";
+                                
                 $dirout .= "<tr>\n";
                 $dirout .= "<td><small><a href=\"/ls.htm?path=$fullpath/\">$file/</a></small></td>\n";
                 if ($file eq '..') {
@@ -921,21 +930,39 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                     sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec) 
                     ."</small></td>\n";
                 $buf .= "</tr>\n";
+
+                $tmp = "$path$file";
+                if ($ctrl->{'os'} eq 'win') {
+                    $tmp =~ s/\//\\/g;
+                }
                 if ($file =~ /\.bak$/) {
                     $bakout .= $buf;
+                    if ($showbak) {
+                        # clip path listing
+                        $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$file</a> - ";
+                    }
                 } else {
                     $fileout .= $buf;
+                    # clip path listing
+                    $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$file</a> - ";
                 }
+
                 $nofiles++;
             }
         }
-        print $sock $dirout;
-        print $sock $fileout;
-        if ($showbak) {
-            print $sock $bakout;
-        }
-        print $sock "</table>\n";
         closedir (DIR);
+
+        if (defined ($form->{'clippath'}) && ($form->{'clippath'} eq 'on')) {
+            print $sock "</table>\n";
+            print $sock "<p><hr>$clipfile - $clipdir<p><hr>\n";
+        } else {
+            print $sock $dirout;
+            print $sock $fileout;
+            if ($showbak) {
+                print $sock $bakout;
+            }
+            print $sock "</table>\n";
+        }
         print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
     }
 
@@ -998,14 +1025,19 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #.\n";
-        print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
         print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #.\n";
+        print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
         print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
+        print $sock "    </tr>\n";
+
+        print $sock "    <tr>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
+        print $sock "        <td>&nbsp;</td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
