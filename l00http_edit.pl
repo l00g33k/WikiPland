@@ -43,7 +43,7 @@ sub l00http_edit_proc2 {
         (defined($form->{'pathorg'})) &&
         ($contextln > 1) &&
         ($blklineno > 0)) {
-print "\n\nEDITSORTED\n\n\n";
+print "\nEDITSORTED\n\n";
         $form->{'path'} = $form->{'pathorg'};
         &l00httpd::l00freadLine($ctrl);
         $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
@@ -99,24 +99,30 @@ print "\n\nEDITSORTED\n\n\n";
         } else {
 		    # in block mode
             if (($form->{'blklineno'} == $blklineno) && ($contextln > 1)) {
-                # when a block has been selected, selecting the first line clears block
-                $form->{'noblock'} = 1;
+print "\nCLEAR BLOCK\n\n";
+#                # when a block has been selected, selecting the first line clears block
+#                $form->{'noblock'} = 1;
             } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
 			    $contextln >= 1)) {
-                # when a block has been selected, selecting the last line clears block
-				# skip to below
+print "\nCOPY BLOCK\n\n";
+#                # when a block has been selected, selecting the last line clears block
+#				# skip to below
             } elsif ($form->{'blklineno'} < $blklineno) {
+print "\nEXPAND START\n\n";
 			    # selected line before start, expand start
        	        $contextln += ($blklineno - $form->{'blklineno'});
            	    $blklineno = $form->{'blklineno'};
             } elsif ($form->{'blklineno'} > ($blklineno + $contextln - 1)) {
+print "\nEXPAND END\n\n";
 			    # selected line after end, expand end
        	        $contextln += ($form->{'blklineno'} - ($blklineno + $contextln - 1));
            	} elsif ($form->{'blklineno'} < ($blklineno + $contextln / 2)) {
+print "\nSHRINK START\n\n";
 		    	# selected line after start but before half, move start
                 $contextln -= $form->{'blklineno'} - $blklineno;
    	            $blklineno = $form->{'blklineno'};
        	    } else {
+print "\nSHRINK END\n\n";
 			    # selected line after start and after  half, move end
                	$contextln -= ($blklineno + $contextln - 1) - $form->{'blklineno'};
            	}
@@ -265,10 +271,11 @@ print "\n\nEDITSORTED\n\n\n";
             if (defined($form->{'blklineno'}) &&
                 ($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
 			    $contextln >= 1)) {
-                # when a block has been selected, selecting the last line clears block
-                if ($ctrl->{'os'} eq 'and') {
-                    $ctrl->{'droid'}->setClipboard ($buffer);
-                }
+print "\nCLIP BLOCK 2\n\n";
+#                # when a block has been selected, selecting the last line clears block
+#                if ($ctrl->{'os'} eq 'and') {
+#                    $ctrl->{'droid'}->setClipboard ($buffer);
+#                }
             }
         }
     }
@@ -349,7 +356,7 @@ print "\n\nEDITSORTED\n\n\n";
     print $sock "</td></tr>\n";
 
     if ($blklineno > 0) {
-        print $sock "<input type=\"hidden\" name=\"blklineno\" value=\"$blklineno\">\n";
+#        print $sock "<input type=\"hidden\" name=\"blklineno\" value=\"$blklineno\">\n";
     }
 
     print $sock "</table><br>\n";
