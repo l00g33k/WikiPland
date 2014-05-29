@@ -46,6 +46,13 @@ sub dbp {
 
     1;
 }
+sub dbphash {
+    my ($desc, $name, $hash) = @_;
+    my ($buf);
+
+    $buf = &dumphashbuf ($name, $hash);
+    &dbp($desc, "Dumping hash $name:\n$buf\n");
+}
 sub dbpget {
     $debuglog;
 }

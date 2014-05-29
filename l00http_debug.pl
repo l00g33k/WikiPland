@@ -13,6 +13,7 @@ $jmpintv = 100;
 
 #l00httpd::dbpclr();
 #l00httpd::dbp($config{'desc'}, "test\n");
+#l00httpd::dbphash($config{'desc'}, 'FORM', $form);
 
 sub l00http_debug_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
