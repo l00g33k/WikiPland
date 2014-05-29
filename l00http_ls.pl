@@ -29,7 +29,7 @@ my ($ino, $intbl, $isdst, $editable, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els);
-my ($fileout, $dirout, $clipfile, $clipdir, $bakout, $http, $desci, $httphdr, $sendto);
+my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
 
 
@@ -104,6 +104,7 @@ sub l00http_ls_proc {
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
+    my ($clipdir, $clipfile);
 
     $wikihtmlflags = 0;
 
@@ -893,7 +894,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                 if ($ctrl->{'os'} eq 'win') {
                     $tmp =~ s/\//\\/g;
                 }
-                $clipdir .= "<a href=\"/clip.htm?update=on&clip=$tmp\">&lt;$file&gt;</a> - ";
+                $clipdir .= "&lt;<a href=\"/clip.htm?update=on&clip=$tmp\">$file</a>&gt; - ";
                                 
                 $dirout .= "<tr>\n";
                 $dirout .= "<td><small><a href=\"/ls.htm?path=$fullpath/\">$file/</a></small></td>\n";
@@ -935,16 +936,24 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                 if ($ctrl->{'os'} eq 'win') {
                     $tmp =~ s/\//\\/g;
                 }
+                $tmp2 = $file;
+                if ($path eq $ctrl->{'plpath'}) {
+                    if ($clipfile eq '') {
+                        $clipfile = 'shorten l00http_X.pl to X - ';
+					}
+                    # shorten listing name if viewing source code
+                    $tmp2 =~ s/l00http_(.+)\.pl/$1/;
+				}
                 if ($file =~ /\.bak$/) {
                     $bakout .= $buf;
                     if ($showbak) {
                         # clip path listing
-                        $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$file</a> - ";
+                        $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$tmp2</a> - ";
                     }
                 } else {
                     $fileout .= $buf;
                     # clip path listing
-                    $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$file</a> - ";
+                    $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$tmp2</a> - ";
                 }
 
                 $nofiles++;
