@@ -301,7 +301,8 @@ l00httpd::dbp($config{'desc'}, "CLIP BLOCK 2\n");
     print $sock "<p>\n";
 
     if ($blklineno > 0) {
-        print $sock "In block editing mode: editing line ", $blklineno, 
+        print $sock "In block editing mode: editing line ", 
+                    "<a href=\"#line$blklineno\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".\n";
         print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
 
