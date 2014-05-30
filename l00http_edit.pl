@@ -41,15 +41,17 @@ sub l00http_edit_proc2 {
 
     l00httpd::dbphash($config{'desc'}, 'FORM', $form);
 
-    if ((defined($form->{'editsorted'})) &&
-        (defined($form->{'pathorg'})) &&
+    if ((defined($form->{'pathorg'})) &&
         ($contextln > 1) &&
         ($blklineno > 0)) {
 l00httpd::dbp($config{'desc'}, "EDITSORTED\n");
         $form->{'path'} = $form->{'pathorg'};
-        &l00httpd::l00freadLine($ctrl);
-        $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
-        $form->{'save'} = 1;    # fake a save from buffer
+        if (defined($form->{'editsorted'})) {
+l00httpd::dbp($config{'desc'}, "EDITSORTED save\n");
+            &l00httpd::l00freadLine($ctrl);
+            $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
+            $form->{'save'} = 1;    # fake a save from buffer
+        }
     }
 
     if (defined ($form->{'path'})) {
