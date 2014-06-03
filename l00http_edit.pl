@@ -32,6 +32,7 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf);
+	my ($clipblk);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -40,16 +41,19 @@ sub l00http_edit_proc2 {
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 
     l00httpd::dbphash($config{'desc'}, 'FORM', $form);
+	$clipblk = 0;
 
-    if ((defined($form->{'editsorted'})) &&
-        (defined($form->{'pathorg'})) &&
+    if ((defined($form->{'pathorg'})) &&
         ($contextln > 1) &&
         ($blklineno > 0)) {
 l00httpd::dbp($config{'desc'}, "EDITSORTED\n");
         $form->{'path'} = $form->{'pathorg'};
-        &l00httpd::l00freadLine($ctrl);
-        $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
-        $form->{'save'} = 1;    # fake a save from buffer
+        if (defined($form->{'editsorted'})) {
+l00httpd::dbp($config{'desc'}, "EDITSORTED save\n");
+            &l00httpd::l00freadLine($ctrl);
+            $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
+            $form->{'save'} = 1;    # fake a save from buffer
+        }
     }
 
     if (defined ($form->{'path'})) {
@@ -102,10 +106,11 @@ l00httpd::dbp($config{'desc'}, "EDITSORTED\n");
 		    # in block mode
             if (($form->{'blklineno'} == $blklineno) && ($contextln > 1)) {
 l00httpd::dbp($config{'desc'}, "CLEAR BLOCK\n");
-#                # when a block has been selected, selecting the first line clears block
-#                $form->{'noblock'} = 1;
+                # when a block has been selected, selecting the first line clears block
+                $form->{'noblock'} = 1;
             } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
 			    $contextln >= 1)) {
+                $clipblk = 1;
 l00httpd::dbp($config{'desc'}, "COPY BLOCK\n");
 #                # when a block has been selected, selecting the last line clears block
 #				# skip to below
@@ -270,14 +275,12 @@ l00httpd::dbp($config{'desc'}, "SHRINK END\n");
                 }
                 $lineno++;
             }
-            if (defined($form->{'blklineno'}) &&
-                ($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
-			    $contextln >= 1)) {
-l00httpd::dbp($config{'desc'}, "CLIP BLOCK 2\n");
-#                # when a block has been selected, selecting the last line clears block
-#                if ($ctrl->{'os'} eq 'and') {
-#                    $ctrl->{'droid'}->setClipboard ($buffer);
-#                }
+            if ($clipblk) {
+l00httpd::dbp($config{'desc'}, "COPY BLOCK 2\n$buffer\n");
+                # when a block has been selected, selecting the last line clears block
+                if ($ctrl->{'os'} eq 'and') {
+                    $ctrl->{'droid'}->setClipboard ($buffer);
+                }
             }
         }
     }
@@ -301,7 +304,8 @@ l00httpd::dbp($config{'desc'}, "CLIP BLOCK 2\n");
     print $sock "<p>\n";
 
     if ($blklineno > 0) {
-        print $sock "In block editing mode: editing line ", $blklineno, 
+        print $sock "In block editing mode: editing line ", 
+                    "<a href=\"#line$blklineno\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".\n";
         print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
 

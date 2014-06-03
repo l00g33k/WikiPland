@@ -106,7 +106,8 @@ sub l00http_editsort_proc {
 
     print $sock "<tr><td>\n";
     print $sock "<form action=\"/edit.htm\" method=\"post\">\n";
-    print $sock "<input type=\"submit\" name=\"editsorted\" value=\"Back to Edit\">\n";
+    print $sock "<input type=\"submit\" name=\"editsorted\" value=\"Save\">\n";
+    print $sock "<input type=\"submit\" name=\"reload\" value=\"Quit\">\n";
     print $sock "<input type=\"hidden\" name=\"pathorg\" value=\"$pathorg\">\n";
     print $sock "</form>\n";
     print $sock "</td>\n";
