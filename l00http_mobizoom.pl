@@ -283,7 +283,7 @@ sub l00http_mobizoom_proc {
         if ($mode1online2offline4download == 4) {
             &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         } else {
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.pl');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.wget');
         }
         if ($mode1online2offline4download == 2) {
 		    # <head> and <form> mess with my <span font-size> so drop them

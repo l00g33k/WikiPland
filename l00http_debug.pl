@@ -20,7 +20,7 @@ sub l00http_debug_desc {
 
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "debug: view debug log";
+    " C: debug: view debug log";
 }
 
 sub l00http_debug_proc (\%) {
