@@ -103,8 +103,10 @@ sub l00http_periocalrem_perio {
     if (&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
         $eventnear = '';
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_\n"), if ($ctrl->{'debug'} >= 5);
             chop;
             if (!/^[#*]/) {
+                l00httpd::dbp($config{'desc'}, "CALREM calrem event: $_\n"), if ($ctrl->{'debug'} >= 3);
                 if ($eventnear eq '') {
                     $eventnear = "<font style=\"color:black;background-color:yellow\">$_</font>";
 				} else {

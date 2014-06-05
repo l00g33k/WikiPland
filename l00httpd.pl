@@ -823,10 +823,10 @@ print "sock timeout 3s\n";
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">Home</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
-                if (defined($ctrl{'reminder'})) {
-                    # put reminder.pl message on title banner too
-                    $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center>$ctrl{'home'}";
-                }
+#               if (defined($ctrl{'reminder'})) {
+#                   # put reminder.pl message on title banner too
+#                   $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center>$ctrl{'home'}";
+#               }
 
                 # a generic scheme to support system wide banner
                 # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';

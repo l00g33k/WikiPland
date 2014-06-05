@@ -331,6 +331,7 @@ sub l00http_reminder_perio {
             $pause = 0;
 
             $ctrl->{'reminder'} = $msg;
+            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a>: <font style=\"color:yellow;background-color:red\">$msg</font></center>";
 
             if ($ctrl->{'os'} eq 'and') {
                 $ctrl->{'droid'}->makeToast("$percnt: $msg");
@@ -355,6 +356,7 @@ sub l00http_reminder_perio {
         $retval = $starttime - time + $utcoffsec;
         # time not due yet, clear title banner message
         undef $ctrl->{'reminder'};
+        undef $ctrl->{'BANNER:reminder'};
     }
 
     $retval;
