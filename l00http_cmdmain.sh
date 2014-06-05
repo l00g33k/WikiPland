@@ -82,7 +82,7 @@ if [ $sel = "ii" ]; then
 vim /sdcard/sl4a/scripts/portfwrd.pl; fi
 
 if [ $sel = "j" ]; then
-vim /sdcard/sl4a/scripts/l00httpd/l00httpd.cfg; fi
+vim /sdcard/sl4a/scripts/l00httpd/l00httpd.cfg /sdcard/al/l00httpd.cfg; fi
 
 if [ $sel = "jj" ]; then
 vim /sdcard/l00httpd/CutPasteCheat.txt; fi

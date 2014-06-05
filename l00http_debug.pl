@@ -13,6 +13,7 @@ $jmpintv = 100;
 
 #l00httpd::dbpclr();
 #l00httpd::dbp($config{'desc'}, "test\n");
+#l00httpd::dbp($config{'desc'}, "test\n"), if ($ctrl{'debug'} >= 5);
 #l00httpd::dbphash($config{'desc'}, 'FORM', $form);
 
 sub l00http_debug_desc {

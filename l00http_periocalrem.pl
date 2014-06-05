@@ -38,19 +38,27 @@ sub l00http_periocalrem_proc {
 
 sub l00http_periocalrem_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($date, $len, $todo, $eventnear);
+    my ($date, $len, $todo, $eventnear, $days);
     my ($year,$mon, $mday,);
     my ($thisweek, $julian, $juliannow);
+
+    $days = 2;
+    if (defined($ctrl->{'calremdays'})) {
+        $days = $ctrl->{'calremdays'};
+	}
 
     $ctrl->{'BANNER:periocalrem'} = '<center><font style="color:black;background-color:yellow">periocalrem</font></center>';
     undef $ctrl->{'BANNER:periocalrem'};
 
 
+    l00httpd::dbp($config{'desc'}, "CALREM $lastchkdate\n"), if ($ctrl->{'debug'} >= 5);
     if (!&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
         # rescan if extracted result was deleted
         $lastchkdate = '';
+        l00httpd::dbp($config{'desc'}, "No calrem.txt\n"), if ($ctrl->{'debug'} >= 5);
     }
     if ($lastchkdate ne substr($ctrl->{'now_string'},0,8)) {
+        l00httpd::dbp($config{'desc'}, "$lastchkdate is old\n"), if ($ctrl->{'debug'} >= 5);
         $lastchkdate = substr($ctrl->{'now_string'},0,8);
 		if (open (IN, "<$ctrl->{'workdir'}l00_cal.txt")) {
             ($year, $mon, $mday) = $lastchkdate =~ /(\d\d\d\d)(\d\d)(\d\d)/;
@@ -73,14 +81,15 @@ sub l00http_periocalrem_perio {
                     $year -= 1900;
                     ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
                     if (($julian - $juliannow >= 0)  &&
-                        ($julian - $juliannow <= 1))  {
+                        ($julian - $juliannow <= $days))  {
+                        l00httpd::dbp($config{'desc'}, "found $todo\n"), if ($ctrl->{'debug'} >= 5);
                         $eventnear .= "$todo\n";
-print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
+                        #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
                     }
 		    	}
 			}
 		    close (IN);
-#$lastchkdate = '';
+
             if ($eventnear ne '') {
                 $eventnear .= "* makes wiki\n";
                 $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
