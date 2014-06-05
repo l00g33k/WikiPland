@@ -7,7 +7,8 @@ use warnings;
 my %config = (proc => "l00http_periocalrem_proc",
               desc => "l00http_periocalrem_desc",
               perio => "l00http_periocalrem_perio");
-
+my($lastchkdate);
+$lastchkdate = '';
 
 
 sub l00http_periocalrem_desc {
@@ -17,9 +18,6 @@ sub l00http_periocalrem_desc {
     "periocalrem: Calendar reminder";
 }
 
-
-my($calremcnt);
-$calremcnt = 0;
 
 sub l00http_periocalrem_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -40,14 +38,84 @@ sub l00http_periocalrem_proc {
 
 sub l00http_periocalrem_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my ($date, $len, $todo, $eventnear, $days);
+    my ($year,$mon, $mday,);
+    my ($thisweek, $julian, $juliannow);
 
-printf ("    $calremcnt cal rem $ctrl->{'now_string'}\n");
-if ($calremcnt++ > 10) {
-    $calremcnt = 0;
-    $ctrl->{'BANNER:periocalrem'} = '<center><font style=\"color:red;background-color:yellow\">periocalrem</font></center><br>';
-} else {
+    $days = 2;
+    if (defined($ctrl->{'calremdays'})) {
+        $days = $ctrl->{'calremdays'};
+	}
+
+    $ctrl->{'BANNER:periocalrem'} = '<center><font style="color:black;background-color:yellow">periocalrem</font></center>';
     undef $ctrl->{'BANNER:periocalrem'};
-}
+
+
+    l00httpd::dbp($config{'desc'}, "CALREM $lastchkdate\n"), if ($ctrl->{'debug'} >= 5);
+    if (!&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
+        # rescan if extracted result was deleted
+        $lastchkdate = '';
+        l00httpd::dbp($config{'desc'}, "No calrem.txt\n"), if ($ctrl->{'debug'} >= 5);
+    }
+    if ($lastchkdate ne substr($ctrl->{'now_string'},0,8)) {
+        l00httpd::dbp($config{'desc'}, "$lastchkdate is old\n"), if ($ctrl->{'debug'} >= 5);
+        $lastchkdate = substr($ctrl->{'now_string'},0,8);
+		if (open (IN, "<$ctrl->{'workdir'}l00_cal.txt")) {
+            ($year, $mon, $mday) = $lastchkdate =~ /(\d\d\d\d)(\d\d)(\d\d)/;
+            $year -= 1900;
+            ($thisweek, $juliannow) = &l00mktime::weekno ($year, $mon, $mday);
+            $eventnear = '';
+		    while (<IN>) {
+                chop;
+                if (/^#/) {
+	            # # in column 1 is remark
+                    next;
+                }
+                if (!/^\d/) {
+	            # must start with numeric
+                    next;
+                }
+                ($date, $len, $todo) = split (',', $_);
+                if (defined ($date) && defined ($len) && defined ($todo)) {
+                    ($year,$mon, $mday,) = split ('/', $date);
+                    $year -= 1900;
+                    ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+                    if (($julian - $juliannow >= 0)  &&
+                        ($julian - $juliannow <= $days))  {
+                        l00httpd::dbp($config{'desc'}, "found $todo\n"), if ($ctrl->{'debug'} >= 5);
+                        $eventnear .= "$todo\n";
+print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
+                    }
+		    	}
+			}
+		    close (IN);
+#$lastchkdate = '';
+            if ($eventnear ne '') {
+                $eventnear .= "* makes wiki\n";
+                $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
+		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
+			    &l00httpd::l00fwriteClose($ctrl);
+			}
+		}
+    }
+    undef $ctrl->{'BANNER:periocalrem'};
+    if (&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
+        $eventnear = '';
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            chop;
+            if (!/^[#*]/) {
+                if ($eventnear eq '') {
+                    $eventnear = "<font style=\"color:black;background-color:yellow\">$_</font>";
+				} else {
+                    $eventnear .= " - <font style=\"color:black;background-color:yellow\">$_</font>";
+				}
+            }
+            if ($eventnear ne '') {
+                $ctrl->{'BANNER:periocalrem'} = "<center><a href=\"/recedit.pl?record1=.&path=l00://calrem.txt\">cal</a>: $eventnear</center>";
+            }
+        }
+    }
 
     0;  # not a periodic task; just take advantage so we get call on page load
 }

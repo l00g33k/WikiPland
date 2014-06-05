@@ -320,7 +320,11 @@ sub l00fwriteClose {
 
     if ($writeName =~ /^l00:\/\/./) {
         # ram file
-        $ctrl->{'l00file'}->{$writeName} = $writeBuf;
+        if ($writeBuf eq '') {
+            $ctrl->{'l00file'}->{$writeName} = undef;
+        } else {
+            $ctrl->{'l00file'}->{$writeName} = $writeBuf;
+        }
     } else {
         if ($writeBuf eq '') {
             # write 0 bytes file is delete file.

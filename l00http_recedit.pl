@@ -43,12 +43,14 @@ sub l00http_recedit_proc (\%) {
     print $sock "<a href=\"/recedit.htm\">recedit</a><p>\n";
 
     if (defined ($form->{'submit'}) && (length($record1) > 0)) {
-        if (open (IN, "<$path")) {
+        if (&l00httpd::l00freadOpen($ctrl, $path)) {
+#       if (open (IN, "<$path")) {
             $obuf = '';
             $found = 0;
             $output = '';
             $id = 1;
-            while (<IN>) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+#           while (<IN>) {
                 if (/^ *$/) {
                     if ($found) {
                         $cmted .= $_;
@@ -141,9 +143,12 @@ sub l00http_recedit_proc (\%) {
             close (IN);
             &l00backup::backupfile ($ctrl, $path, 1, 5);
             #print $sock "<pre>$output</pre>$path\n";
-            if (open (OU, ">$path")) {
-                print OU $output;
-                close (OU);
+            if (&l00httpd::l00fwriteOpen($ctrl, $path)) {
+                &l00httpd::l00fwriteBuf($ctrl, $output);
+                &l00httpd::l00fwriteClose($ctrl);
+#           if (open (OU, ">$path")) {
+#               print OU $output;
+#               close (OU);
             } else {
                 print $sock "<p>Unable to save '$path'<p>\n";
             }
@@ -177,11 +182,13 @@ sub l00http_recedit_proc (\%) {
     print $sock "    </tr>\n";
 
     if (length($record1) > 0) {
-        if (open (IN, "<$path")) {
+        if (&l00httpd::l00freadOpen($ctrl, $path)) {
+#       if (open (IN, "<$path")) {
             $obuf = '';
             $found = 0;
             $id = 1;
-            while (<IN>) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+#           while (<IN>) {
                 if (/^ *$/) {
                     next;
                 }
@@ -319,13 +326,15 @@ sub l00http_recedit_proc (\%) {
     print $sock "</form>\n";
 
 
-    if (open (IN, "<$path")) {
+    if (&l00httpd::l00freadOpen($ctrl, $path)) {
+#   if (open (IN, "<$path")) {
         print $sock "<pre>";
-        while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+#       while (<IN>) {
             print $sock "$_";
         }
         print $sock "</pre>\n";
-        close (IN);
+#       close (IN);
     }
     
 

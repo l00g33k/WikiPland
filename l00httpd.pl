@@ -825,7 +825,7 @@ print "sock timeout 3s\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">Home</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
                 if (defined($ctrl{'reminder'})) {
                     # put reminder.pl message on title banner too
-                    $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center><p>$ctrl{'home'}";
+                    $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center>$ctrl{'home'}";
                 }
 
                 # a generic scheme to support system wide banner
@@ -834,7 +834,9 @@ print "sock timeout 3s\n";
                 foreach $_ (sort keys %ctrl) {
                     if (/^BANNER:(.+)/) {
                         #print "key $_\n";
-                        $ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                        if (defined($ctrl{$_})) {
+                            $ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+						}
                     }
                 }
 
