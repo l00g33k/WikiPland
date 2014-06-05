@@ -46,13 +46,12 @@ sub l00http_edit_proc2 {
     if ((defined($form->{'pathorg'})) &&
         ($contextln > 1) &&
         ($blklineno > 0)) {
-l00httpd::dbp($config{'desc'}, "EDITSORTED\n");
         $form->{'path'} = $form->{'pathorg'};
         if (defined($form->{'editsorted'})) {
-l00httpd::dbp($config{'desc'}, "EDITSORTED save\n");
-            &l00httpd::l00freadLine($ctrl);
-            $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
-            $form->{'save'} = 1;    # fake a save from buffer
+			if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+                $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
+                $form->{'save'} = 1;    # fake a save from buffer
+			}
         }
     }
 
@@ -105,31 +104,25 @@ l00httpd::dbp($config{'desc'}, "EDITSORTED save\n");
         } else {
 		    # in block mode
             if (($form->{'blklineno'} == $blklineno) && ($contextln > 1)) {
-l00httpd::dbp($config{'desc'}, "CLEAR BLOCK\n");
                 # when a block has been selected, selecting the first line clears block
                 $form->{'noblock'} = 1;
             } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
 			    $contextln >= 1)) {
                 $clipblk = 1;
-l00httpd::dbp($config{'desc'}, "COPY BLOCK\n");
 #                # when a block has been selected, selecting the last line clears block
 #				# skip to below
             } elsif ($form->{'blklineno'} < $blklineno) {
-l00httpd::dbp($config{'desc'}, "EXPAND START\n");
 			    # selected line before start, expand start
        	        $contextln += ($blklineno - $form->{'blklineno'});
            	    $blklineno = $form->{'blklineno'};
             } elsif ($form->{'blklineno'} > ($blklineno + $contextln - 1)) {
-l00httpd::dbp($config{'desc'}, "EXPAND END\n");
 			    # selected line after end, expand end
        	        $contextln += ($form->{'blklineno'} - ($blklineno + $contextln - 1));
            	} elsif ($form->{'blklineno'} < ($blklineno + $contextln / 2)) {
-l00httpd::dbp($config{'desc'}, "SHRINK START\n");
 		    	# selected line after start but before half, move start
                 $contextln -= $form->{'blklineno'} - $blklineno;
    	            $blklineno = $form->{'blklineno'};
        	    } else {
-l00httpd::dbp($config{'desc'}, "SHRINK END\n");
 			    # selected line after start and after  half, move end
                	$contextln -= ($blklineno + $contextln - 1) - $form->{'blklineno'};
            	}
@@ -276,7 +269,6 @@ l00httpd::dbp($config{'desc'}, "SHRINK END\n");
                 $lineno++;
             }
             if ($clipblk) {
-l00httpd::dbp($config{'desc'}, "COPY BLOCK 2\n$buffer\n");
                 # when a block has been selected, selecting the last line clears block
                 if ($ctrl->{'os'} eq 'and') {
                     $ctrl->{'droid'}->setClipboard ($buffer);
