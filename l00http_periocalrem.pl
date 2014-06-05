@@ -84,12 +84,12 @@ sub l00http_periocalrem_perio {
                         ($julian - $juliannow <= $days))  {
                         l00httpd::dbp($config{'desc'}, "found $todo\n"), if ($ctrl->{'debug'} >= 5);
                         $eventnear .= "$todo\n";
-print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
+                        #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
                     }
 		    	}
 			}
 		    close (IN);
-#$lastchkdate = '';
+
             if ($eventnear ne '') {
                 $eventnear .= "* makes wiki\n";
                 $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
