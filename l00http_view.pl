@@ -30,7 +30,7 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp);
+    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -53,8 +53,8 @@ sub l00http_view_proc {
     }
 
 
-    if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-        $hilitetext = $form->{'hilite'};
+    if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
+        $hilitetext = $form->{'hilitetext'};
     }
 
     print $sock "<p>\n";
@@ -150,6 +150,8 @@ sub l00http_view_proc {
 
             print $sock "<pre>\n";
 
+            print $sock sprintf ("<a name=\"hilitetext_%d\"></a>", 0);
+            $hilitetextidx = 1;
             foreach $_ (split ("\n", $buffer)) {
                 $lineno++;
                 if ($lineno < $skip) {
@@ -170,8 +172,8 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
-                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                        if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
+                            s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
                         }
                         print $sock "$_\n";
                     }
@@ -183,12 +185,27 @@ sub l00http_view_proc {
                         print $sock $clip;
                         print $sock sprintf ("\">%04d</a>: ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
-                        print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
-                        print $sock $clip;
-                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                        if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
+                            if (/$form->{'hilitetext'}/) {
+
+                                s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                                print $sock "<a name=\"hilitetext_$hilitetextidx\"></a>";
+                                $tmp = $hilitetextidx - 1;
+                                print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
+                                print $sock $clip;
+                                $tmp = $hilitetextidx + 1;
+                                print $sock sprintf ("\">%04d</a><a href=\"#hilitetext_$tmp\">&gt;</a>", $lineno) . "$_\n";
+                                $hilitetextidx++;
+                            } else {
+                                print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
+                                print $sock $clip;
+                                print $sock sprintf ("\">%04d</a>: ", $lineno) . "$_\n";
+                            }
+                        } else {
+                            print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
+                            print $sock $clip;
+                            print $sock sprintf ("\">%04d</a>: ", $lineno) . "$_\n";
                         }
-                        print $sock sprintf ("\">%04d</a>: ", $lineno) . "$_\n";
                     }
                 }
             }
@@ -209,7 +226,7 @@ sub l00http_view_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"dohilite\" value=\"HiLite\">\n";
     print $sock "</td><td>\n";
-    print $sock "regex <input type=\"text\" size=\"12\" name=\"hilite\" value=\"$hilitetext\">\n";
+    print $sock "regex <input type=\"text\" size=\"12\" name=\"hilitetext\" value=\"$hilitetext\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
