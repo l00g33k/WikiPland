@@ -281,6 +281,7 @@ sub l00http_find_proc {
     my $form = $ctrl->{'FORM'};
     my ($thispath, $pathcnt);
 
+
     # special srcdoc.pl integration
     $srcdoc = '';
     if (defined ($form->{'srcdoc'})) {
@@ -311,7 +312,9 @@ sub l00http_find_proc {
     }
     if (defined ($form->{'content'})) {
         $content = $form->{'content'};
-    }
+    } else {
+        $content = '';
+	}
     if (defined ($form->{'maxlines'})) {
         $maxlines = $form->{'maxlines'};
     }

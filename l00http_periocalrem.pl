@@ -39,8 +39,8 @@ sub l00http_periocalrem_proc {
 sub l00http_periocalrem_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($date, $len, $todo, $eventnear, $days);
-    my ($year,$mon, $mday,);
     my ($thisweek, $julian, $juliannow);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst, $nowstamp);
 
     $days = 2;
     if (defined($ctrl->{'calremdays'})) {
@@ -57,9 +57,14 @@ sub l00http_periocalrem_perio {
         $lastchkdate = '';
         l00httpd::dbp($config{'desc'}, "No calrem.txt\n"), if ($ctrl->{'debug'} >= 5);
     }
-    if ($lastchkdate ne substr($ctrl->{'now_string'},0,8)) {
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+	# a nowstamp that changes 4 times a day for more frequent reminder
+    $nowstamp = sprintf ("%4d%02d%02d %d", $year + 1900, $mon+1, $mday, int ($hour / 6));
+#   if ($lastchkdate ne substr($ctrl->{'now_string'},0,8)) {
+    if ($lastchkdate ne $nowstamp) {
         l00httpd::dbp($config{'desc'}, "$lastchkdate is old\n"), if ($ctrl->{'debug'} >= 5);
-        $lastchkdate = substr($ctrl->{'now_string'},0,8);
+        $lastchkdate = $nowstamp;
+#       $lastchkdate = substr($ctrl->{'now_string'},0,8);
 		if (open (IN, "<$ctrl->{'workdir'}l00_cal.txt")) {
             ($year, $mon, $mday) = $lastchkdate =~ /(\d\d\d\d)(\d\d)(\d\d)/;
             $year -= 1900;
@@ -80,7 +85,7 @@ sub l00http_periocalrem_perio {
                     ($year,$mon, $mday,) = split ('/', $date);
                     $year -= 1900;
                     ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
-                    if (($julian - $juliannow >= 0)  &&
+                    if (($julian - $juliannow >= -15)  &&
                         ($julian - $juliannow <= $days))  {
                         l00httpd::dbp($config{'desc'}, "found $todo\n"), if ($ctrl->{'debug'} >= 5);
                         $eventnear .= "$todo\n";
@@ -91,7 +96,8 @@ sub l00http_periocalrem_perio {
 		    close (IN);
 
             if ($eventnear ne '') {
-                $eventnear .= "* makes wiki\n";
+                $eventnear = "* CLEAR_THIS_STOPS_ALL\n$eventnear";
+#               $eventnear .= "* makes wiki\n";
                 $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
 		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
@@ -105,7 +111,16 @@ sub l00http_periocalrem_perio {
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_\n"), if ($ctrl->{'debug'} >= 5);
             chop;
+            if (/#\* CLEAR_THIS_STOPS_ALL/) {
+			    # special key
+                $eventnear = '';
+			    last;
+			}
             if (!/^[#*]/) {
+                if (/\* CLEAR_THIS_STOPS_ALL/) {
+				    # skip special key
+				    next;
+				}
                 l00httpd::dbp($config{'desc'}, "CALREM calrem event: $_\n"), if ($ctrl->{'debug'} >= 3);
                 if ($eventnear eq '') {
                     $eventnear = "<font style=\"color:black;background-color:yellow\">$_</font>";
