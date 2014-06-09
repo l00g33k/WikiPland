@@ -10,13 +10,14 @@ my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
 my ($hostpath);
-my ($findtext, $block, $prefmt, $found, $pname, $fname, $maxln, $skip);
+my ($findtext, $block, $prefmt, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '';
 $prefmt = '';
 $skip = 0;
 $maxln = 1000;
+$hilitetext = '';
 
 sub l00http_view_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -51,6 +52,10 @@ sub l00http_view_proc {
         print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>\n";
     }
 
+
+    if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
+        $hilitetext = $form->{'hilite'};
+    }
 
     print $sock "<p>\n";
     if (defined ($form->{'maxln'})) {
@@ -165,6 +170,9 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
+                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
+                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                        }
                         print $sock "$_\n";
                     }
                 } else {
@@ -177,6 +185,9 @@ sub l00http_view_proc {
                     } else {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
+                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
+                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                        }
                         print $sock sprintf ("\">%04d</a>: ", $lineno) . "$_\n";
                     }
                 }
@@ -191,8 +202,20 @@ sub l00http_view_proc {
     print $sock "\nThere are $lineno lines in this file<p>\n";
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
 
-    # find
+    # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
+    print $sock "<form action=\"/view.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"dohilite\" value=\"HiLite\">\n";
+    print $sock "</td><td>\n";
+    print $sock "regex <input type=\"text\" size=\"12\" name=\"hilite\" value=\"$hilitetext\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "</table>\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</form>\n";
+
+    # find
     print $sock "<form action=\"/view.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
