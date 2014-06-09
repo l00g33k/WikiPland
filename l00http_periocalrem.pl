@@ -85,7 +85,7 @@ sub l00http_periocalrem_perio {
                     ($year,$mon, $mday,) = split ('/', $date);
                     $year -= 1900;
                     ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
-                    if (($julian - $juliannow >= 0)  &&
+                    if (($julian - $juliannow >= -15)  &&
                         ($julian - $juliannow <= $days))  {
                         l00httpd::dbp($config{'desc'}, "found $todo\n"), if ($ctrl->{'debug'} >= 5);
                         $eventnear .= "$todo\n";
