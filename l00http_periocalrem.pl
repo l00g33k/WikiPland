@@ -77,10 +77,14 @@ sub l00http_periocalrem_perio {
                     next;
                 }
                 if (!/^\d/) {
-	            # must start with numeric
+                    # must start with numeric
                     next;
                 }
                 ($date, $len, $todo) = split (',', $_);
+                if ($todo =~ /^ *!/) {
+                    # leading ! hides item
+                    $todo = "#$todo";
+                }
                 if (defined ($date) && defined ($len) && defined ($todo)) {
                     ($year,$mon, $mday,) = split ('/', $date);
                     $year -= 1900;
