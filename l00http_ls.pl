@@ -247,7 +247,8 @@ sub l00http_ls_proc {
                             print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
                         }
                         print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                        print $sock "<a href=\"/edit.htm?path=$path\">Edit</a><hr>\n";
+                        print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
+                        print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
                         if (defined ($form->{'bkvish'})) {
                             print $sock "<pre>\n";
                             print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
@@ -452,7 +453,8 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
                     }
                     print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                    print $sock "<a href=\"/edit.htm?path=$path\">Edit</a><hr>\n";
+                    print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
+                    print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
                     if (defined ($form->{'bkvish'})) {
                         print $sock "<pre>\n";
                         print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
