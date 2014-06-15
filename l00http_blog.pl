@@ -43,6 +43,10 @@ sub l00http_blog_proc {
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
     }
+    if (defined ($form->{'pastesave'})) {
+        $_ = $ctrl->{'droid'}->getClipboard()->{'result'};
+        print $sock "<hr>$_<hr>\n";
+    }
 
     $buffer = '';
     if (defined ($form->{'timesave'})) {
