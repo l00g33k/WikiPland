@@ -176,17 +176,23 @@ sub l00http_search_search {
                                             $hit++;
                                             # construct output
                                             if ($linemode) {
-                                                $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file:$lineno</a>";
+                                                $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file</a>";
                                             } else {
-                                                $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file:$anchorline</a>";
+                                                $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
                                             }
                                             foreach $conte (@contents) {
                                                 $lineout = $rowOutput{$conte};
                                                 if (defined($lineout)) {
+                                                    if ($linemode) {
+                                                        $line .= "<`>$lineno";
+                                                    } else {
+                                                        $line .= "<`>$anchorline";
+                                                    }
                                                     $lineout =~ s/</&lt;/g;  # no HTML tags
                                                     $lineout =~ s/>/&gt;/g;
                                                     $line .= "<`>$lineout";
                                                 } else {
+                                                    $line .= "<`>(blank)";
                                                     $line .= "<`>(blank)";
                                                 }
                                             }
@@ -249,14 +255,16 @@ sub l00http_search_search {
                                     $hitcnt++;
                                     $hit++;
                                     # construct output
-                                    $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file:$anchorline</a>";
+                                    $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
                                     foreach $conte (@contents) {
                                         $lineout = $rowOutput{$conte};
                                         if (defined($lineout)) {
+                                            $line .= "<`>$anchorline";
                                             $lineout =~ s/</&lt;/g;  # no HTML tags
                                             $lineout =~ s/>/&gt;/g;
                                             $line .= "<`>$lineout";
                                         } else {
+                                            $line .= "<`>(blank)";
                                             $line .= "<`>(blank)";
                                         }
                                     }
@@ -314,7 +322,7 @@ sub l00http_search_search {
             $line = $outputsorted[0];
             @cols = split('<`>', $line);
             print $sock "<tr>\n";
-            print $sock "    <td>File:line</td>\n";
+            print $sock "    <td>File</td><td>Line</td>\n";
             foreach $conte (@contents) {
                 print $sock "    <td>$conte</td>\n";
             }
