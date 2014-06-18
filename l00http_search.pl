@@ -62,13 +62,21 @@ sub fn {
         $allfieldb[$ii] =~ s/<.+?>//g;
     }
 
-    # don't know why content of @sorts get destroy; recreae
+    # don't know why content of @sorts get destroy; recrete
     @sorts = split('\|\|\|', $sort);
     foreach $sortlvl (@sorts) {
         if ($retval == 0) {
             if ($sortlvl > 0) {
                 $sortlvl--;
-                if ($allfielda [$sortlvl] gt $allfieldb [$sortlvl]) {
+                if (($allfielda [$sortlvl] eq '&nbsp;') && 
+                    ($allfieldb [$sortlvl] ne '&nbsp;')) {
+                    # '&nbsp;' means field is blank, make it last
+                    $retval = 1;
+                } elsif (($allfielda [$sortlvl] ne '&nbsp;') && 
+                         ($allfieldb [$sortlvl] eq '&nbsp;')) {
+                    # '&nbsp;' means field is blank, make it last
+                    $retval = -1;
+                } elsif ($allfielda [$sortlvl] gt $allfieldb [$sortlvl]) {
                     $retval = 1;
                 } elsif ($allfielda [$sortlvl] lt $allfieldb [$sortlvl]) {
                     $retval = -1;
