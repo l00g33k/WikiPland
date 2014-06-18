@@ -86,7 +86,8 @@ print "clear doplpath = $doplpath\n"
             print $sock "<a name=\"top\"></a>\n";
             print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
             print $sock "<a href=\"#end\">Jump to end</a>\n";
-            print $sock "<a href=\"/edit.htm?path=$doplpathnow\">Edit</a>\n";
+            print $sock "<a href=\"/edit.htm?path=$doplpathnow\">Ed</a>\n";
+            print $sock "<a href=\"/view.htm?path=$doplpathnow\">Vw</a>\n";
         }
     }
 
