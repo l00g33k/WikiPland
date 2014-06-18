@@ -189,7 +189,7 @@ sub l00http_search_search {
                                                     $lineout =~ s/>/&gt;/g;
                                                     $line .= "<`>$lineout";
                                                 } else {
-                                                    $line .= "<`>(blank)";
+                                                    $line .= "<`>&nbsp;";
                                                 }
                                             }
                                             # save output
@@ -260,7 +260,7 @@ sub l00http_search_search {
                                             $lineout =~ s/>/&gt;/g;
                                             $line .= "<`>$lineout";
                                         } else {
-                                            $line .= "<`>(blank)";
+                                            $line .= "<`>&nbsp;";
                                         }
                                     }
                                     # save output
