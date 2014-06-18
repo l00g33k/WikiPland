@@ -65,7 +65,7 @@ sub l00http_blog_proc {
         }
         if (defined ($form->{'blog'})) {
             if ($form->{'blog'} eq "on") {
-                $form->{'buffer'} = "===$ctrl->{'now_string'}===\n* ";
+                $form->{'buffer'} = "==$ctrl->{'now_string'} ==\n* ";
             } else {
                 # 'blog' = none
                 $form->{'buffer'} = "";
@@ -79,7 +79,7 @@ sub l00http_blog_proc {
     if (defined ($form->{'pastesave'})) {
         if (defined ($form->{'blog'})) {
             if ($form->{'blog'} eq "on") {
-                $form->{'buffer'} = "===$ctrl->{'now_string'}===\n* ";
+                $form->{'buffer'} = "==$ctrl->{'now_string'} ==\n* ";
             } else {
                 # 'blog' = none
                 $form->{'buffer'} = "";
@@ -164,7 +164,7 @@ sub l00http_blog_proc {
     }
     if (defined ($form->{'blog'})) {
         if ($form->{'blog'} eq "on") {
-            $buffer = "===$ctrl->{'now_string'}===\n* ";
+            $buffer = "==$ctrl->{'now_string'} ==\n* ";
         } else {
             $buffer = "";
         }
