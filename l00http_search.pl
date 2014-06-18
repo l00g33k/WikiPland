@@ -177,22 +177,18 @@ sub l00http_search_search {
                                             # construct output
                                             if ($linemode) {
                                                 $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file</a>";
+                                                $line .= "<`>$lineno";
                                             } else {
                                                 $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
+                                                $line .= "<`>$anchorline";
                                             }
                                             foreach $conte (@contents) {
                                                 $lineout = $rowOutput{$conte};
                                                 if (defined($lineout)) {
-                                                    if ($linemode) {
-                                                        $line .= "<`>$lineno";
-                                                    } else {
-                                                        $line .= "<`>$anchorline";
-                                                    }
                                                     $lineout =~ s/</&lt;/g;  # no HTML tags
                                                     $lineout =~ s/>/&gt;/g;
                                                     $line .= "<`>$lineout";
                                                 } else {
-                                                    $line .= "<`>(blank)";
                                                     $line .= "<`>(blank)";
                                                 }
                                             }
@@ -256,15 +252,14 @@ sub l00http_search_search {
                                     $hit++;
                                     # construct output
                                     $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
+                                    $line .= "<`>$anchorline";
                                     foreach $conte (@contents) {
                                         $lineout = $rowOutput{$conte};
                                         if (defined($lineout)) {
-                                            $line .= "<`>$anchorline";
                                             $lineout =~ s/</&lt;/g;  # no HTML tags
                                             $lineout =~ s/>/&gt;/g;
                                             $line .= "<`>$lineout";
                                         } else {
-                                            $line .= "<`>(blank)";
                                             $line .= "<`>(blank)";
                                         }
                                     }
