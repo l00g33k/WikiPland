@@ -102,13 +102,14 @@ sub l00http_search_search {
     my $filecnt = 0;
     my ($anchor, $tmp);
     my (@output, @outputsorted, $line, @cols, $item, @conditions, @contents, $anchorline, @allhits);
-    my ($condi, $conte, %rowOutput, %conditionsFound, $conditionsFoundCnt, $lineout);
+    my ($condi, $conte, %rowOutput, %conditionsFound, $conditionsFoundCnt, $lineout, $clean);
 
     $line = '';
     undef @output;
 
     # split search terms
     @conditions = split('\|\|\|', $condition);
+    l00httpd::dbp($config{'desc'}, "conditions\n".join("\n",@conditions)."\n"), if ($ctrl->{'debug'} >= 3);
     # split sort terms
     @sorts = split('\|\|\|', $sort);
 
@@ -167,9 +168,13 @@ sub l00http_search_search {
                                 undef %rowOutput;
                                 $anchorline = 0;
                                 while (<IN>) {
+                                    # Make a clean line without \r\n
+                                    $clean = $_;
+                                    $clean =~ s/\r//;
+                                    $clean =~ s/\n//;
                                     # for each line in the file
                                     $lineno++;
-                                    if (/$linemark/i || $linemode) {
+                                    if ($clean =~ /$linemark/i || $linemode) {
                                         # new heading, terminate and output last search
                                         $conditionsFoundCnt = -1;
                                         foreach $condi (@conditions) {
@@ -208,16 +213,18 @@ sub l00http_search_search {
                                         undef %rowOutput;
                                     }
 
-                                    if (/^=+(.+?)=+$/) {
-#                                   if (/($linemark)/i) 
+                                    if ($clean =~ /($linemark)/i) {
                                         # save anchor
                                         $anchor = $1;
                                         $anchor =~ s/[^0-9A-Za-z]/_/g;
                                         $anchorline = $lineno;
                                     }
                                     # search for conditions
+                                    l00httpd::dbp($config{'desc'}, "line >$_<\n"), if ($ctrl->{'debug'} >= 4);
                                     foreach $condi (@conditions) {
-                                        if (/$condi/i) {
+                                        l00httpd::dbp($config{'desc'}, "condi >$condi<\n"), if ($ctrl->{'debug'} >= 4);
+                                        if ($clean =~ /$condi/i) {
+                                            l00httpd::dbp($config{'desc'}, "HIT\n"), if ($ctrl->{'debug'} >= 4);
                                             $conditionsFound{$condi} = 1;
                                         }
                                     }
@@ -301,20 +308,15 @@ sub l00http_search_search {
             defined ($form->{'savepath'}) &&
             (length ($form->{'savepath'}) > 1)) {
             print $sock "Results saved: <a href=\"/ls.htm?path=$form->{'savepath'}\">$form->{'savepath'}</a><br>\n";
-#           if (open (OU, ">$form->{'savepath'}")) {
             if (&l00httpd::l00fwriteOpen($ctrl, $form->{'savepath'})) {
                 foreach $line (@outputsorted) {
                     @cols = split('<`>', $line);
-#                   print OU "||";
                     &l00httpd::l00fwriteBuf($ctrl, "||");
                     foreach $item (@cols) {
-#                       print OU "$item||";
                         &l00httpd::l00fwriteBuf($ctrl, "$item||");
                     }
-#                   print OU "\n";
                     &l00httpd::l00fwriteBuf($ctrl, "\n");
                 }
-#               close (OU);
 				&l00httpd::l00fwriteClose($ctrl);
             }
         }
@@ -341,11 +343,9 @@ sub l00http_search_search {
             print $sock "</table>\n";
         } else {
             foreach $line (@outputsorted) {
-#print ">>>>$line<<<<\n\n";
                 @cols = split('<`>', $line);
                 $tmp = 0;
                 foreach $item (@cols) {
-#print ">$item<\n";
                     if ($tmp == 0) {
                         print $sock "<p><font style=\"color:black;background-color:lime\">$item</font><br>\n";
                         if ($pretext eq 'checked') {
@@ -544,8 +544,7 @@ sub l00http_search_proc {
 
     print $sock "        <tr>\n";
     print $sock "            <td><input type=\"checkbox\" name=\"saveresults\">Save <a href=\"/ls.htm?path=l00://search.pl\">results</a></td>\n";
-#   print $sock "            <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"$path"."TmpSearchResults.txt\"></td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"l00://search.pl\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"l00://search.htm\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
