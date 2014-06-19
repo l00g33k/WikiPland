@@ -9,7 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
 my $record1;
-$record1 = '';
+$record1 = '^\d{8,8} \d{6,6} ';
 
 sub l00http_recedit_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -42,15 +42,17 @@ sub l00http_recedit_proc (\%) {
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> ";
     print $sock "<a href=\"/recedit.htm\">recedit</a><p>\n";
 
+    if (!defined ($form->{'submit'}) || (length($record1) == 0)) {
+        $record1 = '^\d{8,8} \d{6,6} ';
+    }
+
     if (defined ($form->{'submit'}) && (length($record1) > 0)) {
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
-#       if (open (IN, "<$path")) {
             $obuf = '';
             $found = 0;
             $output = '';
             $id = 1;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
-#           while (<IN>) {
                 if (/^ *$/) {
                     if ($found) {
                         $cmted .= $_;
@@ -146,9 +148,6 @@ sub l00http_recedit_proc (\%) {
             if (&l00httpd::l00fwriteOpen($ctrl, $path)) {
                 &l00httpd::l00fwriteBuf($ctrl, $output);
                 &l00httpd::l00fwriteClose($ctrl);
-#           if (open (OU, ">$path")) {
-#               print OU $output;
-#               close (OU);
             } else {
                 print $sock "<p>Unable to save '$path'<p>\n";
             }
@@ -183,12 +182,10 @@ sub l00http_recedit_proc (\%) {
 
     if (length($record1) > 0) {
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
-#       if (open (IN, "<$path")) {
             $obuf = '';
             $found = 0;
             $id = 1;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
-#           while (<IN>) {
                 if (/^ *$/) {
                     next;
                 }
@@ -236,7 +233,6 @@ sub l00http_recedit_proc (\%) {
                             if ($record1 eq '.') {
                                # drop leading date/time
                                $line =~ s/^\d{8,8} \d{6,6} //;
-#print "1 $line\n";
                                # match any specific
                                $tmp = $line;
                                $tmp =~ s/ /+/g;
@@ -327,14 +323,11 @@ sub l00http_recedit_proc (\%) {
 
 
     if (&l00httpd::l00freadOpen($ctrl, $path)) {
-#   if (open (IN, "<$path")) {
         print $sock "<pre>";
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
-#       while (<IN>) {
             print $sock "$_";
         }
         print $sock "</pre>\n";
-#       close (IN);
     }
     
 
