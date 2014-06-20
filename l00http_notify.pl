@@ -80,6 +80,8 @@ sub l00http_notify_proc (\%) {
     }
     if (defined ($form->{'submit'})) {
         $msgsub = $msg;
+        $msgsub =~ s/\r/ /g;
+        $msgsub =~ s/\n/ /g;
         $msg = '';
     }
 
