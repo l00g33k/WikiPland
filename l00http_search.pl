@@ -190,10 +190,8 @@ sub l00http_search_search {
                                             # construct output
                                             if ($linemode) {
                                                 $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file</a>";
-                                                $line .= "<`>$lineno";
                                             } else {
                                                 $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
-                                                $line .= "<`>$anchorline";
                                             }
                                             foreach $conte (@contents) {
                                                 $lineout = $rowOutput{$conte};
@@ -204,6 +202,12 @@ sub l00http_search_search {
                                                 } else {
                                                     $line .= "<`>&nbsp;";
                                                 }
+                                            }
+                                            # save line number/anchor at the right most column
+                                            if ($linemode) {
+                                                $line .= "<`>$lineno";
+                                            } else {
+                                                $line .= "<`>$anchorline";
                                             }
                                             # save output
                                             push (@output, $line);
@@ -267,7 +271,6 @@ sub l00http_search_search {
                                     $hit++;
                                     # construct output
                                     $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
-                                    $line .= "<`>$anchorline";
                                     foreach $conte (@contents) {
                                         $lineout = $rowOutput{$conte};
                                         if (defined($lineout)) {
@@ -278,6 +281,8 @@ sub l00http_search_search {
                                             $line .= "<`>&nbsp;";
                                         }
                                     }
+                                    # save line number/anchor at the right most column
+                                    $line .= "<`>$anchorline";
                                     # save output
                                     push (@output, $line);
                                 }
@@ -327,10 +332,11 @@ sub l00http_search_search {
             $line = $outputsorted[0];
             @cols = split('<`>', $line);
             print $sock "<tr>\n";
-            print $sock "    <td>File</td><td>Line</td>\n";
+            print $sock "    <td>File</td>\n";
             foreach $conte (@contents) {
                 print $sock "    <td>$conte</td>\n";
             }
+            print $sock "    <td>Line</td>\n";
             print $sock "</tr>\n";
             foreach $line (@outputsorted) {
                 @cols = split('<`>', $line);
