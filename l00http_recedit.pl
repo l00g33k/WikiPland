@@ -42,7 +42,7 @@ sub l00http_recedit_proc (\%) {
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> ";
     print $sock "<a href=\"/recedit.htm\">recedit</a><p>\n";
 
-    if (!defined ($form->{'submit'}) || (length($record1) == 0)) {
+    if (length($record1) == 0) {
         $record1 = '^\d{8,8} \d{6,6} ';
     }
 
