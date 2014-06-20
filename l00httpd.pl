@@ -50,7 +50,7 @@ my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
 $httpmax = 10240;
-my (@cmd_param_pairs, $timeout, $cnt);
+my (@cmd_param_pairs, $timeout, $cnt, $cfgedit);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 
@@ -63,7 +63,7 @@ $idpwmustbe = "p:p";  # change as you wish
 $debug = 1;         # 0=none, 1=minimal, 5=max
 $open = 0;
 $shutdown = 0;
-
+$cfgedit = '';
 
 undef $timeout;
 
@@ -180,6 +180,10 @@ $conf = "l00httpd.cfg";
 $tmp = $plpath; # first time, find in l00httpd script directory
 for ($cnt = 0; $cnt < 3; $cnt++) {
     if (open (IN, "<$tmp$conf")) {
+        if ($cfgedit eq '') {
+            $cfgedit = "Edit l00httpd.cfg at:<br>\n";
+        }
+        $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
         print "Reading $tmp$conf...\n";;
         while (<IN>) {
             if (/^#/) {
@@ -1159,6 +1163,10 @@ print "sock timeout 3s\n";
                     print $sock "<a name=\"wifi\"></a>\n";
                     # on server: display submit button
                     print $sock "</form>\n";
+
+                    if ($cfgedit ne '') {
+                        print $sock "$cfgedit\n";
+                    }
 
                     # dump all ctrl data
                     print $sock "<p>ctrl data:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
