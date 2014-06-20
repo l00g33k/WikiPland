@@ -47,8 +47,6 @@ sub l00http_periocalrem_perio {
         $days = $ctrl->{'calremdays'};
 	}
 
-    $ctrl->{'BANNER:periocalrem'} = '<center><font style="color:black;background-color:yellow">periocalrem</font></center>';
-    undef $ctrl->{'BANNER:periocalrem'};
 
 
     l00httpd::dbp($config{'desc'}, "CALREM $lastchkdate\n"), if ($ctrl->{'debug'} >= 5);
@@ -102,7 +100,7 @@ sub l00http_periocalrem_perio {
             if ($eventnear ne '') {
                 $eventnear = "* CLEAR_THIS_STOPS_ALL\n$eventnear";
 #               $eventnear .= "* makes wiki\n";
-                $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
+#               $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
 		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
 			    &l00httpd::l00fwriteClose($ctrl);
@@ -110,7 +108,8 @@ sub l00http_periocalrem_perio {
 		}
     }
     undef $ctrl->{'BANNER:periocalrem'};
-    if (&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
+    if ((!defined($ctrl->{'calremBannerDisabled'})) && 
+       &l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
         $eventnear = '';
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_\n"), if ($ctrl->{'debug'} >= 5);
