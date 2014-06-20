@@ -327,6 +327,7 @@ sub l00http_ls_proc {
                 # if not usual text file extension, make it raw
 #::heremark::
                 if (!($path =~ /\.txt$/i) &&
+                    !($path =~ /\.inc$/i) &&
                     !($path =~ /\.bak$/i) &&
                     !($path =~ /\.csv$/i) &&
                     !($path =~ /\.log$/i) &&
