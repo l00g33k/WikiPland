@@ -330,6 +330,7 @@ sub l00http_ls_proc {
                     !($path =~ /\.bak$/i) &&
                     !($path =~ /\.csv$/i) &&
                     !($path =~ /\.log$/i) &&
+                    !($path =~ /\.md$/i) &&
                     !($path =~ /\.pl$/i) &&
                     !($path =~ /\.pm$/i) &&
                     !($path =~ /\.h$/i) &&

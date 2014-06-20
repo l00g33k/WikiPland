@@ -414,6 +414,7 @@ if(1){
         $mdChanged2Tw = 0;
         # http://daringfireball.net/projects/markdown/basics
         # ====  or ---- style heading
+        # or .....
         if ($cacheidx < $#inputcache) {
             # checking up to the second last line in the source
             $tmp = $inputcache[$cacheidx + 1];
@@ -433,6 +434,13 @@ if(1){
                 }
                 if ($tmp eq "-" x length($_)) {
                     $_ = "## $_";
+                    $cacheidx++; # skip a line
+                    # occurance of this form of header say we are markdown
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
+                }
+                if ($tmp eq "." x length($_)) {
+                    $_ = "### $_";
                     $cacheidx++; # skip a line
                     # occurance of this form of header say we are markdown
                     $mode0unknown1twiki2markdown = 2;
