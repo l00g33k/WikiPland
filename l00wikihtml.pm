@@ -466,48 +466,57 @@ if(1){
         if ($mode0unknown1twiki2markdown == 2) {
             # if line start with word, then it must be 
             # normal paragraph. Don't put <br> at the end
-            $markdownparanobr = /^\w/;
-}
-# make ^    <pre> for all
-{
-            # code, 2 or more indents make <pre>code</pre>
-            $tmp = $_;
-            $tmp =~ s/&nbsp;/ /g;
-            if ($tmp =~ /^  /) {
-                # currnet line is indented
-                $tbuf = "$tmp\n";
-                $ahead = $cacheidx + 1;
-                # look forward
-                $loop = 1;
-                while ($loop) {
-                    $tmp = $inputcache[$ahead];
-                    if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
-                        $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
-                    }
-                    $tmp =~ s/&nbsp;/ /g;
-                    if ($tmp =~ /^  /) {
-                        $tbuf .= "$tmp\n";
-                        $ahead++;
-                        $mdChanged2Tw = 1;
-                    } else {
-                        $loop = 0;
-                    }
+            if (/^ *$/) {
+                # blank line in markdown is end of paragraph
+                $markdownparanobr = 1;
+            } else {
+                $markdownparanobr = /^\w/;
+            }
+        }
+        # make ^    <pre> for all
+        # code, 2 or more indents make <pre>code</pre>
+        $tmp = $_;
+        $tmp =~ s/&nbsp;/ /g;
+        if ($tmp =~ /^  /) {
+            # currnet line is indented
+            $tbuf = "$tmp\n";
+            $ahead = $cacheidx + 1;
+            # look forward
+            $loop = 1;
+            while ($loop) {
+                $tmp = $inputcache[$ahead];
+                if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                    $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
                 }
+                $tmp =~ s/&nbsp;/ /g;
+                if ($tmp =~ /^  /) {
+                    $tbuf .= "$tmp\n";
+                    $ahead++;
+                    $mdChanged2Tw = 1;
+                } else {
+                    $loop = 0;
+                }
+            }
 #                $tbuf =~ s/</&lt;/g;
 #                $tbuf =~ s/>/&gt;/g;
 #                $tbuf =~ s/&/&amp;/g;
-                $tbuf = "<pre>$tbuf</pre>";
-                # line $ahead isn't indented and wasn't included
-                #print "first     indented is line $cacheidx >$inputcache[$cacheidx]<\n";
-                #print "first not indented is line $ahead >$inputcache[$ahead]<\n";
-                #print "Proposed changes:\n$tbuf\n";
-                $cacheidx = $ahead - 1;
-                $oubuf .= $tbuf;
-                $_ = '';
-                next;
-            }
+            $tbuf = "<pre>$tbuf</pre>";
+            # line $ahead isn't indented and wasn't included
+            #print "first     indented is line $cacheidx >$inputcache[$cacheidx]<\n";
+            #print "first not indented is line $ahead >$inputcache[$ahead]<\n";
+            #print "Proposed changes:\n$tbuf\n";
+            $cacheidx = $ahead - 1;
+            $oubuf .= $tbuf;
+            $_ = '';
+            next;
         }
         if ($_ eq '') {
+            # If in markdown mode, blank line is end of paragraph
+            if ($mode0unknown1twiki2markdown == 2) {
+                if ($markdownparanobr) {
+                    $oubuf .=  "<p>\n";
+                }
+            }
             next;
         }
 
