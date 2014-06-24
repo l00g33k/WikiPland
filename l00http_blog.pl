@@ -102,13 +102,11 @@ sub l00http_blog_proc {
                 local $/ = undef;
                 $buforgpre = '';
                 if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-#                    $buforg = &l00httpd::l00freadAll($ctrl);
                     $lineno = 1;
                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
                         s/\r//g;
                         s/\n//g;
                         if (defined($form->{'afterline'})) {
-print "if ($lineno <= $form->{'afterline'}) \n";
                             if ($lineno <= $form->{'afterline'}) {
                                 $buforgpre .= "$_\n";
                             } else {
@@ -250,10 +248,10 @@ print "if ($lineno <= $form->{'afterline'}) \n";
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     if (defined($form->{'afterline'})) {
-        print $sock "<input type=\"hidden\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
+        print $sock "<input type=\"text\" size=\"4\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     if (defined ($form->{'blog'})) {
         print $sock "<input type=\"hidden\" name=\"blog\" value=\"$form->{'blog'}\">\n";
     }
