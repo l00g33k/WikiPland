@@ -23,7 +23,7 @@ sub l00http_blog_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $path, $buforg, $fname);
+    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname);
     my ($output, $keys, $key, $space);
 
     if (defined ($form->{'path'})) {
@@ -100,23 +100,34 @@ sub l00http_blog_proc {
                 $lastbuf = $buffer;
                 # don't backup when just appending
                 local $/ = undef;
-#               if (open (IN, "<$form->{'path'}")) {
-#                   # http://www.perlmonks.org/?node_id=1952
-#                   local $/ = undef;
-#                   $buforg = <IN>;
-#                   close (IN);
+                $buforgpre = '';
                 if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-                    $buforg = &l00httpd::l00freadAll($ctrl);
+#                    $buforg = &l00httpd::l00freadAll($ctrl);
+                    $lineno = 1;
+                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                        s/\r//g;
+                        s/\n//g;
+                        if (defined($form->{'afterline'})) {
+print "if ($lineno <= $form->{'afterline'}) \n";
+                            if ($lineno <= $form->{'afterline'}) {
+                                $buforgpre .= "$_\n";
+                            } else {
+                                $buforg .= "$_\n";
+                            }
+                        } else {
+                            $buforg .= "$_\n";
+                        }
+                        $lineno++;
+                    }
                 } else {
                     $buforg = '';
                     print $sock "Unable to read original '$form->{'path'}'<p>\n";
                 }
                 &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 9);
-#               &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-#               &l00httpd::l00fwriteBuf($ctrl, $outbuf);
-#               &l00httpd::l00fwriteClose($ctrl);
-#               if (open (OUT, ">$form->{'path'}")) {
                 if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path'})) {
+                    if ($buforgpre ne '') {
+                        &l00httpd::l00fwriteBuf($ctrl, $buforgpre);
+                    }
                     @alllines = split ("\n", $buffer);
                     $space = '';
                     foreach $line (@alllines) {
@@ -124,28 +135,22 @@ sub l00http_blog_proc {
                         $line =~ s/\n//g;
                         if (defined ($form->{'blog'})) {
                             if ($form->{'blog'} eq "on") {
-#                               print OUT "$line\n";
                                 &l00httpd::l00fwriteBuf($ctrl, "$line\n");
                             } else {
                                 # all on one line
-#                               print OUT "$line ";
                                 &l00httpd::l00fwriteBuf($ctrl, "$space$line");
                                 $space = ' ';
                             }
                         } else {
                             # all on one line
-#                           print OUT "$line ";
                             &l00httpd::l00fwriteBuf($ctrl, "$space$line");
                             $space = ' ';
                         }
                     }
                     if (!defined ($form->{'blog'}) || ($form->{'blog'} ne "on")) {
-#                       print OUT "\n";
                         &l00httpd::l00fwriteBuf($ctrl, "\n");
                     }
-#                   print OUT $buforg;
                     &l00httpd::l00fwriteBuf($ctrl, $buforg);
-#                   close (OUT);
                     &l00httpd::l00fwriteClose($ctrl);
                 } else {
                     print $sock "Unable to write '$form->{'path'}'<p>\n";
@@ -206,9 +211,7 @@ sub l00http_blog_proc {
             s/\n//g;
             # extract special keywords
             if (($key) = /^%BLOG:([^%]+)%/) {
-                if ($keys == 0) {
-#                   print $sock "<br>";
-                } else {
+                if ($keys != 0) {
                     print $sock " - ";
                 }
                 $key =~ s/ /+/g;
@@ -248,6 +251,9 @@ sub l00http_blog_proc {
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    if (defined($form->{'afterline'})) {
+        print $sock "<input type=\"hidden\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
+    }
     if (defined ($form->{'blog'})) {
         print $sock "<input type=\"hidden\" name=\"blog\" value=\"$form->{'blog'}\">\n";
     }

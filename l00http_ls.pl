@@ -293,7 +293,7 @@ sub l00http_ls_proc {
                         $buf .= $_;
 			        }
                 
-                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
+                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
                     if (defined ($form->{'hiliteln'})) {
                         foreach $_ (split ("\n", $buf)) {
                             if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
@@ -749,14 +749,14 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # render found results
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags);
+                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
                         }
                         
                         if ((defined ($form->{'find'})) &&
                             ($showpage ne 'checked')) {
                             # find without displaying page
                         } else {
-                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags);
+                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
                             if (defined ($form->{'hiliteln'})) {
                                 foreach $_ (split ("\n", $buf)) {
                                     if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
@@ -797,7 +797,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # rendering as raw text
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags);
+                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
                         }
 
                         $ln = 1;

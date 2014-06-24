@@ -109,7 +109,7 @@ sub wikihtml {
     #        8=open link in 'newwin'
     # $ctrl: system variables
     # $pname: current path for relateive wikiword links
-    my ($ctrl, $pname, $inbuf, $flags) = @_;
+    my ($ctrl, $pname, $inbuf, $flags, $fname) = @_;
     my ($oubuf, $bulvl, $tx, $lvn, $desc, $http, $toc, $toccol);
     my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els, $__lineno__);
     my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $tag, $bareclip);
@@ -121,6 +121,9 @@ sub wikihtml {
     undef @chlvls;
     undef $lastchlvl;
 
+    if (!defined($fname)) {
+        $fname = '(undef)';
+    }
     $bookmarkkeyfound = 0;
     if (($flags & 1) == 0) {
         # not specified for BOOKMARK
@@ -672,6 +675,7 @@ if(1){
                          " <a href=\"#$tag\">here</a>".
                          " <a href=\"#___top___\">top</a>" .
                          " <a href=\"#__toc__\">toc</a>" .
+                         " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">log</a>" .
                          sprintf("</h%d>",length($el[2])) .
                          $el[3];
                 }
