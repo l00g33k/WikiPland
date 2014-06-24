@@ -7,7 +7,7 @@ use warnings;
 my %config = (proc => "l00http_periocalrem_proc",
               desc => "l00http_periocalrem_desc",
               perio => "l00http_periocalrem_perio");
-my($lastchkdate);
+my($lastchkdate, %calremcolor);
 $lastchkdate = '';
 
 
@@ -39,7 +39,7 @@ sub l00http_periocalrem_proc {
 sub l00http_periocalrem_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($date, $len, $todo, $eventnear, $days);
-    my ($thisweek, $julian, $juliannow);
+    my ($thisweek, $julian, $juliannow, $color);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst, $nowstamp);
 
     $days = 2;
@@ -68,6 +68,7 @@ sub l00http_periocalrem_perio {
             $year -= 1900;
             ($thisweek, $juliannow) = &l00mktime::weekno ($year, $mon, $mday);
             $eventnear = '';
+            undef %calremcolor;
 		    while (<IN>) {
                 chop;
                 if (/^#/) {
@@ -89,8 +90,17 @@ sub l00http_periocalrem_perio {
                     ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
                     if (($julian - $juliannow >= -15)  &&
                         ($julian - $juliannow <= $days))  {
-                        l00httpd::dbp($config{'desc'}, "found $todo\n"), if ($ctrl->{'debug'} >= 5);
+                        l00httpd::dbp($config{'desc'}, "found >$todo<\n"), if ($ctrl->{'debug'} >= 5);
                         $eventnear .= "$todo\n";
+                        if ($julian - $juliannow < 0) {
+                            $calremcolor{$todo} = 'red';
+                        } elsif ($julian - $juliannow < 1) {
+                            $calremcolor{$todo} = 'yellow';
+                        } elsif ($julian - $juliannow < 2) {
+                            $calremcolor{$todo} = 'lime';
+                        } elsif ($julian - $juliannow < 3) {
+                            $calremcolor{$todo} = 'aqua';
+                        }
                         #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
                     }
 		    	}
@@ -99,8 +109,7 @@ sub l00http_periocalrem_perio {
 
             if ($eventnear ne '') {
                 $eventnear = "* CLEAR_THIS_STOPS_ALL\n$eventnear";
-#               $eventnear .= "* makes wiki\n";
-#               $ctrl->{'BANNER:periocalrem'} = "<center><font style=\"color:black;background-color:yellow\">cal: $eventnear</font></center>";
+                $eventnear .= "* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&lenwk=18&today=on|View calendar]]\n";
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
 		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
 			    &l00httpd::l00fwriteClose($ctrl);
@@ -124,11 +133,16 @@ sub l00http_periocalrem_perio {
 				    # skip special key
 				    next;
 				}
-                l00httpd::dbp($config{'desc'}, "CALREM calrem event: $_\n"), if ($ctrl->{'debug'} >= 3);
+                l00httpd::dbp($config{'desc'}, "CALREM calrem event: >$_<\n"), if ($ctrl->{'debug'} >= 3);
+                if (defined($calremcolor{$_})) {
+                    $color = $calremcolor{$_};
+                } else {
+                    $color = 'olive';
+                }
                 if ($eventnear eq '') {
-                    $eventnear = "<font style=\"color:black;background-color:yellow\">$_</font>";
+                    $eventnear = "<font style=\"color:black;background-color:$color\">$_</font>";
 				} else {
-                    $eventnear .= " - <font style=\"color:black;background-color:yellow\">$_</font>";
+                    $eventnear .= " - <font style=\"color:black;background-color:$color\">$_</font>";
 				}
             }
             if ($eventnear ne '') {
