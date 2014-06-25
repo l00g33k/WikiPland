@@ -240,7 +240,7 @@ sub l00http_ls_proc {
                         }
                         print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
                         print $sock "<a href=\"#end\">end</a>\n";
-                        print $sock "<a href=\"#__toc__\">toc</a>\n";
+                        print $sock "<a href=\"#__toc__\">TOC</a>\n";
                         if (defined ($form->{'bkvish'})) {
                             print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
                         } else {
@@ -448,7 +448,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                     }
                     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
                     print $sock "<a href=\"#end\">end</a>\n";
-                    print $sock "<a href=\"#__toc__\">toc</a>\n";
+                    print $sock "<a href=\"#__toc__\">TOC</a>\n";
                     if (defined ($form->{'bkvish'})) {
                         print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
                     } else {
