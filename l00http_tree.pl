@@ -134,8 +134,8 @@ sub l00http_tree_proc {
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
 $form->{'filter'} = 'not implemented';
-    print $sock "Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
-    print $sock "<input type=\"checkbox\" name=\"crc32\">computer CRC32 (pure Perl CRC32 is very slow)\n";
+    print $sock "<br>Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
+    print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
     print $sock "</form>\n";
 
     print $sock "<a name=\"__end__\"></a>\n";
