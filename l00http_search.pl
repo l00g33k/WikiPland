@@ -100,7 +100,7 @@ sub l00http_search_search {
     my ($ctrl, $form, $mypath) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $hitcnt = 0;
     my $filecnt = 0;
-    my ($anchor, $tmp);
+    my ($tmp);
     my (@output, @outputsorted, $line, @cols, $item, @conditions, @contents, $anchorline, @allhits);
     my ($condi, $conte, %rowOutput, %conditionsFound, $conditionsFoundCnt, $lineout, $clean);
 
@@ -162,7 +162,6 @@ sub l00http_search_search {
                             if (open (IN, "<$fullname")) {
                                 my $hit = 0;
                                 $lineno = 0;
-                                $anchor = '';
                                 # searching target file
                                 undef %conditionsFound;
                                 undef %rowOutput;
@@ -191,8 +190,8 @@ sub l00http_search_search {
                                             if ($linemode) {
                                                 $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file</a>";
                                             } else {
-                                                l00httpd::dbp($config{'desc'}, "1: $fullname#$anchor\n"), if ($ctrl->{'debug'} >= 3);
-                                                $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
+                                                l00httpd::dbp($config{'desc'}, "1: $fullname#line$anchorline\n"), if ($ctrl->{'debug'} >= 3);
+                                                $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&lineno=on&path=$fullname#line$anchorline\">$file</a>";
                                             }
                                             foreach $conte (@contents) {
                                                 $lineout = $rowOutput{$conte};
@@ -219,11 +218,7 @@ sub l00http_search_search {
                                     }
 
                                     if ($clean =~ /($linemark)/i) {
-                                        # save anchor
-                                        $anchor = $1;
-                                        l00httpd::dbp($config{'desc'}, "1: $anchor\n"), if ($ctrl->{'debug'} >= 3);
-                                        $anchor =~ s/[^0-9A-Za-z]/_/g;
-                                        l00httpd::dbp($config{'desc'}, "2: $anchor\n"), if ($ctrl->{'debug'} >= 3);
+                                        # save anchor line number
                                         $anchorline = $lineno;
                                     }
                                     # search for conditions
@@ -273,8 +268,8 @@ sub l00http_search_search {
                                     $hitcnt++;
                                     $hit++;
                                     # construct output
-                                    l00httpd::dbp($config{'desc'}, "2: $fullname#$anchor\n"), if ($ctrl->{'debug'} >= 3);
-                                    $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file</a>";
+                                    l00httpd::dbp($config{'desc'}, "1: $fullname#line$anchorline\n"), if ($ctrl->{'debug'} >= 3);
+                                    $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&lineno=on&path=$fullname#line$anchorline\">$file</a>";
                                     foreach $conte (@contents) {
                                         $lineout = $rowOutput{$conte};
                                         if (defined($lineout)) {
