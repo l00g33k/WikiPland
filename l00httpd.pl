@@ -826,7 +826,7 @@ print "sock timeout 3s\n";
                 $ctrl{'sock'} = $sock;
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
-                $ctrl{'home'} = "<a href=\"/httpd.htm\">Home</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
+                $ctrl{'home'} = "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
 #               if (defined($ctrl{'reminder'})) {
 #                   # put reminder.pl message on title banner too
 #                   $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center>$ctrl{'home'}";
@@ -1016,7 +1016,7 @@ print "sock timeout 3s\n";
                     # on server: display submit button
                     print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
                 }
-                print $sock "<a href=\"/httpd.htm\">Home</a> <a href=\"$ctrl{'quick'}\">Quick</a> \n";
+                print $sock "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"$ctrl{'quick'}\">HOME</a> \n";
                 print $sock "<a href=\"/ls.htm/QuickStart.htm?path=$plpath"."docs_demo/QuickStart.txt\">QuickStart</a>\n";
                 print $sock "<a href=\"#end\">end</a> \n";
                 if ($ctrl{'os'} eq 'and') {
