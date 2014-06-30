@@ -7,7 +7,7 @@ use warnings;
 my %config = (proc => "l00http_periocalrem_proc",
               desc => "l00http_periocalrem_desc",
               perio => "l00http_periocalrem_perio");
-my($lastchkdate, %calremcolor);
+my($lastchkdate, %calremcolor, %calremfont);
 $lastchkdate = '';
 
 
@@ -39,7 +39,7 @@ sub l00http_periocalrem_proc {
 sub l00http_periocalrem_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($date, $len, $todo, $eventnear, $days);
-    my ($thisweek, $julian, $juliannow, $color);
+    my ($thisweek, $julian, $juliannow, $color, $font);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst, $nowstamp);
 
     $days = 2;
@@ -69,6 +69,7 @@ sub l00http_periocalrem_perio {
             ($thisweek, $juliannow) = &l00mktime::weekno ($year, $mon, $mday);
             $eventnear = '';
             undef %calremcolor;
+            undef %calremfont;
 		    while (<IN>) {
                 chop;
                 if (/^#/) {
@@ -94,12 +95,16 @@ sub l00http_periocalrem_perio {
                         $eventnear .= "$todo\n";
                         if ($julian - $juliannow < 0) {
                             $calremcolor{$todo} = 'red';
+                            $calremfont{$todo} = 'yellow';
                         } elsif ($julian - $juliannow < 1) {
                             $calremcolor{$todo} = 'yellow';
+                            $calremfont{$todo} = 'black';
                         } elsif ($julian - $juliannow < 2) {
                             $calremcolor{$todo} = 'lime';
+                            $calremfont{$todo} = 'black';
                         } elsif ($julian - $juliannow < 3) {
                             $calremcolor{$todo} = 'aqua';
+                            $calremfont{$todo} = 'black';
                         }
                         #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
                     }
@@ -136,13 +141,15 @@ sub l00http_periocalrem_perio {
                 l00httpd::dbp($config{'desc'}, "CALREM calrem event: >$_<\n"), if ($ctrl->{'debug'} >= 3);
                 if (defined($calremcolor{$_})) {
                     $color = $calremcolor{$_};
+                    $font = $calremfont{$_};
                 } else {
                     $color = 'olive';
+                    $font = 'black';
                 }
                 if ($eventnear eq '') {
-                    $eventnear = "<font style=\"color:black;background-color:$color\">$_</font>";
+                    $eventnear = "<font style=\"color:$font;background-color:$color\">$_</font>";
 				} else {
-                    $eventnear .= " - <font style=\"color:black;background-color:$color\">$_</font>";
+                    $eventnear .= " - <font style=\"color:$font;background-color:$color\">$_</font>";
 				}
             }
             if ($eventnear ne '') {

@@ -238,7 +238,7 @@ sub l00http_ls_proc {
                             }
                             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
                         }
-                        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
+                        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
                         print $sock "<a href=\"#end\">end</a>\n";
                         print $sock "<a href=\"#__toc__\">TOC</a>\n";
                         if (defined ($form->{'bkvish'})) {
@@ -446,7 +446,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
                     }
-                    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> \n";
+                    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
                     print $sock "<a href=\"#end\">end</a>\n";
                     print $sock "<a href=\"#__toc__\">TOC</a>\n";
                     if (defined ($form->{'bkvish'})) {
@@ -838,7 +838,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path\n";
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
         print $sock "<a href=\"/dirnotes.htm?path=$path"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
