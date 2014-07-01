@@ -21,7 +21,7 @@ sub l00http_mime_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $header, $httphdr, $ttlbytes, $size);
+    my ($path, $fname, $header, $httphdr, $ttlbytes);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -40,23 +40,30 @@ sub l00http_mime_proc {
     $header = &l00httpd::urlencode ($form->{'header'});
 
     if (defined ($form->{'get'})) {
-$size = 0;
-        $httphdr = "$form->{'header'}\r\n";
-        $httphdr .= "Content-Length: $size\r\n";
-        $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-        print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-        binmode ($sock);
-        $ttlbytes = 0;
-        # send file in block of 0x10000 bytes
-#        do {
-#            $len = read (FILE, $buf, 0x10000);
-#            if ($len > 0) {
-#                $ttlbytes += $len;
-#            }
-#            syswrite ($sock, $buf, $len);
-#            select (undef, undef, undef, 0.001);    # 1 ms delay. Without it Android looses data
-#        } until ($len < 0x10000);
-        $sock->close;
+                my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+                 $size, $atime, $mtime, $ctime, $blksize, $blocks, $buf, $len);
+                ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+                 $size, $atime, $mtime, $ctime, $blksize, $blocks)
+                 = stat($path);
+        if (open (FILE, "<$path")) {
+            $httphdr = "$form->{'header'}\r\n";
+            $httphdr .= "Content-Length: $size\r\n";
+            $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+            print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+            binmode (FILE);
+            binmode ($sock);
+            $ttlbytes = 0;
+            # send file in block of 0x10000 bytes
+            do {
+                $len = read (FILE, $buf, 0x10000);
+                if ($len > 0) {
+                    $ttlbytes += $len;
+                }
+                syswrite ($sock, $buf, $len);
+                select (undef, undef, undef, 0.001);    # 1 ms delay. Without it Android looses data
+            } until ($len < 0x10000);
+            $sock->close;
+        }
     } else {
         # Send HTTP and HTML headers
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>MIME $fname</title>" .$ctrl->{'htmlhead2'};
