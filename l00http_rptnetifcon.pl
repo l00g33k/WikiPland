@@ -60,6 +60,11 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$fname</a>\n";
     }
     print $sock "<a href=\"/perionetifcon.htm\">perionetifcon</a><br>\n";
+    print $sock "<a href=\"#sum\">summary</a>,\n";
+    print $sock "<a href=\"#graphs\">graphs</a>,\n";
+    print $sock "<a href=\"#local\">local ip</a>,\n";
+    print $sock "<a href=\"#remote\">remote ip</a>,\n";
+    print $sock "<a href=\"#socket\">socket pairs</a><br>\n";
 
 
     # get submitted name and print greeting
