@@ -107,7 +107,7 @@ sub l00http_wget_proc (\%) {
             print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a> - ";
             print $sock "<a href=\"/view.htm?path=l00%3A%2F%2Fwget.hdr\">l00://wget.hdr</a><br>\n";
             print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a><br>\n";
-            print $sock "If you don't see 'Header length' and 'Body length', host may be off-line.<br>\n";
+            print $sock "If you don't see 'Header length' and 'Body length' below, the host may be off-line.<br>\n";
 
             if (($name ne '') || ($pw ne '')) {
                 ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
