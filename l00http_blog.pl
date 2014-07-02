@@ -23,15 +23,16 @@ sub l00http_blog_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname);
+    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
     my ($output, $keys, $key, $space);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
-        ($fname) = $path =~ /[\\\/]([^\\\/]+)$/;
+        ($pname, $fname) = $path =~ /^(.+[\\\/])([^\\\/]+)$/;
     } else {
         $path = '(none)';
         $fname = '(none)';
+        $pname = '(none)';
     }
 
     # Send HTTP and HTML headers
@@ -39,7 +40,9 @@ sub l00http_blog_proc {
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> %BLOG:key%:<br>\n";
+        print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> ";
+        print $sock "%BLOG:key%:<br>\n";
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
     }
