@@ -32,7 +32,7 @@ sub l00http_battery_proc (\%) {
 
 	# Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>battery</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 
     print $sock "<form action=\"/battery.htm\" method=\"get\">\n";

@@ -84,7 +84,7 @@ print "clear doplpath = $doplpath\n"
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname - do</title>\n" . $refreshtag . $ctrl->{'htmlhead2'};
         if ($refresh eq '') {
             print $sock "<a name=\"top\"></a>\n";
-            print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+            print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
             print $sock "<a href=\"#end\">Jump to end</a>\n";
             print $sock "<a href=\"/edit.htm?path=$doplpathnow\">Ed</a>\n";
             print $sock "<a href=\"/view.htm?path=$doplpathnow\">Vw</a>\n";

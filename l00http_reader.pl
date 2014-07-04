@@ -29,7 +29,7 @@ sub l00http_reader_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>reader</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
 
 
     if (defined ($form->{'readln'})) {

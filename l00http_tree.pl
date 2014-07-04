@@ -56,7 +56,7 @@ sub l00http_tree_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     if ((defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
         $_ = $form->{'path'};

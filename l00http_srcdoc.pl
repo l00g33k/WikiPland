@@ -52,7 +52,7 @@ if (defined ($form->{'navigate'})) {
 } else {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 	print $sock "<a href=\"#__toc__\">toc</a>\n";
     # process now because we need to print Path: ...

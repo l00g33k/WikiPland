@@ -68,7 +68,7 @@ sub l00http_cal_proc {
     ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} - <a href=\"$ctrl->{'quick'}\">Quick</a> - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+    print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
 
     # handling moving lnno to moveto
     if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {

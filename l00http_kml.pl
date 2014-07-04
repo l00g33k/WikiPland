@@ -68,7 +68,7 @@ sub l00http_kml_proc {
 
     # create HTTP and HTML headers
     $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
-    $httphdr .= "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    $httphdr .= "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     if (defined ($form->{'path'})) {
         $httphdr .= "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
     }

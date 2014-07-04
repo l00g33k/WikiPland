@@ -43,7 +43,7 @@ sub l00http_filecrypt_proc (\%) {
 
     # Send HTTP and HTML headers
     $hout .= $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
-    $hout .= "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    $hout .= "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     if (defined ($form->{'path'})) {
         $hout .= "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 

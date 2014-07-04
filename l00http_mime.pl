@@ -68,7 +68,7 @@ sub l00http_mime_proc {
         # Send HTTP and HTML headers
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>MIME $fname</title>" .$ctrl->{'htmlhead2'};
         print $sock "<a name=\"__top__\"></a>";
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
         print $sock "Path: <a href=\"/ls.htm?path=$path\">$path</a><br>\n";
 
         print $sock "<p><a href=\"/mime.pl/$fname$form->{'ext'}?path=$path&get=on&header=$header&ext=$form->{'ext'}\">$path$form->{'ext'}</a><br>\n";

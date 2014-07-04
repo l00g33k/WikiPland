@@ -64,7 +64,7 @@ sub l00http_svg_proc {
         print $sock "<input type=\"hidden\" name=\"view\">\n";
         print $sock "</form>\n";
 
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
         print $sock "Click graph above.\n";
         if (defined ($form->{'x'})) {
             print $sock "You clicked: ($form->{'x'},$form->{'y'})<br>\n";
@@ -113,7 +113,7 @@ sub l00http_svg_proc {
 
         # Send HTTP and HTML headers
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
 
         print $sock "<a href=\"/svg.htm?graph=demo&view=\">Viewer demo</a><br>\n";
         print $sock "SVG plotting demo:<p>\n";

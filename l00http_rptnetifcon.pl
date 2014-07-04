@@ -48,7 +48,7 @@ sub l00http_rptnetifcon_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname rptnetifcon</title>" .$ctrl->{'htmlhead2'};
-    print $sock "<a name=\"top\"></a>$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
+    print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
         $tmp = $path;
         if ($ctrl->{'os'} eq 'win') {

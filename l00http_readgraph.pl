@@ -62,7 +62,7 @@ sub l00http_readgraph_proc {
     print $sock "<input type=\"hidden\" name=\"view\">\n";
     print $sock "</form>\n";
 
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "Click graph above.\n";
     if (defined ($form->{'x'})) {
         print $sock "You clicked: ($form->{'x'},$form->{'y'})<br>\n";

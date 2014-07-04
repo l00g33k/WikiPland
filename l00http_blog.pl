@@ -38,7 +38,7 @@ sub l00http_blog_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blog</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
         print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> ";

@@ -39,7 +39,7 @@ sub l00http_kml2gmap_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>kml2gmap</title>\n" . $refreshtag . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
 
     if ((!($mypath =~ m|/|)) && (!($mypath =~ m|\\|))) {
         # try default path

@@ -34,7 +34,7 @@ sub l00http_eval_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>eval</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "<a href=\"#end\">Jump to end</a><br>\n";
 
     if (defined ($form->{'eval'})) {

@@ -354,7 +354,7 @@ sub l00http_find_proc {
             }
 
             print $sock "<a name=\"__top__\"></a>\n";
-            print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+            print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$thispath\">Path</a>: <a href=\"/ls.htm/ls.htm?path=$thispath\">$thispath</a> \n";
             print $sock "<a href=\"#end\">Jump to end</a>\n";
             print $sock "<a href=\"#find\">Find</a><hr>\n";

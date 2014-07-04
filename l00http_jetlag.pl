@@ -71,8 +71,8 @@ sub l00http_jetleg_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>jetlag</title>" . $ctrl->{'htmlhead2'};
-#   print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+#   print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
 
     if (defined ($form->{'charPerDay'})) {
         $charPerDay = $form->{'charPerDay'};

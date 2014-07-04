@@ -35,7 +35,7 @@ sub l00http_playcopy_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>playcopy</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><p>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<p>\n";
 
     if ($ctrl->{'os'} eq 'and') {
         if (defined ($form->{'midvol'})) {

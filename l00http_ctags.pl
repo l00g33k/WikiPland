@@ -76,7 +76,7 @@ sub l00http_ctags_proc {
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>ctags viewer</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a href=\"#__end__\">Jump to end</a><hr>\n";
 
 

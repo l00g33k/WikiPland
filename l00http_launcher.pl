@@ -27,7 +27,7 @@ sub l00http_launcher_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     if (defined ($form->{'path'})) {
 #       print $sock " Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}\">Path</a>:";

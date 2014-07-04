@@ -319,7 +319,7 @@ sub l00http_gpsmap_proc (\%) {
 
 
     print $sock "<p>$ctrl->{'home'} \n";
-    print $sock "<a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "$ctrl->{'HOME'} \n";
     print $sock "<a href=\"/ls.htm?path=$map\">$map</a>\n";
     print $sock "<a name=\"ctrl\"></a><p>\n";
 

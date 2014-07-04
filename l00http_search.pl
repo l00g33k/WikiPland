@@ -469,7 +469,7 @@ sub l00http_search_proc {
         # yes, it is a directory, read files in the directory
         
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
         print $sock "Path: <a href=\"/ls.htm?path=$path\">$path</a> \n";
         print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
 

@@ -30,7 +30,7 @@ sub l00http_hexview_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
     
     if (defined ($form->{'offset'})) {

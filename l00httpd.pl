@@ -288,6 +288,22 @@ if ($ctrl{'quick'} =~ m|^/ls\.htm|) {
         }
     }
 }
+if (!defined ($ctrl{'HOME'})) {
+    # sets default if not defined in l00httpd.txt
+    # make it available to modules
+    $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
+}
+# check if target exist
+if ($ctrl{'HOME'} =~ m|^/ls\.htm|) {
+    # points to ls.pl
+    if (($_) = $ctrl{'HOME'} =~ m|path=(.+)&*|) {
+        print "HOME target: $_\n";
+        if (!-f $_) {
+            print "target does not exist >$_<\n";
+            $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
+        }
+    }
+}
 
 
 sub loadmods {
@@ -1016,7 +1032,7 @@ print "sock timeout 3s\n";
                     # on server: display submit button
                     print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
                 }
-                print $sock "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"$ctrl{'quick'}\">HOME</a> \n";
+                print $sock "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"$ctrl{'quick'}\">HOME</a> $ctrl{'HOME'}\n";
                 print $sock "<a href=\"/ls.htm/QuickStart.htm?path=$plpath"."docs_demo/QuickStart.txt\">QuickStart</a>\n";
                 print $sock "<a href=\"#end\">end</a> \n";
                 if ($ctrl{'os'} eq 'and') {

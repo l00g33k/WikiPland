@@ -25,7 +25,7 @@ sub l00http_screen_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>screen</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><p>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<p>\n";
 
     if ($ctrl->{'os'} eq 'and') {
         l00httpd::dbp($config{'desc'}, "FORM:\n" . &l00httpd::dumphashbuf ("form", $form) . "\n");

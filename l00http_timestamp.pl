@@ -23,7 +23,7 @@ sub l00http_timestamp_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>timestamp</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
 
     $timestamp = "$ctrl->{'now_string'} ";
     if ($ctrl->{'os'} eq 'and') {
