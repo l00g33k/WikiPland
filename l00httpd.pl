@@ -1032,7 +1032,7 @@ print "sock timeout 3s\n";
                     # on server: display submit button
                     print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
                 }
-                print $sock "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"$ctrl{'quick'}\">HOME</a> $ctrl{'HOME'}\n";
+                print $sock "<a href=\"/httpd.htm\">Ctrl</a> $ctrl{'HOME'}\n";
                 print $sock "<a href=\"/ls.htm/QuickStart.htm?path=$plpath"."docs_demo/QuickStart.txt\">QuickStart</a>\n";
                 print $sock "<a href=\"#end\">end</a> \n";
                 if ($ctrl{'os'} eq 'and') {
