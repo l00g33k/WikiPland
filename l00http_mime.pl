@@ -32,10 +32,10 @@ sub l00http_mime_proc {
     }
 
     if (!defined($form->{'ext'})) {
-        $form->{'ext'} = '.dat';
+        $form->{'ext'} = '.png';
     }
     if (!defined($form->{'header'})) {
-        $form->{'header'} = "Content-Type: application/octet-octet-stream\r\n";
+        $form->{'header'} = "Content-Type: image/png\r\n";
     }
     $header = &l00httpd::urlencode ($form->{'header'});
 
