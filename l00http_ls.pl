@@ -982,7 +982,6 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
     # 4) If not in raw mode, also display a control table
 
     if (($htmlend) && (!defined ($form->{'bare'}))) {
-        print $sock "<hr><a name=\"end\"></a>\n";
         if ($ctrl->{'ishost'}) {
             if ($ctrl->{'noclinav'}) {
                 print $sock "Client access mode: limited: $ctrl->{'clipath'} <br>\n";
@@ -1153,6 +1152,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
             print $sock "</tr></table>\n";
         }
 
+        print $sock "<hr><a name=\"end\"></a>\n";
         if (!defined ($file)) {
             $dir = $path;
             $dir =~ s/\/[^\/]+$/\//;
