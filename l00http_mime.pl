@@ -74,10 +74,27 @@ sub l00http_mime_proc {
         print $sock "<p><a href=\"/mime.pl/$fname$form->{'ext'}?path=$path&get=on&header=$header&ext=$form->{'ext'}\">$path$form->{'ext'}</a><br>\n";
 
         print $sock "<form action=\"/mime.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"submit\" value=\"Generate link\">\n";
+        print $sock "</td><td>\n";
         print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$path\"><br>\n";
-        print $sock "Header: <input type=\"text\" size=\"16\" name=\"header\" value=\"$form->{'header'}\"><br>\n";
-        print $sock "Extension: <input type=\"text\" size=\"6\" name=\"ext\" value=\"$form->{'ext'}\">\n";
+        print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "Header\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" size=\"16\" name=\"header\" value=\"$form->{'header'}\">\n";
+        print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "Extension\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" size=\"6\" name=\"ext\" value=\"$form->{'ext'}\">\n";
+        print $sock "</td></tr>\n";
+
+        print $sock "</table>\n";
         print $sock "</form>\n";
 
         print $sock "<hr><a name=\"end\"></a>";
