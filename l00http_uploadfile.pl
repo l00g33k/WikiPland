@@ -33,10 +33,8 @@ sub l00http_uploadfile_proc {
 
     if (defined($form->{'path'})) {
         $path = $form->{'path'};
-print "path $path\n";
         # drop any path
         $path =~ s/([\/\\])[^\/\\]+$/$1/;
-print "path $path\n";
     } else {
         if ($ctrl->{'os'} eq 'and') {
             $path = '/sdcard/tmp/';
