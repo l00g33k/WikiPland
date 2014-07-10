@@ -41,7 +41,11 @@ sub l00http_view_proc {
     $form->{'path'} =~ s/\r//g;
     $form->{'path'} =~ s/\n//g;
     if (defined ($form->{'path'})) {
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}\">Path</a>: ";
+        $tmp = $form->{'path'};
+        if ($ctrl->{'os'} eq 'win') {
+            $tmp =~ s/\//\\/g;
+        }
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: ";
         if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
             # not ending in / or \, not a dir
             print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";

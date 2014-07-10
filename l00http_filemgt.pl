@@ -260,10 +260,10 @@ sub l00http_filemgt_proc {
     print $sock "<input type=\"submit\" name=\"copytree\" value=\"Copy Tree\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "fr: <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<a href=\"/tree.htm?path=$form->{'path'}\">fr:</a> <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "to: <input type=\"text\" size=\"16\" name=\"treeto\" value=\"$treeto\">\n";
+    print $sock "<a href=\"/tree.htm?path=$treeto\">to:</a> <input type=\"text\" size=\"16\" name=\"treeto\" value=\"$treeto\">\n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
