@@ -48,6 +48,8 @@ sub l00http_uploadfile_proc {
     }
     $form->{'path'} = $path;
 
+    print $sock "<a href=\"/uploadfile.htm\">uploadfile.htm</a><p>\n";
+
     if (defined($form->{'payload'})) {
         ##&l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         #&l00httpd::l00fwriteOpen($ctrl, 'c:\x\z.txt');
@@ -68,10 +70,11 @@ sub l00http_uploadfile_proc {
         print DBG2 $form->{'payload'};
         close(DBG2);
         print $sock "<p>Saved '$fname' to '$path'<br>\n";
-        print $sock sprintf("Size = %d bytes<br>CRC32 = 0x%08x<p>\n", length($form->{'payload'}), $_);
+        print $sock sprintf("Size = %d bytes<br>CRC32 = 0x%08x<br>\n", length($form->{'payload'}), $_);
+        print $sock "<a href =\"/ls.htm?path=$path\">$fname</a>\n";
+        print $sock "<a href =\"/view.htm?path=$path\">view</a>\n";
+        print $sock "<a href =\"/launcher.htm?path=$path\">launcher</a><p>\n";
     }
-
-    print $sock "<a href=\"/uploadfile.htm\">uploadfile.htm</a><p>\n";
 
     print $sock "<form action=\"/uploadfile.htm\" method=\"post\" enctype=\"multipart/form-data\">\n";
 
