@@ -1,0 +1,17 @@
+%TOC%
+* Sample template. [[/edit.htm?path=$&clip=%__LINE__+1%_12|clipboard next 12 lines]]
+%TXTDOPL%
+sub txtdopl {
+    my ($sock, $ctrl, $lnno, $last, $this, $next) = @_; #$ctrl is a hash, see l00httpd.pl for content definition
+
+    if (defined($this)) {
+        print $sock "$this\n";
+    }
+
+    if (!defined($this)) {
+        $this = '';
+    }
+    $this;
+}
+1;
+%TXTDOPL%
