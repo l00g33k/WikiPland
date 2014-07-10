@@ -93,7 +93,7 @@ sub crc32 {
     my $data;
 
     for my $byte( unpack 'C*', $message ) {
-        $data = reflect( $byte, 8 ) ^ ( $remainder >> ( 24 ) );
+        $data = (reflect( $byte, 8 ) ^ ( $remainder >> ( 24 ) )) & 0xff;
         $remainder = crcTable->[ $data ] ^ ( $remainder << 8 );
     }
     return reflect( $remainder, 32 ) ^ 0xFFFFFFFF;
