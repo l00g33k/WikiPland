@@ -49,8 +49,8 @@ my ($urlparams, $val, $wday, $yday, $year, $subname);
 my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
-$httpmax = 10240;
-my (@cmd_param_pairs, $timeout, $cnt, $cfgedit);
+$httpmax = 1024 * 1024 * 10 + 4096;
+my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 
@@ -575,27 +575,20 @@ while(1) {
 
             # 3) Parse client HTTP submission and identify module plugin name
 
-# Does IE9 use keep-alive so sysread never return?
 #if (1) {
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
-#            select ($rout = $rin, undef, $eout = $rin, 1);
             select ($rout = $rin, undef, $eout = $rin, 2); # public network needs 3 sec?
             if (vec($eout,fileno($sock),1) == 1) {
-print "sock error\n";
-#                $sock->close;
+                print "sock error\n";
                 next;
             } elsif (vec($rout,fileno($sock),1) == 1) {
                 $httpsiz = sysread ($sock, $httpbuf, $httpmax);
-#print "read $httpsiz\n";
             } else {
-print "sock timeout 3s\n";
+                print "sock timeout 3s\n";
                 $sock->close;
                 next;
             }
-#} else {
-#           $httpsiz = sysread ($sock, $httpbuf, $httpmax);
-#}
             print "httpsiz $httpsiz\n", if ($debug >= 4);
             &dlog  ("client $client_ip ");
             $postlen = -1;
@@ -657,6 +650,7 @@ print "sock timeout 3s\n";
 
             # read in browser submission
             $httphdr =~ s/\r//g;
+            $postboundary = '';
             foreach $_ (split ("\n", $httphdr)) {
                 if (/^\x0D\x0A$/) {
                     # end of submission
@@ -671,6 +665,9 @@ print "sock timeout 3s\n";
                 } elsif (/POST (\/[^ ]*) HTTP/) {
                     # extract the URL after the domain
                     $urlparams = $1;
+                } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
+                    $postboundary = $1;
+                    l00httpd::dbp("l00httpd", "Content-Type: multipart/form-data; boundary=$postboundary\n");
                 }
             }
 
@@ -747,22 +744,53 @@ print "sock timeout 3s\n";
 
             # prepare to extract form data
             undef %FORM;
-            $urlparams =~ s/\r//g;
-            $urlparams =~ s/\n//g;
-            @cmd_param_pairs = split ('&', $urlparams);
-            foreach $cmd_param_pair (@cmd_param_pairs) {
-                ($name, $param) = split ('=', $cmd_param_pair);
-                if (defined ($name) && defined ($param)) {
-                    $param =~ tr/+/ /;
-                    $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
-                    $FORM{$name} = $param;
-                    if ($debug >= 3) {
-                        $tmp = substr ($FORM{$name}, 0, 160);
-                        print "FORMDATA $name=$tmp\n";
+            if ($postboundary ne '') {
+                # We saw Content-Type: multipart/form-data; boundary=---------------------------7de3003160be2
+                # because we specified enctype="multipart/form-data"
+                @cmd_param_pairs = split ("--$postboundary", $urlparams);
+                foreach $_ (@cmd_param_pairs) {
+                    # look for \r\n\r\n marking start of data
+                    $tmp = index ($_, "\x0D\x0A\x0D\x0A");
+                    if ($tmp >= 0) {
+                        $tmp += 4;
+                        # add 4 for \r\n\r\n
+                        # extract data
+                        $tmp = substr ($_, $tmp, length($_) - $tmp - 2);
+                        # - 2 to remove \r\n
+                    } else {
+                        $tmp = '';
                     }
-                    # convert \ to /
-                    if ($name eq 'path') {
-                        $FORM{$name} =~ tr/\\/\//;
+                    #Content-Disposition: form-data; name="myfile"; filename="C:\x\strings.xml"
+                    # 'myfile' must match l00http_uploadfile.pl
+                    #     print $sock "<input id=\"myfile\" name=\"myfile\" type=\"file\">\n";
+                    if (/Content-Disposition: form-data; name="myfile"; filename="([^"]+)"/i) {
+                        $FORM{'filename'} = $1;
+                        $FORM{'payload'} = $tmp;
+                        l00httpd::dbp("l00httpd", "FORM{'filename'}=>$FORM{'filename'}<\n");
+                        #print "FORM{'payload'}=>$FORM{'payload'}<\n";
+                    } elsif (/Content-Disposition: form-data; name="([^"]+)"/i) {
+                        $FORM{$1} = $1;
+                        l00httpd::dbp("l00httpd", "FORM{'$1'}=>$FORM{$1}<\n");
+                    }
+                }
+            } else {
+                $urlparams =~ s/\r//g;
+                $urlparams =~ s/\n//g;
+                @cmd_param_pairs = split ('&', $urlparams);
+                foreach $cmd_param_pair (@cmd_param_pairs) {
+                    ($name, $param) = split ('=', $cmd_param_pair);
+                    if (defined ($name) && defined ($param)) {
+                        $param =~ tr/+/ /;
+                        $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
+                        $FORM{$name} = $param;
+                        if ($debug >= 3) {
+                            $tmp = substr ($FORM{$name}, 0, 160);
+                            print "FORMDATA $name=$tmp\n";
+                        }
+                        # convert \ to /
+                        if ($name eq 'path') {
+                            $FORM{$name} =~ tr/\\/\//;
+                        }
                     }
                 }
             }
