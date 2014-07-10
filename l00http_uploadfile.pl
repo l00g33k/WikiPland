@@ -91,7 +91,7 @@ sub l00http_uploadfile_proc {
     print $sock "</form>\n";
 
     print $sock "Note: The directory part of the 'Upload to' field is used as the destination direction. ".
-        "The filename is taken from the file being uploaded. If only directory is given, it must end in '/' or '\'<p>\n";
+        "The filename is taken from the file being uploaded. If only directory is given, it must end in '/' or '\'. Pick a file in launcher and only the directory part will be kept<p>\n";
 
     print $sock "Note: Maximum updae size is 10 MBytes<p>\n".
 
