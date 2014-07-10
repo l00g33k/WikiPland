@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00backup;
+use l00crc32;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -22,12 +23,32 @@ sub l00http_uploadfile_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my ($path, $fname);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
+
+    if (defined($form->{'path'})) {
+        $path = $form->{'path'};
+print "path $path\n";
+        # drop any path
+        $path =~ s/([\/\\])[^\/\\]+$/$1/;
+print "path $path\n";
+    } else {
+        if ($ctrl->{'os'} eq 'and') {
+            $path = '/sdcard/tmp/';
+        } elsif ($ctrl->{'os'} eq 'win') {
+            $path = 'c:/';
+        } elsif ($ctrl->{'os'} eq 'lin') {
+            $path = '/home/';
+        } else {
+            $path = '/';
+        }
+    }
+    $form->{'path'} = $path;
 
     if (defined($form->{'payload'})) {
         ##&l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
@@ -36,15 +57,22 @@ sub l00http_uploadfile_proc {
         #if (&l00httpd::l00fwriteClose($ctrl)) {
         #    print $sock "Unable to write '$form->{'path'}'<p>\n";
         #}
-        open(DBG2,">c:\\x\\z.txt");
+        $fname = $form->{'filename'};
+        $fname =~ s/^.+[\/\\]([^\/\\]+)$/$1/;
+        $path .= $fname;
+        if (-f "$path") {
+            # backup
+            &l00backup::backupfile ($ctrl, $path, 1, 5);
+        }
+        $_ = &l00crc32::crc32($form->{'payload'});
+        open(DBG2,">$path");
         binmode(DBG2);
         print DBG2 $form->{'payload'};
         close(DBG2);
+        print $sock "<p>Saved '$fname' to '$path'<br>\n";
+        print $sock sprintf("Size = %d bytes<br>CRC32 = 0x%08x<p>\n", length($form->{'payload'}), $_);
     }
 
-if (!defined($form->{'path'})) {
-    $form->{'path'} = '';
-}
     print $sock "<a href=\"/uploadfile.htm\">uploadfile.htm</a><p>\n";
 
     print $sock "<form action=\"/uploadfile.htm\" method=\"post\" enctype=\"multipart/form-data\">\n";
@@ -61,9 +89,8 @@ if (!defined($form->{'path'})) {
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 
-    print $sock "Note: when launching from the 'launcher', the destination direction is ".
-        "taken from the direction portion of the path, and the filename is taken from ".
-        "the file being uploaded<p>\n";
+    print $sock "Note: The directory part of the 'Upload to' field is used as the destination direction. ".
+        "The filename is taken from the file being uploaded. If only directory is given, it must end in '/' or '\'<p>\n";
 
     print $sock "Note: Maximum updae size is 10 MBytes<p>\n".
 

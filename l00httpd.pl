@@ -769,7 +769,7 @@ while(1) {
                         l00httpd::dbp("l00httpd", "FORM{'filename'}=>$FORM{'filename'}<\n");
                         #print "FORM{'payload'}=>$FORM{'payload'}<\n";
                     } elsif (/Content-Disposition: form-data; name="([^"]+)"/i) {
-                        $FORM{$1} = $1;
+                        $FORM{$1} = $tmp;
                         l00httpd::dbp("l00httpd", "FORM{'$1'}=>$FORM{$1}<\n");
                     }
                 }
