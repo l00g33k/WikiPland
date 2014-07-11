@@ -675,7 +675,8 @@ if(1){
                          " <a href=\"#$tag\">here</a>".
                          " <a href=\"#___top___\">top</a>" .
                          " <a href=\"#__toc__\">toc</a>" .
-                         " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">log</a>" .
+                         " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
+                         " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
                          sprintf("</h%d>",length($el[2])) .
                          $el[3];
                 }
