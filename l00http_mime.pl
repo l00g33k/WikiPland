@@ -85,7 +85,8 @@ sub l00http_mime_proc {
         print $sock "<tr><td>\n";
         print $sock "Header\n";
         print $sock "</td><td>\n";
-        print $sock "<input type=\"text\" size=\"16\" name=\"header\" value=\"$form->{'header'}\">\n";
+#        print $sock "<input type=\"text\" size=\"16\" name=\"header\" value=\"$form->{'header'}\">\n";
+        print $sock "<input type=\"text\" size=\"50\" name=\"header\" value=\"$form->{'header'}\">\n";
         print $sock "</td></tr>\n";
 
         print $sock "<tr><td>\n";
@@ -102,25 +103,25 @@ sub l00http_mime_proc {
         print $sock "<br>\n";
 
         print $sock "<pre>\n";
-        print $sock ".zip    Content-Type: application/x-zip\n";
-        print $sock ".kmz    Content-Type: application/x-zip\n";
-        print $sock ".kml    Content-Type: application/vnd.google-earth.kml+xml\n";
-        print $sock ".apk    Content-Type: application/vnd.android.package-archive\n";
-        print $sock ".jpeg   Content-Type: image/jpeg\n";
-        print $sock ".jpg    Content-Type: image/jpeg\n";
-        print $sock ".wma    Content-Type: audio/x-ms-wma\n";
-        print $sock ".3gp    Content-Type: audio/3gp\n";
-        print $sock ".pdf    Content-Type: application/pdf\n";
-        print $sock ".mp3    Content-Type: audio/mpeg\n";
-        print $sock ".mp4    Content-Type: video/mp4\n";
-        print $sock ".gif    Content-Type: image/gif\n";
-        print $sock ".svg    Content-Type: image/svg+xml\n";
-        print $sock ".png    Content-Type: image/png\n";
-        print $sock ".html   Content-Type: text/html\n";
-        print $sock ".htm    Content-Type: text/html\n";
-        print $sock ".bak    Content-Type: text/html\n";
-        print $sock ".txt    Content-Type: text/html\n";
-        print $sock "( )     Content-Type: application/octet-octet-stream\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+application%2Fx-zip&ext=.zip\"                       >.zip</a>    Content-Type: application/x-zip\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+application%2Fx-zip&ext=.kmz\"                       >.kmz</a>    Content-Type: application/x-zip\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+application%2Fvnd.google-earth.kml%2Bxml&ext=.kml\"  >.kml</a>    Content-Type: application/vnd.google-earth.kml+xml\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+application%2Fvnd.android.package-archive&ext=.apk\" >.apk</a>    Content-Type: application/vnd.android.package-archive\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+image%2Fjpeg&ext=.jpeg\"                             >.jpeg</a>   Content-Type: image/jpeg\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+image%2Fjpeg&ext=.jpg\"                              >.jpg</a>    Content-Type: image/jpeg\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+audio%2Fx-ms-wma&ext=.wma\"                          >.wma</a>    Content-Type: audio/x-ms-wma\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+audio%2F3gp&ext=.3gp\"                               >.3gp</a>    Content-Type: audio/3gp\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+application%2Fpdf&ext=.pdf\"                         >.pdf</a>    Content-Type: application/pdf\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+audio%2Fmpeg&ext=.mp3\"                              >.mp3</a>    Content-Type: audio/mpeg\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+video%2Fmp4&ext=.mp4\"                               >.mp4</a>    Content-Type: video/mp4\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+image%2Fgif&ext=.gif\"                               >.gif</a>    Content-Type: image/gif\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+image%2Fsvg%2Bxml&ext=.svg\"                         >.svg</a>    Content-Type: image/svg+xml\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+image%2Fpng&ext=.png\"                               >.png</a>    Content-Type: image/png\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+text%2Fhtml&ext=.html\"                              >.html</a>   Content-Type: text/html\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+text%2Fhtml&ext=.htm\"                               >.htm</a>    Content-Type: text/html\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+text%2Fhtml&ext=.bak\"                               >.bak</a>    Content-Type: text/html\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+text%2Fhtml&ext=.txt\"                               >.txt</a>    Content-Type: text/html\n";
+        print $sock "<a href=\"/mime.htm?submit=yes&path=$path&header=Content-Type%3A+application%2Foctet-octet-stream&ext=.bin\"          >( )</a>     Content-Type: application/octet-octet-stream\n";
 
         print $sock "</pre>\n";
 
