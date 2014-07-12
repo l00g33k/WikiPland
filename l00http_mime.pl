@@ -85,8 +85,7 @@ sub l00http_mime_proc {
         print $sock "<tr><td>\n";
         print $sock "Header\n";
         print $sock "</td><td>\n";
-#        print $sock "<input type=\"text\" size=\"16\" name=\"header\" value=\"$form->{'header'}\">\n";
-        print $sock "<input type=\"text\" size=\"50\" name=\"header\" value=\"$form->{'header'}\">\n";
+        print $sock "<input type=\"text\" size=\"16\" name=\"header\" value=\"$form->{'header'}\">\n";
         print $sock "</td></tr>\n";
 
         print $sock "<tr><td>\n";
