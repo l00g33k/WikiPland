@@ -156,6 +156,10 @@ sub l00http_edit_proc2 {
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
                 }
             }
+            # allow &clear=&save= to delete file from URL
+            if (defined ($form->{'clear'})) {
+                $buffer = '';
+            }
             if ($blklineno > 0) {
                 $blkbuf = '';
                 if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
