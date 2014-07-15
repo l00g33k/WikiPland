@@ -133,9 +133,19 @@ sub l00http_rptnetifcon_proc {
                     }
                     $svgifacc .= "$now,$rxtx ";
                 } elsif ($flds[1] eq 'net') {
+                    if ((!defined($flds[9])) && 
+                        (defined($flds[7])) && 
+                        (($flds[2] eq 'tcp6') || ($flds[2] eq 'udp6'))) {
+                        # probably missing ',' between IP and port number
+#20140714 145526,net,tcp6,local,remote,2607:fb90:508:fb3d:7211:7150:856b:3e21:60407,2607:f8b0:4003:c01::6d:993,disc
+#20140714 145526,net,tcp6,local,remote,::ffff:192.168.97.47,40302,::ffff:74.125.227.222,443,conn
+                        $flds[9] = $flds[7];
+                        ($flds[7], $flds[8]) = $flds[6] =~ /^(.+):([^:]+)$/;
+                        ($flds[5], $flds[6]) = $flds[5] =~ /^(.+):([^:]+)$/;
+                    }
                     if (!defined($flds[9])) {
                         # unexpected
-                        print $sock "$lnno: flds[9] not def &gt;$_ &lt;<br>\n";
+                        print $sock "ERROR: $lnno: flds[9] not def &gt;$_ &lt;<br>\n";
                     } else {
                         if ($flds[9] eq 'conn') {
                             if (defined($connections{"$flds[7],$flds[8],<-,$flds[5],$flds[6]"})) {
