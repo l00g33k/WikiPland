@@ -32,7 +32,7 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf);
-	my ($clipblk);
+	my ($clipblk, $pname, $fname);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -56,8 +56,10 @@ sub l00http_edit_proc2 {
     }
 
     if (defined ($form->{'path'})) {
+        ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
-        print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+        print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
         print $sock " <a href=\"/ls.htm?path=$form->{'path'}&editline=on\">Edit line link</a>\n";
     }
     print $sock " <a href=\"/ls.htm?path=$form->{'path'}#__toc__\">toc</a>\n";

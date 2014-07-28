@@ -113,7 +113,8 @@ sub l00http_periocalrem_perio {
 		    close (IN);
 
             if ($eventnear ne '') {
-                $eventnear = "* CLEAR_THIS_STOPS_ALL\n* [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|Delete calrem.txt]] to refresh\n$eventnear";
+#               $eventnear = "* CLEAR_THIS_STOPS_ALL\n* [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|Delete calrem.txt]] to refresh\n$eventnear";
+                $eventnear = "* CLEAR_THIS_STOPS_ALL\n* [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|Delete calrem.txt]] to refresh\n* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&lenwk=18&today=on|View calendar]]\n$eventnear";
                 $eventnear .= "* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&lenwk=18&today=on|View calendar]]\n";
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
 		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
