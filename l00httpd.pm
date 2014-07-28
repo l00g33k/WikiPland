@@ -160,9 +160,11 @@ sub findInBuf  {
         # extract $lnno line number or count locally if not available
 		if (($lnno) = $line =~ /^%l00httpd:lnno:(\d+)%/) {
             $lnno = sprintf("%04d: ", $lnno);
+#           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $lnno);
 		    $line =~ s/^%l00httpd:lnno:\d+%//;
         } else {
             $lnno = sprintf("%04d: ", $llnno);
+#           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $llnno);
             $llnno++;
         }
         if ($line =~ /$block/i) {

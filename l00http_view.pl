@@ -30,7 +30,7 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
+    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx, $tmpno, $tmpln, $tmptop);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -145,6 +145,16 @@ sub l00http_view_proc {
                 }
                 $found .= &l00httpd::findInBuf ($findtext, $block, $buffer);
                 if ($prefmt ne '') {
+				    $tmp = '';
+					foreach $_ (split("\n", $found)) {
+					    if (($tmpno, $tmpln) = /^(\d+)(:.+)$/) {
+						    $tmptop = $tmpno - 20;
+						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>$tmpln";
+print "$_\n\n";
+						}
+					    $tmp .= "$_\n";
+					}
+					$found = $tmp;
                     $found .= "</pre>\n";
                 }
                 $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
