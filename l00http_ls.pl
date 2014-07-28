@@ -566,11 +566,10 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                                     # prepend line number
                                     $_ = sprintf("%04d: ", $lnno). $_;
                                 }
-#                                if (/^(=+)(.+=+)$/) {
-#                                    # insert chapter number
-#                                    $chno++;
-#                                    $_ = "$1$chno) $2\n";
-#                                }
+print;
+                                if (/^(=+.+[^=])(=+)$/) {
+                                    $_ = "$1 ($lnno) $2\n";
+                                }
                             }
                             # implement %SHOWLEADINGSPACES%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
                             # convert leading spaces to no break spaces
