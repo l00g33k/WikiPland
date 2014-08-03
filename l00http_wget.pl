@@ -98,6 +98,8 @@ sub l00http_wget_proc (\%) {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    print $sock "<br>Prepend 'proxy:proxy_host:proxy_port' to use HTTP proxy server<br>\n";
+    print $sock "e.g. proxy:127.0.0.1:8118:http://www.google.com<br>\n";
 
     if (defined ($form->{'submit'})) {
        if ((!defined ($form->{'nofetch'})) ||

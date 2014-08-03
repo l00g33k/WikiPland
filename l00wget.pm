@@ -11,7 +11,7 @@ package l00wget;
 sub wget {
     my ($url, $nmpw, $opentimeout, $readtimeout) = @_;
     my ($hdr, $bdy);
-    my ($buf);
+    my ($buf, $proxy, $finalurl);
     my ($server_socket, $cnt, $hdrlen, $bdylen);
     my ($readable, $ready, $curr_socket, $ret, $mode);
     my ($chunksz, $host, $port, $path, $contlen);
@@ -23,15 +23,21 @@ sub wget {
         $readtimeout = 20;
     }
 
-    $port = 80;
-    if (($host, $path) = $url =~ m|http://(.+?)(/.*)|i) {
-        if ($host =~ m|(.+?):(/.*)|) {
-            $host = $1;
-            $port = $2;
-        }
+    # proxy:127.0.0.1:8118:http://www.google.com
+    if (($host, $port, $path) = $url =~ m|proxy:(.+?):(\d+):(http://.+)$|i) {
+	    # using http proxy
+        #print "($host, $port, $path)\n";
     } else {
-        $host = 'www.google.com';
-        $path = '/';
+        $port = 80;
+        if (($host, $path) = $url =~ m|http://(.+?)(/.*)|i) {
+            if ($host =~ m|(.+?):(/.*)|) {
+                $host = $1;
+                $port = $2;
+            }
+        } else {
+            $host = 'www.google.com';
+            $path = '/';
+        }
     }
     if (defined($opentimeout)) {
         $server_socket = IO::Socket::INET->new(
