@@ -49,6 +49,9 @@ sub l00http_ls_sortfind {
     ($aa, $bb) = ($a, $b);
     $aa =~ s/%l00httpd:lnno:\d+%//g;
     $bb =~ s/%l00httpd:lnno:\d+%//g;
+    # remote leading line number
+    $aa =~ s/^\d+: *//g;
+    $bb =~ s/^\d+: *//g;
     
     $rst = lc($bb) cmp lc($aa);
 
