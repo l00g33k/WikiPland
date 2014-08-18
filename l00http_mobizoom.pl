@@ -210,6 +210,8 @@ sub l00http_mobizoom_proc {
                 # Opera Mini does not include http://
                 $url = "http://$url";
             }
+            # News++ adds ?rss=1, drop it
+            $url =~ s|\?rss=1$||;
         } else {
 			# must be reading locally cached file
             $form->{'paste'} = undef;

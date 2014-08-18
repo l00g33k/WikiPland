@@ -33,7 +33,7 @@ sub l00http_debug_proc (\%) {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>debug</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/debug.htm\">Refresh</a><p> \n";
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/debug.htm\">Refresh</a><p> \n";
 
     if (defined($form->{'jmpintv'})) {
         $jmpintv = $form->{'jmpintv'};

@@ -306,7 +306,7 @@ sub l00http_perionetifcon_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/perionetifcon.htm\">Refresh</a><br>\n";
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/perionetifcon.htm\">Refresh</a><br>\n";
 
     $tmp = $totalifcon;
     $tmp =~ s/(\d)(\d\d\d)$/$1,$2/;
