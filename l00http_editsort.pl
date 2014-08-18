@@ -79,6 +79,30 @@ sub l00http_editsort_proc {
         }
     }
 
+    if (defined ($form->{'ascend'})) {
+        undef @inbuf;
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                push (@inbuf, $_);
+            }
+            $outbuf = join("", sort (@inbuf));
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+            &l00httpd::l00fwriteBuf($ctrl, $outbuf);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    }
+    if (defined ($form->{'descend'})) {
+        undef @inbuf;
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                push (@inbuf, $_);
+            }
+            $outbuf = join("", sort {$b cmp $a} (@inbuf));
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+            &l00httpd::l00fwriteBuf($ctrl, $outbuf);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    }
 
     if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
         print $sock "<p><pre>\n";
@@ -118,9 +142,19 @@ sub l00http_editsort_proc {
     print $sock "</form>\n";
     print $sock "</td></tr>\n";
 
+    print $sock "<form action=\"/editsort.htm\" method=\"post\">\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"ascend\" value=\"All Ascend\">\n";
+    print $sock "</td>\n";
+    print $sock "<td>\n";
+    print $sock "<input type=\"submit\" name=\"descend\" value=\"Descend\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "</form>\n";
+
     print $sock "</table><br>\n";
 
     print $sock "<a name=\"end\"></a>";
+    print $sock "Working buffer: <a href=\"/view.htm?path=l00://editblock\">l00://editblock</a><p>\n";
     print $sock "<a href=\"#top\">top</a>\n";
 
     # send HTML footer and ends
