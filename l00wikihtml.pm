@@ -863,6 +863,27 @@ if(1){
             $_ = "$lv $tx";
         }
         if (($lv,$tx) = /^(\*+) (.*)$/) {
+            if ($mode0unknown1twiki2markdown == 2) {
+                #print "0)>$_<(\n";
+                while (($cacheidx + 1) < $#inputcache) {
+                    $tmp = $inputcache[$cacheidx + 1];
+                    if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                        # remove internal tag
+                        $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                    }
+                    # $tmp is next line (looking ahead)
+                    if ($tmp =~ /^[^ *=:&|]/) {
+                        # looks like a normal line, concatenate it
+                        #print "+)>$tmp<(\n";
+                        $_ .= " $tmp";
+                        # rescan/reparse
+                        ($lv,$tx) = /^(\*+) (.*)$/;
+                        $cacheidx++;    # point to next line and check again
+                    } else {
+                        last;
+                    }
+                }
+            }
             # process bullets
             $lvn = length ($lv);
             if ($lvn > $bulvl) {
