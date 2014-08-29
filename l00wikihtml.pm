@@ -864,6 +864,7 @@ if(1){
         }
         if (($lv,$tx) = /^(\*+) (.*)$/) {
             if ($mode0unknown1twiki2markdown == 2) {
+                # markdown multiple line bullet support
                 #print "0)>$_<(\n";
                 while (($cacheidx + 1) < $#inputcache) {
                     $tmp = $inputcache[$cacheidx + 1];
@@ -872,7 +873,9 @@ if(1){
                         $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
                     }
                     # $tmp is next line (looking ahead)
-                    if ($tmp =~ /^[^ *=:&|]/) {
+                    if ($tmp =~ /^$/) {
+                        last;
+                    } elsif ($tmp =~ /^[^ *=:&|]/) {
                         # looks like a normal line, concatenate it
                         #print "+)>$tmp<(\n";
                         $_ .= " $tmp";
