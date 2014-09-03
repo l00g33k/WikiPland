@@ -8,7 +8,7 @@ use l00mktime;
 # this is a simple template, a good starting point to make your own modules
 
 my ($lastcalled, $percnt, $interval, $starttime, $msg, $vibra, $vibracnt, 
-    $utcoffsec, $wake, $vmsec, $pause);
+    $utcoffsec, $wake, $vmsec, $pause, $filetime);
 my %config = (proc => "l00http_reminder_proc",
               desc => "l00http_reminder_desc",
               perio => "l00http_reminder_perio");
@@ -22,6 +22,7 @@ $vibracnt = 0;
 $wake = 0;
 $vmsec = 60;
 $pause = 0;
+$filetime = 0;
 
 sub l00http_reminder_date2j {
 # convert from date to seconds
@@ -65,6 +66,12 @@ sub l00http_reminder_find {
 
 
     if (open (IN, "<$ctrl->{'workdir'}l00_reminder.txt")) {
+        my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+        $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+            = stat("$ctrl->{'workdir'}l00_reminder.txt");
+        # remember file mod time
+        $filetime = $mtimea;
+
         # "TIME:$form->{'starttime'}\nITV:$interval\nMSG:$msg\n";
         $st0 = 0;
         while (<IN>) {
@@ -350,6 +357,14 @@ sub l00http_reminder_perio {
                 }
             } else {
                 $vibracnt++;
+            }
+            # reload if file modified later
+            my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                = stat("$ctrl->{'workdir'}l00_reminder.txt");
+            # remember file mod time
+            if ($filetime != $mtimea) {
+                &l00http_reminder_find ($ctrl);
             }
         }
         $retval = $interval;
