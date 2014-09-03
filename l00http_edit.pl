@@ -32,7 +32,7 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf);
-	my ($clipblk, $pname, $fname);
+	my ($clipblk, $pname, $fname, $rsyncpath);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -395,15 +395,26 @@ sub l00http_edit_proc2 {
     if (defined ($form->{'path'})) {
         my ($path, $fname);
         if (($path, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
+            if (defined($ctrl->{'adbpath'})) {
+                # use setting in l00httpd.cfg if defined
+                $hostpath = $ctrl->{'adbpath'};
+            }
             print $sock "<pre>\n";
             #print $sock "adb shell ls -l $path$fname\n";
             print $sock "adb pull \"$path$fname\" \"$hostpath$fname\"\n";
             print $sock "$hostpath$fname\n";
             print $sock "adb push \"$hostpath$fname\" \"$path$fname\"\n";
-            print $sock "perl $hostpath"."adb.pl $hostpath"."adb.in\n";
+            print $sock "perl ${hostpath}adb.pl ${hostpath}adb.in\n";
             print $sock "</pre>\n";
-            print $sock "rsync from device: rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname /cygdrive/d/x/ram/l00/$fname<br>\n";
-            print $sock "rsync to  device: rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' /cygdrive/d/x/ram/l00/$fname 127.0.0.1:$path$fname<p>\n";
+
+            # Windows + cygwin
+            $rsyncpath = $hostpath;
+            $rsyncpath =~ s/^(\w):\\/\/cygdrive\/$1\//;
+            $rsyncpath =~ s/\\/\//g;
+
+            print $sock "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
+            print $sock "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<p>\n";
+
             print $sock "Send $path$fname to <a href=\"/launcher.htm?path=$path$fname\">launcher</a><p>\n";
             print $sock "<a href=\"/view.htm/$fname.htm?path=$path$fname\">View</a> $path$fname<p>\n";
         }
