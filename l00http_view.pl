@@ -230,7 +230,10 @@ print "$_\n\n";
     if (($lineno + $skip) > $maxln) {
         print $sock "\nAnother " . ($lineno - $skip - $maxln) . " lines skipped<br>\n";
     }
-    print $sock "\nThere are $lineno lines in this file<p>\n";
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                = stat($form->{'path'});
+    print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
 
     # highlite
