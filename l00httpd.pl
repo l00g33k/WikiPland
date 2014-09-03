@@ -578,14 +578,14 @@ while(1) {
 #if (1) {
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
-            select ($rout = $rin, undef, $eout = $rin, 2); # public network needs 3 sec?
+            select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
             if (vec($eout,fileno($sock),1) == 1) {
                 print "sock error\n";
                 next;
             } elsif (vec($rout,fileno($sock),1) == 1) {
                 $httpsiz = sysread ($sock, $httpbuf, $httpmax);
             } else {
-                print "sock timeout 3s\n";
+                print "sock timeout 1s\n";
                 $sock->close;
                 next;
             }
