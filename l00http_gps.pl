@@ -10,7 +10,7 @@ my ($known0loc1, $knost, $locst, $lastres);
 my %config = (proc => "l00http_gps_proc",
               desc => "l00http_gps_desc",
               perio => "l00http_gps_perio");
-my ($interval, $trkhdr, $wake, $lastcoor);
+my ($interval, $trkhdr, $wake, $lastcoor, $toast, $nexttoast);
 my ($lon, $lat, $EW, $NS, $lastgps, $lastpoll);
 my ($buf, $coor, $src, $dup, $dolog, $context);
 $interval = 0;
@@ -27,6 +27,8 @@ $lastcoor = '';
 $dup = 0;
 $dolog = 1;
 $context = 20;
+$toast = 0;
+$nexttoast = 0;
 
 my @mname = ( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
@@ -118,6 +120,12 @@ sub l00http_gps_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, @countinglines);
 
+    if (defined ($form->{'toast'}) && ($form->{'toast'} =~ /(\d+)/)) {
+        $toast = $1;
+    } else {
+        $toast = 0;
+    }
+
     if (defined ($form->{'stop'})) {
         $interval = 0;
         $lastcalled = 0;    # forces immediate periodic action
@@ -141,14 +149,17 @@ sub l00http_gps_proc {
             $dup = 0;
         }
         if (defined ($form->{'dolog'}) && ($form->{'dolog'} eq 'on')) {
-            $dolog = 0;
-        } else {
             $dolog = 1;
+        } else {
+            $dolog = 0;
         }
         # get submitted name and print greeting
         if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
             $interval = $form->{"interval"};
             $lastcalled = 0;    # forces immediate periodic action
+            if ($toast > 0) {
+                $nexttoast = 0xffffffff;    # force first time
+            }
 
             if ($interval > 0) {
                 if (($ctrl->{'os'} eq 'and') &&
@@ -198,7 +209,6 @@ sub l00http_gps_proc {
             $ctrl->{'droid'}->setClipboard ("$lon,$lat\n$buf");
         }
     }
-
 
 
     # Send HTTP and HTML headers
@@ -257,8 +267,19 @@ sub l00http_gps_proc {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
+
+    if ($dolog) {
+        $buf = 'checked';
+    } else {
+        $buf = '';
+    }
     print $sock "        <td><input type=\"checkbox\" name=\"dolog\" $buf>No logging</td>\n";
     print $sock "        <td>Check to prevent writing to log file gps.trk</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td>Toast MPH</td>\n";
+    print $sock "        <td><input type=\"text\" size=\"6\" name=\"toast\" value=\"$toast\"> at seconds interval. 0 disables.</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -348,6 +369,16 @@ sub l00http_gps_perio {
                     }
                     $thislog .= "$out\n";
                     $lastout = $out;
+                    # toast mph
+                    if (($toast > 0) &&
+                        ($nexttoast > $lastpoll)) {
+print "$nexttoast\n";
+                        if ($toast > 0) {
+                            $nexttoast = $lastpoll + $toast;
+                        } else {
+                            $nexttoast = 0;
+                        }
+                    }
                 }
             }
         }
