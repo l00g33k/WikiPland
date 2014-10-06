@@ -335,6 +335,17 @@ sub l00http_reminder_perio {
         (time - $utcoffsec>= $starttime)) {
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
+            # reload if file modified later
+            my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                = stat("$ctrl->{'workdir'}l00_reminder.txt");
+            # remember file mod time
+            if ($filetime != $mtimea) {
+                &l00http_reminder_find ($ctrl);
+            }
+        }
+        if (($interval > 0) && 
+            (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
             $lastcalled = time - $utcoffsec;
             $pause = 0;
 
@@ -357,14 +368,6 @@ sub l00http_reminder_perio {
                 }
             } else {
                 $vibracnt++;
-            }
-            # reload if file modified later
-            my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
-            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-                = stat("$ctrl->{'workdir'}l00_reminder.txt");
-            # remember file mod time
-            if ($filetime != $mtimea) {
-                &l00http_reminder_find ($ctrl);
             }
         }
         $retval = $interval;
