@@ -166,7 +166,7 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
-	my ($skip, $tmp, $wgetall);
+	my ($skip, $tmp, $wgetall, $urlorg);
 
     $url = '';
     if (defined ($form->{'url'})) {
@@ -262,7 +262,9 @@ sub l00http_mobizoom_proc {
 
     if ($mode1online2offline4download & 3) {
     print $sock "<hr>\n";
-    $tmp = $url;
+    $urlorg = $url;
+    $urlorg =~ s/&ei=.*$//; # drop &ei=...
+    $tmp = $urlorg;
     $tmp =~ s/ /+/g;
     $tmp =~ s/:/%3A/g;
     $tmp =~ s/&/%26/g;
@@ -271,7 +273,7 @@ sub l00http_mobizoom_proc {
     $tmp =~ s/\//%2F/g;
     $tmp =~ s/\|/%7C/g;
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
-    print $sock "<a href=\"$url\">original</a> \n";
+    print $sock "<a href=\"$urlorg\">original</a> \n";
     print $sock "<a href=\"$mobiurl\">Google Mobilizer</a> \n";
     print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
     print $sock "<hr>\n";
