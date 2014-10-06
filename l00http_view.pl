@@ -281,8 +281,9 @@ print "$_\n\n";
     print $sock "</form>\n";
     print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
-    print $sock "<p><a href=\"#top\">Jump to top</a> \n";
-    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">launcher</a>\n";
+    print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
+    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a> - \n";
+	print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&prefmt=on&path=$form->{'path'}\">Find in this file</a>\n";
     print $sock "<p>Send $form->{'path'} to launcher\n";
 
 

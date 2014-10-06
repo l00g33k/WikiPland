@@ -415,7 +415,11 @@ sub l00http_edit_proc2 {
 
             print $sock "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
             print $sock "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
-            print $sock "ssh localhost -p 30339<p>\n";
+            print $sock "<pre>\n";
+            print $sock "ssh localhost -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
+            print $sock "perl ${hostpath}adb.pl ${hostpath}adb.in\n";
+            print $sock "${hostpath}adb.in\n";
+            print $sock "</pre>\n";
 
             print $sock "Send $path$fname to <a href=\"/launcher.htm?path=$path$fname\">launcher</a><p>\n";
             print $sock "<a href=\"/view.htm/$fname.htm?path=$path$fname\">View</a> $path$fname<p>\n";
