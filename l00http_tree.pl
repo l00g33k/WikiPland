@@ -51,7 +51,7 @@ sub l00http_tree_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $path2, $path, $file, $cnt, $cntbak, $crc32, $export, $buf);
-    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0,
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
 
     # Send HTTP and HTML headers
@@ -78,11 +78,19 @@ sub l00http_tree_proc {
         $form->{'filter'} = '';
     }
 
+    if (defined($form->{'showbak'})) {
+        $showbak = 'checked';
+    } else  {
+        $showbak = '';
+    }
+
     undef @list;
 	$lvl = 0;
     &l00http_tree_list ($sock, $form->{'path'});
     print $sock "<pre>";
 	$cnt = 0;
+	$nodir = 0;
+	$nofile = 0;
 	$cntbak = 0;
 	$export = '';
 	$time0 = time;
@@ -111,7 +119,9 @@ sub l00http_tree_proc {
                 if ($isdir) {
                     $crc32 = 0;
                     $file = "$file/ &lt;dir&gt;";
+                    $nodir++;
                 } else {
+                    $nofile++;
                     local $/ = undef;
                     if(open(IN, "<$path$file")) {
                         binmode (IN);
@@ -127,6 +137,9 @@ sub l00http_tree_proc {
             } else {
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
+                    $nodir++;
+                } else {
+                    $nofile++;
                 }
                 print $sock sprintf("%8d ", $size);
                 $export .= sprintf("%4d %8d %s\n",$cnt, $size, $path.$file);
@@ -142,7 +155,7 @@ sub l00http_tree_proc {
     }
     print $sock "</pre>";
 
-    print $sock "<p>There are $nobytes bytes in $cnt files\n";
+    print $sock "<p>There are $nobytes bytes in $nofile files $nodir directories\n";
     print $sock "<p>$cntbak '*.bak' files not shown\n";
     &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
     &l00httpd::l00fwriteBuf($ctrl, $export);
@@ -156,7 +169,7 @@ sub l00http_tree_proc {
 $form->{'filter'} = 'not implemented';
     print $sock "<br>Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
-    print $sock "<br><input type=\"checkbox\" name=\"showbak\">Show *.bak too\n";
+    print $sock "<br><input type=\"checkbox\" name=\"showbak\" $showbak>Show *.bak too\n";
     print $sock "</form>\n";
 
     print $sock "<a name=\"__end__\"></a>\n";
