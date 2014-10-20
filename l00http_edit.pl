@@ -32,7 +32,7 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf);
-	my ($clipblk, $pname, $fname, $rsyncpath);
+	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -467,19 +467,21 @@ sub l00http_edit_proc2 {
             print $sock "<a href=\"#end\">end</a> ";
             print $sock "\n";
 		}
+        $lineclip = &l00httpd::urlencode ($line);
+        $lineclip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $lineclip . "\">cb</a>";
         $line =~ s/\r//g;
         $line =~ s/\n//g;
         $line =~ s/</&lt;/g;
         $line =~ s/>/&gt;/g;
         if ($blklineno == 0) {
-            print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>: ", $lineno) . "$line\n";
+            print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>-%s: ", $lineno, $lineclip) . "$line\n";
         } else {
             if (($lineno >= $blklineno) && ($lineno < ($blklineno + $contextln))) {
                 # selected lines
                 print $sock sprintf ("<font style=\"color:black;background-color:lime\">".
-                    "<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a></font>: ", $lineno) . "$line\n";
+                    "<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a></font>-%s: ", $lineno, $lineclip) . "$line\n";
             } else {
-                print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>: ", $lineno) . "$line\n";
+                print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>-%s: ", $lineno, $lineclip) . "$line\n";
             }
         }
         $lineno++;
