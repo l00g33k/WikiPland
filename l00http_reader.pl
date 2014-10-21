@@ -9,9 +9,10 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_reader_proc",
               desc => "l00http_reader_desc");
-my ($hostpath, $zoom);
+my ($hostpath, $zoom, $maxarts);
 $hostpath = "c:\\x\\";
 $zoom = 150;
+$maxarts = 20;
 
 sub l00http_reader_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -25,11 +26,11 @@ sub l00http_reader_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $fname, $lnno, $lnno2, $readln, $tmp, $curr, $buf, $font0, $font1);
-	my ($cachepath, $cachename, $cachelink, $url, $morepage, $tmp2, %duplicate);
+	my ($cachepath, $cachename, $cachelink, $url, $morepage, $tmp2, %duplicate, $cnt);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>reader</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<a name=\"top\"></a><br>\n";
 
 
     if (defined ($form->{'readln'})) {
@@ -117,6 +118,7 @@ sub l00http_reader_proc (\%) {
     print $sock "</form>\n";
 
     print $sock "<p><a target=\"reader\" href=\"/mobizoom.htm\">mobiz</a>\n";
+    print $sock "<a href=\"#end\">end</a>\n";
 
     print $sock "<a href=\"#line\">Line $readln</a>:";
     if ($curr =~ /^(\d{8,8} \d{6,6}) /) {
@@ -144,6 +146,7 @@ sub l00http_reader_proc (\%) {
 
     print $sock " <form action=\"/reader.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"download\" value=\"Download All\">\n";
+    print $sock "max #:<input type=\"text\" size=\"3\" name=\"maxarts\" value=\"$maxarts\">\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<input type=\"submit\" name=\"mobizoomzoom\" value=\"Mobizoom %\">\n";
@@ -157,7 +160,12 @@ sub l00http_reader_proc (\%) {
 
     if (defined ($form->{'path'})) {
         if (open(IN, "<$form->{'path'}")) {
+            if (defined ($form->{'download'}) && defined ($form->{'maxarts'})) {
+                $maxarts = $form->{'maxarts'};
+            }
+
             $lnno = 1;
+            $cnt = 0;
             while (<IN>) {
                 if (/^(\d{8,8} \d{6,6}) /) {
 					$cachename = $1;
@@ -168,7 +176,9 @@ sub l00http_reader_proc (\%) {
                         mkdir ($cachepath);
 					}
                     $cachename = "$cachepath$cachename.txt";
-                    if (defined ($form->{'download'}) && !(-e $cachename)) {
+                    if (defined ($form->{'download'}) && 
+                        !(-e $cachename) &&
+                        ($cnt < $maxarts)) {   # download at most 50 articles at once
                         # downloading and not yet cached. cache now
 						$tmp = $_;
                         $path = $form->{'path'};
@@ -241,6 +251,7 @@ sub l00http_reader_proc (\%) {
                         }
 
 						$_ = $tmp;
+						$cnt++;
                     }
 					if (-e $cachename) {
                         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
@@ -267,7 +278,7 @@ sub l00http_reader_proc (\%) {
             close(IN);
         }
         print $sock "<hr>\n";
-        print $sock "Full file\n";
+        print $sock "<a name=\"end\"></a><a href=\"#top\">Jump to top</a>. Full file:\n";
         print $sock "<hr>\n";
         if (open(IN, "<$form->{'path'}")) {
             $lnno = 1;
