@@ -62,11 +62,16 @@ sub l00http_view_proc {
     }
 
     print $sock "<p>\n";
-    if (defined ($form->{'maxln'})) {
-        $maxln = $form->{'maxln'};
-    }
-    if (defined ($form->{'skip'})) {
-        $skip = $form->{'skip'};
+    if (defined ($form->{'update'})) {
+        if (defined ($form->{'maxln'})) {
+            $maxln = $form->{'maxln'};
+        }
+        if (defined ($form->{'skip'})) {
+            $skip = $form->{'skip'};
+        }
+    } else {
+        $skip = 0;
+        $maxln = 1000;
     }
 
     $hilite = 0;
@@ -102,8 +107,15 @@ sub l00http_view_proc {
     }
     print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
     # skip forward $maxln
-    $tmp = $skip + $maxln;
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
+    $tmp = int ($skip - $maxln / 2);
+    if ($tmp < 0) {
+        $tmp = 0;
+    }
+    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+    $tmp = int ($skip + $maxln / 2);
+    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+    $tmp = int ($skip + $maxln);
+    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
     print $sock "</form>\n";
 
     if ($hilite > 0) {
