@@ -677,6 +677,7 @@ if(1){
                          " <a href=\"#__toc__\">toc</a>" .
                          " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
+                         " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">vw</a>" .
                          sprintf("</h%d>",length($el[2])) .
                          $el[3];
                 }
