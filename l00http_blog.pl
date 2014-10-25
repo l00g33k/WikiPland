@@ -40,7 +40,8 @@ sub l00http_blog_proc {
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
+        print $sock "<a href=\"/launcher.htm?path=$path\">Launch</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>";
+#       print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> ";
         print $sock "%BLOG:key%:<br>\n";
     } else {
