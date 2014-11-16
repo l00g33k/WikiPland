@@ -451,6 +451,14 @@ if(1){
                 }
             }
         }
+
+        # password/ID clipboard
+        if (/\* (ID|PW): (\S+) *$/) {
+            $clip = &l00httpd::urlencode ($2);
+            $tmp = "[[/clip.htm?update=Copy+to+clipboard&clip=$clip|$2]]";
+            $_ .= " ($tmp)";
+        }
+
         # ## headings
         if (($mode0unknown1twiki2markdown == 2) && (/^(#+) (\S.*)$/)) {
             # convert only if we are in markdown mode
