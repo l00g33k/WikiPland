@@ -28,7 +28,7 @@ $dup = 0;
 $dolog = 1;
 $context = 20;
 $toast = 0;
-$nexttoast = 0;
+$nexttoast = 0xffffffff;
 
 my @mname = ( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
@@ -120,15 +120,12 @@ sub l00http_gps_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, @countinglines);
 
-    if (defined ($form->{'toast'}) && ($form->{'toast'} =~ /(\d+)/)) {
-        $toast = $1;
-    } else {
-        $toast = 0;
-    }
 
     if (defined ($form->{'stop'})) {
         $interval = 0;
         $lastcalled = 0;    # forces immediate periodic action
+        $toast = 0;
+        $nexttoast = 0xffffffff;
         if ($ctrl->{'os'} eq 'and') {
             $ctrl->{'droid'}->stopLocating();
             if ($wake != 0) {
@@ -148,17 +145,23 @@ sub l00http_gps_proc {
         } else {
             $dup = 0;
         }
-        if (defined ($form->{'dolog'}) && ($form->{'dolog'} eq 'on')) {
-            $dolog = 1;
+        if (defined ($form->{'toast'}) && ($form->{'toast'} =~ /(\d+)/)) {
+            $toast = $1;
         } else {
+            $toast = 0;
+        }
+        if (defined ($form->{'dolog'}) && ($form->{'dolog'} eq 'on')) {
+            # no logging checked
             $dolog = 0;
+        } else {
+            $dolog = 1;
         }
         # get submitted name and print greeting
         if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
             $interval = $form->{"interval"};
             $lastcalled = 0;    # forces immediate periodic action
             if ($toast > 0) {
-                $nexttoast = 0xffffffff;    # force first time
+                $nexttoast = 0;    # force first time
             }
 
             if ($interval > 0) {
@@ -269,9 +272,9 @@ sub l00http_gps_proc {
     print $sock "    <tr>\n";
 
     if ($dolog) {
-        $buf = 'checked';
-    } else {
         $buf = '';
+    } else {
+        $buf = 'checked';
     }
     print $sock "        <td><input type=\"checkbox\" name=\"dolog\" $buf>No logging</td>\n";
     print $sock "        <td>Check to prevent writing to log file gps.trk</td>\n";
@@ -371,8 +374,49 @@ sub l00http_gps_perio {
                     $lastout = $out;
                     # toast mph
                     if (($toast > 0) &&
-                        ($nexttoast > $lastpoll)) {
-print "$nexttoast\n";
+                        ($nexttoast <= $lastpoll)) {
+# * x 30 == ' ' x 72
+#".******************************.\n".
+#".                                                                        .\n".
+
+
+$_ = "toast $nexttoast";
+$_ = 
+"    ***   ". ".      *     ".".  ****  .\n".
+"  *       *".".    **     ". ".           *.\n".
+"  *       *".".      *     ".".           *.\n".
+"  *       *".".      *     ".".  *****.\n".
+"  *       *".".      *     ".".           *.\n".
+"  *       *".".      *     ".".           *.\n".
+"    ***   ". ".   ***   "  . ".  ****  .\n".
+"\n".
+".*****. "     ."  *       *".  "  *****  \n".
+".  ****. "    ."  *       *".  "  *       *  \n".
+".     ***. "  ."  *       *".  "  *       *  \n".
+".       **. " ."  *****".      "  *****  \n".
+".         *. "."            *"."  *       *  \n".
+".*       *. " ."            *"."  *       *  \n".
+".*****. "     ."            *"."  *****  \n".
+"\n".
+"";
+
+
+
+"  *****"    ."  *****"    ."  *****  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *****"    ."  *****"    ."  *****  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *****"    ."  *****"    ."  *****  \n".
+"";
+
+
+
+
+                        if ($ctrl->{'os'} eq 'and') {
+                            $ctrl->{'droid'}->makeToast($_);
+                        }
                         if ($toast > 0) {
                             $nexttoast = $lastpoll + $toast;
                         } else {
