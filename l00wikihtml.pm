@@ -865,6 +865,9 @@ if(1){
               s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
         s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
 
+        # convert geo: to http links
+        s|(geo:[0-9,\.\-\+]+)\?q=(\S+)|<a href=\"$1?q=$2\">$2</a>|g;
+
         $leadcolor = '';
         if ((($leadcolor,$lv,$tx) = /^(<.+?>)(\*+) (.*)$/)) {
             # special case for colored bullet
@@ -997,6 +1000,8 @@ if(1){
         # generate closing table
         $oubuf .= "</table>\n";
     }
+
+
 
     # The next statement overwrites the old style TOC with 
     # collapsible Java TOC.  Uncomment to restore old style TOC

@@ -822,7 +822,11 @@ while(1) {
             }
 
             # reset to selected brightness (Slide lost screen brightness after camera)
-            if ($ctrl{'os'} eq 'and') {
+            if (($ctrl{'os'} eq 'and') && defined($ctrl{'slideCamBrighnessFix'})) {
+                # Define below in l00httpd.cfg to fix Slide camera brightness problem
+                # Slide auto switch to max brighness when camera is turned on but 
+                # doesn't always restore correctly
+                #slideCamBrighnessFix^justdefinethis
                 if (defined($ctrl{'screenbrightness'})) {
                     $tmp = $ctrl{'droid'}->getScreenBrightness ();
                     $tmp = $tmp->{'result'};
