@@ -10,8 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_edit_proc2",
               desc => "l00http_edit_desc2");
 my ($buffer, $editwd, $editht, $editsz);
-my ($hostpath, $contextln, $blklineno, $blkfname);
-$hostpath = "d:\\x\\ram\\l00\\";
+my ($contextln, $blklineno, $blkfname);
 $editsz = 0;
 $editwd = 240;
 $editht = 30;
@@ -394,33 +393,8 @@ sub l00http_edit_proc2 {
 
     if (defined ($form->{'path'})) {
         my ($path, $fname);
+        print $sock &l00httpd::pcSyncCmdline($ctrl, $form->{'path'});
         if (($path, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
-            if (defined($ctrl->{'adbpath'})) {
-                # use setting in l00httpd.cfg if defined
-                $hostpath = $ctrl->{'adbpath'};
-            }
-            print $sock "<pre>\n";
-            #print $sock "adb shell ls -l $path$fname\n";
-            print $sock "adb pull \"$path$fname\" \"$hostpath$fname\"\n";
-            print $sock "$hostpath$fname\n";
-            print $sock "adb push \"$hostpath$fname\" \"$path$fname\"\n";
-            print $sock "perl ${hostpath}adb.pl ${hostpath}adb.in\n";
-            print $sock "${hostpath}adb.in\n";
-            print $sock "</pre>\n";
-
-            # Windows + cygwin
-            $rsyncpath = $hostpath;
-            $rsyncpath =~ s/^(\w):\\/\/cygdrive\/$1\//;
-            $rsyncpath =~ s/\\/\//g;
-
-            print $sock "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
-            print $sock "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
-            print $sock "<pre>\n";
-            print $sock "ssh localhost -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
-            print $sock "perl ${hostpath}adb.pl ${hostpath}adb.in\n";
-            print $sock "${hostpath}adb.in\n";
-            print $sock "</pre>\n";
-
             print $sock "Send $path$fname to <a href=\"/launcher.htm?path=$path$fname\">launcher</a><p>\n";
             print $sock "<a href=\"/view.htm/$fname.htm?path=$path$fname\">View</a> $path$fname<p>\n";
         }

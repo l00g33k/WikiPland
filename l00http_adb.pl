@@ -7,8 +7,6 @@ use warnings;
 
 my %config = (proc => "l00http_adb_proc",
               desc => "l00http_adb_desc");
-my ($hostpath);
-$hostpath = "d:\\x\\ram\\l00\\";
 
 
 sub l00http_adb_desc {
@@ -22,7 +20,7 @@ sub l00http_adb_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $rsyncpath);
+    my ($buf);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>adb</title>" . $ctrl->{'htmlhead2'};
@@ -30,46 +28,26 @@ sub l00http_adb_proc (\%) {
 
 
     if (defined ($form->{'hostpath'})) {
-        $hostpath = $form->{'hostpath'}
+        $ctrl->{'adbpath'} = $form->{'hostpath'}
     }
 
     if (defined ($form->{'path'})) {
+        print $sock "<form action=\"/adb.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"backup\" value=\"Make backup\">\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "</form>\n";
+
         if ($form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
-            $path = $1;
-            $fname = $2;
+            if (defined ($form->{'backup'})) {
+                # make backup
+                &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            }
             $_ = "$form->{'path'}";
             s / /%20/g;
-            print $sock "<br><a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">Copy path</a><br>\n";
-            if (defined($ctrl->{'adbpath'})) {
-                # use setting in l00httpd.cfg if defined
-                $hostpath = $ctrl->{'adbpath'};
-            }
-            print $sock "<pre>\n";
-            print $sock "adb shell ls -l $path$fname\n";
-            print $sock "adb pull \"$path$fname\" \"$hostpath$fname\"\n";
-            print $sock "$hostpath$fname\n";
-            print $sock "adb push \"$hostpath$fname\" \"$path$fname\"\n";
-            print $sock "perl ${hostpath}adb.pl ${hostpath}adb.in\n";
-            print $sock "${hostpath}adb.in\n";
-            print $sock "</pre>\n";
+            print $sock "<br><a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">Copy path</a><p>\n";
 
-            # Windows + cygwin
-            $rsyncpath = $hostpath;
-            $rsyncpath =~ s/^(\w):\\/\/cygdrive\/$1\//;
-            $rsyncpath =~ s/\\/\//g;
-
-            print $sock "rsync -v  -e 'ssh -p 40339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
-            print $sock "rsync -vv -e 'ssh -p 40339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
-            print $sock "<pre>\n";
-            print $sock "ssh localhost -p 40339 'cat /sdcard/l00httpd/.whoami'\n";
-            print $sock "perl ${hostpath}adb.pl ${hostpath}adb.in\n";
-            print $sock "${hostpath}adb.in\n";
-            print $sock "</pre>\n";
-
-            print $sock "busybox vi $path$fname<p>Copied to clipboard<p>\n";
-            if ($ctrl->{'os'} eq 'and') {
-                $ctrl->{'droid'}->setClipboard ("busybox vi $path$fname"); 
-            }
+            $buf = &l00httpd::pcSyncCmdline($ctrl, $form->{'path'});
+            print $sock $buf;
         }
     }
 
@@ -79,7 +57,7 @@ sub l00http_adb_proc (\%) {
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
     print $sock "            <td>Host path:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"hostpath\" value=\"$hostpath\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"hostpath\" value=\"$ctrl->{'adbpath'}\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
@@ -88,7 +66,7 @@ sub l00http_adb_proc (\%) {
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "</form>\n";
+    print $sock "</form><p>\n";
 
     print $sock "<p>Listing of adb.pl (click <a href=\"/view.htm?path=$ctrl->{'plpath'}l00http_adb.pl&hidelnno=on\">here</a> and copy from screen)\n";
 

@@ -253,12 +253,7 @@ sub l00http_ls_proc {
                         print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
                         print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
                         if (defined ($form->{'bkvish'})) {
-                            print $sock "<pre>\n";
-                            print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
-                            print $sock "c:\\x\\$fname\n";
-                            print $sock "adb push \"c:\\x\\$fname\" \"$pname$fname\"\n";
-						    print $sock "perl c:\\x\\adb.pl c:\\x\\adb.in\n";
-                            print $sock "</pre>\n";
+                            print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
                             print $sock "<hr>\n";
                         }
                     } else {
@@ -461,12 +456,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                     print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
                     print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
                     if (defined ($form->{'bkvish'})) {
-                        print $sock "<pre>\n";
-                        print $sock "adb pull \"$pname$fname\" \"c:\\x\\$fname\"\n";
-                        print $sock "c:\\x\\$fname\n";
-                        print $sock "adb push \"c:\\x\\$fname\" \"$pname$fname\"\n";
-						print $sock "perl c:\\x\\adb.pl c:\\x\\adb.in\n";
-                        print $sock "</pre>\n";
+                        print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
                         print $sock "<hr>\n";
                     }
                 } else {
