@@ -48,7 +48,7 @@ sub l00http_blog_proc {
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
     }
-    if (defined ($form->{'pastesave'})) {
+    if ((defined ($form->{'pastesave'})) && ($ctrl->{'os'} eq 'and')) {
         $_ = $ctrl->{'droid'}->getClipboard()->{'result'};
         print $sock "<hr>$_<hr>\n";
     }
@@ -81,7 +81,7 @@ sub l00http_blog_proc {
         $form->{'buffer'} .= $buffer;
         $form->{'save'} = 1;
     }
-    if (defined ($form->{'pastesave'})) {
+    if ((defined ($form->{'pastesave'})) && ($ctrl->{'os'} eq 'and')) {
         if (defined ($form->{'blog'})) {
             if ($form->{'blog'} eq "on") {
                 $form->{'buffer'} = "==$ctrl->{'now_string'} ==\n* ";
@@ -195,10 +195,10 @@ sub l00http_blog_proc {
             $buffer .= substr ($form->{'buffer'}, 16, 9999);
         }
     }
-    if (defined ($form->{'paste'})) {
+    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
         $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
     }
-    if (defined ($form->{'pasteadd'})) {
+    if ((defined ($form->{'pasteadd'})) && ($ctrl->{'os'} eq 'and')) {
         $buffer = $form->{'buffer'} . ' ';
         $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
     }
