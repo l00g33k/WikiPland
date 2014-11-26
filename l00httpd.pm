@@ -416,15 +416,15 @@ sub pcSyncCmdline {
         $rsyncpath =~ s/^(\w):\\/\/cygdrive\/$1\//;
         $rsyncpath =~ s/\\/\//g;
 
-        $buf .= "rsync -v  -e 'ssh -p 40339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
-        $buf .= "rsync -vv -e 'ssh -p 40339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
+        $buf .= "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
+        $buf .= "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
 
         $buf .= "<pre>\n";
         $buf .= "adb pull \"$path$fname\" \"$pcpath$fname\"\n";
         $buf .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";
         $buf .= "$pcpath$fname\n";
 
-        $buf .= "ssh localhost -p 40339 'cat /sdcard/l00httpd/.whoami'\n";
+        $buf .= "ssh localhost -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
         $buf .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $buf .= "${pcpath}adb.in\n";
         $buf .= "</pre>\n";
