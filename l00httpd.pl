@@ -875,10 +875,6 @@ while(1) {
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
-#               if (defined($ctrl{'reminder'})) {
-#                   # put reminder.pl message on title banner too
-#                   $ctrl{'home'} = "<center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center>$ctrl{'home'}";
-#               }
 
                 # a generic scheme to support system wide banner
                 # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
@@ -887,7 +883,11 @@ while(1) {
                     if (/^BANNER:(.+)/) {
                         #print "key $_\n";
                         if (defined($ctrl{$_})) {
-                            $ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                            #$ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                            #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                            # process banner content through wikihtml to make wiki links, etc.
+                            $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
+                            $ctrl{'home'} = $_ . $ctrl{'home'};
 						}
                     }
                 }
