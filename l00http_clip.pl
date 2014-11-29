@@ -88,7 +88,7 @@ sub l00http_clip_proc {
 
     print $sock "View <a href=\"/view.htm?path=l00://clip\">l00://clip</a>, \n";
     print $sock "<a href=\"/launcher.htm?path=l00://clip\">launcher</a>.\n";
-    print $sock "<a href=\"/scratch.htm\">scratch</a>.<p>\n";
+    print $sock "View <a href=\"/scratch.htm\">scratch</a>.<p>\n";
 
     print $sock "<p>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $clip, 0);

@@ -117,8 +117,9 @@ sub l00http_scratch_proc {
     print $sock "</form><p>\n";
 
 
-    print $sock "Send l00://clipboard to <a href=\"/launcher.htm?path=l00://clipboard\">launcher</a>. \n";
-    print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard<p>\n";
+    print $sock "Send l00://clipboard to <a href=\"/launcher.htm?path=l00://clipboard\">launcher</a>, \n";
+    print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard.\n";
+    print $sock "View <a href=\"/clip.htm\">clip</a><p>\n";
 
     # get submitted name and print greeting
     if (defined ($form->{'text'})) {
