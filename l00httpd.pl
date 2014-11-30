@@ -270,14 +270,9 @@ if ($ctrl{'os'} eq 'rhc') {
     # more RHC special
     $ctrl{'alwayson_clip'} = 'rhc';
     $ctrl{'alwayson_debug'} = 'rhc';
-    $ctrl{'alwayson_find'} = 'rhc';
-    $ctrl{'alwayson_hello'} = 'rhc';
-    $ctrl{'alwayson_hexview'} = 'rhc';
     $ctrl{'alwayson_launcher'} = 'rhc';
-    $ctrl{'alwayson_mobizoom'} = 'rhc';
     $ctrl{'alwayson_readme'} = 'rhc';
     $ctrl{'alwayson_solver'} = 'rhc';
-    $ctrl{'alwayson_timestamp'} = 'rhc';
     $ctrl{'alwayson_tree'} = 'rhc';
 }
 
