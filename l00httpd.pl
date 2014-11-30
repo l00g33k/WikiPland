@@ -123,7 +123,12 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
 } elsif (defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
 } else {
-    $ctrl{'os'} = 'lin';
+    if ($plpath =~ /\/var\/lib\/openshift\//) {
+        # on RHC
+        $ctrl{'os'} = 'rhc';
+    } else {
+        $ctrl{'os'} = 'lin';
+    }
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
@@ -256,19 +261,24 @@ foreach $key (keys %ctrl) {
 }
 
 # RHC special: make clipath at Perl directory so everything below is viewable by default
-if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
+#if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
+if ($ctrl{'os'} eq 'rhc') {
     # on RHC
     $ctrl{'clipath'} =~ s/\/l00httpd\/pub\/$/\//;
     $ctrl{'nopwpath'} = $ctrl{'clipath'};
     $nopwtimeout = 0x7fffffff;
     # more RHC special
-    $ctrl{'alwayson_clip'} = 'y';
-    $ctrl{'alwayson_mobizoom'} = 'y';
-    $ctrl{'alwayson_hexview'} = 'y';
-    $ctrl{'alwayson_launcher'} = 'y';
-    $ctrl{'alwayson_solver'} = 'y';
-    $ctrl{'alwayson_timestamp'} = 'y';
-    $ctrl{'alwayson_tree'} = 'y';
+    $ctrl{'alwayson_clip'} = 'rhc';
+    $ctrl{'alwayson_debug'} = 'rhc';
+    $ctrl{'alwayson_find'} = 'rhc';
+    $ctrl{'alwayson_hello'} = 'rhc';
+    $ctrl{'alwayson_hexview'} = 'rhc';
+    $ctrl{'alwayson_launcher'} = 'rhc';
+    $ctrl{'alwayson_mobizoom'} = 'rhc';
+    $ctrl{'alwayson_readme'} = 'rhc';
+    $ctrl{'alwayson_solver'} = 'rhc';
+    $ctrl{'alwayson_timestamp'} = 'rhc';
+    $ctrl{'alwayson_tree'} = 'rhc';
 }
 
 # check 'quick' from 'l00httpd.cfg'

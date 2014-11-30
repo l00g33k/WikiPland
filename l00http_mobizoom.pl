@@ -22,16 +22,16 @@ sub l00http_mobizoom_wget {
 
     $wget = '';
     if (length ($url) > 6) {
-	    # mobilize:
+        # mobilize:
 
-	    #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
-	    $url =~ s|:|%3A|g;
-	    $url =~ s|/|%2F|g;
-	    $url =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
+        #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
+        $url =~ s|:|%3A|g;
+        $url =~ s|/|%2F|g;
+        $url =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
 
-	    #print $sock "$url";
+        #print $sock "$url";
 
-	    ($hdr, $wget) = &l00wget::wget ($url);
+        ($hdr, $wget) = &l00wget::wget ($url);
         $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
         $wget2 = '';
         foreach $_ (split("\n", $wget)) {
@@ -72,14 +72,14 @@ s/>/&gt;/g;
         $wget =~ s/<\/*span.*?>//gm;
         $wget =~ s/<\/*div.*?>//gm;
 
-	    $wget =~ s/\r//g;
-	    $wget =~ s/\n//g;
-	    $wget =~ s/^.+<body.*?>\n//g;
-	    $wget =~ s/<\/body.*$>\n//g;
-	    $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
-	    $wget =~ s/<\/wml.*$>\n//g;
+        $wget =~ s/\r//g;
+        $wget =~ s/\n//g;
+        $wget =~ s/^.+<body.*?>\n//g;
+        $wget =~ s/<\/body.*$>\n//g;
+        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
+        $wget =~ s/<\/wml.*$>\n//g;
 
-	    $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
+        $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
     }
 
     $wget2 = $wget;
@@ -130,7 +130,7 @@ s/>/&gt;/g;
     $wget .= "<font style=\"color:black;background-color:lime\">\n";
     $wget .= "<a href=\"#__here". ($here + 1) ."__\">next</a>";
     $wget .= "<a name=\"__here$here\__\"></a>\n";
-	$here++;
+    $here++;
     $wget .= "</font>\n";
     $wget .= "<font style=\"color:black;background-color:lime\">\n";
     $wget .= "<a href=\"#__end__\">END</a>";
@@ -166,14 +166,15 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
-	my ($skip, $tmp, $wgetall, $urlorg);
+    my ($skip, $tmp, $wgetall, $urlorg);
 
     $url = '';
     if (defined ($form->{'url'})) {
-	    $url = $form->{'url'};
+        $url = $form->{'url'};
     }
 
-    if (defined ($form->{'path'})) {
+    if ((defined ($form->{'path'})) && ($ctrl->{'os'} ne 'rhc')) {
+        # only when not on RHC
         $mode1online2offline4download = 4;
     } elsif (&l00httpd::l00freadOpen($ctrl, $url)) {
         $mode1online2offline4download = 2;
@@ -188,21 +189,21 @@ sub l00http_mobizoom_proc {
         print $sock "<a name=\"__top__\"></a>\n";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#__end__\">Jump to end</a><hr>\n";
-	}
+    }
 
     if (defined ($form->{'zoom'})) {
-	    if ($form->{'zoom'} =~ /(\d+)/) {
+        if ($form->{'zoom'} =~ /(\d+)/) {
             # is a number (zoom %)
-		    $zoom = $1;
-	    }
+            $zoom = $1;
+        }
     }
     if (defined ($form->{'zoomradio'})) {
         $zoom = $form->{'zoomradio'};
     }
     if (defined ($form->{'paste'}) && ($ctrl->{'os'} eq 'and')) {
         $url = $ctrl->{'droid'}->getClipboard()->{'result'};
-		if (!($url =~ /^\//)) {
-		    # extract URL only if it doesn't look like a local file
+        if (!($url =~ /^\//)) {
+            # extract URL only if it doesn't look like a local file
             if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
                 $url = $1;
             }
@@ -213,14 +214,14 @@ sub l00http_mobizoom_proc {
             # News++ adds ?rss=1, drop it
             $url =~ s|\?rss=1$||;
         } else {
-			# must be reading locally cached file
+            # must be reading locally cached file
             $form->{'paste'} = undef;
             $form->{'fetch'} = 1;
             if (&l00httpd::l00freadOpen($ctrl, $url)) {
                 $mode1online2offline4download = 2;
                 $wget = &l00httpd::l00freadAll($ctrl);
-			}
-		}
+            }
+        }
         #print "From clipboard:\n$url\n", if ($ctrl->{'debug'} >= 3);
     }
 
@@ -255,10 +256,10 @@ sub l00http_mobizoom_proc {
     }
 
     $mobiurl = $url;
-	#http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
-	$mobiurl =~ s|:|%3A|g;
-	$mobiurl =~ s|/|%2F|g;
-	$mobiurl =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
+    #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
+    $mobiurl =~ s|:|%3A|g;
+    $mobiurl =~ s|/|%2F|g;
+    $mobiurl =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
 
     if ($mode1online2offline4download & 3) {
     print $sock "<hr>\n";
@@ -279,8 +280,8 @@ sub l00http_mobizoom_proc {
     print $sock "<hr>\n";
     }
 
-	$here = 1;
-	$threads = "Threads:<br>\n";
+    $here = 1;
+    $threads = "Threads:<br>\n";
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
         $para = 1;
         $nextpage = $url;
@@ -290,35 +291,35 @@ sub l00http_mobizoom_proc {
             &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.wget');
         }
         if ($mode1online2offline4download == 2) {
-		    # <head> and <form> mess with my <span font-size> so drop them
-			$tmp = '';
-			$skip = 0;
-			foreach $_ (split("\n", $wget)) {
-			    if (/<\/form.*>/) {
-					$skip = 0;
-					next;
-				}
-			    if (/<form.*>/) {
-					$skip = 1;
-					next;
-				}
-			    if (/<\/head.*>/) {
-					$skip = 0;
-					next;
-				}
-			    if (/<head.*>/) {
-					$skip = 1;
-					next;
-				}
-				if ($skip) {
-					next;
-				}
-			    if (/<\?xml.*>/ || /<!DOCTYPE.*>/) {
-					next;
-				}
-			    $tmp .= "$_\n";
-			}
-			$wget = $tmp;
+            # <head> and <form> mess with my <span font-size> so drop them
+            $tmp = '';
+            $skip = 0;
+            foreach $_ (split("\n", $wget)) {
+                if (/<\/form.*>/) {
+                    $skip = 0;
+                    next;
+                }
+                if (/<form.*>/) {
+                    $skip = 1;
+                    next;
+                }
+                if (/<\/head.*>/) {
+                    $skip = 0;
+                    next;
+                }
+                if (/<head.*>/) {
+                    $skip = 1;
+                    next;
+                }
+                if ($skip) {
+                    next;
+                }
+                if (/<\?xml.*>/ || /<!DOCTYPE.*>/) {
+                    next;
+                }
+                $tmp .= "$_\n";
+            }
+            $wget = $tmp;
             # <span style="font-size : 144%;">
             $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/g;
             print $sock $wget;
@@ -331,7 +332,7 @@ sub l00http_mobizoom_proc {
                 $wget = &l00http_mobizoom_wget ($nextpage, $zoom);
                 if ($wget =~ /<a href=.+?url=(.+?)'>\nNext page /) {
                     $nextpage = $1;
-	    		    $nextpage =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
+                    $nextpage =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
                     #print "$nextpage \nNext page\n";
                     $getmore = 1;
                 }
@@ -366,7 +367,7 @@ sub l00http_mobizoom_proc {
     print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
     print $sock $ctrl->{'htmlfoot'};
-	}
+    }
 }
 
 
