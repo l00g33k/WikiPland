@@ -686,6 +686,13 @@ while(1) {
                 # point to welcome page
                 $modcalled = "ls";
                 $urlparams = "path=$plpath"."docs_demo/QuickStart.txt";
+            } elsif (($urlparams eq '/') &&      # no path
+                ($ctrl{'os'} eq 'rhc')           # on RHC
+                ) {
+                # the form 'http://localhost:20337/'
+                # point to welcome page
+                $modcalled = "ls";
+                $urlparams = "path=$plpath"."docs_demo/QuickStart.txt";
             } elsif ($urlparams =~ /^\/(\w+)\.pl[^?]*\?*(.*)$/) {
                 # allows ls.pl/a.jpg to display jpg
                 # of form: http://localhost:20337/ls.pl?path=/sdcard
