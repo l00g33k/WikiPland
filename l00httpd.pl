@@ -899,6 +899,8 @@ while(1) {
                             #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
                             # process banner content through wikihtml to make wiki links, etc.
                             $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
+                            # remove ending <br> added
+                            s/<br>$//;
                             $ctrl{'home'} = $_ . $ctrl{'home'};
 						}
                     }

@@ -26,7 +26,8 @@ sub l00http_periocalrem_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} - <a href=\"/periocalrem.htm\">Refresh</a><br> \n";
+    print $sock "$ctrl->{'home'} - <a href=\"/periocalrem.htm\">Refresh</a> \n";
+#   print $sock "$ctrl->{'home'} - <a href=\"/periocalrem.htm\">Refresh</a><br> \n";
 
     print $sock "Calendar reminder.\n";
 

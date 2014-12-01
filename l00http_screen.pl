@@ -71,12 +71,7 @@ sub l00http_screen_proc (\%) {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"setmax\" value=\"Max brightness\"></td>\n";
-    print $sock "        <td>255</td>\n";
-    print $sock "    </tr>\n";
-                                                
-    print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"setmin\" value=\"Min  brightness\"></td>\n";
-    print $sock "        <td>0</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
