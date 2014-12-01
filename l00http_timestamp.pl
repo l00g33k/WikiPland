@@ -29,6 +29,10 @@ sub l00http_timestamp_proc {
     if ($ctrl->{'os'} eq 'and') {
         $ctrl->{'droid'}->setClipboard ($timestamp);
     }
+    if ($ctrl->{'os'} eq 'win') {
+        `echo $timestamp | clip`;
+        print $sock "<br>Copied to Windows clipboard using clip.exe<br>\n";
+    }
 
     print $sock "<br><form action=\"/timestamp.htm\" method=\"get\">\n";
     print $sock "<input type=\"text\" size=\"20\" name=\"timestamp\" value=\"$timestamp\">\n";

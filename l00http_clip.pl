@@ -64,7 +64,7 @@ sub l00http_clip_proc {
                 $ctrl->{'droid'}->setClipboard ($tmp);
             }
             if ($ctrl->{'os'} eq 'win') {
-                `echo tmp | clip`;
+                `echo $tmp | clip`;
                 print $sock "<br>Copied to Windows clipboard using clip.exe<br>\n";
             }
             $tmp = &l00httpd::urlencode ($tmp);
