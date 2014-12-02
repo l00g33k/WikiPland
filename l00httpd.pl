@@ -86,7 +86,11 @@ $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
 $ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
 $ctrl{'htmlhead'} .= "<head>\x0D\x0A";
 $ctrl{'htmlhead'} .= "<meta name=\"generator\" content=\"l00httpd, http://l00g33k.wikispaces.com/micro+HTTP+application+server\">\x0D\x0A".
-                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A";
+                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
+                     # so arrow keys scroll page in my browser
+                     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A";
+#                    "<meta http-equiv=\"x-ua-compatible\" content=\"text/html; IE=EmulateIE7; charset=utf-8\">\x0D\x0A";
+
 $ctrl{'htmlhead2'} = "</head>\x0D\x0A<body>\n";
 $ctrl{'htmlfoot'}  = "\x0D\x0A</body>\x0D\x0A</html>";
 $ctrl{'dlog'}  = \&dlog;

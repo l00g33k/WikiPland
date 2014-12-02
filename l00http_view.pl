@@ -246,7 +246,7 @@ print "$_\n\n";
             $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                 = stat($form->{'path'});
     print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
-    print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
+    print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
 
     # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
