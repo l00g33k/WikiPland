@@ -110,7 +110,7 @@ sub l00http_reminder_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($ii, $temp, $timstr);
+    my ($ii, $temp, $timstr, $selected);
     my ($yr, $mo, $da, $hr, $mi, $se, $pausewant);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
@@ -246,8 +246,12 @@ sub l00http_reminder_proc {
     print $sock "        <select name=\"day\">\n";
     print $sock "        <option value=\"--d\">--</option>\n";
 	for($ii = 1; $ii < 32; $ii++) {
+        $selected = '';
+        if ($ii == substr($timstr, 6, 2)) {
+            $selected = 'selected';
+        }
 	    $temp = sprintf("%d", $ii);
-        print $sock "        <option name=\"day\" value=\"$temp\">$temp</option>\n";
+        print $sock "        <option name=\"day\" value=\"$temp\" $selected>$temp</option>\n";
 	}
     print $sock "        </select>d\n";
     print $sock "        </td>\n";
