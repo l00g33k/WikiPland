@@ -147,7 +147,18 @@ sub l00http_edit_proc2 {
         # falls through all cases to else to reload
     }
 
-    if (defined ($form->{'save'})) {
+    if (defined ($form->{'arc'}) &&
+        (defined ($form->{'path'}) && 
+        (length ($form->{'path'}) > 0))) {
+        # save to {'path'].datestamp.arc
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            ($tmp) = $ctrl->{'now_string'} =~ /^(\d+) /;
+            $tmp = "$form->{'path'}.$tmp.arc";
+            &l00httpd::l00fwriteOpen($ctrl, $tmp);
+            &l00httpd::l00fwriteBuf($ctrl, &l00httpd::l00freadAll($ctrl));
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    } elsif (defined ($form->{'save'})) {
         if ((defined ($form->{'path'}) && 
             (length ($form->{'path'}) > 0))) {
             if (!($form->{'path'} =~ /^l00:\/\//)) {
@@ -318,10 +329,11 @@ sub l00http_edit_proc2 {
     }
     print $sock "</td><td>\n";
     if ($blklineno > 0) {
-        print $sock "<input type=\"checkbox\" name=\"nobak\" checked>Do not backup\n";
+        print $sock "<input type=\"checkbox\" name=\"nobak\" checked>No backup\n";
     } else {
-        print $sock "<input type=\"checkbox\" name=\"nobak\">Do not backup\n";
+        print $sock "<input type=\"checkbox\" name=\"nobak\">No backup\n";
     }
+    print $sock "<input type=\"submit\" name=\"arc\" value=\"arc\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
