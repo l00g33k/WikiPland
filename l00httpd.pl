@@ -890,7 +890,7 @@ while(1) {
                 $ctrl{'sock'} = $sock;
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
-                $ctrl{'home'} = "<a href=\"/httpd.htm\">Ctrl</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
+                $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
 
                 # a generic scheme to support system wide banner
                 # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
