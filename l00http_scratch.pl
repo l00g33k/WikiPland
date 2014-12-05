@@ -149,8 +149,7 @@ sub l00http_scratch_proc {
         @alllines = split ("\n", $scratchhtml);
         $scratchhtml = "";
         foreach $line (@alllines) {
-            if ((defined ($form->{'cbmobi'})) ||
-                (defined ($form->{'mobi'}))) {
+            if (defined ($form->{'mobi'})) {
                 #http://www.google.com/gwt/n?u=http%3A%2F%2Fwww.a.com
                 $line =~ s|:|%3A|g;
                 $line =~ s|/|%2F|g;
