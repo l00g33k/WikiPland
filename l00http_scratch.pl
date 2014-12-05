@@ -27,7 +27,8 @@ sub l00http_scratch_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>scratch</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-    print $sock "<a href=\"#end\">Jump to end</a><br>\n";
+    print $sock "<a href=\"#end\">Jump to end</a>. \n";
+    print $sock "Go to <a href=\"/clip.htm\">clip</a><br>\n";
 
     if (defined ($form->{'eval'})) {
         $eval = $form->{'eval'};
@@ -118,8 +119,7 @@ sub l00http_scratch_proc {
 
 
     print $sock "Send l00://clipboard to <a href=\"/launcher.htm?path=l00://clipboard\">launcher</a>, \n";
-    print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard.\n";
-    print $sock "View <a href=\"/clip.htm\">clip</a><p>\n";
+    print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard.<p>\n";
 
     # get submitted name and print greeting
     if (defined ($form->{'text'})) {
