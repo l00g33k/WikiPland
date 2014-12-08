@@ -405,11 +405,11 @@ sub l00http_edit_proc2 {
 
     if (defined ($form->{'path'})) {
         my ($path, $fname);
-        print $sock &l00httpd::pcSyncCmdline($ctrl, $form->{'path'});
         if (($path, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
             print $sock "Send $path$fname to <a href=\"/launcher.htm?path=$path$fname\">launcher</a><p>\n";
             print $sock "<a href=\"/view.htm/$fname.htm?path=$path$fname\">View</a> $path$fname<p>\n";
         }
+        print $sock &l00httpd::pcSyncCmdline($ctrl, $form->{'path'});
         #print $sock "You can connect from your desktop, copy the buffer content and paste into your favorite editor, and paste it back into the edit area after your editing.<p>\n";
 
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}.bak\">bak</a> \n";
