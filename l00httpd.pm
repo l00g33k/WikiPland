@@ -69,32 +69,35 @@ sub urlencode {
     # http://search.cpan.org/~mithun/URI-Encode-0.09/lib/URI/Encode.pm
     # reserved char:
     #  ! * ' ( ) ; : @ & = + $ , / ? # [ ]
+    if (defined($buf)) {
+        $buf =~  s/!/%21/g;
+        $buf =~ s/\*/%2A/g;
+        $buf =~  s/'/%27/g;
+        $buf =~ s/\(/%28/g;
+        $buf =~ s/\)/%29/g;
+        $buf =~  s/;/%3B/g;
+        $buf =~  s/:/%3A/g;
+        $buf =~ s/\@/%40/g;
+        $buf =~  s/&/%26/g;
+        $buf =~  s/=/%3D/g;
+        $buf =~ s/\+/%2B/g;
+        $buf =~ s/\$/%24/g;
+        $buf =~  s/,/%2C/g;
+        $buf =~ s/\//%2F/g;
+        $buf =~ s/\?/%3F/g;
+        $buf =~  s/#/%23/g;
+        $buf =~ s/\[/%5B/g;
+        $buf =~ s/\]/%5D/g;
 
-    $buf =~  s/!/%21/g;
-    $buf =~ s/\*/%2A/g;
-    $buf =~  s/'/%27/g;
-    $buf =~ s/\(/%28/g;
-    $buf =~ s/\)/%29/g;
-    $buf =~  s/;/%3B/g;
-    $buf =~  s/:/%3A/g;
-    $buf =~ s/\@/%40/g;
-    $buf =~  s/&/%26/g;
-    $buf =~  s/=/%3D/g;
-    $buf =~ s/\+/%2B/g;
-    $buf =~ s/\$/%24/g;
-    $buf =~  s/,/%2C/g;
-    $buf =~ s/\//%2F/g;
-    $buf =~ s/\?/%3F/g;
-    $buf =~  s/#/%23/g;
-    $buf =~ s/\[/%5B/g;
-    $buf =~ s/\]/%5D/g;
+        $buf =~    s/ /+/g;
 
-    $buf =~    s/ /+/g;
-
-    $buf =~  s/"/%22/g;
-    $buf =~ s/\|/%7C/g;
-    $buf =~ s/\r/%0D/g;
-    $buf =~ s/\n/%0A/g;
+        $buf =~  s/"/%22/g;
+        $buf =~ s/\|/%7C/g;
+        $buf =~ s/\r/%0D/g;
+        $buf =~ s/\n/%0A/g;
+    } else {
+        $buf = '';
+    }
 
     $buf;
 }
