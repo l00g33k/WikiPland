@@ -455,7 +455,8 @@ if(1){
         # password/ID clipboard
         if (/\* (ID|PW): (\S+) *$/) {
             $clip = &l00httpd::urlencode ($2);
-            $tmp = "[[/clip.htm?update=Copy+to+clipboard&clip=$clip|$2]]";
+#           $tmp = "[[/clip.htm?update=Copy+to+clipboard&clip=$clip|$2]]";
+            $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"newwin\">%s</a>", $clip, $2);
             $_ .= " ($tmp)";
         }
 
