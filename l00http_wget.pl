@@ -44,8 +44,14 @@ sub l00http_wget_proc (\%) {
     if (defined ($form->{'wgetpath'})) {
         $wgetpath = $form->{'wgetpath'}
     }
+    if (defined ($form->{'default'})) {
+        $wgetpath = "l00://wget.htm";
+    }
     if (defined ($form->{'url'})) {
         $url = $form->{'url'}
+    }
+    if (defined ($form->{'pastepath'}) && ($ctrl->{'os'} eq 'and')) {
+        $wgetpath = $ctrl->{'droid'}->getClipboard()->{'result'};
     }
     if (defined ($form->{'paste'}) && ($ctrl->{'os'} eq 'and')) {
         $url = $ctrl->{'droid'}->getClipboard()->{'result'};
@@ -77,7 +83,8 @@ sub l00http_wget_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
-    print $sock "            <td>Save path:</td>\n";
+    print $sock "            <td><input type=\"submit\" name=\"pastepath\" value=\"Save\">path";
+    print $sock "<input type=\"submit\" name=\"default\" value=\":\"></td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"wgetpath\" value=\"$wgetpath\"></td>\n";
     print $sock "        </tr>\n";
                                                 
