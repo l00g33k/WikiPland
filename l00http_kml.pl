@@ -157,7 +157,7 @@ sub l00http_kml_proc {
 		                }
 		                $tracks = $tracks . 
 			                "\t\t<Placemark><name>Track $trackno</name>\n" .
-			                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color></LineStyle></Style>\n" .
+			                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
 			                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
 			                "\t\t\t<coordinates>\n";
                         $trackno++;

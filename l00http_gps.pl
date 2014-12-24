@@ -171,6 +171,8 @@ sub l00http_gps_proc {
                         $wake = 1;
                         $ctrl->{'droid'}->wakeLockAcquirePartial();
                     }
+                } else {
+                    $wake = 0;
                 }
                 if (($known0loc1 == 1) && ($ctrl->{'os'} eq 'and')) {
                     $ctrl->{'droid'}->startLocating ($interval * 1000, 1);
