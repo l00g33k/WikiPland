@@ -13,7 +13,7 @@ echo j : l00httpd.cfg ........ jj: CutPasteCheat.txt
 echo k : 0do.pl ..............
 echo l : l00sh_l00httpcode.sh. ll: l00sh_l00httpcode2.sh
 echo y : l00http_cmdedit.sh
-echo z : l00http_cmdmain.sh
+echo z : l00http_cmdmain.sh .. zz: ad hoc: l00_Whatsapp.pl 
 read sel
 echo $sel
 
@@ -80,7 +80,6 @@ vim /sdcard/sl4a/scripts/l00httpd/l00httpd__readme.txt; fi
 
 if [ $sel = "ii" ]; then
 vim /sdcard/sl4a/scripts/portfwrd.pl; fi
-
 if [ $sel = "j" ]; then
 vim /sdcard/sl4a/scripts/l00httpd/l00httpd.cfg /sdcard/al/l00httpd.cfg; fi
 
@@ -102,6 +101,8 @@ vim /sdcard/sl4a/scripts/l00httpd/l00http_cmdedit.sh; fi
 if [ $sel = "z" ]; then
 vim /sdcard/sl4a/scripts/l00httpd/l00http_cmdmain.sh; fi
 
+if [ $sel = "zz" ]; then
+vim /sdcard/l00httpd/l00_Whatsapp.pl ; fi
 done
 fi
 

@@ -1,0 +1,6 @@
+* Quick notes:
+* Buttons:
+** CB: Paste clipboard content to the URL field. Tries to extract only valid URL and will ignore leading and trailing texts.
+** Save: Paste clipboard content to the 'Save path' field
+** ':': Reset 'Save path' field to l00://wget.htm
+** Fetch URL: Fetch the content of the URL
