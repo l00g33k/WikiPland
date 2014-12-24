@@ -454,7 +454,7 @@ sub l00http_edit_proc2 {
             print $sock "\n";
 		}
         $lineclip = &l00httpd::urlencode ($line);
-        $lineclip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $lineclip . "\">cb</a>";
+        $lineclip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $lineclip . "\" target=\"newclip\">cb</a>";
         $line =~ s/\r//g;
         $line =~ s/\n//g;
         $line =~ s/</&lt;/g;
