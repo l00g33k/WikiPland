@@ -6,7 +6,7 @@ use warnings;
 # this is a simple template, a good starting point to make your own modules
 
 my ($lastcalled, $percnt, $thislog, $lastout);
-my ($known0loc1, $knost, $locst, $lastres);
+my ($known0loc1, $knost, $locst, $lastres, $datename, $fname);
 my %config = (proc => "l00http_gps_proc",
               desc => "l00http_gps_desc",
               perio => "l00http_gps_perio");
@@ -29,6 +29,8 @@ $dolog = 1;
 $context = 20;
 $toast = 0;
 $nexttoast = 0xffffffff;
+$datename = 0;
+$fname = 'gps.trk';
 
 my @mname = ( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
@@ -145,6 +147,11 @@ sub l00http_gps_proc {
         } else {
             $dup = 0;
         }
+        if (defined ($form->{'datename'}) && ($form->{'datename'} eq 'on')) {
+            $datename = 1;
+        } else {
+            $datename = 0;
+        }
         if (defined ($form->{'toast'}) && ($form->{'toast'} =~ /(\d+)/)) {
             $toast = $1;
         } else {
@@ -178,11 +185,18 @@ sub l00http_gps_proc {
                     $ctrl->{'droid'}->startLocating ($interval * 1000, 1);
                 }
                 if ($dolog) {
-                    if (open (IN, "<$ctrl->{'workdir'}gps.trk")) {
-                        close (IN);
-                        open (OUT, ">>$ctrl->{'workdir'}gps.trk");
+                    if ($datename) {
+                        $fname = 'gps_' . 
+                            substr($ctrl->{'now_string'}, 0, 8) . '.trk';
                     } else {
-                        open (OUT, ">$ctrl->{'workdir'}gps.trk");
+                        $fname = 'gps.trk';
+                    }
+                    if (-f "$ctrl->{'workdir'}$fname") {
+                        # exist
+                        open (OUT, ">>$ctrl->{'workdir'}$fname");
+                    } else {
+                        # does not exist
+                        open (OUT, ">$ctrl->{'workdir'}$fname");
                         print OUT "$filhdr\n";
                     }
                     print OUT "$trkhdr\n";
@@ -214,12 +228,18 @@ sub l00http_gps_proc {
             $ctrl->{'droid'}->setClipboard ("$lon,$lat\n$buf");
         }
     }
+    if ($datename) {
+        $fname = 'gps_' . 
+            substr($ctrl->{'now_string'}, 0, 8) . '.trk';
+    } else {
+        $fname = 'gps.trk';
+    }
 
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} - <a href=\"/gps.htm\">Refresh</a> -  $ctrl->{'HOME'} - ";
-    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}gps.trk\">log</a> - \n";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}$fname\">log</a> - \n";
     print $sock "<a href=\"#end\">Jump to end</a><br>\n";
     print $sock "<a name=\"top\"></a>\n";
  
@@ -261,6 +281,18 @@ sub l00http_gps_proc {
     print $sock "        <td><input type=\"submit\" name=\"stop\" value=\"Stop\"> Note: when phone sleeps, interval may be much longer than specified</td>\n";
     print $sock "    </tr>\n";
 
+    if ($datename) {
+        $buf = 'checked';
+    } else {
+        $buf = '';
+    }
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"datename\" $buf>date name</td>\n";
+    print $sock "        <td>Filename=gps_(date).trk (otherwise=gps.trk)</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+
     if ($dup) {
         $buf = 'checked';
     } else {
@@ -279,7 +311,7 @@ sub l00http_gps_proc {
         $buf = 'checked';
     }
     print $sock "        <td><input type=\"checkbox\" name=\"dolog\" $buf>No logging</td>\n";
-    print $sock "        <td>Check to prevent writing to log file gps.trk</td>\n";
+    print $sock "        <td>Check to prevent writing to log file $fname</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
@@ -339,7 +371,8 @@ sub l00http_gps_proc {
     }
     print $sock "</pre><p>\n";
 
-    print $sock "view <a href=\"/view.htm?path=$ctrl->{'workdir'}gps.trk\">$ctrl->{'workdir'}gps.trk</a><p>\n";
+    print $sock "launcher <a href=\"/ls.htm?path=$ctrl->{'workdir'}\">$ctrl->{'workdir'}</a>";
+    print $sock "<a href=\"/launcher.htm?path=$ctrl->{'workdir'}$fname\">$fname</a><p>\n";
 
     print $sock "<a name=\"end\"></a><p>\n";
     print $sock "<a href=\"#top\">Jump to top</a><p>\n";
@@ -368,7 +401,21 @@ sub l00http_gps_perio {
             if ($out ne '') {
                 if (($dup == 1) || ($out ne $lastout)) {
                     if ($dolog) {
-                        open (OUT, ">>$ctrl->{'workdir'}gps.trk");
+                        if ($datename) {
+                            $fname = 'gps_' . 
+                                substr($ctrl->{'now_string'}, 0, 8) . '.trk';
+                        } else {
+                            $fname = 'gps.trk';
+                        }
+                        if (-f "$ctrl->{'workdir'}$fname") {
+                            # exist
+                            open (OUT, ">>$ctrl->{'workdir'}$fname");
+                        } else {
+                            # does not exist
+                            open (OUT, ">$ctrl->{'workdir'}$fname");
+                            print OUT "$filhdr\n";
+                            print OUT "$trkhdr\n";
+                        }
                         printf OUT "$out\n";
                         close (OUT);
                     }

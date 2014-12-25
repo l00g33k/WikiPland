@@ -23,7 +23,7 @@ sub l00http_launcher_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $file, $name, $col);
+    my (@alllines, $line, $lineno, $file, $name, $col, $extra);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -66,7 +66,11 @@ sub l00http_launcher_proc {
         if ($col == 0) {
             print $sock "<tr><td>\n";
         }
-        print $sock "<a href=\"/$name.htm?path=$form->{'path'}\">$name</a>\n";
+        $extra = '';
+        if ($name eq 'kml') {
+           $extra = '.kml';
+        }
+        print $sock "<a href=\"/$name.htm$form->{'path'}$extra?path=$form->{'path'}\">$name</a>\n";
         $col++;
         # change number of column here and below
         if ($col >= 3) {
