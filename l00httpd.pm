@@ -113,6 +113,11 @@ sub dumphashbuf {
             $buf .= "$name->$key => $tmp\n";
             if (ref $tmp eq 'HASH') {
                 $buf .= &dumphashbuf ("$name->$key", $tmp);
+            } elsif (ref $tmp eq 'ARRAY') {
+                $buf .= "$name->$key => ";
+                $buf .= 'last index: ' . $#$tmp . "; content:\n";
+                $buf .= join ("\n", @$tmp);
+                $buf .= "\n";
             } elsif ($key eq 'result') {
 #               $buf .= &dumphashbuf ("$name->$key", $tmp);
             }
@@ -135,6 +140,11 @@ sub dumphash {
             print "$name->$key => $tmp\n";
             if (ref $tmp eq 'HASH') {
                 &dumphash ("$name->$key", $tmp);
+            } elsif (ref $tmp eq 'ARRAY') {
+                print "$name->$key => ";
+                print 'last index: ' . $#$tmp . "; content:\n";
+                print join ("\n", @$tmp);
+                print "\n";
             } elsif ($key eq 'result') {
 #               &dumphash ("$name->$key", $tmp);
             }
