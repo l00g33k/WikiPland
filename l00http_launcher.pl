@@ -69,6 +69,9 @@ sub l00http_launcher_proc {
         $extra = '';
         if ($name eq 'kml') {
            $extra = '.kml';
+        } elsif ($form >{'path'} =~ /\.txt$/) {
+           # add .htm as some browser won't open .txt as HTML
+           $extra = '.htm';
         }
         print $sock "<a href=\"/$name.htm$form->{'path'}$extra?path=$form->{'path'}\">$name</a>\n";
         $col++;
