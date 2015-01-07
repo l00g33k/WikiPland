@@ -13,7 +13,7 @@ echo j : l00httpd.cfg ........ jj: CutPasteCheat.txt
 echo k : 0do.pl ..............
 echo l : l00sh_l00httpcode.sh. ll: l00sh_l00httpcode2.sh
 echo y : l00http_cmdedit.sh
-echo z : l00http_cmdmain.sh .. zz: ad hoc: l00_Whatsapp.pl 
+echo z : l00http_cmdmain.sh .. zz:WApp zzz:pod zzzz:came
 read sel
 echo $sel
 
@@ -103,6 +103,13 @@ vim /sdcard/sl4a/scripts/l00httpd/l00http_cmdmain.sh; fi
 
 if [ $sel = "zz" ]; then
 vim /sdcard/l00httpd/l00_Whatsapp.pl ; fi
+
+if [ $sel = "zzz" ]; then
+vim /sdcard/sl4a/scripts/l00httpd/l00http_podplay.pl ; fi
+
+if [ $sel = "zzzz" ]; then
+vim /sdcard/sl4a/scripts/l00httpd/docs_demo/l00_camera.pl ; fi
+
 done
 fi
 
