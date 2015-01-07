@@ -412,9 +412,8 @@ sub l00npoormanrdnshash {
 #&l00httpd::pcSyncCmdline($ctrl, $fullpath);
 sub pcSyncCmdline {
     my ($ctrl, $fullpath) = @_;
-    my ($buf, $rsyncpath, $path, $fname, $pcpath);
+    my ($buf, $clip, $rsyncpath, $path, $fname, $pcpath);
 
-    $buf = '';
 
     if (defined($ctrl->{'adbpath'})) {
         # use setting in l00httpd.cfg if defined
@@ -422,6 +421,9 @@ sub pcSyncCmdline {
     } else {
         $pcpath = 'c:/x/';
     }
+
+    $buf = '';
+    $clip = '';
 
     if (($path, $fname) = $fullpath =~ /^(.+\/)([^\/]+)$/) {
         # Windows + cygwin
@@ -441,6 +443,25 @@ sub pcSyncCmdline {
         $buf .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $buf .= "${pcpath}adb.in\n";
         $buf .= "</pre>\n";
+
+
+        #$clip .= "Send the clipboard to the host through port <a href=\"/clipbrdxfer.htm?url=127.0.0.1%3A50337&name=p&pw=p&nofetch=on\">50337</a><br>\n";        
+
+        $clip .= "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname\n";
+        $clip .= "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname\n";
+
+        $clip .= "adb pull \"$path$fname\" \"$pcpath$fname\"\n";
+        $clip .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";
+        $clip .= "$pcpath$fname\n";
+
+        $clip .= "ssh localhost -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
+        $clip .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
+        $clip .= "${pcpath}adb.in\n";
+
+        $clip = urlencode ($clip);
+
+        $buf = "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $clip . "\" target=\"newclip\">clipboard</a>:<br>\n" . $buf;
+
     }
 
     $buf;
