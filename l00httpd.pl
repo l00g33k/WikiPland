@@ -1276,8 +1276,10 @@ while(1) {
                 $tmp = $ctrl{'l00file'};
 
                 foreach $_ (sort keys %$tmp) {
+                    if (($_ eq 'l00://ram') ||
+                       (defined($ctrl{'l00file'}->{$_}) &&
+                        (length($ctrl{'l00file'}->{$_}) > 0))) {
 
-                    if (($_ eq 'l00://ram') || (length($ctrl{'l00file'}->{$_}) > 0)) {
                         print $sock "<tr>\n";
 
                         print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
