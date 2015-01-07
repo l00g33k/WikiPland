@@ -258,6 +258,7 @@ sub l00http_ls_proc {
                         }
                     } else {
                         ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                        print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                     }
 #l00:
                     # rendering as wiki text
@@ -461,6 +462,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                     }
                 } else {
                     ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                    print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                 }
 
                 # 2.2) If not, try reading 30 lines and look for Wikitext
@@ -973,197 +975,198 @@ print;
 
     # 4) If not in raw mode, also display a control table
 
-    if (($htmlend) && (!defined ($form->{'bare'}))) {
-        if ($ctrl->{'ishost'}) {
-            if ($ctrl->{'noclinav'}) {
-                print $sock "Client access mode: limited: $ctrl->{'clipath'} <br>\n";
-            } else {
-                print $sock "Client access mode: full<br>\n";
+    if ($htmlend) {
+        if (!defined ($form->{'bare'})) {
+            if ($ctrl->{'ishost'}) {
+                if ($ctrl->{'noclinav'}) {
+                    print $sock "Client access mode: limited: $ctrl->{'clipath'} <br>\n";
+                } else {
+                    print $sock "Client access mode: full<br>\n";
+                }
             }
-        }
-        print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
-        print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
-        print $sock "<tr>\n";
-        print $sock "  <td>Settings</td>\n";
-        print $sock "  <td>Descriptions</td>\n";
-        print $sock "</tr> <tr>\n";
-        print $sock "  <td>Path:</td>\n";
-        print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path\"></td>\n";
-        print $sock "</tr>\n";
-
-        if ($read0raw1 == 0) {
-            $readst = "checked";
-            $raw_st = "unchecked";
-            $pre_st = "unchecked";
-        } elsif ($read0raw1 == 1) {
-            $readst = "unchecked";
-            $raw_st = "checked";
-            $pre_st = "unchecked";
-        } else {
-            $readst = "unchecked";
-            $raw_st = "unchecked";
-            $pre_st = "checked";
-        }
-        print $sock "    <tr>\n";
-        print $sock "        <td>".
-          "<input type=\"radio\" name=\"mode\" value=\"read\" $readst>reading<br>".
-          "<input type=\"radio\" name=\"mode\" value=\"raw\"  $raw_st>raw<br>".
-          "<input type=\"radio\" name=\"mode\" value=\"pre\"  $pre_st>pre<br>".
-          "</td>\n";
-        print $sock "        <td>add new line for reading<br>raw dump<br>".
-                    "<input type=\"checkbox\" name=\"bare\">No header/footer</td>\n";
-        print $sock "    </tr>\n";
-
-        print $sock "    <tr>\n";
-#       print $sock "        <td>&nbsp;</td>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
-
-        if ($wikihtmlflags == 2) {
-            $buf = "checked";
-        } else {
-            $buf = "";
-        }
-        print $sock "        <td><input type=\"checkbox\" $buf name=\"sort\">dir sort by time</td>\n";
-
-        print $sock "    </tr>\n";
-
-        print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
-        print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
-        print $sock "    </tr>\n";
-
-        print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #.\n";
-        print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
-        print $sock "    </tr>\n";
-
-        print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
-        print $sock "        <td>&nbsp;</td>\n";
-        print $sock "    </tr>\n";
-
-        print $sock "    <tr>\n";
-        print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
-        print $sock "        <td><input type=\"checkbox\" name=\"showbak\">Show .bak files</td>\n";
-        print $sock "    </tr>\n";
-
-        print $sock "</table>\n";
-        print $sock "</form>\n";
-
-        if ($ctrl->{'ishost'}) {
-            print $sock "<hr>\n";
             print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
             print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
             print $sock "<tr>\n";
+            print $sock "  <td>Settings</td>\n";
+            print $sock "  <td>Descriptions</td>\n";
+            print $sock "</tr> <tr>\n";
             print $sock "  <td>Path:</td>\n";
             print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path\"></td>\n";
             print $sock "</tr>\n";
-            if ($ctrl->{'noclinav'}) {
+
+            if ($read0raw1 == 0) {
+                $readst = "checked";
+                $raw_st = "unchecked";
+                $pre_st = "unchecked";
+            } elsif ($read0raw1 == 1) {
+                $readst = "unchecked";
+                $raw_st = "checked";
+                $pre_st = "unchecked";
+            } else {
+                $readst = "unchecked";
+                $raw_st = "unchecked";
+                $pre_st = "checked";
+            }
+            print $sock "    <tr>\n";
+            print $sock "        <td>".
+              "<input type=\"radio\" name=\"mode\" value=\"read\" $readst>reading<br>".
+              "<input type=\"radio\" name=\"mode\" value=\"raw\"  $raw_st>raw<br>".
+              "<input type=\"radio\" name=\"mode\" value=\"pre\"  $pre_st>pre<br>".
+              "</td>\n";
+            print $sock "        <td>add new line for reading<br>raw dump<br>".
+                        "<input type=\"checkbox\" name=\"bare\">No header/footer</td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
+    #       print $sock "        <td>&nbsp;</td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
+
+            if ($wikihtmlflags == 2) {
                 $buf = "checked";
             } else {
                 $buf = "";
             }
-            print $sock "    <tr>\n";
-            print $sock "        <td><input type=\"checkbox\" $buf name=\"noclinav\">NoCliNav</td>\n";
-            print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+            print $sock "        <td><input type=\"checkbox\" $buf name=\"sort\">dir sort by time</td>\n";
+
             print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
+            print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #.\n";
+            print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
+            print $sock "        <td>&nbsp;</td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
+            print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"showbak\">Show .bak files</td>\n";
+            print $sock "    </tr>\n";
+
             print $sock "</table>\n";
             print $sock "</form>\n";
-        }
 
-        if ($editable) {
-            # find
-            print $sock "<hr><a name=\"find\"></a>\n";
-            print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
-            print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-            print $sock "<tr><td>\n";
-            print $sock "<input type=\"submit\" name=\"find\" value=\"Find\">\n";
-            print $sock "</td><td>\n";
-            print $sock "Find in this file\n";
-            print $sock "</td></tr>\n";
-            print $sock "<tr><td>\n";
-            print $sock "RegEx:\n";
-            print $sock "</td><td>\n";
-            print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\">\n";
-            print $sock "</td></tr>\n";
-            print $sock "<tr><td>\n";
-            print $sock "Block mark:\n";
-            print $sock "</td><td>\n";
-            print $sock "<input type=\"text\" size=\"12\" name=\"block\" value=\"$block\">\n";
-            print $sock "</td></tr>\n";
-            print $sock "<tr><td>\n";
-            print $sock "<input type=\"checkbox\" name=\"prefmt\" $prefmt>Fixed font\n";
-            print $sock "</td><td>\n";
-            if ($block eq '.') {
-                print $sock "<input type=\"checkbox\" name=\"sortfind\" $sortfind>Sort found\n";
-            } else {
-                print $sock "Sort found\n";
+            if ($ctrl->{'ishost'}) {
+                print $sock "<hr>\n";
+                print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+                print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+                print $sock "<tr>\n";
+                print $sock "  <td>Path:</td>\n";
+                print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path\"></td>\n";
+                print $sock "</tr>\n";
+                if ($ctrl->{'noclinav'}) {
+                    $buf = "checked";
+                } else {
+                    $buf = "";
+                }
+                print $sock "    <tr>\n";
+                print $sock "        <td><input type=\"checkbox\" $buf name=\"noclinav\">NoCliNav</td>\n";
+                print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+                print $sock "    </tr>\n";
+                print $sock "</table>\n";
+                print $sock "</form>\n";
             }
-            print $sock "</td></tr>\n";
-            print $sock "<tr><td>\n";
-            print $sock "<input type=\"checkbox\" name=\"showpage\" $showpage>Show page\n";
-            print $sock "</td><td>\n";
-            print $sock "&nbsp;\n";
-            print $sock "</td></tr>\n";
-            print $sock "<tr><td>\n";
-            print $sock "File:\n";
-            print $sock "</td><td>\n";
-            print $sock "<input type=\"text\" size=\"12\" name=\"path\" value=\"$form->{'path'}\">\n";
-            print $sock "</td></tr>\n";
-            print $sock "</table>\n";
-            print $sock "</form>\n";
-            print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
+
+            if ($editable) {
+                # find
+                print $sock "<hr><a name=\"find\"></a>\n";
+                print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+                print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                print $sock "<tr><td>\n";
+                print $sock "<input type=\"submit\" name=\"find\" value=\"Find\">\n";
+                print $sock "</td><td>\n";
+                print $sock "Find in this file\n";
+                print $sock "</td></tr>\n";
+                print $sock "<tr><td>\n";
+                print $sock "RegEx:\n";
+                print $sock "</td><td>\n";
+                print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\">\n";
+                print $sock "</td></tr>\n";
+                print $sock "<tr><td>\n";
+                print $sock "Block mark:\n";
+                print $sock "</td><td>\n";
+                print $sock "<input type=\"text\" size=\"12\" name=\"block\" value=\"$block\">\n";
+                print $sock "</td></tr>\n";
+                print $sock "<tr><td>\n";
+                print $sock "<input type=\"checkbox\" name=\"prefmt\" $prefmt>Fixed font\n";
+                print $sock "</td><td>\n";
+                if ($block eq '.') {
+                    print $sock "<input type=\"checkbox\" name=\"sortfind\" $sortfind>Sort found\n";
+                } else {
+                    print $sock "Sort found\n";
+                }
+                print $sock "</td></tr>\n";
+                print $sock "<tr><td>\n";
+                print $sock "<input type=\"checkbox\" name=\"showpage\" $showpage>Show page\n";
+                print $sock "</td><td>\n";
+                print $sock "&nbsp;\n";
+                print $sock "</td></tr>\n";
+                print $sock "<tr><td>\n";
+                print $sock "File:\n";
+                print $sock "</td><td>\n";
+                print $sock "<input type=\"text\" size=\"12\" name=\"path\" value=\"$form->{'path'}\">\n";
+                print $sock "</td></tr>\n";
+                print $sock "</table>\n";
+                print $sock "</form>\n";
+                print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
 
-            print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
-            print $sock "<form action=\"/edit.htm\" method=\"get\">\n";
-            print $sock "<td><input type=\"submit\" name=\"edit\" value=\"Edit\"></td>\n";
-            print $sock "<td><input type=\"text\" size=\"7\" name=\"path\" value=\"$path\"></td>\n";
-            #print $sock "<td><input type=\"text\" size=\"4\" name=\"busybox\" value=\"busybox vi $path\"></td>\n";
-            print $sock "</form>\n";
-            print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
-            print $sock "<td><input type=\"submit\" name=\"bkvish\" value=\"bk&vi\"></td>\n";
-            print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-            print $sock "</form>\n";
+                print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
+                print $sock "<form action=\"/edit.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"edit\" value=\"Edit\"></td>\n";
+                print $sock "<td><input type=\"text\" size=\"7\" name=\"path\" value=\"$path\"></td>\n";
+                #print $sock "<td><input type=\"text\" size=\"4\" name=\"busybox\" value=\"busybox vi $path\"></td>\n";
+                print $sock "</form>\n";
+                print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"bkvish\" value=\"bk&vi\"></td>\n";
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+                print $sock "</form>\n";
 
-            print $sock "</tr><tr>\n";
+                print $sock "</tr><tr>\n";
 
-            print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
-            print $sock "<td><input type=\"submit\" name=\"setlaunch\" value=\"Set\"></td>\n";
-            print $sock "<td><input type=\"text\" size=\"7\" name=\"target\" value=\"$target\"></td>\n";
-            print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-            print $sock "</form>\n";
+                print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"setlaunch\" value=\"Set\"></td>\n";
+                print $sock "<td><input type=\"text\" size=\"7\" name=\"target\" value=\"$target\"></td>\n";
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+                print $sock "</form>\n";
 
-            print $sock "<form action=\"/$target.htm\" method=\"get\">\n";
-            print $sock "<td><input type=\"submit\" name=\"launchit\" value=\"$target\"></td>\n";
-            print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-            print $sock "</form>\n";
-            print $sock "</tr></table>\n";
-        }
-
-        print $sock "<hr><a name=\"end\"></a>\n";
-        if (!defined ($file)) {
-            $dir = $path;
-            $dir =~ s/\/[^\/]+$/\//;
-            print $sock "<p><a href=\"/find.htm?path=$dir&fmatch=%5C.txt%24\">find in files</a> in $dir\n";
-            print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>\n";
-            print $sock "<p><a href=\"/view.htm?path=$path\">View</a> $path\n";
-            print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
-            print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
-            print $sock "<td><input type=\"submit\" name=\"altsendto\" value=\"'Size' send to\"></td>\n";
-            print $sock "<td><input type=\"text\" size=\"7\" name=\"sendto\" value=\"$ctrl->{'lssize'}\"></td>\n";
-            if (!defined ($form->{'path'})) {
-                print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
-            } else {
-                print $sock "<input type=\"hidden\" name=\"path\"\">\n";
+                print $sock "<form action=\"/$target.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"launchit\" value=\"$target\"></td>\n";
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+                print $sock "</form>\n";
+                print $sock "</tr></table>\n";
             }
-            print $sock "</form>\n";
-            print $sock "</tr></table>\n";
-        }
 
+            print $sock "<hr><a name=\"end\"></a>\n";
+            if (!defined ($file)) {
+                $dir = $path;
+                $dir =~ s/\/[^\/]+$/\//;
+                print $sock "<p><a href=\"/find.htm?path=$dir&fmatch=%5C.txt%24\">find in files</a> in $dir\n";
+                print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>\n";
+                print $sock "<p><a href=\"/view.htm?path=$path\">View</a> $path\n";
+                print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
+                print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"altsendto\" value=\"'Size' send to\"></td>\n";
+                print $sock "<td><input type=\"text\" size=\"7\" name=\"sendto\" value=\"$ctrl->{'lssize'}\"></td>\n";
+                if (!defined ($form->{'path'})) {
+                    print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+                } else {
+                    print $sock "<input type=\"hidden\" name=\"path\"\">\n";
+                }
+                print $sock "</form>\n";
+                print $sock "</tr></table>\n";
+            }
+        }
         print $sock $ctrl->{'htmlfoot'};
     }
 
