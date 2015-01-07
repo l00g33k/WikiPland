@@ -159,6 +159,7 @@ sub l00http_kml_proc {
 			                "\t\t<Placemark><name>Track $trackno</name>\n" .
 			                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
 			                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+			                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
 			                "\t\t\t<coordinates>\n";
                         $trackno++;
                     }
@@ -175,7 +176,7 @@ sub l00http_kml_proc {
                             if ($ew eq 'W') {
                                 $lon_ = -$lon_;
                             }
-		                    $tracks = $tracks . "\t\t\t$lon_,$lat_\n";
+		                    $tracks = $tracks . "\t\t\t$lon_,$lat_,30\n";
                         }
                     }
                 }
