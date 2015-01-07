@@ -24,7 +24,8 @@ sub l00http_quickdev_desc {
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
     "quickdev: Execute module without restarting. Specify full path in ".
-    "<a href=\"/edit.htm?path=l00://quickdev.htm\">quickdev.htm</a>";
+    "<a href=\"/edit.htm?path=l00://quickdev.htm\">quickdev.htm</a> -- ".
+    "<a href=\"/clip.htm?update=Copy+to+CB&clip=%2Fsdcard%2Fsl4a%2Fscripts%2Fl00httpd%2Fl00http_toast.pl\">clip example</a>";
 }
 
 sub l00http_quickdev_proc (\%) {
