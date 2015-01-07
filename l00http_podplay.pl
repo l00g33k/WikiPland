@@ -184,7 +184,7 @@ $out = '';
 
 # Extract URL from clipboard
 $url = $ctrl->{'droid'}->getClipboard()->{'result'};
-$out .= "Clipboard content:<br>$url<p><hr>\n";
+$out .= "<hr>Clipboard content:<br>$url<p><hr>\n";
 $tail = '';
 if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
     $url = $1;
@@ -201,24 +201,27 @@ $out .= "Found URL:<br><a href=\"$url\">$url</a><p><hr>Fetch it:<br>\n";
 &l00httpd::l00fwriteClose($ctrl);
 
 if (defined($bdy)) {
-    $out .= "hdr " . length($hdr) . " bdy " . length($bdy) . " \n";
+    $out .= "header bytes " . length($hdr) . " body bytes " . length($bdy) . ". \n";
     $out .= "Fetch result: <a href=\"/view.htm?path=l00://pod1\">view l00://pod1</a><p>\n";
-    # <audio src="http://cdn.pri.org/sites/default/files/pris-world/segment-audio/121020146.mp3" class="mediaelement-formatter-identifier-1418279453-0" controls="controls" style="max-width: 100%;" preload="none" >
     $url = '';
     if ($bdy =~ /<audio +src="(http:.+?\.mp3)"/) {
+        # <audio src="http://cdn.pri.org/sites/default/files/pris-world/segment-audio/121020146.mp3" class="mediaelement-formatter-identifier-1418279453-0" controls="controls" style="max-width: 100%;" preload="none" >
         $url = $1;
         $out .= "audio src URL:<br><a href=\"$url\">$url</a><p><hr>\n";
-    }
-    $bdy =~ s/</&lt;/g;
-    $bdy =~ s/>/&gt;\n/g;
-    $out .= "Potential URLs:<br>\n";
-    foreach $_ (split ("\n", $bdy)) {
-        $out .= "$_<p>\n", if (/http.*\.mp3/);
-        if (/(http.*\.mp3)/) {
-            if ($url eq '') { 
-                $url = $1;
+    } else {
+        # no <audio src= tag, search for *.mp3
+        $bdy =~ s/</&lt;/g;
+        $bdy =~ s/>/&gt;\n/g;
+        $out .= "Potential .mp3 URLs:<br>\n";
+        foreach $_ (split ("\n", $bdy)) {
+            $out .= "$_<p>\n", if (/http.*\.mp3/);
+            if (/(http.*\.mp3)/) {
+                if ($url eq '') { 
+                    $url = $1;
+                    $out .= ".mp3 URL:<br><a href=\"$url\">$url</a><p><hr>\n";
+                    last;
+                }
             }
-            $out .= "$1<p>\n";
         }
     }
 
@@ -236,7 +239,7 @@ if (defined($bdy)) {
         &l00httpd::l00fwriteBuf($ctrl, "$hdr\n\n$bdy");
         &l00httpd::l00fwriteClose($ctrl);
         if (defined($hdr)) {
-            $out .= "hdr " . length($hdr) . " bdy " . length($bdy) . "<p>\n";
+            $out .= "header bytes " . length($hdr) . " body bytes " . length($bdy) . "<p>\n";
             $out .= "<a href=\"/view.htm?path=l00://pod2\">l00://pod2</a><p>\n";
             $hdr =~ s/</&lt;/g;
             $hdr =~ s/>/&gt;\n/g;
@@ -270,7 +273,7 @@ if (defined($bdy)) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>podplay</title>" . $refreshtag . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
 
 
 print $sock $out;
@@ -305,7 +308,7 @@ print $sock $out;
     print $sock "<br>\n";
 
 print $sock "<br>\n";
-print $sock "<input type=\"submit\" name=\"clip\" value=\"Clip\">\n";
+print $sock "<input type=\"submit\" name=\"clip\" value=\"Fetch .mp3 URL\">\n";
     $seqnxt = $seq + 1;
     print $sock "<INPUT TYPE=\"hidden\" NAME=\"seq\" VALUE=\"$seqnxt\">\n";
     print $sock "</form>\n";
