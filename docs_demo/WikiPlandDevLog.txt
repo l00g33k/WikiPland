@@ -1,0 +1,2 @@
+20150108 223743 reader: '---' starting from column 0 ends attempt to cache articles
+* A developer's log when I remember to enter

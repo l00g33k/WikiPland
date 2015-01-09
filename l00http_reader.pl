@@ -27,6 +27,7 @@ sub l00http_reader_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $fname, $lnno, $lnno2, $readln, $tmp, $curr, $buf, $font0, $font1);
 	my ($cachepath, $cachename, $cachelink, $url, $morepage, $tmp2, %duplicate, $cnt);
+    my ($docaching);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>reader</title>" . $ctrl->{'htmlhead2'};
@@ -166,7 +167,12 @@ sub l00http_reader_proc (\%) {
 
             $lnno = 1;
             $cnt = 0;
+            $docaching = 1;
             while (<IN>) {
+                if (/^---/) {
+                    # --- ends attempt to cache
+                    $docaching = 0;
+                }
                 if (/^(\d{8,8} \d{6,6}) /) {
 					$cachename = $1;
 					$cachename =~ s/ /_/;
@@ -178,6 +184,7 @@ sub l00http_reader_proc (\%) {
                     $cachename = "$cachepath$cachename.txt";
                     if (defined ($form->{'download'}) && 
                         !(-e $cachename) &&
+                        $docaching &&
                         ($cnt < $maxarts)) {   # download at most 50 articles at once
                         # downloading and not yet cached. cache now
 						$tmp = $_;
