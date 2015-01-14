@@ -246,6 +246,15 @@ print "$_\n\n";
             $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                 = stat($form->{'path'});
     print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
+
+    # skip backward $maxln
+    $tmp = $lineno - 200;
+    print $sock "View last: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=200&path=$form->{'path'}\">200</a>,\n";
+    $tmp = $lineno - 500;
+    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=500&path=$form->{'path'}\">500</a>,\n";
+    $tmp = $lineno - 1000;
+    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=1000&path=$form->{'path'}\">1000</a> lines.<p>\n";
+
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
 
     # highlite

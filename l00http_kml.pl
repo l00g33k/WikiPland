@@ -176,7 +176,7 @@ sub l00http_kml_proc {
                             if ($ew eq 'W') {
                                 $lon_ = -$lon_;
                             }
-		                    $tracks = $tracks . "\t\t\t$lon_,$lat_,30\n";
+		                    $tracks = $tracks . "\t\t\t$lon_,$lat_,10\n";
                         }
                     }
                 }

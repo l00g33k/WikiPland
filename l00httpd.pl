@@ -827,8 +827,8 @@ while(1) {
             }
 
             foreach $mod (sort keys %httpmods) {
-# what was the reason I disable this always on?
-                if (defined ($ctrl{"alwayson_$mod"})) {
+                if (defined ($ctrl{"alwayson_$mod"}) ||
+                    defined ($ctrl{'allappson'})) {
                     $modsinfo{"$mod:ena:checked"} = "checked";
                 }
 				if ($open) {
@@ -1002,7 +1002,8 @@ while(1) {
                     }
 
                     # enable all Applets overwrites
-                    if ((defined ($FORM{'allappson'})) && ($FORM{'allappson'} eq "on")) {
+                    if (((defined ($FORM{'allappson'})) && ($FORM{'allappson'} eq "on")) ||
+                        defined ($ctrl{'allappson'})) {
                         foreach $mod (sort keys %httpmods) {
                             if (defined ($modsinfo{"$mod:fn:proc"})) {
                                 $modsinfo{"$mod:ena:checked"} = "checked";
@@ -1082,7 +1083,9 @@ while(1) {
                     # on server: display submit button
                     print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
                 }
-                print $sock "<a href=\"/httpd.htm\">Ctrl</a> $ctrl{'HOME'}\n";
+                print $sock "<a href=\"/httpd.htm\">#</a>\n";
+                print $sock "<a href=\"/ls.htm/HelpModl00httpd.htm?path=${plpath}docs_demo/HelpModl00httpd.txt\">?</a>\n";
+                print $sock "$ctrl{'HOME'}\n";
                 print $sock "<a href=\"/ls.htm/QuickStart.htm?path=$plpath"."docs_demo/QuickStart.txt\">QuickStart</a>\n";
                 print $sock "<a href=\"#end\">end</a> \n";
                 if ($ctrl{'os'} eq 'and') {
