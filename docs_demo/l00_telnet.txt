@@ -1,0 +1,12 @@
+* [[/telnet.htm?path=/sdcard/sl4a/scripts/l00httpd/docs_demo/l00_telnet.txt|telnet.pl]]
+#ADDR.5:127.0.0.1:20339
+#ADDR.5:192.168.97.44:23
+ADDR.5:127.0.0.1:2323
+SEND:\n
+EXPECT.3:login:
+SEND:root\n
+EXPECT.3::~#
+SEND:ps\n
+EXPECT.3::~#
+SEND:exit\n
+EXPECT.3:
