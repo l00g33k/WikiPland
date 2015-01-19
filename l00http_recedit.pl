@@ -197,7 +197,7 @@ sub l00http_recedit_proc (\%) {
                         print $sock "    <tr>\n";
                         if (defined ($form->{'reminder'})) {
                             print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del<br>\n";
-                            print $sock "            <input type=\"checkbox\" name=\"add$id\">+1</td>\n";
+                            print $sock "            +1<input type=\"checkbox\" name=\"add$id\"></td>\n";
                             $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
                         } else {
                             print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
@@ -262,7 +262,7 @@ sub l00http_recedit_proc (\%) {
                 print $sock "    <tr>\n";
                 if (defined ($form->{'reminder'})) {
                     print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del<br>\n";
-                    print $sock "            <input type=\"checkbox\" name=\"add$id\">+1</td>\n";
+                    print $sock "            +1<input type=\"checkbox\" name=\"add$id\"></td>\n";
                     $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
                 } else {
                     print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
