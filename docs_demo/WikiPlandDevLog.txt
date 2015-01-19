@@ -1,2 +1,6 @@
+20150119 095712 creating telnet.pl for Expect like connection to telnet ports (incomplete)
+20150113 224547 fix to allow wiki words in upcoming calendar event to be display as link s
+20150113 224521 gps kml elevation set to 30m
+20150113 224417 added more space at the end of view. added link at the end preview to view last 200, 500, 1000 mds
 20150108 223743 reader: '---' starting from column 0 ends attempt to cache articles
 * A developer's log when I remember to enter

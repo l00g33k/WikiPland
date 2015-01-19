@@ -53,14 +53,16 @@ sub l00http_eval_proc {
     }
     $lncn = 0;
     if (defined ($eval) && (length ($eval) > 1)) {
+        print $sock "<pre>\n";
         foreach $line (split ("\n", $eval)) {
             #print $sock "eval: $line\n";
             #eval $line;
             print $sock "$lncn: ";
             eval "print \$sock $line";
-            print $sock "$rst<br>\n";
+            print $sock "$rst\n";
             $lncn++;
         }
+        print $sock "</pre>\n";
     }
 
     print $sock "<form action=\"/eval.htm\" method=\"post\">\n";
