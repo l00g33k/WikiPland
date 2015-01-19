@@ -384,7 +384,7 @@ sub l00http_gps_proc {
 
 sub l00http_gps_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($out);
+    my ($out, $retval, $brightness);
 
     $lastpoll = time;
     if (($interval > 0) && 
@@ -479,8 +479,25 @@ $_ =
         $percnt++;
     }
 
-    $interval;
+
+    $retval = $interval;
+
+    if ($interval > 0) {
+        # if gps.pl is on (periodic)
+        # get screen brightness
+        $brightness = $ctrl->{'droid'}->getScreenBrightness ();
+        $brightness = $brightness->{'result'};
+        # if screen brightness == 0, overwrite interval to 1 hour, 
+        # i.e. effectively turning logging off
+        if ($brightness == 0) {
+            $retval = 3600;
+        }
+    }
+
+
+    $retval;
 }
 
 
 \%config;
+
