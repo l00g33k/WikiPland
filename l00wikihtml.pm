@@ -664,8 +664,6 @@ if(1){
                 # wikiword links
 #d612                s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
                 s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
-                # for wikiword in column 0
-                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|g;
                 # special case when wiki word is the first word without leading space
 #d612                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;
                 s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
@@ -953,6 +951,8 @@ if(1){
             #s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt&tx=$2.htm\">$2</a>|g;
 #d612            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
             s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+            # special case without space in front
+            s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|g;
             # special case when wiki word is the first word without leading space
             #s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt&tx=$1.htm\">$1</a>|;
 #d612            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;

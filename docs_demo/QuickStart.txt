@@ -1,6 +1,6 @@
-WikiPlandDevLog
 %TOC%
 =Welcome to l00httpd=
+* Link to WikiPlandDevLog
 * You see this page because you have not yet personalized your l00httpd directory
 ** Personalization copies the 'l00httpd' directory tree to the !SDcard at /sdcard/l00httpd
 ** This makes the directory visible to your desktop computer when you connect your phone in 'Disk drive' mode so you can copy all your data files to your desktop for backup
