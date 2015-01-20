@@ -425,29 +425,50 @@ if(1){
                 # remove internal tag
                 $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
             }
+            # check if we have a Markdown style header (with ===, ---, ... underline)
             if ((length($_) > 0) && (length($_) == length($tmp))) {
                 # Making my life simple by requiring heading and == or -- equal length
                 # At least one char long
                 if ($tmp eq "=" x length($_)) {
                     $_ = "# $_";
                     $cacheidx++; # skip a line
-                    # occurance of this form of header say we are markdown
+                    # occurance of this form of header says we are in markdown mode
                     $mode0unknown1twiki2markdown = 2;
                     $mdChanged2Tw = 1;
                 }
                 if ($tmp eq "-" x length($_)) {
                     $_ = "## $_";
                     $cacheidx++; # skip a line
-                    # occurance of this form of header say we are markdown
+                    # occurance of this form of header says we are in markdown mode
                     $mode0unknown1twiki2markdown = 2;
                     $mdChanged2Tw = 1;
                 }
                 if ($tmp eq "." x length($_)) {
                     $_ = "### $_";
                     $cacheidx++; # skip a line
-                    # occurance of this form of header say we are markdown
+                    # occurance of this form of header says we are in markdown mode
                     $mode0unknown1twiki2markdown = 2;
                     $mdChanged2Tw = 1;
+                }
+            }
+        }
+        # allow markdown bullet list to span multiple lines. Look ahead
+        if (/^\*+ /) {
+            while ($cacheidx < $#inputcache) {
+                # we are on a bullet line
+                # checking up to the second last line in the source
+                $tmp = $inputcache[$cacheidx + 1];
+                if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                    # remove internal tag
+                    $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                }
+                # is it an extension line?
+                if ($tmp =~ /^[0-9A-Za-z'"_\-]/) {
+                    $_ .= " $tmp";
+                    # consume the line
+                    $cacheidx++;
+                } else {
+                    last;
                 }
             }
         }

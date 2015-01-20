@@ -1,3 +1,5 @@
+20150119 163828 Improve wiki markdown to allow bulleted paragraph to span multiple lines
+20150119 130308 Added telnet.pl to support Expected like telnet client for connecting to a telnet terminal and say issue reboot command
 20150119 095712 creating telnet.pl for Expect like connection to telnet ports (incomplete)
 20150113 224547 fix to allow wiki words in upcoming calendar event to be display as link s
 20150113 224521 gps kml elevation set to 30m
