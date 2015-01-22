@@ -132,7 +132,7 @@ sub l00http_tree_proc {
                     }
                     $crc32 = &l00crc32::crc32($buf);
                 }
-                print $sock sprintf("%8d %08x ", $size, $crc32);
+                print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                 $export .= sprintf("%4d %8d %08x %s\n",$cnt, $size, $crc32, $path.$file);
             } else {
                 if ($isdir) {
@@ -141,14 +141,14 @@ sub l00http_tree_proc {
                 } else {
                     $nofile++;
                 }
-                print $sock sprintf("%8d ", $size);
+                print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
                 $export .= sprintf("%4d %8d %s\n",$cnt, $size, $path.$file);
             }
             # show path from base down only
 			$path2 = $path;
 			$path2 =~ s/^$form->{'path'}//;
             print $sock "<a href=\"/ls.htm?path=$path\">$path2</a>";
-            print $sock "<a href=\"/view.htm?path=$path$file\">$file</a>\n";
+            print $sock "<a href=\"/ls.htm?path=$path$file\">$file</a>\n";
         } else {
             $cntbak++;
         }

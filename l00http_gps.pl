@@ -490,7 +490,7 @@ $_ =
         # if screen brightness == 0, overwrite interval to 1 hour, 
         # i.e. effectively turning logging off
         if ($brightness == 0) {
-            $retval = 3600;
+            $retval = 0;
         }
     }
 
@@ -500,4 +500,3 @@ $_ =
 
 
 \%config;
-
