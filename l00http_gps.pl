@@ -172,14 +172,18 @@ sub l00http_gps_proc {
             }
 
             if ($interval > 0) {
-                if (($ctrl->{'os'} eq 'and') &&
-                    (defined ($form->{"wake"}) && ($form->{"wake"} eq 'on'))) {
-                    if ($wake == 0) {
-                        $wake = 1;
-                        $ctrl->{'droid'}->wakeLockAcquirePartial();
+                if ($ctrl->{'os'} eq 'and') {
+                    if (defined ($form->{"wake"}) && ($form->{"wake"} eq 'on')) {
+                        if ($wake == 0) {
+                            $wake = 1;
+                            $ctrl->{'droid'}->wakeLockAcquirePartial();
+                        }
+                    } else {
+                        if ($wake != 0) {
+                            $wake = 0;
+                            $ctrl->{'droid'}->wakeLockRelease();
+                        }
                     }
-                } else {
-                    $wake = 0;
                 }
                 if (($known0loc1 == 1) && ($ctrl->{'os'} eq 'and')) {
                     $ctrl->{'droid'}->startLocating ($interval * 1000, 1);
