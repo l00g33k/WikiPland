@@ -76,7 +76,7 @@ sub wget {
                 $ret = sysread ($curr_socket, $_, 4 * 1024 * 1024);
 
                 if ((!defined($ret)) || ($ret == 0)) {
-                    next;
+                    last;
                 }
                 $cnt += $ret;
                 $buf .= $_;
