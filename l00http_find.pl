@@ -136,7 +136,8 @@ sub l00http_find_search {
                                                         $output .= 
                                                             "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
                                                             "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
-                                                        $output .= "($lineno): $_$lineend";
+                                                        #$output .= "($lineno): $_$lineend";
+                                                        $output .= "(<a href=\"/view.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$lineno</a>): $_$lineend";
                                                         #print $sock 
                                                         #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
                                                         #   "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
