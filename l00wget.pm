@@ -74,67 +74,66 @@ sub wget {
             $ret = undef;
             foreach my $curr_socket (@$ready) {
                 $ret = sysread ($curr_socket, $_, 4 * 1024 * 1024);
-
-                if ((!defined($ret)) || ($ret == 0)) {
-                    last;
-                }
-                $cnt += $ret;
-                $buf .= $_;
-                if ($hdrlen <= 0) {
-                    $hdrlen = index ($buf, "\r\n\r\n");
-                    if ($hdrlen > 0) {
-                        $hdrlen += 2;
-                        # save hdr
-                        $hdr = substr ($buf, 0, $hdrlen);
-                        # chop hdr
-                        substr ($buf, 0, $hdrlen + 2) = '';
-                        if ($hdr =~ /Content-Length: *(\d+)/i) {
-                            $mode = 'contlen';
-                            $contlen = $1;
-                        }
-                        if ($hdr =~ /Transfer-Encoding: *chunked/i) {
-                            $mode = 'chunked';
-                            $chunksz = -1;
-                        }
-                    } else {
-                        # not finding HTTP header; 
-                        $hdrlen = 1;    # anything > 0
-                    }
-                }
+            }
+            if ((!defined($ret)) || ($ret == 0)) {
+                last;
+            }
+            $cnt += $ret;
+            $buf .= $_;
+            if ($hdrlen <= 0) {
+                $hdrlen = index ($buf, "\r\n\r\n");
                 if ($hdrlen > 0) {
-                    # got header
-                    if ($mode eq 'chunked') {
-                        while (1) {
-                            if ($chunksz < 0) {
-                                if ($buf =~ /^([0-9a-fA-F]+)\r/) {
-                                    $chunksz = hex ($1);
-                                    if ($chunksz == 0) {
-                                        last;
-                                    }
-                                    substr ($buf, 0, length($1) + 2) = '';
-                                }
-                            }
-                            if (($chunksz > 0) && (length ($buf) >= $chunksz)) {
-                                $bdy .= substr ($buf, 0, $chunksz);
-                                substr ($buf, 0, $chunksz + 2) = '';
-                                $chunksz = -1;
-                            } else {
-                                last;
-                            }
-                        }
-                        if ($chunksz == 0) {
-                            last;
-                        }
-                    } elsif ($mode eq 'contlen') {
-                        $bdy .= $buf;
-                        $buf = '';
-                        if (length ($bdy) >= $contlen) {
-                            last;
-                        }
-                    } else {
-                        $bdy .= $buf;
-                        $buf = '';
+                    $hdrlen += 2;
+                    # save hdr
+                    $hdr = substr ($buf, 0, $hdrlen);
+                    # chop hdr
+                    substr ($buf, 0, $hdrlen + 2) = '';
+                    if ($hdr =~ /Content-Length: *(\d+)/i) {
+                        $mode = 'contlen';
+                        $contlen = $1;
                     }
+                    if ($hdr =~ /Transfer-Encoding: *chunked/i) {
+                        $mode = 'chunked';
+                        $chunksz = -1;
+                    }
+                } else {
+                    # not finding HTTP header; 
+                    $hdrlen = 1;    # anything > 0
+                }
+            }
+            if ($hdrlen > 0) {
+                # got header
+                if ($mode eq 'chunked') {
+                    while (1) {
+                        if ($chunksz < 0) {
+                            if ($buf =~ /^([0-9a-fA-F]+)\r/) {
+                                $chunksz = hex ($1);
+                                if ($chunksz == 0) {
+                                    last;
+                                }
+                                substr ($buf, 0, length($1) + 2) = '';
+                            }
+                        }
+                        if (($chunksz > 0) && (length ($buf) >= $chunksz)) {
+                            $bdy .= substr ($buf, 0, $chunksz);
+                            substr ($buf, 0, $chunksz + 2) = '';
+                            $chunksz = -1;
+                        } else {
+                            last;
+                        }
+                    }
+                    if ($chunksz == 0) {
+                        last;
+                    }
+                } elsif ($mode eq 'contlen') {
+                    $bdy .= $buf;
+                    $buf = '';
+                    if (length ($bdy) >= $contlen) {
+                        last;
+                    }
+                } else {
+                    $bdy .= $buf;
+                    $buf = '';
                 }
             }
         }
