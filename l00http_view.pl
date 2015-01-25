@@ -69,9 +69,6 @@ sub l00http_view_proc {
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
         }
-    } else {
-        $skip = 0;
-        $maxln = 1000;
     }
 
     $hilite = 0;
@@ -86,11 +83,10 @@ sub l00http_view_proc {
         # we are highlighting
         if (($hilite < $skip) || ($hilite > $skip + $maxln)) {
             # but it won't be in view. adjust skip and maxln
-            $skip = $hilite - 500;
+            $skip = $hilite - int ($maxln / 2);
             if ($skip < 0) {
                 $skip = 0;
             }
-            $maxln = 1000;
         }
     }
 
