@@ -154,7 +154,9 @@ sub l00http_reader_proc (\%) {
     print $sock "</form>\n";
 
     if ((defined ($form->{'path'})) && (defined ($form->{'download'}))) {
-        print $sock "<br>Downloading. $lnno2 lines to check.<br>\n";
+        print $sock "<br>Downloading. $lnno2 lines to check.\n";
+        print $sock "Start 20347 server and click <a href=\"http://127.0.0.1:20347/sleep.htm?path=$ctrl->{'workdir'}SigReaderDownloadStop.txt&save=y&buffer=Existence+of+file+signal+stop\">here</a> to stop downloading.\n";
+        print $sock "<br>\n";
     }
 
     print $sock "<pre>\n";
@@ -171,6 +173,11 @@ sub l00http_reader_proc (\%) {
             while (<IN>) {
                 if (/^---/) {
                     # --- ends attempt to cache
+                    $docaching = 0;
+                }
+                if (-f "$ctrl->{'workdir'}SigReaderDownloadStop.txt") {
+                    # Existence of file signal stop downloading
+                    unlink ("$ctrl->{'workdir'}SigReaderDownloadStop.txt");
                     $docaching = 0;
                 }
                 if (/^(\d{8,8} \d{6,6}) /) {
