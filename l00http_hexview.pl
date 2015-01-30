@@ -4,10 +4,11 @@
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # this is a simple template, a good starting point to make your own modules
-my ($offset, $length, $width);
+my ($offset, $length, $width, $group);
 $offset = 0;
 $length = 0x200;
 $width = 8;
+$group = 4;
 
 my %config = (proc => "l00http_hexview_proc",
               desc => "l00http_hexview_desc");
@@ -42,6 +43,9 @@ sub l00http_hexview_proc {
     if (defined ($form->{'width'})) {
         $width = $form->{'width'};
     }
+    if (defined ($form->{'group'})) {
+        $group = hex ($form->{'group'});
+    }
 
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
@@ -60,21 +64,18 @@ sub l00http_hexview_proc {
         binmode (IN);
         # http://www.perlmonks.org/?node_id=1952
         local $/ = undef;
-        $buffer = <IN>;
+        seek (IN, $offset, 0);
+        read (IN, $buffer, $length);
         close (IN);
-        $iiend = $offset + $length;
+        $iiend = $length;
         if ($iiend > length ($buffer)) {
             $iiend = length ($buffer);
         }
         print $sock "<pre>\n";
         $ascii = '';
         $hex = '';
-        for ($ii = $offset; $ii < $iiend; $ii += 4) {
-            $blklen = $iiend - $ii;
-            if ($blklen > 4) {
-                $blklen = 4;
-            }
-            if (($ii % $width) == 0) {
+        for ($ii = 0; $ii < $iiend; $ii++) {
+            if ((($ii) % $width) == 0) {
                 $tmp = "$hex $ascii\n";
                 $tmp =~ s/\\/\\\\/g;
                 $tmp =~ s/%/%%/g;
@@ -82,15 +83,15 @@ sub l00http_hexview_proc {
                 $tmp =~ s/>/&gt;/g;
                 printf $sock ($tmp);
                 #printf $sock ("$hex $ascii\n");
-                $hex = sprintf ("%06x", $ii);
+                $hex = sprintf ("%06x", $ii + $offset);
                 $ascii = '';
             }
-            if (($ii % 4) == 0) {
+            if ((($ii % $width) % $group) == 0) {
                 $hex .= ' ';
             }
-            $hex .= sprintf (" %02x"x$blklen,
-                unpack ("C$blklen", substr ($buffer, $ii, $blklen)));
-            $tmp = substr ($buffer, $ii, $blklen);
+            $hex .= sprintf (" %02x",
+                unpack ("C", substr ($buffer, $ii, 1)));
+            $tmp = substr ($buffer, $ii, 1);
             $tmp =~ s/([^a-zA-Z0-9])/((ord($1)<32)||(ord($1)>95))?'.':$1/ge;
             $ascii .= "$tmp";
         }
@@ -126,7 +127,12 @@ sub l00http_hexview_proc {
     print $sock "<tr><td>\n";
     print $sock "Width\n";
     print $sock "</td><td>\n";
-    print $sock "0x<input type=\"text\" name=\"width\" size=8 value=\"$width\"> mod 4\n";
+    print $sock "<input type=\"text\" name=\"width\" size=8 value=\"$width\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Group\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" name=\"group\" size=8 value=\"$group\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form><p>\n";
