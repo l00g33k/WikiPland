@@ -41,7 +41,7 @@ eval "use Android";
 
 
 my ($addr, $checked, $client_ip, $cmd_param_pair, $conf);
-my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $cli_port, $debug, $file, $hour);
+my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $ctrl_port_first, $cli_port, $debug, $file, $hour);
 my ($idpw, $idpwmustbe, $ip, $isdst, $key, $mday, $min, $host_ip);
 my ($modcalled, $mod, $mon, $name, $param, $tmp, $buf);
 my ($rethash, $retval, $sec, $sock, $tickdelta, $postlen);
@@ -183,6 +183,7 @@ while ($_ = shift) {
 		$open = 1;
 	}
 }
+$ctrl_port_first = $ctrl_port;
 
 
 $conf = "l00httpd.cfg";
@@ -392,6 +393,15 @@ if (!$ctrl_lstn_sock) {
         Listen => 5, 
         Reuse => 1
     );
+    if (!$ctrl_lstn_sock) {
+        $ctrl_port += 10;
+        $ctrl_lstn_sock = IO::Socket::INET->new (
+            LocalPort => $ctrl_port,
+            LocalAddr => $host_ip,
+            Listen => 5, 
+            Reuse => 1
+        );
+    }
 }
 die "Can't create socket for listening: $!" unless $ctrl_lstn_sock;
 
@@ -455,7 +465,10 @@ if (open (OUT, ">$plpath"."l00httpd.log")) {
 
 $l00time = time;
 
-&periodictask ();
+if ($ctrl_port_first == $ctrl_port) {
+    # execute periodic tasks only on first instance
+    &periodictask ();
+}
 
 if ($ctrl{'os'} eq 'and') {
     $ctrl{'droid'}->makeToast("Welcome to l00httpd\nPlease browse to http://127.0.0.1:$ctrl_port\nSee Notification");
@@ -1303,5 +1316,8 @@ while(1) {
             $sock->close;
         }
     }
-    &periodictask ();
+    if ($ctrl_port_first == $ctrl_port) {
+        # execute periodic tasks only on first instance
+        &periodictask ();
+    }
 }
