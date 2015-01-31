@@ -14,7 +14,7 @@ my ($findtext, $block, $prefmt, $found, $pname, $fname, $maxln, $skip, $hilitete
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '';
-$prefmt = '';
+$prefmt = 'checked';
 $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
@@ -158,7 +158,6 @@ sub l00http_view_proc {
 					    if (($tmpno, $tmpln) = /^(\d+)(:.+)$/) {
 						    $tmptop = $tmpno - 20;
 						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>$tmpln";
-print "$_\n\n";
 						}
 					    $tmp .= "$_\n";
 					}
@@ -250,6 +249,11 @@ print "$_\n\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=500&path=$form->{'path'}#end\">500</a>,\n";
     $tmp = $lineno - 1000;
     print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=1000&path=$form->{'path'}#end\">1000</a> lines.<p>\n";
+
+    # view first X lines
+    print $sock "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$form->{'path'}#top\">200</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$form->{'path'}#top\">500</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$form->{'path'}#top\">1000</a> lines.<p>\n";
 
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
 

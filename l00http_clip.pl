@@ -48,6 +48,7 @@ sub l00http_clip_proc {
                 $ctrl->{'droid'}->setClipboard ($clip);
             }
             if ($ctrl->{'os'} eq 'win') {
+                # ::todo:: add windows special character escape
                 `echo $clip | clip`;
                 print $sock "<br>Copied to Windows clipboard using clip.exe\n";
             }
