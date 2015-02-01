@@ -34,26 +34,14 @@ sub l00http_scratch_proc {
         $eval = $form->{'eval'};
     }
     if (defined ($form->{'cbmobi'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $scratch = $ctrl->{'droid'}->getClipboard();
-            $scratch = $scratch->{'result'};
-            #&l00httpd::dumphash ("key", $scratch);
-        }
+        $scratch = &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'prepend'})) {
-        $scratch = '';
-        if ($ctrl->{'os'} eq 'and') {
-            $scratch = $ctrl->{'droid'}->getClipboard();
-            $scratch = $scratch->{'result'};
-        }
+        $scratch = &l00httpd::l00getCB($ctrl);
         if (defined ($form->{'scratchbuf'})) {
             $scratch = "$scratch $form->{'scratchbuf'}";
         }
     } elsif (defined ($form->{'append'})) {
-        $scratch = '';
-        if ($ctrl->{'os'} eq 'and') {
-            $scratch = $ctrl->{'droid'}->getClipboard();
-            $scratch = $scratch->{'result'};
-        }
+        $scratch = &l00httpd::l00getCB($ctrl);
         if (defined ($form->{'scratchbuf'})) {
             $scratch = "$form->{'scratchbuf'} $scratch";
         }
@@ -73,7 +61,7 @@ sub l00http_scratch_proc {
     if (defined ($form->{'cburl'})) {
         if ($ctrl->{'os'} eq 'and') {
             if (($tmp) = $scratch =~ /(http:\/\/[^ \n\r\t]+)/) {
-                $ctrl->{'droid'}->setClipboard ($tmp); 
+                &l00httpd::l00setCB($ctrl, $tmp);
             }
         }
     }
@@ -85,9 +73,7 @@ sub l00http_scratch_proc {
         &l00httpd::l00fwriteClose($ctrl);
     }
     if (defined ($form->{'cbcopy'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $ctrl->{'droid'}->setClipboard ($scratch); 
-        }
+        &l00httpd::l00setCB($ctrl, $scratch);
     }
 
     print "scratch: >$scratch<\n", if ($ctrl->{'debug'} >= 5);

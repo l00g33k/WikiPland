@@ -227,10 +227,7 @@ sub l00http_gps_proc {
 			close(OUT);
         }
     } elsif (defined ($form->{"getgps"})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $buf = &android_get_gps ($ctrl);
-            $ctrl->{'droid'}->setClipboard ("$lon,$lat\n$buf");
-        }
+        &l00httpd::l00setCB($ctrl, "$lon,$lat\n$buf");
     }
     if ($datename) {
         $fname = 'gps_' . 

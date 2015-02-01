@@ -46,10 +46,7 @@ sub l00http_eval_proc {
         $eval = '';
     }
     if (defined ($form->{'paste'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $eval = $ctrl->{'droid'}->getClipboard();
-            $eval = $eval->{'result'};
-        }
+        $eval = &l00httpd::l00getCB($ctrl);
     }
     $lncn = 0;
     if (defined ($eval) && (length ($eval) > 1)) {

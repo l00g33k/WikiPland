@@ -92,7 +92,7 @@ if (defined ($form->{'navigate'})) {
     if (defined ($form->{'lnno'})) {
         if (defined ($form->{'pastesave'})) {
             if ($ctrl->{'os'} eq 'and') {
-                $form->{'url'} = $ctrl->{'droid'}->getClipboard()->{'result'};
+                $form->{'url'} = &l00httpd::l00getCB($ctrl);
                 $form->{'save'} = 1;
             }
         }

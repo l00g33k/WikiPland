@@ -48,8 +48,8 @@ sub l00http_blog_proc {
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
     }
-    if ((defined ($form->{'pastesave'})) && ($ctrl->{'os'} eq 'and')) {
-        $_ = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'pastesave'})) {
+        $_ = &l00httpd::l00getCB($ctrl);
         print $sock "<hr>$_<hr>\n";
     }
 
@@ -81,7 +81,7 @@ sub l00http_blog_proc {
         $form->{'buffer'} .= $buffer;
         $form->{'save'} = 1;
     }
-    if ((defined ($form->{'pastesave'})) && ($ctrl->{'os'} eq 'and')) {
+    if (defined ($form->{'pastesave'})) {
         if (defined ($form->{'blog'})) {
             if ($form->{'blog'} eq "on") {
                 $form->{'buffer'} = "==$ctrl->{'now_string'} ==\n* ";
@@ -92,7 +92,7 @@ sub l00http_blog_proc {
         } else {
             $form->{'buffer'} = $ctrl->{'now_string'} . ' ';
         }
-        $form->{'buffer'} .= $ctrl->{'droid'}->getClipboard()->{'result'};
+        $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
     if (defined ($form->{'save'})) {
@@ -195,12 +195,12 @@ sub l00http_blog_proc {
             $buffer .= substr ($form->{'buffer'}, 16, 9999);
         }
     }
-    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
-        $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $buffer .= &l00httpd::l00getCB($ctrl);
     }
-    if ((defined ($form->{'pasteadd'})) && ($ctrl->{'os'} eq 'and')) {
+    if (defined ($form->{'pasteadd'})) {
         $buffer = $form->{'buffer'} . ' ';
-        $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
+        $buffer .= &l00httpd::l00getCB($ctrl);
     }
 
     # dump content of file in formatted text

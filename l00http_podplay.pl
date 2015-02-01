@@ -172,9 +172,8 @@ sub l00http_podplay_proc (\%) {
 
 
 $out = '';
-    if (($ctrl->{'os'} eq 'and') && (defined($ctrl->{'FORM'}->{'clip'}))) {
-        $tmp = $ctrl->{'droid'}->getClipboard();
-        $tmp = $tmp->{'result'};
+    if (defined($ctrl->{'FORM'}->{'clip'})) {
+        $tmp = &l00httpd::l00getCB($ctrl);
 #       $refreshtag = "<meta http-equiv=\"refresh\" content=\"$rate\"> ";
 #       $seq++;
 #       $track = 0;
@@ -183,7 +182,7 @@ $out = '';
         $state = '';
 
 # Extract URL from clipboard
-$url = $ctrl->{'droid'}->getClipboard()->{'result'};
+$url = &l00httpd::l00getCB($ctrl);
 $out .= "<hr>Clipboard content:<br>$url<p><hr>\n";
 $tail = '';
 if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {

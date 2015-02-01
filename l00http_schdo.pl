@@ -82,8 +82,8 @@ sub l00http_schdo_proc {
     my ($yr, $mo, $da, $hr, $mi, $se);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
-    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
-        $dopl = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $dopl = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{"dopl"})) {
         $dopl = $form->{"dopl"};

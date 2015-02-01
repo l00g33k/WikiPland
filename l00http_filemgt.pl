@@ -106,10 +106,7 @@ sub l00http_filemgt_proc {
 
     # copy paste target
     if (defined ($form->{'paste2'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $buffer = $ctrl->{'droid'}->getClipboard();
-            $form->{'path2'} = $buffer->{'result'};
-        }
+        $form->{'path2'} = &l00httpd::l00getCB($ctrl);
     }
     if ((defined ($form->{'copy'})) &&
         (defined ($form->{'path'}) && 
@@ -176,10 +173,7 @@ sub l00http_filemgt_proc {
     }
     # copy tree paste target
     if (defined ($form->{'pasteto'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $treeto = $ctrl->{'droid'}->getClipboard();
-            $treeto = $treeto->{'result'};
-        }
+        $treeto = &l00httpd::l00getCB($ctrl);
     }
 
     # delete

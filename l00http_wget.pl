@@ -50,11 +50,11 @@ sub l00http_wget_proc (\%) {
     if (defined ($form->{'url'})) {
         $url = $form->{'url'}
     }
-    if (defined ($form->{'pastepath'}) && ($ctrl->{'os'} eq 'and')) {
-        $wgetpath = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'pastepath'})) {
+        $wgetpath = &l00httpd::l00getCB($ctrl);
     }
-    if (defined ($form->{'paste'}) && ($ctrl->{'os'} eq 'and')) {
-        $url = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $url = &l00httpd::l00getCB($ctrl);
         if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
             $url = $1;
         }

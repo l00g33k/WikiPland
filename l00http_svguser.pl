@@ -29,10 +29,7 @@ sub l00http_svguser_proc {
 
     $buf = '';
     if (defined ($form->{'paste'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $buf = $ctrl->{'droid'}->getClipboard();
-            $buf = $buf->{'result'};
-        }
+        $buf = &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'plot'})) {
         $buf = $form->{'svgdata'};
     }

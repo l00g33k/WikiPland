@@ -62,6 +62,7 @@ sub dbpclr {
 
 
 
+
 #$buf = &l00httpd::urlencode ($buf);
 sub urlencode {
     my ($buf) = @_;
@@ -465,6 +466,43 @@ sub pcSyncCmdline {
     }
 
     $buf;
+}
+
+
+
+#&l00httpd::l00getCB($ctrl);
+sub l00getCB {
+    my ($ctrl) = @_;
+    my ($buf);
+
+    if ($ctrl->{'os'} eq 'and') {
+        $buf = $ctrl->{'droid'}->getClipboard(); print __LINE__," $buf\n";
+        $buf = $buf->{'result'};
+    } else {
+        &l00freadOpen($ctrl, 'l00://clipboard');
+        $buf = &l00freadAll($ctrl);
+    }
+    if (!defined ($buf)) {
+        $buf = '';
+    }
+
+    $buf;
+}
+
+#&l00httpd::l00setCB($ctrl, $buf);
+sub l00setCB {
+    my ($ctrl, $buf) = @_;
+
+    &l00fwriteOpen($ctrl, 'l00://clipboard');
+    &l00fwriteBuf($ctrl, $buf);
+    &l00fwriteClose($ctrl);
+
+    if ($ctrl->{'os'} eq 'and') {
+        $ctrl->{'droid'}->setClipboard ($buf);
+    } elsif ($ctrl->{'os'} eq 'win') {
+        # ::todo:: add windows special character escape
+        `echo $buf | clip`;
+    }
 }
 
 

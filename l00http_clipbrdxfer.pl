@@ -78,8 +78,7 @@ sub l00http_clipbrdxfer_proc (\%) {
     if (defined ($form->{'submit'})) {
 	    $tmp = '';
 		if ($ctrl->{'os'} eq 'and') {
-            $buf = $ctrl->{'droid'}->getClipboard();
-            $buf = $buf->{'result'};
+            $buf = &l00httpd::l00getCB($ctrl);
             $tmp = &l00httpd::urlencode ($buf);
             $tmp = "clip.htm?update=Copy+to+clipboard&clip=$tmp";
         }

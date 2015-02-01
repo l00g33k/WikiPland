@@ -200,8 +200,8 @@ sub l00http_mobizoom_proc {
     if (defined ($form->{'zoomradio'})) {
         $zoom = $form->{'zoomradio'};
     }
-    if (defined ($form->{'paste'}) && ($ctrl->{'os'} eq 'and')) {
-        $url = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $url = &l00httpd::l00getCB($ctrl);
         if (!($url =~ /^\//)) {
             # extract URL only if it doesn't look like a local file
             if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {

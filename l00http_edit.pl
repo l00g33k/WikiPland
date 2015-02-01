@@ -238,26 +238,16 @@ sub l00http_edit_proc2 {
     } elsif (defined ($form->{'defsize'})) {
         $editsz = 0;
     } elsif (defined ($form->{'cut'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $ctrl->{'droid'}->setClipboard ($buffer);
-        }
+        &l00httpd::l00setCB($ctrl, $buffer);
         $buffer = '';
     } elsif (defined ($form->{'edittocb'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $ctrl->{'droid'}->setClipboard ($buffer);
-        }
+        &l00httpd::l00setCB($ctrl, $buffer);
     } elsif (defined ($form->{'cbtoedit'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $buffer = $ctrl->{'droid'}->getClipboard();
-            $buffer = $buffer->{'result'};
-        }
+        $buffer = &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'edittotxt'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $buffer = $ctrl->{'droid'}->getClipboard();
-            $buffer = $buffer->{'result'};
-            if (defined ($form->{'buffer'})) {
-                $buffer = "$form->{'buffer'}$buffer";
-            }
+        $buffer = &l00httpd::l00getCB($ctrl);
+        if (defined ($form->{'buffer'})) {
+            $buffer = "$form->{'buffer'}$buffer";
         }
     } elsif (defined ($form->{'txttoedit'})) {
         if (defined ($form->{'buffer'})) {
@@ -286,9 +276,7 @@ sub l00http_edit_proc2 {
             }
             if ($clipblk) {
                 # when a block has been selected, selecting the last line clears block
-                if ($ctrl->{'os'} eq 'and') {
-                    $ctrl->{'droid'}->setClipboard ($buffer);
-                }
+                &l00httpd::l00setCB($ctrl, $buffer);
             }
         }
     }
@@ -297,9 +285,7 @@ sub l00http_edit_proc2 {
     }
 
     if (defined ($form->{'clip'})) {
-        if ($ctrl->{'os'} eq 'and') {
-            $ctrl->{'droid'}->setClipboard ($buffer);
-        }
+        &l00httpd::l00setCB($ctrl, $buffer);
     }
 
 

@@ -89,7 +89,7 @@ sub l00http_blogtag_proc {
         } else {
             $form->{'buffer'} = $ctrl->{'now_string'} . ' ';
         }
-        $form->{'buffer'} .= $ctrl->{'droid'}->getClipboard()->{'result'};
+        $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
     if (defined ($form->{'save'})) {
@@ -194,7 +194,7 @@ sub l00http_blogtag_proc {
         }
     }
     if (defined ($form->{'paste'})) {
-        $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
+        $buffer .= &l00httpd::l00getCB($ctrl);
     }
 
     print $sock "<form action=\"/blogtag.htm\" method=\"get\">\n";

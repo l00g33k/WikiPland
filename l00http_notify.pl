@@ -65,11 +65,11 @@ sub l00http_notify_proc (\%) {
     if (defined ($form->{'msg'})) {
         $msg = $form->{'msg'};
     }
-    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
-        $msg = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $msg = &l00httpd::l00getCB($ctrl);
     }
-    if ((defined ($form->{'pasteset'})) && ($ctrl->{'os'} eq 'and')) {
-        $msg = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'pasteset'})) {
+        $msg = &l00httpd::l00getCB($ctrl);
         $form->{'submit'} = 'x'; # fake paste then submit
     }
     if (defined ($form->{'speech'})) {

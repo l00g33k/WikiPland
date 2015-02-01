@@ -141,8 +141,8 @@ sub l00http_reminder_proc {
         $pause = $form->{"min"} * 60;
         $pausewant = $form->{"min"};
     }
-    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
-        $formmsg = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $formmsg = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{"set"})) {
         if ($wake != 0) {

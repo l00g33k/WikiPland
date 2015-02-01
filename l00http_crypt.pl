@@ -241,13 +241,12 @@ sub l00http_crypt_proc (\%) {
 
     $buffer = "$pre\n$cryptbound:$method:\n$plain\n$cryptbound:$method:\n$post";
     # copy to clipboard
-    if ((defined ($form->{'edittocb'})) && ($ctrl->{'os'} eq 'and')) {
-        $ctrl->{'droid'}->setClipboard ($buffer);
+    if (defined ($form->{'edittocb'})) {
+        &l00httpd::l00setCB($ctrl, $buffer);
     }
-    if ((defined ($form->{'cbtoedit'})) && ($ctrl->{'os'} eq 'and')) {
+    if (defined ($form->{'cbtoedit'})) {
         # paste from clipboard
-        $buffer = $ctrl->{'droid'}->getClipboard();
-        $buffer = $buffer->{'result'};
+        $buffer = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{'toram'})) {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');

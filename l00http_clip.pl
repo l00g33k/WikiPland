@@ -23,7 +23,7 @@ sub l00http_clip_proc {
     my (@alllines, $line, $clip, $tmp, $words);
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>clip</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "Go to <a href=\"/scratch.htm\">scratch</a>.<br>\n";
 
@@ -32,26 +32,12 @@ sub l00http_clip_proc {
 	    # clears
     } elsif (defined ($form->{'append'})) {
         $clip = $form->{'clip'};
-        if ($ctrl->{'os'} eq 'and') {
-            $tmp = $ctrl->{'droid'}->getClipboard();
-            $tmp = $tmp->{'result'};
-            $clip .= $tmp;
-        }
+        $clip .= &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'clip'})) {
         $clip = $form->{'clip'};
         if (defined ($form->{'update'})) {
             print $sock "<br>Also copied to <a href=\"/launcher.htm?path=l00://clip\">l00://clip</a><p>\n";
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://clip');
-            &l00httpd::l00fwriteBuf($ctrl, $clip);
-            &l00httpd::l00fwriteClose($ctrl);
-            if ($ctrl->{'os'} eq 'and') {
-                $ctrl->{'droid'}->setClipboard ($clip);
-            }
-            if ($ctrl->{'os'} eq 'win') {
-                # ::todo:: add windows special character escape
-                `echo $clip | clip`;
-                print $sock "<br>Copied to Windows clipboard using clip.exe\n";
-            }
+            &l00httpd::l00setCB($ctrl, $clip);
         } elsif (defined ($form->{'link'})) {
             # send text [[/clip.pl?...|show text]] to clipboard
             if ($clip =~ /^\s*(\S+ +\S+)/)  {
@@ -62,13 +48,7 @@ sub l00http_clip_proc {
             $tmp = &l00httpd::urlencode ($clip);
             $tmp = sprintf ("[[/clip.htm?update=Copy+to+clipboard&clip=%s|%s]]", $tmp, $words);
             printf $sock ("Sent:<br><pre>%s</pre>to clipboard.\n", $tmp);
-            if ($ctrl->{'os'} eq 'and') {
-                $ctrl->{'droid'}->setClipboard ($tmp);
-            }
-            if ($ctrl->{'os'} eq 'win') {
-                `echo $tmp | clip`;
-                print $sock "<br>Copied to Windows clipboard using clip.exe<br>\n";
-            }
+            &l00httpd::l00setCB($ctrl, $tmp);
             $tmp = &l00httpd::urlencode ($tmp);
             printf $sock ("View in <a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\">clip.htm</a><p>\n", $tmp);
         }

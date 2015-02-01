@@ -65,9 +65,7 @@ sub l00http_coorcalc_proc {
 		$lat  += ($distance * cos ($bearing / 180 * 3.141592653589793)) / 20000000 * 180;
 		$long += ($distance * sin ($bearing / 180 * 3.141592653589793)) / 20000000 * 180;
 		$latlong = "$long,$lat";
-        if ($ctrl->{'os'} eq 'and') {
-            $ctrl->{'droid'}->setClipboard ($latlong);
-        }
+        &l00httpd::l00setCB($ctrl, $latlong);
     }
 
 
