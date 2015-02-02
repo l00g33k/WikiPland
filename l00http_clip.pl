@@ -25,7 +25,8 @@ sub l00http_clip_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>clip</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-    print $sock "Go to <a href=\"/scratch.htm\">scratch</a>.<br>\n";
+    print $sock "Go to <a href=\"/scratch.htm\">scratch</a> - \n";
+    print $sock "<a href=\"/httpd.htm#ram\">RAM files</a><br>\n";
 
     $clip = "";
     if (defined ($form->{'clear'})) {

@@ -26,7 +26,7 @@ sub l00http_shell_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     print $sock "Warning: you are executing shell commands which could ".
                 "cause you to lose data.  You are warned. ".
-                "Note: pipe doesn't work, but &gt; and &gt;&gt; are implemented.".
+                "Note: pipe doesn't work, but > and >> are simulated.".
                 "<p>\n";
 
     $buffer = "";

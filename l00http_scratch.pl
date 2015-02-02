@@ -28,7 +28,8 @@ sub l00http_scratch_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>scratch</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a href=\"#end\">Jump to end</a>. \n";
-    print $sock "Go to <a href=\"/clip.htm\">clip</a><br>\n";
+    print $sock "Go to <a href=\"/clip.htm\">clip</a> - \n";
+    print $sock "<a href=\"/httpd.htm#ram\">RAM files</a><br>\n";
 
     if (defined ($form->{'eval'})) {
         $eval = $form->{'eval'};
