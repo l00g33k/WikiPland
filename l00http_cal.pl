@@ -67,11 +67,14 @@ sub l00http_cal_proc {
     print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
     ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
 
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
-
     # handling moving lnno to moveto
     if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {
+#       $tmp = "<META http-equiv=\"refresh\" content=\"3;URL=http://www.indiana.edu/~account/new-directory\">\r\n";
+        # redirect back to calendar
+        $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=/cal.htm?path=$fullpathname\">\r\n";
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $tmp . $ctrl->{'htmlhead2'};
+        print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+
         if (open (IN, "<$fullpathname")) {
             $buf = '';
             $lnno = 0;
@@ -94,6 +97,9 @@ sub l00http_cal_proc {
         print $sock $ctrl->{'htmlfoot'};
         return;
     }
+
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
 
     # remember parameters if new ones are provided
     if (defined ($form->{'cellwd'}) && $form->{'cellwd'} > 3) {
