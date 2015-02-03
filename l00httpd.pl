@@ -419,6 +419,15 @@ if (!$cli_lstn_sock) {
         Listen => 5, 
         Reuse => 1
     );
+    if (!$cli_lstn_sock) {
+        $cli_port += 10;
+        $cli_lstn_sock = IO::Socket::INET->new (
+            LocalPort => $cli_port,
+            LocalAddr => $host_ip,
+            Listen => 5, 
+            Reuse => 1
+        );
+    }
 }
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
 
@@ -888,6 +897,15 @@ while(1) {
                 print $sock "Click <a href=\"/restart.htm\">here</a> to restart<p>\n";
                 print $sock $ctrl{'htmlfoot'};
                 next;
+            } elsif ($modcalled =~ /^redirect/) {
+                if (defined ($ctrl{$modcalled})) {
+                    $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=$ctrl{$modcalled}\">\r\n";
+                } else {
+                    $tmp = '';
+                }
+                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $tmp . $ctrl{'htmlhead2'};
+                print $sock "Redirect to <a href=\"$ctrl{$modcalled}\">$ctrl{$modcalled}</a><p>\n";
+                print $sock $ctrl{'htmlfoot'};
             } elsif (($modcalled ne 'httpd') &&                 # not server control
                 ((($ishost)) ||           # client enabled or is server
                  ((defined ($modsinfo{"$modcalled:ena:checked"})) &&
