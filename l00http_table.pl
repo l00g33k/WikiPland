@@ -84,6 +84,7 @@ sub l00http_table_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $multitbl, $fname);
+    my ($filtered, $tblfil, $tblcol, $tblfiled, $tblnot, @tblfield);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -299,6 +300,7 @@ sub l00http_table_proc {
     }
 
     # sort
+    $filtered = 0;
     if ((defined ($form->{'sort'}) &&
         (defined ($form->{'keys'})) && 
         (length ($form->{'keys'}) > 0)) &&
@@ -341,6 +343,41 @@ sub l00http_table_proc {
         ($tblhdr, @tblbdy) = split("\n",$tbl);
         @rows = sort tablesort @tblbdy;
         $tbl = "$tblhdr\n" . join ("\n", @rows) . "\n";
+
+
+        if (defined ($form->{'filter'}) &&
+            (length ($form->{'filter'}) > 0)) {
+            $tblfil = $form->{'filter'};
+            l00httpd::dbp($config{'desc'}, "filter = $tblfil\n");
+            if ($tblfil =~ /^!!/) {
+                $tblnot = 1;
+                substr ($tblfil, 0, 2) = '';
+            } else {
+                $tblnot = 0;
+            }
+            if (($tblcol, $tblfil) = $tblfil =~ /(\d+)\|\|(.+)/) {
+                $tblcol++;  # there is one extra count
+                l00httpd::dbp($config{'desc'}, "(tblcol, tblfil) = ($tblcol, $tblfil)\n");
+                $filtered = 1;
+                $tblfiled = "$tblhdr\n";
+                foreach $_ (@rows) {
+                    @tblfield = split ('\|\|', $_);
+                    if ($tblnot) {
+                        # skip matching
+                        if ($tblfield[$tblcol] =~ /$tblfil/) {
+                            next;
+                        }
+                    } else {
+                        # skip not matching
+                        if (!($tblfield[$tblcol] =~ /$tblfil/)) {
+                            next;
+                        }
+                    }
+                    $tblfiled .= "$_\n";
+                }
+                $tblfiled .= "\n";
+            }
+        }
     }
 
     # glue it together
@@ -349,7 +386,12 @@ sub l00http_table_proc {
     if ($multitbl) {
         print $sock "<h1>Warning: multiple tables. Only the first table will be processed</h1>\n";
     }
-    print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+    if ($filtered) {
+        $tblfiled = $pre . $tblfiled . $post;
+        print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $tblfiled, 0);
+    } else {
+        print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+    }
 
     # if convert, save to file
     if ((defined ($form->{'convert'}) &&
@@ -421,16 +463,26 @@ sub l00http_table_proc {
     print $sock "</table>\n";
 
     # sort 
+    print $sock "<form action=\"/table.htm\" method=\"get\">\n";
     print $sock "<br>Sort key: 1-:hdr(\\d+)||3<br><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<form action=\"/table.htm\" method=\"get\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<input type=\"submit\" name=\"sort\" value=\"Sort\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"20\" name=\"keys\">\n";
-    print $sock "</form>\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Filter\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"20\" name=\"filter\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "&nbsp;\n";
+    print $sock "</td><td>\n";
+    print $sock "Filter affects only display. !!col#||regex\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
+    print $sock "</form>\n";
 
     if (defined ($form->{'path'})) {
         print $sock "<br><a href=\"/tableedit.htm?path=$form->{'path'}\">tableedit</a>: table row editor\n";
