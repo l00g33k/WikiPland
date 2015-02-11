@@ -5,8 +5,9 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($sel);
+my ($sel, $arg);
 $sel = '';
+$arg = '';
 
 my %config = (proc => "l00http_txtdopl_proc",
               desc => "l00http_txtdopl_desc");
@@ -40,13 +41,21 @@ sub l00http_txtdopl_proc (\%) {
         $sel = $form->{'sel'};
     }
 
+    if (defined ($form->{'arg'})) {
+        $arg = $form->{'arg'};
+    }
+
     print $sock "<form action=\"/txtdopl.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"runbare\" value=\"RunBare\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"run\" value=\"Run\"></td>\n";
+    print $sock "        <td>arg: <input type=\"text\" size=\"4\" name=\"arg\" value=\"$arg\"></td>\n";
+    print $sock "    </tr>\n";
+    print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\"></td>\n";
     print $sock "        <td>tag: <input type=\"text\" size=\"4\" name=\"sel\" value=\"$sel\"></td>\n";
+    print $sock "        <td>&nbsp;</td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
