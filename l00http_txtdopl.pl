@@ -195,7 +195,7 @@ sub l00http_txtdopl_proc (\%) {
                     print OU $newfile;
                     close (OU);
                 }
-                print $sock "</pre>Run completed<br>\n";
+                print $sock "</pre>\n";
             }
         }
     }
