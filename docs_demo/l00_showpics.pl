@@ -1,7 +1,7 @@
 # [[/do.htm?do=Do&path=/sdcard/sl4a/scripts/l00httpd/docs_demo/l00_camera.pl|run l00_camera.pl]]
 use l00wikihtml;
 
-$jpgpath  = "/sdcard/DCIM/100MEDIA/";
+$jpgpath  = "/sdcard/DCIM/Camera/";
 $doplpath = "$ctrl->{'plpath'}docs_demo/";
 
 print $sock "Edit: <a href=\"/edit.htm?path=$doplpath"."l00_showpics.pl\">$doplpath"."l00_showpics.pl</a><br>\n";

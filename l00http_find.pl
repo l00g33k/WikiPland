@@ -431,7 +431,7 @@ sub l00http_find_proc {
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td>Content (regex; !!):</td>\n";
+    print $sock "            <td>Content ((regex); !!):</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"content\" value=\"$content\"></td>\n";
     print $sock "        </tr>\n";
 
