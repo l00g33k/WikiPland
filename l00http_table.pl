@@ -14,7 +14,7 @@ my %config = (proc => "l00http_table_proc",
 my ($buffer, $pre, $tblhdr, $tbl, $post, @width, @cols, $ii);
 my (@modcmds, $modadd, $modcopy, $moddel, $modrow, $mod, $modtab);
 my ($exelog, $nocols, $norows, @rows, @keys, @order);
-my (@allkeys, $sortdebug, @tblbdy);
+my (@allkeys, $sortdebug, @tblbdy, $tblfilorg, $sortkeys);
 
 $modadd  = "Add new column at A";
 $moddel  = "Delete column A";;
@@ -22,6 +22,8 @@ $modcopy = "Copy column A to B";
 $modrow  = "Append A empty row";
 $modtab  = "Display tabs";
 @modcmds = ("Reload from file", $modadd, $moddel, $modcopy, $modrow, $modtab);
+$tblfilorg ='';
+$sortkeys = '';
 
 sub l00http_table_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -84,7 +86,8 @@ sub l00http_table_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $multitbl, $fname);
-    my ($filtered, $tblfil, $tblcol, $tblfiled, $tblnot, @tblfield);
+    my ($filtered, $tblcol, $tblfiled, $tblnot, @tblfield);
+    my ($dofilter, $dosort, $tblfil);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -301,54 +304,63 @@ sub l00http_table_proc {
 
     # sort
     $filtered = 0;
-    if ((defined ($form->{'sort'}) &&
-        (defined ($form->{'keys'})) && 
-        (length ($form->{'keys'}) > 0)) &&
-        !($form->{'keys'} =~ /^ *$/)) {
-        @allkeys = split ('\|\|', $form->{'keys'});
-        if ($ctrl->{'debug'} >= 3) {
-            print "keys >>$form->{'keys'}<<\n";
+    if (defined ($form->{'sort'})) {
+        if ((defined ($form->{'keys'}) && (length ($form->{'keys'}) > 0) && (!($form->{'keys'} =~ /^ *$/)))) {
+            $dosort = 1;
+        } else {
+            $dosort = 0;
+        }
+        if ((defined ($form->{'filter'}) && (length ($form->{'filter'}) > 0) && (!($form->{'filter'} =~ /^ *$/)))) {
+            $dofilter = 1;
+        } else {
+            $dofilter = 0;
+        }
+        if ($dosort) {
+            $sortkeys = $form->{'keys'};
+            @allkeys = split ('\|\|', $sortkeys);
+            if ($ctrl->{'debug'} >= 3) {
+                print "keys >>$sortkeys<<\n";
+                foreach $buffer (@allkeys) {
+                    print "key >$buffer<\n";
+                }
+            }
+            $ii = 0;
+            undef @keys;
             foreach $buffer (@allkeys) {
-                print "key >$buffer<\n";
+                if ($buffer =~ /^(\d+)([+-]*):(.+)$/) {
+                    # 2-:tag:(.+)||
+                    $cols [$ii] = $1;
+                    $order [$ii] = $2;
+                    $keys [$ii] = $3;
+                } elsif ($buffer =~ /^(\d+)([+-]*)$/) {
+                    # 2-||
+                    $cols [$ii] = $1;
+                    $order [$ii] = $2;
+                    $keys [$ii] = "(.*)";
+                } else {
+                    $cols [$ii] = $ii;
+                    $order [$ii] = "";
+                    $keys [$ii] = $buffer;
+                    # $ii (.*)
+                }
+                if (!($keys [$ii] =~ /\(.+\)/)) {
+                    $keys [$ii] .= "(.*)";
+                }
+                if ($ctrl->{'debug'} >= 4) {
+                    print "key$ii cols $cols[$ii] order $order[$ii] key $keys[$ii]\n";
+                }
+                $ii++;
             }
+            $sortdebug = $ctrl->{'debug'};
+            ($tblhdr, @tblbdy) = split("\n",$tbl);
+            @rows = sort tablesort @tblbdy;
+            $tbl = "$tblhdr\n" . join ("\n", @rows) . "\n";
         }
-        $ii = 0;
-        undef @keys;
-        foreach $buffer (@allkeys) {
-            if ($buffer =~ /^(\d+)([+-]*):(.+)$/) {
-                # 2-:tag:(.+)||
-                $cols [$ii] = $1;
-                $order [$ii] = $2;
-                $keys [$ii] = $3;
-            } elsif ($buffer =~ /^(\d+)([+-]*)$/) {
-                # 2-||
-                $cols [$ii] = $1;
-                $order [$ii] = $2;
-                $keys [$ii] = "(.*)";
-            } else {
-                $cols [$ii] = $ii;
-                $order [$ii] = "";
-                $keys [$ii] = $buffer;
-                # $ii (.*)
-            }
-            if (!($keys [$ii] =~ /\(.+\)/)) {
-                $keys [$ii] .= "(.*)";
-            }
-            if ($ctrl->{'debug'} >= 4) {
-                print "key$ii cols $cols[$ii] order $order[$ii] key $keys[$ii]\n";
-            }
-            $ii++;
-        }
-        $sortdebug = $ctrl->{'debug'};
-        ($tblhdr, @tblbdy) = split("\n",$tbl);
-        @rows = sort tablesort @tblbdy;
-        $tbl = "$tblhdr\n" . join ("\n", @rows) . "\n";
 
-
-        if (defined ($form->{'filter'}) &&
-            (length ($form->{'filter'}) > 0)) {
-            $tblfil = $form->{'filter'};
-            l00httpd::dbp($config{'desc'}, "filter = $tblfil\n");
+        if ($dofilter) {
+            $tblfilorg = $form->{'filter'};
+            l00httpd::dbp($config{'desc'}, "filter = $tblfilorg\n");
+            $tblfil = $tblfilorg;
             if ($tblfil =~ /^!!/) {
                 $tblnot = 1;
                 substr ($tblfil, 0, 2) = '';
@@ -359,6 +371,9 @@ sub l00http_table_proc {
                 $tblcol++;  # there is one extra count
                 l00httpd::dbp($config{'desc'}, "(tblcol, tblfil) = ($tblcol, $tblfil)\n");
                 $filtered = 1;
+
+                ($tblhdr, @tblbdy) = split("\n",$tbl);
+                @rows = sort tablesort @tblbdy;
                 $tblfiled = "$tblhdr\n";
                 foreach $_ (@rows) {
                     @tblfield = split ('\|\|', $_);
@@ -469,12 +484,12 @@ sub l00http_table_proc {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<input type=\"submit\" name=\"sort\" value=\"Sort\">\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"20\" name=\"keys\">\n";
+    print $sock "<input type=\"text\" size=\"20\" name=\"keys\" value=\"$sortkeys\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Filter\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"20\" name=\"filter\">\n";
+    print $sock "<input type=\"text\" size=\"20\" name=\"filter\" value=\"$tblfilorg\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "&nbsp;\n";
