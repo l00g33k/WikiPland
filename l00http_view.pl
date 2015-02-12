@@ -14,7 +14,7 @@ my ($findtext, $block, $prefmt, $found, $pname, $fname, $maxln, $skip, $hilitete
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '';
-$prefmt = 'checked';
+$prefmt = '';
 $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
@@ -69,6 +69,9 @@ sub l00http_view_proc {
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
         }
+#    } else {
+#        $skip = 0;
+#        $maxln = 1000;
     }
 
     $hilite = 0;
@@ -83,10 +86,12 @@ sub l00http_view_proc {
         # we are highlighting
         if (($hilite < $skip) || ($hilite > $skip + $maxln)) {
             # but it won't be in view. adjust skip and maxln
+#            $skip = $hilite - 500;
             $skip = $hilite - int ($maxln / 2);
             if ($skip < 0) {
                 $skip = 0;
             }
+#            $maxln = 1000;
         }
     }
 
@@ -155,9 +160,18 @@ sub l00http_view_proc {
                 if ($prefmt ne '') {
 				    $tmp = '';
 					foreach $_ (split("\n", $found)) {
-					    if (($tmpno, $tmpln) = /^(\d+)(:.+)$/) {
+					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
+                            # extract if we find parathesis
+                            if (($findtext =~ /[^\\]\(.+[^\\]\)/) ||
+                                ($findtext =~ /^\(.+[^\\]\)/)) {
+                                # found '(...)' and not '\(...\)'
+                                # strip and print all
+                                if (@_ = ($tmpln =~ /$findtext/)) {
+                                    $tmpln = join (' || ', @_);
+                                }
+                            }
 						    $tmptop = $tmpno - 20;
-						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>$tmpln";
+						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>:$tmpln";
 						}
 					    $tmp .= "$_\n";
 					}

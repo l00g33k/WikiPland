@@ -27,7 +27,7 @@ sub l00http_shell_proc {
     print $sock "Warning: you are executing shell commands which could ".
                 "cause you to lose data.  You are warned. ".
                 "Note: pipe doesn't work, but > and >> are simulated.".
-                "<p>\n";
+                " Please wait...<p>\n";
 
     $buffer = "";
     $out = "";
