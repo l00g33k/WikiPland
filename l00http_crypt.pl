@@ -61,7 +61,8 @@ sub l00http_crypt_proc (\%) {
     print $sock "<a href=\"#find\">find</a> Be patience, cryptography is slow in pure Perl on Android. $tmp<hr>\n";
 
 
-    if (defined ($form->{'save'})) {
+    if (defined ($form->{'save'}) ||
+        defined ($form->{'fromram'})) {
         if ((defined ($form->{'pass1'})) && 
             (defined ($form->{'pass2'})) && 
             ($form->{'pass1'} eq $form->{'pass2'})) {
@@ -92,6 +93,17 @@ sub l00http_crypt_proc (\%) {
 
     $buffer = '';
     $plain = '';
+    if (defined ($form->{'fromram'})) {
+        # retrieve from ram buffer, save, then clear ram buffer
+        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.pl")) {
+            $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
+            $form->{'save'} = 1;
+            # clear ram buffer
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');
+            &l00httpd::l00fwriteBuf($ctrl, '');
+            &l00httpd::l00fwriteClose($ctrl);
+		}
+    }
     if (defined ($form->{'save'})) {
         if (($pass ne '') &&
             (defined ($form->{'buffer'})) &&
@@ -253,11 +265,6 @@ sub l00http_crypt_proc (\%) {
         &l00httpd::l00fwriteBuf($ctrl, $buffer);
         &l00httpd::l00fwriteClose($ctrl);
     }
-    if (defined ($form->{'fromram'})) {
-        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.pl")) {
-            $buffer = &l00httpd::l00freadAll($ctrl);
-		}
-    }
 
     print $sock "<hr><a name=\"end\"></a>\n";
 
@@ -284,6 +291,12 @@ sub l00http_crypt_proc (\%) {
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"toram\" value=\"edit to ram\">\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"submit\" name=\"fromram\" value=\"save ram\">\n";
+    print $sock "<a href=\"/edit.htm?path=l00://crypt.pl\" target=\"newwin\">edit ram</a> \n";
+    print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"submit\" name=\"edittocb\" value=\"edit to CB\">\n";
@@ -291,12 +304,6 @@ sub l00http_crypt_proc (\%) {
         print $sock "<input type=\"submit\" name=\"cbtoedit\" value=\"CB to edit\">\n";
         print $sock "</td></tr>\n";
     }
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"toram\" value=\"edit to ram\">\n";
-    print $sock "</td><td>\n";
-    print $sock "<input type=\"submit\" name=\"fromram\" value=\"ram to edit\">\n";
-    print $sock "<a href=\"/edit.htm?path=l00://crypt.pl\">edit ram</a> \n";
-    print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 
