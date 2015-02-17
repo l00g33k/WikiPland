@@ -14,27 +14,29 @@ sub l00http_notify_set {
     my ($ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($ttl, $msg);
 
-    if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
-        $ttl = '';
-        $msg = '';
-        while (<IN>) {
-            s/\r//g;
-            s/\n//g;
-            if (/^TTL:(.+)/) {
-                $ttl = $1;
-            }
-            if (/^MSG:(.+)/) {
-                $msg = $1;
-            }
-            if (($ttl ne '') && ($msg ne '')) {
-                if ($ctrl->{'os'} eq 'and') {
-                    $ctrl->{'droid'}->notify ($msg, $ttl);
+    if ($ctrl->{'ctrl_port_first'} == $ctrl->{'ctrl_port'}) {
+        if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
+            $ttl = '';
+            $msg = '';
+            while (<IN>) {
+                s/\r//g;
+                s/\n//g;
+                if (/^TTL:(.+)/) {
+                    $ttl = $1;
                 }
-                $ttl = '';
-                $msg = '';
+                if (/^MSG:(.+)/) {
+                    $msg = $1;
+                }
+                if (($ttl ne '') && ($msg ne '')) {
+                    if ($ctrl->{'os'} eq 'and') {
+                        $ctrl->{'droid'}->notify ($msg, $ttl);
+                    }
+                    $ttl = '';
+                    $msg = '';
+                }
             }
+            close (IN);
         }
-        close (IN);
     }
 }
 

@@ -372,7 +372,6 @@ sub loadmods {
     print "\nReady\n";
 }
 
-&loadmods;
 
 
 
@@ -404,6 +403,11 @@ if (!$ctrl_lstn_sock) {
     }
 }
 die "Can't create socket for listening: $!" unless $ctrl_lstn_sock;
+$ctrl{'ctrl_port_first'}  = $ctrl_port_first;
+$ctrl{'ctrl_port'} = $ctrl_port;
+
+# load modules
+&loadmods;
 
 $cli_lstn_sock = IO::Socket::INET->new (
     LocalPort => $cli_port,
