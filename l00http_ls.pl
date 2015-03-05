@@ -807,6 +807,8 @@ print;
             close (FILE);
         } else {
             print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+            print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+            print $sock "<a href=\"#end\">end</a><br>\n";
             print $sock "Path: $path<hr>\n";
             print $sock "Unable to open file '$path'<br>\n";
             $dir = $path;
