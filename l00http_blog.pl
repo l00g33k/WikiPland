@@ -39,9 +39,9 @@ sub l00http_blog_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blog</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
+
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"/launcher.htm?path=$path\">Launch</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>";
-#       print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> ";
         print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\">+ #</a> ";
         print $sock "%BLOG:key%:<br>\n";
@@ -55,6 +55,7 @@ sub l00http_blog_proc {
 
     $buffer = '';
     if (defined ($form->{'timesave'})) {
+        # update time and save form buffer
         if (defined ($form->{'buffer'})) {
             if (defined ($form->{'blog'})) {
                 if ($form->{'blog'} eq "on") {
@@ -273,12 +274,6 @@ sub l00http_blog_proc {
     print $sock $output;
 
     print $sock "<hr><a name=\"end\"></a>";
-# [[/blogtag.pl?path=./sample.txt|log blogtag]] 
-# [[/ls.pl?path=./sample.txt#blogtag|view blogtag]] 
-# [[/tableedit.pl?edit=Edit&path=./sample.txt|tableedit]] 
-# [[/do.pl?do=Do&path=./l00_donow.pl|Filtered]]
-# [[/table.pl?path=$&sort=Sort&keys=1%7C%7C0|@+$+]] 
-# [[/table.pl?path=$&sort=Sort&keys=0%7C%7C1|$+@+]]
     print $sock "<a href=\"#__top__\">top</a>\n";
     print $sock "<br>\n";
     print $sock "<br>\n";

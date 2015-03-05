@@ -117,7 +117,7 @@ sub l00http_svg_proc {
 
         print $sock "<a href=\"/svg.htm?graph=demo&view=\">Viewer demo</a><br>\n";
         print $sock "SVG plotting demo:<p>\n";
-        print $sock "<a href=\"/svg.htm?graph=demo\">".
+        print $sock "<a href=\"/svg.htm?graph=demo&view=\">".
         "<img src=\"/svg.htm?graph=demo\">".
         "</a>\n";
 
