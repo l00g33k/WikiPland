@@ -13,7 +13,7 @@ my %config = (proc => "l00http_table_proc",
               desc => "l00http_table_desc");
 my ($buffer, $pre, $tblhdr, $tbl, $post, @width, @cols, $ii);
 my (@modcmds, $modadd, $modcopy, $moddel, $modrow, $mod, $modtab);
-my ($exelog, $nocols, $norows, @rows, @keys, @order);
+my ($exelog, $nocols, $norows, @rows, @keys, @order, $nolist);
 my (@allkeys, $sortdebug, @tblbdy, $tblfilorg, $sortkeys);
 
 $modadd  = "Add new column at A";
@@ -24,6 +24,7 @@ $modtab  = "Display tabs";
 @modcmds = ("Reload from file", $modadd, $moddel, $modcopy, $modrow, $modtab);
 $tblfilorg ='';
 $sortkeys = '';
+$nolist = '';
 
 sub l00http_table_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -110,6 +111,12 @@ sub l00http_table_proc {
         $form->{'path'} = "$ctrl->{'plpath'}l00_table.txt";
     }
     print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
+
+    if ((defined ($form->{'nolist'})) && ($form->{'nolist'} eq 'on')) {
+        $nolist = 'checked';
+    } else {
+        $nolist = '';
+    }
 
     $buffer = "";
     if (defined ($form->{'convert'})) {
@@ -435,27 +442,28 @@ sub l00http_table_proc {
     # generate HTML buttons, etc.
     print $sock "<hr><a name=\"end\"></a>\n";
 
-    # convert
-    print $sock "<form action=\"/table.htm\" method=\"post\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"convert\" value=\"Convert / Save\">\n";
-    print $sock "<input type=\"checkbox\" name=\"nobak\" checked>Do not backup\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "</form>\n";
-    print $sock "</td><td>\n";
+    if ($nolist ne 'checked') {
+        # convert
+        print $sock "<form action=\"/table.htm\" method=\"post\">\n";
+        print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"convert\" value=\"Convert / Save\">\n";
+        print $sock "<input type=\"checkbox\" name=\"nobak\" checked>Do not backup\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "</form>\n";
+        print $sock "</td><td>\n";
 
-    # cancel
-    print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"cancel\" value=\"Cancel\">\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "</form>\n";
-    print $sock "</td></tr>\n";
-    print $sock "</table><hr>\n";
+        # cancel
+        print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"cancel\" value=\"Cancel\">\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "</form>\n";
+        print $sock "</td></tr>\n";
+        print $sock "</table><hr>\n";
 
-
-    print $sock "Execution log: $exelog<p>\n";
+        print $sock "Execution log: $exelog<p>\n";
+    }
     
     # editing column
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -492,7 +500,7 @@ sub l00http_table_proc {
     print $sock "<input type=\"text\" size=\"20\" name=\"filter\" value=\"$tblfilorg\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "&nbsp;\n";
+    print $sock "<input type=\"checkbox\" name=\"nolist\" $nolist>No listing\n";
     print $sock "</td><td>\n";
     print $sock "Filter affects only display. !!col#||regex\n";
     print $sock "</td></tr>\n";
@@ -504,17 +512,19 @@ sub l00http_table_proc {
     }
 
     # print raw ASCII texts
-    print $sock "<pre>\n";
-    $lineno = 1;
-    $buffer =~ s/\r//g;
-    @alllines = split ("\n", $buffer);
-    foreach $line (@alllines) {
-        $line =~ s/\n//g;
-        $line =~ s/</&lt;/g;
-        $line =~ s/>/&gt;/g;
-        print $sock sprintf ("%04d: ", $lineno++) . "$line\n";
+    if ($nolist ne 'checked') {
+        print $sock "<pre>\n";
+        $lineno = 1;
+        $buffer =~ s/\r//g;
+        @alllines = split ("\n", $buffer);
+        foreach $line (@alllines) {
+            $line =~ s/\n//g;
+            $line =~ s/</&lt;/g;
+            $line =~ s/>/&gt;/g;
+            print $sock sprintf ("%04d: ", $lineno++) . "$line\n";
+        }
+        print $sock "</pre>\n";
     }
-    print $sock "</pre>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
