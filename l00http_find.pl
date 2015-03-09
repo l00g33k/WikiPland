@@ -27,7 +27,7 @@ my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx);
 my ($fmatch, $fmatches, $content, $fullname, $lineno, $lineno0, $maxlines, $sock);
-my ($wday, $yday, $year, @cols, @el, @els, $sendto, $prefmt, $srcdoc, $sortoffset);
+my ($wday, $yday, $year, @cols, @el, @els, $sendto, $noprefmt, $srcdoc, $sortoffset);
 
 my ($path);
 
@@ -36,7 +36,7 @@ $fmatches = '';
 $content = '';
 $maxlines = 4000;
 $sendto = 'ls';
-$prefmt = 'checked';
+$noprefmt = '';
 $srcdoc = '';
 $context = 0;
 $sortoffset = '';
@@ -66,7 +66,7 @@ sub l00http_find_search {
         $paren = 0;
     }
     $lineend = '<br>';
-    if ($prefmt eq '') {
+    if ($noprefmt ne '') {
         $lineend = '';
         print $sock "<pre>\n";
 #       $ctrl->{'l00file'}->{'l00://find.pl'} .= "<pre>\n";
@@ -247,7 +247,7 @@ sub l00http_find_search {
     if (defined ($sortoffset) && (length($sortoffset) > 0) && 
         ($sortoffset > 0) && 
         ($content eq '') &&
-        ($prefmt eq '')) {
+        ($noprefmt ne '')) {
         $output2 = join("\n", sort findsort split("\n", $output));
         print $sock $output2;
 #       $ctrl->{'l00file'}->{'l00://find.pl'} .= $output2;
@@ -258,7 +258,7 @@ sub l00http_find_search {
         &l00httpd::l00fwriteBuf($ctrl, $output);
     }
 
-    if ($prefmt eq '') {
+    if ($noprefmt ne '') {
         print $sock "</pre>\n";
 #       $ctrl->{'l00file'}->{'l00://find.pl'} .= "</pre>\n";
         &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
@@ -303,10 +303,10 @@ sub l00http_find_proc {
     } else {
         $recursive = "";
     }
-    if (defined ($form->{'prefmt'})) {
-        $prefmt = 'checked';
+    if (defined ($form->{'noprefmt'})) {
+        $noprefmt = 'checked';
     } else {
-        $prefmt = '';
+        $noprefmt = '';
     }
     if (defined ($form->{'fmatch'})) {
         $fmatches = $form->{'fmatch'};
@@ -448,7 +448,7 @@ sub l00http_find_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
-    print $sock "        <td><input type=\"checkbox\" name=\"prefmt\" $prefmt>Unformatted text</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"noprefmt\" $noprefmt>Formatted text</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
