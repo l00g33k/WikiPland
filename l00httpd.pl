@@ -1103,7 +1103,8 @@ while(1) {
                 # Send HTTP and HTML headers
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: $client_ip connected to the Android phone. \n";
-                print $sock "Phone IP: $ip, up: ";
+                print $sock "WikiPland IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm
+\">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns<p>\n";
                 
