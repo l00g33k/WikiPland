@@ -21,6 +21,7 @@
 =Update=
 * To update, you must uninstall previous version before installing newer version
 =Release Notes=
+* Perl source code: https://github.com/l00g33k/WikiPland
 ==Major changes in version 1.03==
 * 2012/12/09  0:17:59 Sun
 * Visiting http://127.0.0.1:20337 before personalization displays the !QuickStart page.  The control page is display after personalization. The control page can also be reached by clicking the 'Home' link on most modules
