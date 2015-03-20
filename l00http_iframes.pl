@@ -34,12 +34,13 @@ sub l00http_iframes_proc (\%) {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>iframes</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
+    $formout = '';
     if (!defined ($form->{"noform"}) || ($form->{"noform"} ne 'on')) {
-        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+        $formout .= "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     } else {
-        print $sock "$ctrl->{'HOME'}\n";
+        $formout .= "$ctrl->{'HOME'}\n";
     }
-    print $sock "<a href=\"#end\">Jump to end</a><br>\n";
+    $formout .= "<a href=\"#end\">Jump to end</a><br>\n";
 
     if (defined ($form->{'spec'}) && 
         (length($form->{'spec'}) > 4)) {
@@ -106,7 +107,6 @@ sub l00http_iframes_proc (\%) {
     }
 
 
-    $formout = '';
     $formout .= "<form action=\"/iframes.htm\" method=\"get\">\n";
     $formout .= "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     $formout .= "        <tr>\n";
@@ -204,10 +204,6 @@ sub l00http_iframes_proc (\%) {
     $formout .= "<input type=\"hidden\" name=\"spec\" value=\"$spec\">\n";
     $formout .= "</form><p>\n";
 
-    if (!defined ($form->{"noform"}) || ($form->{"noform"} ne 'on')) {
-        print $sock $formout;
-    }
-
 
     if (defined ($form->{'render'})) {
         print $sock $out;
@@ -218,6 +214,9 @@ sub l00http_iframes_proc (\%) {
         #print $sock $out;
     }
 
+    if (!defined ($form->{"noform"}) || ($form->{"noform"} ne 'on')) {
+        print $sock $formout;
+    }
 
     print $sock "<a name=\"end\"></a>\n";
     print $sock "<p><a href=\"#top\">Jump to top</a>";
