@@ -27,7 +27,7 @@ my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx);
 my ($fmatch, $fmatches, $content, $fullname, $lineno, $lineno0, $maxlines, $sock);
-my ($wday, $yday, $year, @cols, @el, @els, $sendto, $noprefmt, $srcdoc, $sortoffset);
+my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $srcdoc, $sortoffset);
 
 my ($path);
 
@@ -36,7 +36,7 @@ $fmatches = '';
 $content = '';
 $maxlines = 4000;
 $sendto = 'ls';
-$noprefmt = '';
+$wraptext = '';
 $srcdoc = '';
 $context = 0;
 $sortoffset = '';
@@ -66,10 +66,9 @@ sub l00http_find_search {
         $paren = 0;
     }
     $lineend = '<br>';
-    if ($noprefmt ne '') {
+    if ($wraptext eq '') {
         $lineend = '';
         print $sock "<pre>\n";
-#       $ctrl->{'l00file'}->{'l00://find.pl'} .= "<pre>\n";
         &l00httpd::l00fwriteBuf($ctrl, "<pre>\n");
     }
 
@@ -247,20 +246,17 @@ sub l00http_find_search {
     if (defined ($sortoffset) && (length($sortoffset) > 0) && 
         ($sortoffset > 0) && 
         ($content eq '') &&
-        ($noprefmt ne '')) {
+        ($wraptext eq '')) {
         $output2 = join("\n", sort findsort split("\n", $output));
         print $sock $output2;
-#       $ctrl->{'l00file'}->{'l00://find.pl'} .= $output2;
         &l00httpd::l00fwriteBuf($ctrl, $output2);
     } else {
         print $sock $output;
-#       $ctrl->{'l00file'}->{'l00://find.pl'} .= $output;
         &l00httpd::l00fwriteBuf($ctrl, $output);
     }
 
-    if ($noprefmt ne '') {
+    if ($wraptext eq '') {
         print $sock "</pre>\n";
-#       $ctrl->{'l00file'}->{'l00://find.pl'} .= "</pre>\n";
         &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
     }
 
@@ -271,7 +267,7 @@ sub l00http_find_search {
         print $sock "<p>Found $hitcnt occurance(s) in $filecnt file(s) in '$mypath'<br>".
             "Click path to visit directory, click filename to view file\n";
     }
-    print $sock "<p>Find results also in <a href=\"/ls.htm?path=l00://find.pl\">l00://find.pl</a>\n";
+    print $sock "<p>Find results also in <a href=\"/ls.htm?path=l00://find.htm\">l00://find.htm</a>\n";
 
     1;
 }
@@ -303,10 +299,10 @@ sub l00http_find_proc {
     } else {
         $recursive = "";
     }
-    if (defined ($form->{'noprefmt'})) {
-        $noprefmt = 'checked';
+    if (defined ($form->{'wraptext'})) {
+        $wraptext = 'checked';
     } else {
-        $noprefmt = '';
+        $wraptext = '';
     }
     if (defined ($form->{'fmatch'})) {
         $fmatches = $form->{'fmatch'};
@@ -399,17 +395,10 @@ sub l00http_find_proc {
                     $dirlist .= "<td><small>&lt;dir&gt;</small></td>\n";
                     $dirlist .= "<td>&nbsp;</td>\n";
                     $dirlist .= "</tr>\n";
-
-#                   print $sock "<tr>\n";
-#                   print $sock "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
-#                   print $sock "<td><small>&lt;dir&gt;</small></td>\n";
-#                   print $sock "<td>&nbsp;</td>\n";
-#                   print $sock "</tr>\n";
                 }
             }
 
             $dirlist .= "</table>\n";
-#           print $sock "</table>\n";
             closedir (DIR);
         }
     }
@@ -448,7 +437,7 @@ sub l00http_find_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
-    print $sock "        <td><input type=\"checkbox\" name=\"noprefmt\" $noprefmt>Formatted text</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"wraptext\" $wraptext>Wrapped text</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
@@ -466,8 +455,7 @@ sub l00http_find_proc {
     print $sock "<br>!!: Prefix '!!' to regex to list files without matching pattern<p>\n";
 
     if ($content ne '!!') {
-#       $ctrl->{'l00file'}->{'l00://find.pl'} = '';
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://find.pl');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://find.htm');
         foreach $thispath (split ('\|\|\|', $path)) {
             &l00http_find_search ($thispath, $ctrl);
         }
