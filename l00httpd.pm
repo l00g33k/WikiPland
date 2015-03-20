@@ -501,7 +501,7 @@ sub l00setCB {
         $ctrl->{'droid'}->setClipboard ($buf);
     } elsif ($ctrl->{'os'} eq 'win') {
         # ::todo:: add windows special character escape
-        `echo $buf | clip`;
+        `echo $buf| clip`;
     }
 }
 
