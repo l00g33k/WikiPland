@@ -388,7 +388,7 @@ sub l00http_search_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($path);
+    my ($path, $title);
 
 
     # 1) Determine operating path and mode
@@ -401,6 +401,11 @@ sub l00http_search_proc {
     }
     $path =~ tr/\\/\//;     # converts all \ to /, which work on Windows too
 
+    if (defined ($form->{'title'})) {
+        $title = $form->{'title'};
+    } else {
+        $title = '';
+    }
     if (defined ($form->{'recursive'})) {
         $recursive = "checked";
     } else {
@@ -478,6 +483,9 @@ sub l00http_search_proc {
     }
 
     if (length($condition) > 0) {
+        if (length ($title) > 0) {
+            print $sock "$title<br>\n";
+        }
         &l00http_search_search ($ctrl, $form, $path);
     }
 
@@ -530,6 +538,11 @@ sub l00http_search_proc {
         print $sock "            <td><input type=\"checkbox\" name=\"linemode\">Line mode</td>\n";
     }
     print $sock "            <td>Overwrites 'Line marker'</td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>Title:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"title\" value=\"$title\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
