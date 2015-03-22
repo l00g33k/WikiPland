@@ -33,7 +33,7 @@ sub l00http_iframes_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>iframes</title>" . $ctrl->{'htmlhead2'};
-    print $sock "<a name=\"top\"></a>\n";
+    print $sock "<a name=\"iframestop\"></a>\n";
     $formout = '';
     if (!defined ($form->{"noform"}) || ($form->{"noform"} ne 'on')) {
         $formout .= "$ctrl->{'home'} $ctrl->{'HOME'}\n";
@@ -219,7 +219,7 @@ sub l00http_iframes_proc (\%) {
     }
 
     print $sock "<a name=\"end\"></a>\n";
-    print $sock "<p><a href=\"#top\">Jump to top</a>";
+    print $sock "<p><a href=\"#iframestop\">Jump to top</a>";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

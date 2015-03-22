@@ -483,6 +483,7 @@ sub l00http_search_proc {
     }
 
     if (length($condition) > 0) {
+        print $sock "<a name=\"top\"></a>\n";
         if (length ($title) > 0) {
             print $sock "$title<br>\n";
         }
@@ -492,6 +493,7 @@ sub l00http_search_proc {
     # 4) If not in raw mode, also display a control table
 
     print $sock "<hr><a name=\"end\"></a>\n";
+    print $sock "<a href=\"#top\">Jump to top</a><br>\n";
 
     print $sock "<form action=\"/search.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";

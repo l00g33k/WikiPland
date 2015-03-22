@@ -100,6 +100,7 @@ sub l00http_cal_proc {
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+    print $sock "<a name=\"top\"></a>\n";
 
     # remember parameters if new ones are provided
     if (defined ($form->{'cellwd'}) && $form->{'cellwd'} > 3) {
@@ -345,6 +346,7 @@ sub l00http_cal_proc {
 #   print $sock "</pre>\n";
 
     # 3) Display form controls
+    print $sock "<p><a href=\"#top\">Jump to top</a><be>\n";
 
     print $sock "<form action=\"/cal.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
