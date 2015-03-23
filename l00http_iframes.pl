@@ -18,7 +18,7 @@ sub l00http_iframes_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "iframes: simulating multiple screen";
+    " B: iframes: simulating multiple screen";
 }
 
 

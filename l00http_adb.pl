@@ -68,7 +68,7 @@ sub l00http_adb_proc (\%) {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form><p>\n";
 
-    print $sock "<p>Listing of adb.pl (click <a href=\"/view.htm?path=$ctrl->{'plpath'}l00http_adb.pl&hidelnno=on\">here</a> and copy from screen)\n";
+    print $sock "<p>Listing of adb.pl (click <a href=\"/view.htm?path=$ctrl->{'plpath'}adb.pl&hidelnno=on\">here</a> and copy from screen)\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
@@ -76,62 +76,3 @@ sub l00http_adb_proc (\%) {
 
 
 \%config;
-
-__DATA__
-Content of 'adb.pl'. Copy and paste to host file:
-# perl adb.pl adb.in
-
-$ifname = shift;
-($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
-    $atime, $mtime, $ctime, $blksize, $blocks) = stat($ifname);
-$adbintime = $mtime - 1;    # so it always load at first run
-
-$cnt = 0;
-while (1) {
-    # check adb.in spec file timestamp change
-    ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
-        $atime, $mtime, $ctime, $blksize, $blocks) = stat($ifname);
-    if ($adbintime != $mtime) {
-        # adb.in spec file was modified by user, rescan
-        $adbintime = $mtime;
-        if (open (IN, "<$ifname")) {
-            undef %fstamp;
-            undef %phpath;
-            print "REREAD: $ifname\n";
-            while (<IN>) {
-                # save command lines
-                if (($cygpath) = /^rsync -vv -e .*(\/cygdrive\/\S+) 127/) {
-                    s/\n//;
-                    s/\r//;
-                    $pcpath = $cygpath;
-                    $pcpath =~ s|^/cygdrive/(.)/|$1:\\|;
-                    $pcpath =~ s/\//\\/g;
-                    ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
-                        $atime, $mtime, $ctime, $blksize, $blocks) = stat($pcpath);
-                    $rsynccmd{$pcpath} = $_;
-                    $rsynctim{$pcpath} = $mtime;
-                    print "TARGET: $rsynctim{$pcpath} : $pcpath\n";
-                }
-
-            }
-            close (IN);
-        } else {
-            die "Unable to read $ifname\n";
-        }
-    }
-
-    print "loop $cnt:\n";
-    foreach $pcpath (keys %rsynccmd) {
-        $cmd = $rsynccmd{$pcpath};
-        print "CANDIDATE: $pcpath\n";
-        ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, 
-            $atime, $mtime, $ctime, $blksize, $blocks) = stat($pcpath);
-        if ($rsynctim{$pcpath} != $mtime) {
-            print "\n$pcpath modified: $cmd\n";
-            print `$cmd` . "\n";
-            $rsynctim{$pcpath} = $mtime;
-        }
-    }
-    sleep(1);
-    $cnt++;
-}
