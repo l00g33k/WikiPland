@@ -281,8 +281,12 @@ sub l00http_reminder_proc {
     print $sock "        <select name=\"min\">\n";
     print $sock "        <option value=\"--m\">--</option>\n";
 	for($ii = 0; $ii < 60; $ii += 5) {
+        $selected = '';
+        if ($ii == 0) {
+            $selected = 'selected';
+        }
 	    $temp = sprintf("%02d", $ii);
-        print $sock "        <option value=\"$temp"."m\">$temp</option>\n";
+        print $sock "        <option value=\"$temp"."m\" $selected>$temp</option>\n";
 	}
     print $sock "        </select>m\n";
     print $sock "        </td>\n";

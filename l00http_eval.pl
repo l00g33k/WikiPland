@@ -12,7 +12,7 @@ sub l00http_eval_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    " C: eval: Eval expressions";
+    " B: eval: Eval expressions";
 }
 
 sub l00http_eval_proc {
