@@ -12,6 +12,24 @@ my ($buffer, $lastbuf);
 $lastbuf = '';
 
 
+sub blog_get_msg {
+    my ($buffer, $currstyle) = @_;
+
+    if ($currstyle eq 'log') {
+        # log
+        $buffer = substr ($buffer, 16, 9999);
+    } elsif ($currstyle eq 'blog') {
+        # blog
+        $buffer = substr ($buffer, 25, 9999);
+    } elsif ($currstyle eq 'bare') {
+        # bare
+        # no header, no change
+    }
+
+    $buffer;
+}
+
+
 sub l00http_blog_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -19,12 +37,37 @@ sub l00http_blog_desc {
     "blog: Simple blogger: must be invoked through ls.pl file view";
 }
 
+
+# Button actions:
+# Blog style/Log style/Bare style: cycle through different style of prepend header
+## Blog style:
+### 20150322 120000
+## Log style: 
+### ==20150322 233225 ==
+### * 
+## Bare style:
+### (nothing)
+# Save: save form buffer
+# PasteSave: paste clipboard with current style header and save
+# Paste: paste clipboard with current style header, no save
+# PasteAdd: append clipboard to current form buffer, no save
+# TimeSave: save form buffer with current time in current style
+# NewTime: update time in current style and keep form message
+
+# two hidden fields
+## currstyle: indicate style for the just submitted form, 
+## newstyle: transform form buffer from CurrentStyle to NewtStyle
+## currstyle and newstyle default to log style if missing
+
+#::here::
+
+
 sub l00http_blog_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
-    my ($output, $keys, $key, $space);
+    my ($output, $keys, $key, $space, $currstyle, $newstyle);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -48,15 +91,54 @@ sub l00http_blog_proc {
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
     }
+
+    # display what will be pasted
     if (defined ($form->{'pastesave'})) {
         $_ = &l00httpd::l00getCB($ctrl);
         print $sock "<hr>$_<hr>\n";
     }
 
+    $currstyle = 'log';
+    if (defined ($form->{'currstyle'})) {
+        if ($form->{'currstyle'} eq 'log') {
+            $currstyle = 'log';
+        } elsif ($form->{'currstyle'} eq 'blog') {
+            $currstyle = 'blog';
+        } elsif ($form->{'currstyle'} eq 'bare') {
+            $currstyle = 'bare';
+        }
+    }
+    $newstyle = $currstyle;
+    if (defined ($form->{'newstyle'})) {
+        if ($form->{'newstyle'} eq 'log') {
+            $newstyle = 'log';
+        } elsif ($form->{'newstyle'} eq 'blog') {
+            $newstyle = 'blog';
+        } elsif ($form->{'newstyle'} eq 'bare') {
+            $newstyle = 'bare';
+        }
+    }
+
+print $sock "<p>currstyle = $currstyle<p>\n";
+print $sock "<p>newstyle = $newstyle<p>\n";
+$currstyle = '';
+$newstyle = '';
+#::here::
+if ($currstyle eq 'log') {
+    # log
+} elsif ($currstyle eq 'blog') {
+    # blog
+} elsif ($currstyle eq 'bare') {
+    # bare
+}
+
+
     $buffer = '';
     if (defined ($form->{'timesave'})) {
         # update time and save form buffer
         if (defined ($form->{'buffer'})) {
+#::here::
+            $buffer = &blog_get_msg ($form->{'buffer'}, $currstyle);
             if (defined ($form->{'blog'})) {
                 if ($form->{'blog'} eq "on") {
                     $buffer = substr ($form->{'buffer'}, 25, 9999);
@@ -69,6 +151,7 @@ sub l00http_blog_proc {
         } else {
             $buffer = '';
         }
+#::here::
         if (defined ($form->{'blog'})) {
             if ($form->{'blog'} eq "on") {
                 $form->{'buffer'} = "==$ctrl->{'now_string'} ==\n* ";
@@ -83,6 +166,7 @@ sub l00http_blog_proc {
         $form->{'save'} = 1;
     }
     if (defined ($form->{'pastesave'})) {
+#::here::
         if (defined ($form->{'blog'})) {
             if ($form->{'blog'} eq "on") {
                 $form->{'buffer'} = "==$ctrl->{'now_string'} ==\n* ";
@@ -96,6 +180,7 @@ sub l00http_blog_proc {
         $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
+
     if (defined ($form->{'save'})) {
         if ((defined ($form->{'buffer'})) &&
             ((defined ($form->{'path'})) && 
@@ -137,6 +222,7 @@ sub l00http_blog_proc {
                     foreach $line (@alllines) {
                         $line =~ s/\r//g;
                         $line =~ s/\n//g;
+#::here::
                         if (defined ($form->{'blog'})) {
                             if ($form->{'blog'} eq "on") {
                                 &l00httpd::l00fwriteBuf($ctrl, "$line\n");
@@ -151,6 +237,7 @@ sub l00http_blog_proc {
                             $space = ' ';
                         }
                     }
+#::here::
                     if (!defined ($form->{'blog'}) || ($form->{'blog'} ne "on")) {
                         &l00httpd::l00fwriteBuf($ctrl, "\n");
                     }
@@ -162,7 +249,9 @@ sub l00http_blog_proc {
             }
         }
     }
+
     # do funny tricks to switch log style
+#::here::
     if (defined ($form->{'logstyle'})) {
         $form->{'cancel'} = 'NewTime';
         $form->{'blog'} = undef;
@@ -171,6 +260,19 @@ sub l00http_blog_proc {
         $form->{'cancel'} = 'NewTime';
         $form->{'blog'} = 'on';
     }
+
+    # make header
+    if ($currstyle eq 'log') {
+        # log
+        $buffer = $ctrl->{'now_string'} . ' ';
+    } elsif ($currstyle eq 'blog') {
+        # blog
+        $buffer = "==$ctrl->{'now_string'} ==\n* ";
+    } elsif ($currstyle eq 'bare') {
+        # bare
+        $buffer = "";
+    }
+#::here::
     if (defined ($form->{'blog'})) {
         if ($form->{'blog'} eq "on") {
             $buffer = "==$ctrl->{'now_string'} ==\n* ";
@@ -180,8 +282,11 @@ sub l00http_blog_proc {
     } else {
         $buffer = $ctrl->{'now_string'} . ' ';
     }
+
     if (defined ($form->{'cancel'}) && defined ($form->{'buffer'})) {
         # do funny tricks to switch log style
+        $buffer .= &blog_get_msg ($form->{'buffer'}, $currstyle);
+#::here::
         if (defined ($form->{'logstyle'})) {
             $buffer .= substr ($form->{'buffer'}, 25, 9999);
         } elsif (defined ($form->{'blogstyle'})) {
@@ -196,6 +301,7 @@ sub l00http_blog_proc {
             $buffer .= substr ($form->{'buffer'}, 16, 9999);
         }
     }
+
     if (defined ($form->{'paste'})) {
         $buffer .= &l00httpd::l00getCB($ctrl);
     }
@@ -263,13 +369,16 @@ sub l00http_blog_proc {
     }
     print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
     print $sock "<input type=\"submit\" name=\"cancel\" value=\"NewTime\">\n";
+    # display button to switch style
+#::here::
     if (defined ($form->{'blog'})) {
         print $sock "<input type=\"submit\" name=\"logstyle\" value=\"Log style add\">\n";
+        print $sock "<input type=\"hidden\" name=\"currstyle\" value=\"log\">\n";
     } else {
         print $sock "<input type=\"submit\" name=\"blogstyle\" value=\"Blog style add\">\n";
+        print $sock "<input type=\"hidden\" name=\"currstyle\" value=\"blog\">\n";
     }
-    print $sock "</form><br>Append '&blog=' to URL for bare style\n";
-
+    print $sock "</form><br>\n";
 
     print $sock $output;
 
