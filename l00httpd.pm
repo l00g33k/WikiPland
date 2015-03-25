@@ -440,7 +440,7 @@ sub pcSyncCmdline {
         $buf .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";
         $buf .= "$pcpath$fname\n";
 
-        $buf .= "ssh localhost -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
+        $buf .= "ssh 127.0.0.1 -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
         $buf .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $buf .= "${pcpath}adb.in\n";
         $buf .= "</pre>\n";
@@ -455,7 +455,7 @@ sub pcSyncCmdline {
         $clip .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";
         $clip .= "$pcpath$fname\n";
 
-        $clip .= "ssh localhost -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
+        $clip .= "ssh 127.0.0.1 -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
         $clip .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $clip .= "${pcpath}adb.in\n";
 

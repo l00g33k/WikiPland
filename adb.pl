@@ -11,6 +11,9 @@ $ifname = shift;
 $idir = $ifname;
 $idir =~ s/([\/\\])([^\/\\]+)$/$1/;
 
+$idir2 = $idir;
+$idir2 =~ s/\\/\\\\/g;
+
 print "adb.in directory is $idir\n\n";
 
 if (opendir (DIR, $idir)) {
@@ -24,7 +27,7 @@ if (opendir (DIR, $idir)) {
         }
     }
     closedir (DIR);
-    `explorer $idir`;
+    `explorer $idir2`;
     print "\n^C now to terminate.\n";
     <>;
     opendir (DIR, $idir);
@@ -67,6 +70,8 @@ while (1) {
             print "REREAD: $ifname\n";
             $fetch = 0;
             while (<IN>) {
+                s/\n//;
+                s/\r//;
                 # save whoami command
                 if (/(ssh .*\/\.whoami')/) {
                     $whoami = $1;
@@ -78,8 +83,6 @@ while (1) {
                 # rsync -v -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:/sdcard/l00httpd/NtCompTw700.txt 
                 # /cygdrive/D/x/ram/l00/NtCompTw700.txt
                 if (($cygpath) = /^rsync -v -e .*(\/cygdrive\/\S+)$/) {
-                    s/\n//;
-                    s/\r//;
                     $pcpath = $cygpath;
                     $pcpath =~ s|^/cygdrive/(.)/|$1:\\|;
                     $pcpath =~ s/\//\\/g;
