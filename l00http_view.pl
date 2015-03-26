@@ -10,11 +10,11 @@ my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
 my ($hostpath);
-my ($findtext, $block, $prefmt, $found, $pname, $fname, $maxln, $skip, $hilitetext);
+my ($findtext, $block, $wraptext, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '';
-$prefmt = '';
+$wraptext = '';
 $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
@@ -150,14 +150,14 @@ sub l00http_view_proc {
                 if (defined ($form->{'block'})) {
                     $block = $form->{'block'};
                 }
-                if (defined ($form->{'prefmt'})) {
-                    $prefmt = 'checked';
-                    $found .= "<pre>\n";
+                if (defined ($form->{'wraptext'})) {
+                    $wraptext = 'checked';
                 } else {
-                    $prefmt = '';
+                    $wraptext = '';
+                    $found .= "<pre>\n";
                 }
                 $found .= &l00httpd::findInBuf ($findtext, $block, $buffer);
-                if ($prefmt ne '') {
+                if ($wraptext eq '') {
 				    $tmp = '';
 					foreach $_ (split("\n", $found)) {
 					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
@@ -311,7 +311,7 @@ sub l00http_view_proc {
     print $sock "<tr><td>\n";
     print $sock "Formatted:\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"prefmt\" $prefmt>formatted text\n";
+    print $sock "<input type=\"checkbox\" name=\"wraptext\" $wraptext>wrap text\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "File:\n";
@@ -324,7 +324,7 @@ sub l00http_view_proc {
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a> - \n";
-	print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&prefmt=on&path=$form->{'path'}\">Find in this file</a>\n";
+	print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&path=$form->{'path'}\">Find in this file</a>\n";
     print $sock "<p>Send $form->{'path'} to launcher\n";
 
 
