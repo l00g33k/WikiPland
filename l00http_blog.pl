@@ -13,18 +13,18 @@ $lastbuf = '';
 
 
 sub blog_make_hdr {
-    my ($ctrl, $currstyle) = @_;
-    my ($buffer);
+    my ($ctrl, $style) = @_;
+    my ($buffer, $sock);
 
     $buffer = '';
 
-    if ($currstyle eq 'log') {
+    if ($style eq 'log') {
         # log
         $buffer = $ctrl->{'now_string'} . ' ';
-    } elsif ($currstyle eq 'blog') {
+    } elsif ($style eq 'blog') {
         # blog
         $buffer = "==$ctrl->{'now_string'} ==\n* ";
-    } elsif ($currstyle eq 'bare') {
+    } elsif ($style eq 'bare') {
         # bare
         # nothing
     }
@@ -33,19 +33,19 @@ sub blog_make_hdr {
 }
 
 sub blog_get_msg {
-    my ($buffer, $currstyle) = @_;
+    my ($buffer, $style) = @_;
 
     if (!defined ($buffer)) {
         $buffer = '';
     }
 
-    if ($currstyle eq 'log') {
+    if ($style eq 'log') {
         # log
         $buffer = substr ($buffer, 16, 9999);
-    } elsif ($currstyle eq 'blog') {
+    } elsif ($style eq 'blog') {
         # blog
-        $buffer = substr ($buffer, 25, 9999);
-    } elsif ($currstyle eq 'bare') {
+        $buffer = substr ($buffer, 24, 9999);
+    } elsif ($style eq 'bare') {
         # bare
         # no header, no change
     }
@@ -79,9 +79,9 @@ sub l00http_blog_desc {
 # NewTime: update time in current style and keep form message
 
 # two hidden fields
-## currstyle: indicate style for the just submitted form, 
-## newstyle: transform form buffer from CurrentStyle to NewtStyle
-## currstyle and newstyle default to log style if missing
+## stylecurr: indicate style for the just submitted form, 
+## stylenew: transform form buffer from CurrentStyle to NewtStyle
+## stylecurr and stylenew default to log style if missing
 
 
 
@@ -90,7 +90,7 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
-    my ($output, $keys, $key, $space, $currstyle, $newstyle);
+    my ($output, $keys, $key, $space, $stylecurr, $stylenew);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -121,42 +121,39 @@ sub l00http_blog_proc {
         print $sock "<hr>$_<hr>\n";
     }
 
-    $currstyle = 'log';
-    if (defined ($form->{'currstyle'})) {
-        if ($form->{'currstyle'} eq 'log') {
-            $currstyle = 'log';
-        } elsif ($form->{'currstyle'} eq 'blog') {
-            $currstyle = 'blog';
-        } elsif ($form->{'currstyle'} eq 'bare') {
-            $currstyle = 'bare';
+    $stylecurr = 'log';
+    if (defined ($form->{'stylecurr'})) {
+        if ($form->{'stylecurr'} eq 'log') {
+            $stylecurr = 'log';
+        } elsif ($form->{'stylecurr'} eq 'blog') {
+            $stylecurr = 'blog';
+        } elsif ($form->{'stylecurr'} eq 'bare') {
+            $stylecurr = 'bare';
         }
     }
-    $newstyle = $currstyle;
-    if (defined ($form->{'newstyle'})) {
-        if ($form->{'newstyle'} eq 'log') {
-            $newstyle = 'log';
-        } elsif ($form->{'newstyle'} eq 'blog') {
-            $newstyle = 'blog';
-        } elsif ($form->{'newstyle'} eq 'bare') {
-            $newstyle = 'bare';
+    $stylenew = $stylecurr;
+    if (defined ($form->{'setnewstyle'}) &&
+		defined ($form->{'stylenew'})) {
+        if ($form->{'stylenew'} eq 'log') {
+            $stylenew = 'log';
+        } elsif ($form->{'stylenew'} eq 'blog') {
+            $stylenew = 'blog';
+        } elsif ($form->{'stylenew'} eq 'bare') {
+            $stylenew = 'bare';
         }
     }
 
-print $sock "<p>currstyle = $currstyle<p>\n";
-print $sock "<p>newstyle = $newstyle<p>\n";
 
-
-    $buffer = '';
     if (defined ($form->{'timesave'})) {
         # update time and save form buffer
-        $buffer = &blog_get_msg ($form->{'buffer'}, $currstyle);
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $currstyle);
+        $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr);
         $form->{'buffer'} .= $buffer;
         # fake a 'Save' click
         $form->{'save'} = 1;
     }
     if (defined ($form->{'pastesave'})) {
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $currstyle);
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr);
         $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
@@ -202,7 +199,7 @@ print $sock "<p>newstyle = $newstyle<p>\n";
                     foreach $line (@alllines) {
                         $line =~ s/\r//g;
                         $line =~ s/\n//g;
-                        if ($currstyle eq 'blog') {
+                        if ($stylecurr eq 'blog') {
                             # blog
                             &l00httpd::l00fwriteBuf($ctrl, "$line\n");
                         } else {
@@ -210,7 +207,7 @@ print $sock "<p>newstyle = $newstyle<p>\n";
                             $space = ' ';
                         }
                     }
-                    if ($currstyle ne 'blog') {
+                    if ($stylecurr ne 'blog') {
                         &l00httpd::l00fwriteBuf($ctrl, "\n");
                     }
                     &l00httpd::l00fwriteBuf($ctrl, $buforg);
@@ -218,21 +215,23 @@ print $sock "<p>newstyle = $newstyle<p>\n";
                 } else {
                     print $sock "Unable to write '$form->{'path'}'<p>\n";
                 }
+				# saved, clear buffer
+				$form->{'buffer'} = '';
             }
         }
     }
 
 
     # make header
-    $buffer = &blog_make_hdr ($ctrl, $newstyle) . $buffer;
+    $buffer = &blog_make_hdr ($ctrl, $stylenew);
 
     if (defined ($form->{'paste'})) {
         $buffer .= &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'pasteadd'})) {
-        $buffer = $form->{'buffer'} . ' ';
+        $buffer .= &blog_get_msg ($form->{'buffer'}, $stylecurr) . ' ';
         $buffer .= &l00httpd::l00getCB($ctrl);
     } else {
-        $buffer = &blog_get_msg ($form->{'buffer'}, $currstyle);
+        $buffer .= &blog_get_msg ($form->{'buffer'}, $stylecurr);
     }
 
 
@@ -294,19 +293,19 @@ print $sock "<p>newstyle = $newstyle<p>\n";
     print $sock "<input type=\"submit\" name=\"cancel\" value=\"NewTime\">\n";
     # display button to switch style
 
-    print $sock "<input type=\"hidden\" name=\"currstyle\" value=\"currstyle\">\n";
-    if ($currstyle eq 'log') {
+    print $sock "<input type=\"hidden\" name=\"stylecurr\" value=\"$stylenew\">\n";
+    if ($stylenew eq 'log') {
         # log
-        print $sock "<input type=\"submit\" name=\"dummy\" value=\"Blog style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"newstyle\" value=\"blog\">\n";
-    } elsif ($currstyle eq 'blog') {
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Blog style add\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\" value=\"blog\">\n";
+    } elsif ($stylenew eq 'blog') {
         # blog
-        print $sock "<input type=\"submit\" name=\"dummy\" value=\"Bare style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"newstyle\" value=\"bare\">\n";
-    } elsif ($currstyle eq 'bare') {
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Bare style add\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\" value=\"bare\">\n";
+    } elsif ($stylenew eq 'bare') {
         # bare
-        print $sock "<input type=\"submit\" name=\"dummy\" value=\"Log style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"newstyle\" value=\"log\">\n";
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log style add\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\" value=\"log\">\n";
     }
     print $sock "</form><br>\n";
 
