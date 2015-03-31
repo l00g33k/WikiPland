@@ -1,4 +1,6 @@
 %BOOKMARK%
+* See Notes below if you are not running on Android.
+
 * main:
 camera | /do.pl?path=%L00HTTP<plpath>%docs_demo/l00_camera.pl
 nopw/ | /ls.pl?path=%L00HTTP<workdir>%pub/
@@ -23,5 +25,7 @@ OK, close it down now | /httpd?Submit=Submit&allappsoff=on&noclinavon=on
 ExLink1
  **- ExLink2 -**
 Note: these links don't exist.  The seconds on demonstrate font control
+
+* Notes: This page is meant to be a template for your own main page on your Android installation. Since this page is part of the standard distribution, you may be viewing this page on a device or computer other than an Android device. In this case several links on this page do not make sense since they interact with standard Android components such as camera, GPS, Wifi, etc. This is particularly the case if you are view the WikiPland demo on rhcloud.com.
 
 %END%
