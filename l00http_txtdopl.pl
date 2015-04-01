@@ -111,7 +111,7 @@ sub l00http_txtdopl_proc (\%) {
                 }
             } else {
                 print $sock "<pre>\n";
-                open (IN, "<$form->{'path'}");
+                open (TXTDOPLIN, "<$form->{'path'}");
                 $dolncnt = 0;
                 $newfile = '';
                 $perl = '';
@@ -119,17 +119,17 @@ sub l00http_txtdopl_proc (\%) {
                 undef $last;
                 undef $this;
                 undef $next;
-                while (<IN>) {
+                while (<TXTDOPLIN>) {
                     s/\r//;
                     $dolncnt++;
                     if (/^\%TXTDOPL$sel\%/) {
                         $perl .= $_;
-                        while (<IN>) {
+                        while (<TXTDOPLIN>) {
                             s/\r//;
                             $dolncnt++;
                             $perl .= $_;
                             if (/^\%TXTDOPL$sel\%/) {
-                                $_ = <IN>;
+                                $_ = <TXTDOPLIN>;
                                 s/\r//;
                                 $dolncnt++;
                                 $perladd = 1;
@@ -139,12 +139,12 @@ sub l00http_txtdopl_proc (\%) {
                     } elsif (/^\%TXTDOPL.*\%/) {
                         # %TXTDOPLother% not selected
                         $perl .= $_;
-                        while (<IN>) {
+                        while (<TXTDOPLIN>) {
                             s/\r//;
                             $perl .= $_;
                             # skip not selected do lines
                             if (/^\%TXTDOPL.*\%/) {
-                                $_ = <IN>;
+                                $_ = <TXTDOPLIN>;
                                 s/\r//;
                                 $perladd = 1;
                                 last;
@@ -172,17 +172,16 @@ sub l00http_txtdopl_proc (\%) {
                     }
                 }
                 $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
-                close (IN);
+                close (TXTDOPLIN);
                 if ($newfile ne $oldfile) {
 #print $sock "<hr><hr><hr>\n";
-#print $sock length($newfile) . "bytes\n";
+#print $sock "newfile is ".length($newfile) . " bytes\n";
 #print $sock "<hr><hr><hr><pre>";
 #foreach $_ (split("\n", $newfile)) {
 #    print $sock ">$_<\n";
 #}
-#print $sock "</pre><hr><hr><hr>\n\n";
-#print $sock "<hr><hr><hr>\n";
-#print $sock length($oldfile) . "bytes\n";
+#print $sock "<hr><hr><hr>\n\n";
+#print $sock "oldfile is ".length($oldfile) . " bytes\n";
 #print $sock "<hr><hr><hr><pre>";
 #foreach $_ (split("\n", $oldfile)) {
 #    print $sock ">$_<\n";
