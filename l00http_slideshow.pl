@@ -57,7 +57,7 @@ sub l00http_slideshow_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
 
     if (defined ($form->{'set'})) {
         if (defined ($form->{'width'})) {

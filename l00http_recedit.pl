@@ -9,7 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
 my $record1;
-$record1 = '';
+$record1 = '^\d{8,8} \d{6,6} ';
 
 sub l00http_recedit_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -39,16 +39,20 @@ sub l00http_recedit_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>recedit</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> ";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} ";
     print $sock "<a href=\"/recedit.htm\">recedit</a><p>\n";
 
+    if (length($record1) == 0) {
+        $record1 = '^\d{8,8} \d{6,6} ';
+    }
+
     if (defined ($form->{'submit'}) && (length($record1) > 0)) {
-        if (open (IN, "<$path")) {
+        if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $obuf = '';
             $found = 0;
             $output = '';
             $id = 1;
-            while (<IN>) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 if (/^ *$/) {
                     if ($found) {
                         $cmted .= $_;
@@ -75,7 +79,7 @@ sub l00http_recedit_proc (\%) {
                             $mo--;
                             $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                             $tmp += 24 * 3600;
-                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                             $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                 $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
                                 substr ($obuf, 15, 9999));
@@ -88,7 +92,7 @@ sub l00http_recedit_proc (\%) {
                             $se = 0;
                             $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                             $tmp += 24 * 3600;
-                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                             $obuf = sprintf ("%d/%d/%d%s", 
                                 $yr + 1900, $mo + 1, $da, $tmp2);
                         }
@@ -123,7 +127,7 @@ sub l00http_recedit_proc (\%) {
                         $mo--;
                         $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                         $tmp += 24 * 3600;
-                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime ($tmp);
+                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                         $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                             $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
                             substr ($obuf, 15, 9999));
@@ -141,9 +145,9 @@ sub l00http_recedit_proc (\%) {
             close (IN);
             &l00backup::backupfile ($ctrl, $path, 1, 5);
             #print $sock "<pre>$output</pre>$path\n";
-            if (open (OU, ">$path")) {
-                print OU $output;
-                close (OU);
+            if (&l00httpd::l00fwriteOpen($ctrl, $path)) {
+                &l00httpd::l00fwriteBuf($ctrl, $output);
+                &l00httpd::l00fwriteClose($ctrl);
             } else {
                 print $sock "<p>Unable to save '$path'<p>\n";
             }
@@ -177,11 +181,11 @@ sub l00http_recedit_proc (\%) {
     print $sock "    </tr>\n";
 
     if (length($record1) > 0) {
-        if (open (IN, "<$path")) {
+        if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $obuf = '';
             $found = 0;
             $id = 1;
-            while (<IN>) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 if (/^ *$/) {
                     next;
                 }
@@ -192,11 +196,11 @@ sub l00http_recedit_proc (\%) {
                     if ($found) {
                         print $sock "    <tr>\n";
                         if (defined ($form->{'reminder'})) {
-                            print $sock "        <td><input type=\"checkbox\" name=\"id$id\">delete<br>\n";
-                            print $sock "            <input type=\"checkbox\" name=\"add$id\">+1 day</td>\n";
+                            print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1<br>\n";
+                            print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
                             $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
                         } else {
-                            print $sock "        <td><input type=\"checkbox\" name=\"id$id\">delete</td>\n";
+                            print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
                         }
                         print $sock "        <td><pre>";
                         foreach $line (split("\n", $obuf)) {
@@ -229,7 +233,6 @@ sub l00http_recedit_proc (\%) {
                             if ($record1 eq '.') {
                                # drop leading date/time
                                $line =~ s/^\d{8,8} \d{6,6} //;
-#print "1 $line\n";
                                # match any specific
                                $tmp = $line;
                                $tmp =~ s/ /+/g;
@@ -258,11 +261,11 @@ sub l00http_recedit_proc (\%) {
             if ($found) {
                 print $sock "    <tr>\n";
                 if (defined ($form->{'reminder'})) {
-                    print $sock "        <td><input type=\"checkbox\" name=\"id$id\">delete<br>\n";
-                    print $sock "            <input type=\"checkbox\" name=\"add$id\">+ 1 day</td>\n";
+                    print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1<br>\n";
+                    print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
                     $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
                 } else {
-                    print $sock "        <td><input type=\"checkbox\" name=\"id$id\">delete</td>\n";
+                    print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
                 }
                 print $sock "        <td><pre>";
                 foreach $line (split("\n", $obuf)) {
@@ -319,13 +322,12 @@ sub l00http_recedit_proc (\%) {
     print $sock "</form>\n";
 
 
-    if (open (IN, "<$path")) {
+    if (&l00httpd::l00freadOpen($ctrl, $path)) {
         print $sock "<pre>";
-        while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
             print $sock "$_";
         }
         print $sock "</pre>\n";
-        close (IN);
     }
     
 

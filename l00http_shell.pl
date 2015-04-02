@@ -23,11 +23,11 @@ sub l00http_shell_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     print $sock "Warning: you are executing shell commands which could ".
                 "cause you to lose data.  You are warned. ".
-                "Note: pipe doesn't work, but &gt; and &gt;&gt; are implemented.".
-                "<p>\n";
+                "Note: pipe doesn't work, but > and >> are simulated.".
+                " Please wait...<p>\n";
 
     $buffer = "";
     $out = "";

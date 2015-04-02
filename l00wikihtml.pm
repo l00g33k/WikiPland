@@ -85,6 +85,9 @@ sub makeanchor {
     my ($jump, $url, $anchor, $tag);
 
     $tag = $ttl;
+    # $ttl, title, may include font control. remove all HTML tags
+    #  <font style="color:black;background-color:silver">Buy</font>
+    $tag =~ s/<.+?>//g;
     $tag =~ s/[^0-9A-Za-z]/_/g;
 
     if ($lvl > 0) {
@@ -103,19 +106,24 @@ sub wikihtml {
     # flags: 1='bookmark' is on
     #        2=prefix chapter number
     #        4=bare, no header/footer
+    #        8=open link in 'newwin'
     # $ctrl: system variables
     # $pname: current path for relateive wikiword links
-    my ($ctrl, $pname, $inbuf, $flags) = @_;
+    my ($ctrl, $pname, $inbuf, $flags, $fname) = @_;
     my ($oubuf, $bulvl, $tx, $lvn, $desc, $http, $toc, $toccol);
-    my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els);
-    my ($jump, $anchor, $last, $tmp, $color, $tag, $bareclip);
+    my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els, $__lineno__);
+    my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $tag, $bareclip);
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
-    my ($lnnoinfo, @lnnoall, $leadcolor);
+    my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx);
+    my ($mode0unknown1twiki2markdown, $mdChanged2Tw, $markdownparanobr, $loop);
 
     undef @chlvls;
     undef $lastchlvl;
 
+    if (!defined($fname)) {
+        $fname = '(undef)';
+    }
     $bookmarkkeyfound = 0;
     if (($flags & 1) == 0) {
         # not specified for BOOKMARK
@@ -140,7 +148,9 @@ sub wikihtml {
         $bullet = 0;
         $bkmking = 0;
         $lnnoinfo = '';
-        foreach $_  (split ("\n", $oubuf)) {
+        @inputcache = split ("\n", $oubuf); # allows look forward
+        for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
+            $_ = $inputcache[$cacheidx];
             # tags like %l00httpd:lnno:(\d+)% records original line number
             # there may be multiple line nummbers per line due to drop line, etc.
             if (@lnnoall = /%l00httpd:lnno:(\d+)%/g) {
@@ -193,16 +203,63 @@ sub wikihtml {
 		            $desc = $clip;
                     $bareclip = 1;
 		        }
+if(1){
+                # look ahead. If the the current line ends in:
+                # \r\n
+                # and the next line starts with:
+                # ||
+                # then we append it as an extended line
+                while ($cacheidx < $#inputcache) {
+                    # get the next line and remove internal tag
+                    $tmp = $inputcache[$cacheidx + 1];
+                    if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                        # remove internal tag
+                        $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                    }
+#print "\n\nTHIS: $_\n";
+#print "NEXT: $tmp\n";
+                    # so $tmp is the next line
+                    # Does it look line extended line?
+                    if ((/\\r\\n$/) && ($tmp =~ /^\|\|(.*)/)) {
+                        # yes
+                        $_ = $inputcache[$cacheidx + 1];
+                        if (@lnnoall = /%l00httpd:lnno:(\d+)%/g) {
+                            # save for use later so we can remove the tags for normal processing
+                            if ($lnnoinfo eq '') {
+                                $lnnoinfo = join(',', @lnnoall);
+                            } else {
+                                $lnnoinfo .= ',' . join(',', @lnnoall);
+                            }
+                        }
+
+#print "EXT0: >$clip<\n";
+                        # drop ending \r\n
+                        $clip =~ s/\\r\\n$//;
+                        # append extension line
+                        $clip .= "\n$tmp";
+                        # skip forward
+#print "EXT1: >$clip<\n";
+                        $cacheidx++;
+                    } else {
+                        # no extension line
+                        last;
+                    }
+                }        
+#print "END\n\n";
+}
+
                 #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=Asd+ddf
-                $clip =~ s/ /+/g;
+#               $clip =~ s/ /+/g;
                 #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=
                 #%3A%2F
-                $clip =~ s/:/%3A/g;
-                $clip =~ s/&/%26/g;
-                $clip =~ s/=/%3D/g;
-                $clip =~ s/"/%22/g;
-                $clip =~ s/\//%2F/g;
-                $clip =~ s/\|/%7C/g;
+#               $clip =~ s/:/%3A/g;
+#               $clip =~ s/&/%26/g;
+#               $clip =~ s/=/%3D/g;
+#               $clip =~ s/"/%22/g;
+#               $clip =~ s/\//%2F/g;
+#               $clip =~ s/\|/%7C/g;
+#               $clip =~ s/#/%23/g;
+                $clip = &l00httpd::urlencode ($clip);
                 $url = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
                 $url = "[[$url|$desc]]";
                 if ($bareclip) {
@@ -272,24 +329,44 @@ sub wikihtml {
     $lnno = 0;
     $flaged = '';
     $postsit = '';
-    foreach $_  (split ("\n", $inbuf)) {
+    $mode0unknown1twiki2markdown = 0;
+    $markdownparanobr = 0;
+    @inputcache = split ("\n", $inbuf); # allows look forward
+    for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
+        $_ = $inputcache[$cacheidx];
         if (/%l00httpd:lnno:([0-9,]+)%/) {
             $lnnoinfo = $1;
             s/%l00httpd:lnno:([0-9,]+)%//;
             #line_anchor_debug:
             #print"$lnnoinfo\n";
+
+            if (($__lineno__) = $lnnoinfo =~ /^(\d+)/) {
+                # process %__LINE__%
+                s/%__LINE__%/$__lineno__/g;
+                # process %__LINE__+1%
+                if (($tmp) = /%__LINE__\+(\d+)%/) {
+                    # doesn't correctly handle multiple instances per line
+                    # print "lnnoinfo $lnnoinfo __lineno__ $__lineno__ tmp $tmp\n";
+					# There is no easy answer here because multiple lines were combined
+					# into one line. l00httpd:lnno:* does record all the original line 
+					# numbers that made up the single line, but we don't know which 
+					# line contains the %__LINE__% code
+                    $tmp = $__lineno__ + $tmp;
+                    s/%__LINE__\+(\d+)%/$tmp/g;
+                }
+                # process %__LINE__-1%
+                if (($tmp) = /%__LINE__-(\d+)%/) {
+                    # doesn't correctly handle multiple instances per line
+                    $tmp = $__lineno__ - $tmp;
+                    s/%__LINE__-(\d+)%/$tmp/g;
+                }
+            }
         }
         s/\r//g;
         $lnno++;
 
-        # %DATETIME% expansion
-        if (/%DATETIME%/) {
-                # date/time substitution
-                $tmp = $ctrl->{'now_string'};
-                $tmp =~ s/ /T/;
-                s/%DATETIME%/$tmp/g;
-                $inbuf .= "$_\n";
-        }
+
+
 
         # Twiki compatibility
         ## convert '   * '
@@ -332,6 +409,159 @@ sub wikihtml {
             next;
         }
 
+
+
+
+
+        # MARKDOWN compatibility
+        $mdChanged2Tw = 0;
+        # http://daringfireball.net/projects/markdown/basics
+        # ====  or ---- style heading
+        # or .....
+        if ($cacheidx < $#inputcache) {
+            # checking up to the second last line in the source
+            $tmp = $inputcache[$cacheidx + 1];
+            if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                # remove internal tag
+                $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+            }
+            # check if we have a Markdown style header (with ===, ---, ... underline)
+            if ((length($_) > 0) && (length($_) == length($tmp))) {
+                # Making my life simple by requiring heading and == or -- equal length
+                # At least one char long
+                if ($tmp eq "=" x length($_)) {
+                    $_ = "# $_";
+                    $cacheidx++; # skip a line
+                    # occurance of this form of header says we are in markdown mode
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
+                }
+                if ($tmp eq "-" x length($_)) {
+                    $_ = "## $_";
+                    $cacheidx++; # skip a line
+                    # occurance of this form of header says we are in markdown mode
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
+                }
+                if ($tmp eq "." x length($_)) {
+                    $_ = "### $_";
+                    $cacheidx++; # skip a line
+                    # occurance of this form of header says we are in markdown mode
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
+                }
+            }
+        }
+        # allow markdown bullet list to span multiple lines. Look ahead
+        if (/^\*+ /) {
+            while ($cacheidx < $#inputcache) {
+                # we are on a bullet line
+                # checking up to the second last line in the source
+                $tmp = $inputcache[$cacheidx + 1];
+                if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                    # remove internal tag
+                    $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                }
+                # is it an extension line?
+                if ($tmp =~ /^[0-9A-Za-z'"_\-]/) {
+                    $_ .= " $tmp";
+                    # consume the line
+                    $cacheidx++;
+                } else {
+                    last;
+                }
+            }
+        }
+
+        # password/ID clipboard
+        if (/\* (ID|PW): (\S+) *$/) {
+            $clip = &l00httpd::urlencode ($2);
+#           $tmp = "[[/clip.htm?update=Copy+to+clipboard&clip=$clip|$2]]";
+            $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"newwin\">%s</a>", $clip, $2);
+            $_ .= " ($tmp)";
+        }
+
+        # ## headings
+        if (($mode0unknown1twiki2markdown == 2) && (/^(#+) (\S.*)$/)) {
+            # convert only if we are in markdown mode
+            $_ = '=' x length($1) . $2 . '=' x length($1) . "\n";
+            $mdChanged2Tw = 1;
+        }
+
+        # images
+        # ![alt text](/path/to/img.jpg "Title")
+        s/!\[.+?\]\((.+?) *"(.+?)"\)/<img src="$1">$2/g;
+        s/!\[.+?\]\((.+?)\)/<img src="$1">$2/g;
+        # links
+        # This is an [example link](http://example.com/).
+        s/\[(.+?)\]\((.+?)\)/<a href="$2">$1<\/a>/g;
+        # mutiple line paragraphs
+        if ($mode0unknown1twiki2markdown == 2) {
+            # if line start with word, then it must be 
+            # normal paragraph. Don't put <br> at the end
+            if (/^ *$/) {
+                # blank line in markdown is end of paragraph
+                $markdownparanobr = 1;
+            } else {
+                $markdownparanobr = /^\w/;
+            }
+        }
+        # make ^    <pre> for all
+        # code, 2 or more indents make <pre>code</pre>
+        $tmp = $_;
+        $tmp =~ s/&nbsp;/ /g;
+        if ($tmp =~ /^  /) {
+            # currnet line is indented
+            $tbuf = "$tmp\n";
+            $ahead = $cacheidx + 1;
+            # look forward
+            $loop = 1;
+            while ($loop) {
+                $tmp = $inputcache[$ahead];
+                if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                    $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                }
+                $tmp =~ s/&nbsp;/ /g;
+                if ($tmp =~ /^  /) {
+                    $tbuf .= "$tmp\n";
+                    $ahead++;
+                    $mdChanged2Tw = 1;
+                } else {
+                    $loop = 0;
+                }
+            }
+#                $tbuf =~ s/</&lt;/g;
+#                $tbuf =~ s/>/&gt;/g;
+#                $tbuf =~ s/&/&amp;/g;
+            $tbuf = "<pre>$tbuf</pre>";
+            # line $ahead isn't indented and wasn't included
+            #print "first     indented is line $cacheidx >$inputcache[$cacheidx]<\n";
+            #print "first not indented is line $ahead >$inputcache[$ahead]<\n";
+            #print "Proposed changes:\n$tbuf\n";
+            $cacheidx = $ahead - 1;
+            $oubuf .= $tbuf;
+            $_ = '';
+            next;
+        }
+        if ($_ eq '') {
+            # If in markdown mode, blank line is end of paragraph
+            if ($mode0unknown1twiki2markdown == 2) {
+                if ($markdownparanobr) {
+                    $oubuf .=  "<p>\n";
+                }
+            }
+            next;
+        }
+
+        # %DATETIME% expansion
+        if (/%DATETIME%/) {
+                # date/time substitution
+                $tmp = $ctrl->{'now_string'};
+                $tmp =~ s/ /T/;
+                s/%DATETIME%/$tmp/g;
+                $inbuf .= "$_\n";
+        }
+
         # lines ending in ??? gets a colored Highlight link before TOC
         # aka post it note
         # ???, ???r, ???y, ???l, ???s
@@ -345,7 +575,7 @@ sub wikihtml {
             } elsif ($2 eq 'f') { $color = 'fuchsia';
             } elsif ($2 eq 'g') { $color = 'gray';
             } elsif ($2 eq 'o') { $color = 'olive';
-            } else              { $color = 'silver';
+            } else              { $color = 'white';
             }
             
             # drops *
@@ -387,6 +617,12 @@ sub wikihtml {
         # process headings
         if (@el = /^(=+)([^=]+?)(=+)(.*)$/) {
             if ($el[0] eq $el[2]) {
+                # is this ==twiki== heading original or from markdown?
+                if ($mdChanged2Tw == 0) {
+                    # original, we are in Twiki mode
+                    $mode0unknown1twiki2markdown = 1;
+                }
+
                 $el[1] =~ s/____EqSg____/=/g;
                 # left === must match right ===
                 # headings must start from column 0
@@ -469,6 +705,9 @@ sub wikihtml {
                          " <a href=\"#$tag\">here</a>".
                          " <a href=\"#___top___\">top</a>" .
                          " <a href=\"#__toc__\">toc</a>" .
+                         " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
+                         " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
+                         " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">vw</a>" .
                          sprintf("</h%d>",length($el[2])) .
                          $el[3];
                 }
@@ -648,6 +887,9 @@ sub wikihtml {
               s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
         s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
 
+        # convert geo: to http links
+        s|(geo:[0-9,\.\-\+]+)\?q=(\S+)|<a href=\"$1?q=$2\">$2</a>|g;
+
         $leadcolor = '';
         if ((($leadcolor,$lv,$tx) = /^(<.+?>)(\*+) (.*)$/)) {
             # special case for colored bullet
@@ -655,6 +897,30 @@ sub wikihtml {
             $_ = "$lv $tx";
         }
         if (($lv,$tx) = /^(\*+) (.*)$/) {
+            if ($mode0unknown1twiki2markdown == 2) {
+                # markdown multiple line bullet support
+                #print "0)>$_<(\n";
+                while (($cacheidx + 1) < $#inputcache) {
+                    $tmp = $inputcache[$cacheidx + 1];
+                    if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                        # remove internal tag
+                        $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                    }
+                    # $tmp is next line (looking ahead)
+                    if ($tmp =~ /^$/) {
+                        last;
+                    } elsif ($tmp =~ /^[^ *=:&|]/) {
+                        # looks like a normal line, concatenate it
+                        #print "+)>$tmp<(\n";
+                        $_ .= " $tmp";
+                        # rescan/reparse
+                        ($lv,$tx) = /^(\*+) (.*)$/;
+                        $cacheidx++;    # point to next line and check again
+                    } else {
+                        last;
+                    }
+                }
+            }
             # process bullets
             $lvn = length ($lv);
             if ($lvn > $bulvl) {
@@ -706,6 +972,8 @@ sub wikihtml {
             #s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt&tx=$2.htm\">$2</a>|g;
 #d612            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
             s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+            # special case without space in front
+            s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|g;
             # special case when wiki word is the first word without leading space
             #s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt&tx=$1.htm\">$1</a>|;
 #d612            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;
@@ -733,7 +1001,12 @@ sub wikihtml {
             if ($ispre) {
                 $oubuf .=  "$_\n";
             } else {
-                $oubuf .=  "$_<br>\n";
+                if ($markdownparanobr) {
+                    # MARKDOWN mode, paragraph not ended yet
+                    $oubuf .=  "$_\n";
+                } else {
+                    $oubuf .=  "$_<br>\n";
+                }
             }
             if (/<\/pre>/) {
                 $ispre = 0;
@@ -751,6 +1024,8 @@ sub wikihtml {
         # generate closing table
         $oubuf .= "</table>\n";
     }
+
+
 
     # The next statement overwrites the old style TOC with 
     # collapsible Java TOC.  Uncomment to restore old style TOC
@@ -823,6 +1098,12 @@ $oubuf =~ s|(href="[^ ]+path=)\.\/([^ ]+)|$1$pname$2|g;
 
     # expand img src="./ to current dir
     $oubuf =~ s|(img src=")\.\/([^ ]+)|$1$pname$2|g;
+
+    # make all links to open in 'newwin'
+    if (($flags & 8) != 0) {
+        # make all non local anchor link to open in 'newwin'
+        $oubuf =~ s|<a (href="[^#])|<a target="newwin" $1|g;
+    }
 
 
     $oubuf;

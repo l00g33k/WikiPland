@@ -34,6 +34,7 @@ sub l00http_srcdoc_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln);
     my ($pname, $fname, $comment, $buffer, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
+    my ($gethdr);
 
 if (defined ($form->{'navigate'})) {
         # create two-pane frameset
@@ -51,7 +52,7 @@ if (defined ($form->{'navigate'})) {
 } else {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 	print $sock "<a href=\"#__toc__\">toc</a>\n";
     # process now because we need to print Path: ...
@@ -91,7 +92,7 @@ if (defined ($form->{'navigate'})) {
     if (defined ($form->{'lnno'})) {
         if (defined ($form->{'pastesave'})) {
             if ($ctrl->{'os'} eq 'and') {
-                $form->{'url'} = $ctrl->{'droid'}->getClipboard()->{'result'};
+                $form->{'url'} = &l00httpd::l00getCB($ctrl);
                 $form->{'save'} = 1;
             }
         }
@@ -101,7 +102,6 @@ if (defined ($form->{'navigate'})) {
                 (defined ($form->{'comment'}) && 
                 (length ($form->{'comment'}) > 0))) {
                 if (open (IN, "<$form->{'path'}")) {
-#                   print $sock "<font style=\"color:black;background-color:lime\">Step 4: </font><br>\n";
                     print $sock "<font style=\"color:black;background-color:yellow\">Repeat: Choose 'Insert notes here'</font><br>\n";
                     $buffer = '';
                     $tmp = 0;
@@ -113,10 +113,21 @@ if (defined ($form->{'navigate'})) {
                                 $comment = $form->{'comment'};
                             }
                             $ii = 0;
+                            $gethdr = 1;
                             foreach $cmd (split("\n", $comment)) {
                                 $cmd =~ s/\r//;
                                 $ii++;
-                                if ($ii == 1) {
+                                if (($ii == 1) && 
+                                    ($cmd =~ /^([C-Z]:\\.+?)\((\d+)\):/)) {
+                                    # MSDEV input
+                                    #D:\w\ATI_PR3\unfuddle\casa\TDD\tddDlg.cpp(1031): ButtonDisable(m_bmap);
+                                    $tmp = $2 - 10;
+                                    if ($tmp < 1) {
+                                        $tmp = 1;
+                                    }
+                                    $form->{'url'} = "/view.htm?path=$1&lineno=on&hilite=$2#line$tmp";
+                                } elsif ($gethdr) {
+                                    $gethdr = 0;
                                     if (defined ($form->{'level'})) {
 								        $level = $form->{'level'};
 									}
@@ -131,7 +142,8 @@ if (defined ($form->{'navigate'})) {
                                 # remove http://ip:port
                                 $form->{'url'} =~ s|http://[^/]+/|/|;
                                 #$buffer .= "* <a target=\"source\" href=\"$form->{'url'}\">view source</a>";
-                                if (($fname, $tgtline) = $form->{'url'} =~ /path=(.+?)&.*line(\d+)/) {
+                                # /view.htm?path=D:/w/ATI_PR3/unfuddle/casa/TDD/tddDlg.cpp&lineno=on&hilite=1021#line1011
+                                if (($fname, $tgtline) = $form->{'url'} =~ /path=(.+?)&.*hilite=(\d+)/) {
 								    if (open (SRC, "<$fname")) {
 									    $tmp2 = $_;
 										$tgtln = $tgtline;
@@ -173,19 +185,6 @@ if (defined ($form->{'navigate'})) {
                                 $buffer .= "\n";
                             }
                         }
-
-#                        if (/^%SRCDOC%/, 0) {
-#                            if (defined ($form->{'url'}) && 
-#                                (length ($form->{'url'}) > 0)) {
-#                                $form->{'url'} =~ s|http://[^/]+/|/|;
-#                                if ($form->{'url'} =~ /line(\d+)/) {
-#                                    $form->{'comment'} .= " ($1)";
-#                                }
-#                                $buffer .= "$form->{'comment'} | $form->{'url'}\n";
-#                            } else {
-#                                $buffer .= "$form->{'comment'}\n";
-#                            }
-#                        }
                         $buffer .= $_;
                     }
                     close (IN);

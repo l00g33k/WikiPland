@@ -9,31 +9,49 @@ package l00wget;
 
 #($hdr, $bdy) = &l00wget::wget ($url);
 sub wget {
-    my ($url, $nmpw) = @_;
+    my ($url, $nmpw, $opentimeout, $readtimeout) = @_;
     my ($hdr, $bdy);
-    my ($buf);
+    my ($buf, $proxy, $finalurl);
     my ($server_socket, $cnt, $hdrlen, $bdylen);
     my ($readable, $ready, $curr_socket, $ret, $mode);
     my ($chunksz, $host, $port, $path, $contlen);
 
     $hdr = undef;
     $bdy = undef;
-
-    $port = 80;
-    if (($host, $path) = $url =~ m|http://(.+?)(/.*)|i) {
-        if ($host =~ m|(.+?):(/.*)|) {
-            $host = $1;
-            $port = $2;
-        }
-    } else {
-        $host = 'www.google.com';
-        $path = '/';
+    $mode = '';
+    if (!defined($readtimeout)) {
+        $readtimeout = 20;
     }
-    $server_socket = IO::Socket::INET->new(
-        PeerAddr => $host,
-        PeerPort => $port,
-        Proto    => 'tcp');
-    if ($server_socket != 0) {
+
+    # proxy:127.0.0.1:8118:http://www.google.com
+    if (($host, $port, $path) = $url =~ m|proxy:(.+?):(\d+):(http://.+)$|i) {
+	    # using http proxy
+        #print "($host, $port, $path)\n";
+    } else {
+        $port = 80;
+        if (($host, $path) = $url =~ m|http://(.+?)(/.*)|i) {
+            if ($host =~ m|(.+?):(/.*)|) {
+                $host = $1;
+                $port = $2;
+            }
+        } else {
+            $host = 'www.google.com';
+            $path = '/';
+        }
+    }
+    if (defined($opentimeout)) {
+        $server_socket = IO::Socket::INET->new(
+            PeerAddr => $host,
+            PeerPort => $port,
+            Timeout  => $opentimeout,
+            Proto    => 'tcp');
+    } else {
+        $server_socket = IO::Socket::INET->new(
+            PeerAddr => $host,
+            PeerPort => $port,
+            Proto    => 'tcp');
+    }
+    if (defined($server_socket)) {
         if (defined($nmpw) && (length($nmpw) > 1)) {
             $nmpw = "Authorization: Basic " . &l00base64::b64encode ($nmpw) . "\r\n";
         } else {
@@ -51,13 +69,13 @@ sub wget {
         $bdy = '';
         $cnt = 0;
         $hdrlen = 0;
-        while (1){
-            my ($ready) = IO::Select->select($readable, undef, undef, 20);
-            $ret = 0;
+        while (1) {
+            my ($ready) = IO::Select->select($readable, undef, undef, $readtimeout);
+            $ret = undef;
             foreach my $curr_socket (@$ready) {
                 $ret = sysread ($curr_socket, $_, 4 * 1024 * 1024);
             }
-            if ($ret == 0) {
+            if ((!defined($ret)) || ($ret == 0)) {
                 last;
             }
             $cnt += $ret;
@@ -78,6 +96,9 @@ sub wget {
                         $mode = 'chunked';
                         $chunksz = -1;
                     }
+                } else {
+                    # not finding HTTP header; 
+                    $hdrlen = 1;    # anything > 0
                 }
             }
             if ($hdrlen > 0) {

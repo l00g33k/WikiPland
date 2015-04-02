@@ -26,7 +26,7 @@ my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $linemode, $linemark);
 my ($fmatch, $condition, $content, $fullname, $lineno, $maxlines, $sock);
-my ($wday, $yday, $year, @cols, @el, @els, $sendto, $sort, @sorts, $tableout);
+my ($wday, $yday, $year, @cols, @el, @els, $sendto, $sort, @sorts, $tableout, $pretext);
 
 my $path;
 
@@ -40,7 +40,7 @@ $sort = '';
 $linemode = 0;
 $linemark = '^=';
 $tableout = 'checked';
-
+$pretext = 'checked';
 
 sub l00http_search_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -62,13 +62,21 @@ sub fn {
         $allfieldb[$ii] =~ s/<.+?>//g;
     }
 
-    # don't know why content of @sorts get destroy; recreae
+    # don't know why content of @sorts get destroy; recrete
     @sorts = split('\|\|\|', $sort);
     foreach $sortlvl (@sorts) {
         if ($retval == 0) {
             if ($sortlvl > 0) {
                 $sortlvl--;
-                if ($allfielda [$sortlvl] gt $allfieldb [$sortlvl]) {
+                if (($allfielda [$sortlvl] eq '&nbsp;') && 
+                    ($allfieldb [$sortlvl] ne '&nbsp;')) {
+                    # '&nbsp;' means field is blank, make it last
+                    $retval = 1;
+                } elsif (($allfielda [$sortlvl] ne '&nbsp;') && 
+                         ($allfieldb [$sortlvl] eq '&nbsp;')) {
+                    # '&nbsp;' means field is blank, make it last
+                    $retval = -1;
+                } elsif ($allfielda [$sortlvl] gt $allfieldb [$sortlvl]) {
                     $retval = 1;
                 } elsif ($allfielda [$sortlvl] lt $allfieldb [$sortlvl]) {
                     $retval = -1;
@@ -92,15 +100,16 @@ sub l00http_search_search {
     my ($ctrl, $form, $mypath) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $hitcnt = 0;
     my $filecnt = 0;
-    my ($anchor, $tmp);
+    my ($tmp);
     my (@output, @outputsorted, $line, @cols, $item, @conditions, @contents, $anchorline, @allhits);
-    my ($condi, $conte, %rowOutput, %conditionsFound, $conditionsFoundCnt, $lineout);
+    my ($condi, $conte, %rowOutput, %conditionsFound, $conditionsFoundCnt, $lineout, $clean);
 
     $line = '';
     undef @output;
 
     # split search terms
     @conditions = split('\|\|\|', $condition);
+    l00httpd::dbp($config{'desc'}, "conditions\n".join("\n",@conditions)."\n"), if ($ctrl->{'debug'} >= 3);
     # split sort terms
     @sorts = split('\|\|\|', $sort);
 
@@ -153,16 +162,18 @@ sub l00http_search_search {
                             if (open (IN, "<$fullname")) {
                                 my $hit = 0;
                                 $lineno = 0;
-                                $anchor = '';
                                 # searching target file
                                 undef %conditionsFound;
                                 undef %rowOutput;
                                 $anchorline = 0;
                                 while (<IN>) {
+                                    # Make a clean line without \r\n
+                                    $clean = $_;
+                                    $clean =~ s/\r//;
+                                    $clean =~ s/\n//;
                                     # for each line in the file
                                     $lineno++;
-#                                   if (/^=+(.+?)=+$/ || $linemode) {
-                                    if (/$linemark/i || $linemode) {
+                                    if ($clean =~ /$linemark/i || $linemode) {
                                         # new heading, terminate and output last search
                                         $conditionsFoundCnt = -1;
                                         foreach $condi (@conditions) {
@@ -177,9 +188,10 @@ sub l00http_search_search {
                                             $hit++;
                                             # construct output
                                             if ($linemode) {
-                                                $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file:$lineno</a>";
+                                                $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&lineno=on&path=$fullname#line$lineno\">$file</a>";
                                             } else {
-                                                $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file:$anchorline</a>";
+                                                l00httpd::dbp($config{'desc'}, "1: $fullname#line$anchorline\n"), if ($ctrl->{'debug'} >= 3);
+                                                $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&lineno=on&path=$fullname#line$anchorline\">$file</a>";
                                             }
                                             foreach $conte (@contents) {
                                                 $lineout = $rowOutput{$conte};
@@ -188,8 +200,14 @@ sub l00http_search_search {
                                                     $lineout =~ s/>/&gt;/g;
                                                     $line .= "<`>$lineout";
                                                 } else {
-                                                    $line .= "<`>(blank)";
+                                                    $line .= "<`>&nbsp;";
                                                 }
+                                            }
+                                            # save line number/anchor at the right most column
+                                            if ($linemode) {
+                                                $line .= "<`>$lineno";
+                                            } else {
+                                                $line .= "<`>$anchorline";
                                             }
                                             # save output
                                             push (@output, $line);
@@ -199,16 +217,16 @@ sub l00http_search_search {
                                         undef %rowOutput;
                                     }
 
-                                    if (/^=+(.+?)=+$/) {
-#                                   if (/($linemark)/i) {
-                                        # save anchor
-                                        $anchor = $1;
-                                        $anchor =~ s/[^0-9A-Za-z]/_/g;
+                                    if ($clean =~ /($linemark)/i) {
+                                        # save anchor line number
                                         $anchorline = $lineno;
                                     }
                                     # search for conditions
+                                    l00httpd::dbp($config{'desc'}, "line >$_<\n"), if ($ctrl->{'debug'} >= 4);
                                     foreach $condi (@conditions) {
-                                        if (/$condi/i) {
+                                        l00httpd::dbp($config{'desc'}, "condi >$condi<\n"), if ($ctrl->{'debug'} >= 4);
+                                        if ($clean =~ /$condi/i) {
+                                            l00httpd::dbp($config{'desc'}, "HIT\n"), if ($ctrl->{'debug'} >= 4);
                                             $conditionsFound{$condi} = 1;
                                         }
                                     }
@@ -250,7 +268,8 @@ sub l00http_search_search {
                                     $hitcnt++;
                                     $hit++;
                                     # construct output
-                                    $line = "<a href=\"/$sendto.htm?path=$fullname#$anchor\">$file:$anchorline</a>";
+                                    l00httpd::dbp($config{'desc'}, "1: $fullname#line$anchorline\n"), if ($ctrl->{'debug'} >= 3);
+                                    $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&lineno=on&path=$fullname#line$anchorline\">$file</a>";
                                     foreach $conte (@contents) {
                                         $lineout = $rowOutput{$conte};
                                         if (defined($lineout)) {
@@ -258,9 +277,11 @@ sub l00http_search_search {
                                             $lineout =~ s/>/&gt;/g;
                                             $line .= "<`>$lineout";
                                         } else {
-                                            $line .= "<`>(blank)";
+                                            $line .= "<`>&nbsp;";
                                         }
                                     }
+                                    # save line number/anchor at the right most column
+                                    $line .= "<`>$anchorline";
                                     # save output
                                     push (@output, $line);
                                 }
@@ -291,34 +312,30 @@ sub l00http_search_search {
             defined ($form->{'savepath'}) &&
             (length ($form->{'savepath'}) > 1)) {
             print $sock "Results saved: <a href=\"/ls.htm?path=$form->{'savepath'}\">$form->{'savepath'}</a><br>\n";
-#           if (open (OU, ">$form->{'savepath'}")) {
-            if (&l00httpd::writeOpen($ctrl, $form->{'savepath'})) {
+            if (&l00httpd::l00fwriteOpen($ctrl, $form->{'savepath'})) {
                 foreach $line (@outputsorted) {
                     @cols = split('<`>', $line);
-#                   print OU "||";
-                    &l00httpd::writeBuf($ctrl, "||");
+                    &l00httpd::l00fwriteBuf($ctrl, "||");
                     foreach $item (@cols) {
-#                       print OU "$item||";
-                        &l00httpd::writeBuf($ctrl, "$item||");
+                        &l00httpd::l00fwriteBuf($ctrl, "$item||");
                     }
-#                   print OU "\n";
-                    &l00httpd::writeBuf($ctrl, "\n");
+                    &l00httpd::l00fwriteBuf($ctrl, "\n");
                 }
-#               close (OU);
-				&l00httpd::writeClose($ctrl);
+				&l00httpd::l00fwriteClose($ctrl);
             }
         }
 
-        if ($tableout eq '') {
+        if ($tableout eq 'checked') {
             # print output table
             print $sock "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
             $line = $outputsorted[0];
             @cols = split('<`>', $line);
             print $sock "<tr>\n";
-            print $sock "    <td>File:line</td>\n";
+            print $sock "    <td>File</td>\n";
             foreach $conte (@contents) {
                 print $sock "    <td>$conte</td>\n";
             }
+            print $sock "    <td>Line</td>\n";
             print $sock "</tr>\n";
             foreach $line (@outputsorted) {
                 @cols = split('<`>', $line);
@@ -332,15 +349,27 @@ sub l00http_search_search {
         } else {
             foreach $line (@outputsorted) {
                 @cols = split('<`>', $line);
-#                print $sock "<p><font style=\"color:black;background-color:lime\">Found:</font><br>\n";
                 $tmp = 0;
                 foreach $item (@cols) {
                     if ($tmp == 0) {
                         print $sock "<p><font style=\"color:black;background-color:lime\">$item</font><br>\n";
+                        if ($pretext eq 'checked') {
+                            print $sock "<pre>";
+                        }
                     } else {
-                        print $sock "$item<br>\n";
+                        if ($pretext eq 'checked') {
+                            $item =~ s/</&lt;/g;
+                            $item =~ s/>/&gt;/g;
+                            $item =~ s/\|\|\|/\n/g;
+                            print $sock "$item\n";
+                        } else {
+                            print $sock "$item<br>\n";
+                        }
                     }
                     $tmp++;
+                }
+                if ($pretext eq 'checked') {
+                    print $sock "</pre>";
                 }
             }
         }
@@ -359,7 +388,7 @@ sub l00http_search_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($path);
+    my ($path, $title);
 
 
     # 1) Determine operating path and mode
@@ -372,6 +401,11 @@ sub l00http_search_proc {
     }
     $path =~ tr/\\/\//;     # converts all \ to /, which work on Windows too
 
+    if (defined ($form->{'title'})) {
+        $title = $form->{'title'};
+    } else {
+        $title = '';
+    }
     if (defined ($form->{'recursive'})) {
         $recursive = "checked";
     } else {
@@ -405,10 +439,15 @@ sub l00http_search_proc {
     if (defined ($form->{'sort'})) {
         $sort = $form->{'sort'};
     }
-    if (defined ($form->{'tableout'})) {
+    if (defined ($form->{'tableout'}) && ($form->{'tableout'} eq 'on')) {
         $tableout = "checked";
     } else {
         $tableout = '';
+    }
+    if (defined ($form->{'pretext'}) && ($form->{'pretext'} eq 'on')) {
+        $pretext = 'checked';
+    } else {
+        $pretext = '';
     }
 
     # if $path is a file, use its path and filename
@@ -435,7 +474,7 @@ sub l00http_search_proc {
         # yes, it is a directory, read files in the directory
         
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
         print $sock "Path: <a href=\"/ls.htm?path=$path\">$path</a> \n";
         print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
 
@@ -444,12 +483,17 @@ sub l00http_search_proc {
     }
 
     if (length($condition) > 0) {
+        print $sock "<a name=\"top\"></a>\n";
+        if (length ($title) > 0) {
+            print $sock "$title<br>\n";
+        }
         &l00http_search_search ($ctrl, $form, $path);
     }
 
     # 4) If not in raw mode, also display a control table
 
     print $sock "<hr><a name=\"end\"></a>\n";
+    print $sock "<a href=\"#top\">Jump to top</a><br>\n";
 
     print $sock "<form action=\"/search.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
@@ -499,6 +543,11 @@ sub l00http_search_proc {
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
+    print $sock "            <td>Title:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"title\" value=\"$title\"></td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
     print $sock "            <td>Line marker:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"linemark\" value=\"$linemark\"></td>\n";
     print $sock "        </tr>\n";
@@ -510,13 +559,12 @@ sub l00http_search_proc {
 
     print $sock "        <tr>\n";
     print $sock "            <td><input type=\"checkbox\" name=\"tableout\" $tableout>Tabulate</td>\n";
-    print $sock "            <td>Tabulate results</td>\n";
+    print $sock "            <td><input type=\"checkbox\" name=\"pretext\" $pretext>Preformatted text</td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
     print $sock "            <td><input type=\"checkbox\" name=\"saveresults\">Save <a href=\"/ls.htm?path=l00://search.pl\">results</a></td>\n";
-#   print $sock "            <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"$path"."TmpSearchResults.txt\"></td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"l00://search.pl\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"l00://search.htm\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";

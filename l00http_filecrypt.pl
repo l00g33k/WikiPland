@@ -32,7 +32,7 @@ sub l00http_filecrypt_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($hout, $raw, $httphdr, $size, $fext, $targetfname);
     my ($line, $pre, $post, $phase, $lineno, $path, $fname, $binlen);
-    my ($crypt, $plain, $plain2, $filemethod, $tmp, $action);
+    my ($crypt, $plain, $plain2, $filemethod, $tmp, $action, $tnext);
     my ($filecmt, $filemeta, $encr1decy2, $bytesent, $timst);
     $crypt = '';
     $plain = '';
@@ -43,7 +43,7 @@ sub l00http_filecrypt_proc (\%) {
 
     # Send HTTP and HTML headers
     $hout .= $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
-    $hout .= "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    $hout .= "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     if (defined ($form->{'path'})) {
         $hout .= "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
@@ -269,8 +269,12 @@ sub l00http_filecrypt_proc (\%) {
             } else {
                 $cache{$form->{'path'}} = $plain;
                 print $sock $plain;
+                $tnext = time;
                 while ($bytesent < $binlen) {
-                    print "$binlen : $bytesent (", time - $timst, "s)\n";
+                    if ((time - $tnext) >= 3) {
+                        print "$binlen : $bytesent [", int (100 * $bytesent / $binlen), "%] (", time - $timst, "s)\n";
+                        $tnext = time;
+                    }
                     ($plain, $binlen, $filecmt, $filemeta) = l00crypt::l00decryptbin ($pass, $buffer, $bytesent, 8192);
                     $cache{$form->{'path'}} .= $plain;
                     $bytesent += length ($plain);

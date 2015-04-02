@@ -35,7 +35,7 @@ sub l00http_blogtag_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blogtag</title>" .$ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"#end\">Jump to end</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
     }
@@ -89,7 +89,7 @@ sub l00http_blogtag_proc {
         } else {
             $form->{'buffer'} = $ctrl->{'now_string'} . ' ';
         }
-        $form->{'buffer'} .= $ctrl->{'droid'}->getClipboard()->{'result'};
+        $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
     if (defined ($form->{'save'})) {
@@ -194,7 +194,7 @@ sub l00http_blogtag_proc {
         }
     }
     if (defined ($form->{'paste'})) {
-        $buffer .= $ctrl->{'droid'}->getClipboard()->{'result'};
+        $buffer .= &l00httpd::l00getCB($ctrl);
     }
 
     print $sock "<form action=\"/blogtag.htm\" method=\"get\">\n";

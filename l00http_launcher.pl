@@ -23,19 +23,21 @@ sub l00http_launcher_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $file, $name, $col);
+    my (@alllines, $line, $lineno, $file, $name, $col, $extra, $path, $fname);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     if (defined ($form->{'path'})) {
-#       print $sock " Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}\">Path</a>:";
-        print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+        $path = $form->{'path'};
+        $path =~ s/\r//g;
+        $path =~ s/\n//g;
+        print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$path\">Path</a>:";
+        print $sock " <a href=\"/ls.htm?path=$path\">$path</a>\n";
+    } else {
+        $path = '';
     }
     print $sock "<p>\n";
-    $form->{'path'} =~ s/\r//g;
-    $form->{'path'} =~ s/\n//g;
 
 
     if ($#targets == -1) {
@@ -45,6 +47,7 @@ sub l00http_launcher_proc {
                     $name = $1;
                     if (open (IN, "<$ctrl->{'plpath'}$file")) {
                         while (<IN>) {
+                            # does this module reference 'path'?
                             if (/\$form->\{'path'\}/) {
                                 push (@targets, $name);
                                 last;
@@ -66,7 +69,16 @@ sub l00http_launcher_proc {
         if ($col == 0) {
             print $sock "<tr><td>\n";
         }
-        print $sock "<a href=\"/$name.htm?path=$form->{'path'}\">$name</a>\n";
+        $extra = '';
+        if ($name eq 'kml') {
+           $extra = '.kml';
+        } elsif ($path =~ /\.txt$/) {
+           # add .htm as some browser won't open .txt as HTML
+           $extra = '.htm';
+        }
+        $fname = $path;
+        $fname =~ s/.+(\/.+)/$1/;
+        print $sock "<a href=\"/$name.htm$fname$extra?path=$path\">$name</a>\n";
         $col++;
         # change number of column here and below
         if ($col >= 3) {

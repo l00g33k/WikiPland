@@ -26,7 +26,7 @@ sub l00http_speech_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>speech</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
 
 
@@ -39,16 +39,11 @@ sub l00http_speech_proc {
         if ($ctrl->{'os'} eq 'and') {
             $stt = $ctrl->{'droid'}->recognizeSpeech (); 
             $speech .= $stt->{'result'};
-            $ctrl->{'droid'}->setClipboard ($speech); 
+            &l00httpd::l00setCB($ctrl, $speech);
         }
     }
     if (defined ($form->{'paste'})) {
-        $speech = '';
-        if ($ctrl->{'os'} eq 'and') {
-            $scratch = $ctrl->{'droid'}->getClipboard();
-            $scratch = $scratch->{'result'};
-            $speech .= $scratch;
-        }
+        $speech .= &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{'pasteappend'})) {
         if (defined ($form->{'speech'})) {
@@ -56,17 +51,13 @@ sub l00http_speech_proc {
         } else {
             $speech = '';
         }
-        if ($ctrl->{'os'} eq 'and') {
-            $scratch = $ctrl->{'droid'}->getClipboard();
-            $scratch = $scratch->{'result'};
-            $speech .= $scratch;
-        }
+        $speech .= &l00httpd::l00getCB($ctrl);;
     }
     if (defined ($form->{'new'})) {
         if ($ctrl->{'os'} eq 'and') {
             $stt = $ctrl->{'droid'}->recognizeSpeech (); 
             $speech = $stt->{'result'};
-            $ctrl->{'droid'}->setClipboard ($speech); 
+            &l00httpd::l00setCB($ctrl, $speech);
         }
     }
     if (defined ($form->{'speak'})) {

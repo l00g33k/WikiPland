@@ -5,8 +5,9 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($sel);
+my ($sel, $arg);
 $sel = '';
+$arg = '';
 
 my %config = (proc => "l00http_txtdopl_proc",
               desc => "l00http_txtdopl_desc");
@@ -28,7 +29,7 @@ sub l00http_txtdopl_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>txtdopl</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a name=\"__top__\"></a>";
     if (defined ($form->{'path'})) {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
@@ -40,13 +41,21 @@ sub l00http_txtdopl_proc (\%) {
         $sel = $form->{'sel'};
     }
 
+    if (defined ($form->{'arg'})) {
+        $arg = $form->{'arg'};
+    }
+
     print $sock "<form action=\"/txtdopl.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"runbare\" value=\"RunBare\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"run\" value=\"Run\"></td>\n";
+    print $sock "        <td>arg: <input type=\"text\" size=\"4\" name=\"arg\" value=\"$arg\"></td>\n";
+    print $sock "    </tr>\n";
+    print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\"></td>\n";
     print $sock "        <td>tag: <input type=\"text\" size=\"4\" name=\"sel\" value=\"$sel\"></td>\n";
+    print $sock "        <td>&nbsp;</td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
@@ -62,6 +71,7 @@ sub l00http_txtdopl_proc (\%) {
             $oldfile = '';
             print "txtdopl: sel=>$sel<\n", if ($ctrl->{'debug'} >= 3);
             while (<IN>) {
+                s/\r//;
                 $oldfile .= $_;
                 if (/^\%TXTDOPL$sel\%/) {
                     if ($dolncnt == -1) {
@@ -77,6 +87,7 @@ sub l00http_txtdopl_proc (\%) {
                 } elsif (/^\%TXTDOPL.*\%/) {
                     # %TXTDOPLother% not selected
                     while (<IN>) {
+                        s/\r//;
                         $oldfile .= $_;
                         # skip not selected do lines
                         if (/^\%TXTDOPL.*\%/) {
@@ -100,7 +111,7 @@ sub l00http_txtdopl_proc (\%) {
                 }
             } else {
                 print $sock "<pre>\n";
-                open (IN, "<$form->{'path'}");
+                open (TXTDOPLIN, "<$form->{'path'}");
                 $dolncnt = 0;
                 $newfile = '';
                 $perl = '';
@@ -108,15 +119,18 @@ sub l00http_txtdopl_proc (\%) {
                 undef $last;
                 undef $this;
                 undef $next;
-                while (<IN>) {
+                while (<TXTDOPLIN>) {
+                    s/\r//;
                     $dolncnt++;
                     if (/^\%TXTDOPL$sel\%/) {
                         $perl .= $_;
-                        while (<IN>) {
+                        while (<TXTDOPLIN>) {
+                            s/\r//;
                             $dolncnt++;
                             $perl .= $_;
                             if (/^\%TXTDOPL$sel\%/) {
-                                $_ = <IN>;
+                                $_ = <TXTDOPLIN>;
+                                s/\r//;
                                 $dolncnt++;
                                 $perladd = 1;
                                 last;
@@ -125,11 +139,13 @@ sub l00http_txtdopl_proc (\%) {
                     } elsif (/^\%TXTDOPL.*\%/) {
                         # %TXTDOPLother% not selected
                         $perl .= $_;
-                        while (<IN>) {
+                        while (<TXTDOPLIN>) {
+                            s/\r//;
                             $perl .= $_;
                             # skip not selected do lines
                             if (/^\%TXTDOPL.*\%/) {
-                                $_ = <IN>;
+                                $_ = <TXTDOPLIN>;
+                                s/\r//;
                                 $perladd = 1;
                                 last;
                             }
@@ -156,15 +172,29 @@ sub l00http_txtdopl_proc (\%) {
                     }
                 }
                 $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
-                close (IN);
+                close (TXTDOPLIN);
                 if ($newfile ne $oldfile) {
+#print $sock "<hr><hr><hr>\n";
+#print $sock "newfile is ".length($newfile) . " bytes\n";
+#print $sock "<hr><hr><hr><pre>";
+#foreach $_ (split("\n", $newfile)) {
+#    print $sock ">$_<\n";
+#}
+#print $sock "<hr><hr><hr>\n\n";
+#print $sock "oldfile is ".length($oldfile) . " bytes\n";
+#print $sock "<hr><hr><hr><pre>";
+#foreach $_ (split("\n", $oldfile)) {
+#    print $sock ">$_<\n";
+#}
+#print $sock "</pre><hr><hr><hr>\n\n";
+
                     # write new file only if changed
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
                     open (OU, ">$form->{'path'}");
                     print OU $newfile;
                     close (OU);
                 }
-                print $sock "</pre>Run completed<br>\n";
+                print $sock "</pre>\n";
             }
         }
     }

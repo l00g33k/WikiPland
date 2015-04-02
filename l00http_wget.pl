@@ -34,21 +34,27 @@ sub l00http_wget_proc (\%) {
     $mode = '';
 
     if (!defined ($wgetpath)) {
-        $wgetpath = "$ctrl->{'workdir'}del/wget.htm";
+        $wgetpath = "l00://wget.htm";
     }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>wget</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
 
     if (defined ($form->{'wgetpath'})) {
         $wgetpath = $form->{'wgetpath'}
     }
+    if (defined ($form->{'default'})) {
+        $wgetpath = "l00://wget.htm";
+    }
     if (defined ($form->{'url'})) {
         $url = $form->{'url'}
     }
-    if (defined ($form->{'paste'}) && ($ctrl->{'os'} eq 'and')) {
-        $url = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'pastepath'})) {
+        $wgetpath = &l00httpd::l00getCB($ctrl);
+    }
+    if (defined ($form->{'paste'})) {
+        $url = &l00httpd::l00getCB($ctrl);
         if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
             $url = $1;
         }
@@ -57,7 +63,6 @@ sub l00http_wget_proc (\%) {
             $url = "http://$url";
         }
         print $sock "URL from clipboard:<br>$url<br>\n";
-#       $form->{'submit'} = 1;
     }
     if (defined ($form->{'name'})) {
         $name = $form->{'name'}
@@ -78,7 +83,8 @@ sub l00http_wget_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
-    print $sock "            <td>Save path:</td>\n";
+    print $sock "            <td><input type=\"submit\" name=\"pastepath\" value=\"Save\">path";
+    print $sock "<input type=\"submit\" name=\"default\" value=\":\"></td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"wgetpath\" value=\"$wgetpath\"></td>\n";
     print $sock "        </tr>\n";
                                                 
@@ -99,14 +105,18 @@ sub l00http_wget_proc (\%) {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    print $sock "<br>Prepend 'proxy:proxy_host:proxy_port' to use HTTP proxy server<br>\n";
+    print $sock "e.g. proxy:127.0.0.1:8118:http://www.google.com<br>\n";
 
     if (defined ($form->{'submit'})) {
        if ((!defined ($form->{'nofetch'})) ||
            ($form->{'nofetch'} ne 'on')) {
-            print $sock "Fetching '$url'<p>\n";
-            print $sock "<a href=\"/ls.htm?path=$wgetpath\">ls $wgetpath</a><p>\n";
-            print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a><p>\n";
+            print $sock "Fetching '$url'<br>\n";
+            print $sock "<a href=\"/ls.htm?path=$wgetpath\">$wgetpath</a> - \n";
+            print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a> - ";
+            print $sock "<a href=\"/view.htm?path=l00%3A%2F%2Fwget.hdr\">l00://wget.hdr</a><br>\n";
             print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a><br>\n";
+            print $sock "If you don't see 'Header length' and 'Body length' below, the host may be off-line.<br>\n";
 
             if (($name ne '') || ($pw ne '')) {
                 ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
@@ -119,10 +129,13 @@ sub l00http_wget_proc (\%) {
                 print $sock "Body length ",length($bdy), " bytes<br>\n";
 
                 print $sock "<p><pre>$hdr</pre>\n";
-                if (open (OU, ">$wgetpath")) {
-                    binmode (OU);
-                    print OU $bdy;
-                    close (OU);
+                if (&l00httpd::l00fwriteOpen($ctrl, 'l00://wget.hdr')) {
+                    &l00httpd::l00fwriteBuf($ctrl, "$hdr");
+                    &l00httpd::l00fwriteClose($ctrl);
+                }
+                if (&l00httpd::l00fwriteOpen($ctrl, $wgetpath)) {
+                    &l00httpd::l00fwriteBuf($ctrl, "$bdy");
+                    &l00httpd::l00fwriteClose($ctrl);
                     $bdy = substr($bdy, 0, 2000);
                     $bdy =~ s/</&lt;/g;
                     $bdy =~ s/>/&gt;/g;

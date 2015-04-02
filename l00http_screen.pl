@@ -25,23 +25,29 @@ sub l00http_screen_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>screen</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><p>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    print $sock "<a href=\"/play.pl\">Volume</a><p>\n";
 
     if ($ctrl->{'os'} eq 'and') {
+        l00httpd::dbp($config{'desc'}, "FORM:\n" . &l00httpd::dumphashbuf ("form", $form) . "\n");
         if (defined ($form->{'setmax'})) {
             $ctrl->{'droid'}->setScreenBrightness (255);
         } elsif (defined ($form->{'setmin'})) {
             $ctrl->{'droid'}->setScreenBrightness (0);
+        } elsif (defined ($form->{'dec10'})) {
+            $vol = $ctrl->{'droid'}->getScreenBrightness ();
+            l00httpd::dbp($config{'desc'}, "'dec10' was $vol->{'result'} ");
+            $vol = $vol->{'result'} - 10;
+            l00httpd::dbp($config{'desc'}, "new $vol\n");
+            $ctrl->{'droid'}->setScreenBrightness ($vol);
+        } elsif (defined ($form->{'inc10'})) {
+            $vol = $ctrl->{'droid'}->getScreenBrightness ();
+            l00httpd::dbp($config{'desc'}, "'inc10' was $vol->{'result'} ");
+            $vol = $vol->{'result'} + 10;
+            l00httpd::dbp($config{'desc'}, "new $vol\n");
+            $ctrl->{'droid'}->setScreenBrightness ($vol);
         } elsif (defined ($form->{'bright'})) {
             $ctrl->{'droid'}->setScreenBrightness ($form->{'bright'});
-        } elsif (defined ($form->{'-10'})) {
-            $vol = $ctrl->{'droid'}->getScreenBrightness ();
-            $vol = $vol->{'result'} - 10;
-            $ctrl->{'droid'}->setScreenBrightness ($vol);
-        } elsif (defined ($form->{'+10'})) {
-            $vol = $ctrl->{'droid'}->getScreenBrightness ();
-            $vol = $vol->{'result'} + 10;
-            $ctrl->{'droid'}->setScreenBrightness ($vol);
         }
         $vol = $ctrl->{'droid'}->getScreenBrightness ();
         $vol = $vol->{'result'};
@@ -54,7 +60,7 @@ sub l00http_screen_proc (\%) {
     print $sock "<form action=\"/screen.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
-    print $sock "            <td>New brightness:</td>\n";
+    print $sock "            <td>Brightness:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"bright\" value=\"$vol\"></td>\n";
     print $sock "        </tr>\n";
                                                 
@@ -65,25 +71,18 @@ sub l00http_screen_proc (\%) {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"setmax\" value=\"Max brightness\"></td>\n";
-    print $sock "        <td>255</td>\n";
-    print $sock "    </tr>\n";
-                                                
-    print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"setmin\" value=\"Min  brightness\"></td>\n";
-    print $sock "        <td>0</td>\n";
-    print $sock "    </tr>\n";
-
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"+10\" value=\"+10\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"-10\" value=\"-10\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
-    print $sock "</form>\n";
+    print $sock "</form><br>\n";
 
-    for ($ii = 0; $ii < 15; $ii++) {
-        print $sock "&nbsp;<p>\n";
+    print $sock "<a href=\"/screen.htm?inc10=\">+</a> - \n";
+    print $sock "<a href=\"/screen.htm?dec10=\">-</a> - \n";
+    for ($ii = 0; $ii < 255; $ii += 10) {
+        print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
     }
+    print $sock "<p><hr><p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

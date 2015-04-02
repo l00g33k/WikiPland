@@ -1,0 +1,2 @@
+* To disable toast, add the following line in any of the l00httpd.cfg:
+remBannerDisabled^justdefine

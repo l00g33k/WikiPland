@@ -22,6 +22,7 @@ $plpath =~ s/\/\/+/\//g;
 
 #use l00base64;      # used for decoding authentication
 use l00base64;      # used for decoding authentication
+use l00httpd;
 use IO::Socket;     # for networking
 use IO::Select;     # for networking
 
@@ -40,7 +41,7 @@ eval "use Android";
 
 
 my ($addr, $checked, $client_ip, $cmd_param_pair, $conf);
-my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $cli_port, $debug, $file, $hour);
+my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $ctrl_port_first, $cli_port, $debug, $file, $hour);
 my ($idpw, $idpwmustbe, $ip, $isdst, $key, $mday, $min, $host_ip);
 my ($modcalled, $mod, $mon, $name, $param, $tmp, $buf);
 my ($rethash, $retval, $sec, $sock, $tickdelta, $postlen);
@@ -48,9 +49,9 @@ my ($urlparams, $val, $wday, $yday, $year, $subname);
 my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
-$httpmax = 10240;
-my (@cmd_param_pairs, $timeout, $cnt);
-my (%ctrl, %FORM, %httpmods, %httpmodssort, %modsinfo, %moddesc, %ifnet);
+$httpmax = 1024 * 1024 * 10 + 4096;
+my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
+my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 
 
@@ -62,9 +63,11 @@ $idpwmustbe = "p:p";  # change as you wish
 $debug = 1;         # 0=none, 1=minimal, 5=max
 $open = 0;
 $shutdown = 0;
-
+$cfgedit = '';
 
 undef $timeout;
+
+
 
 sub dlog {
     my $logm = pop;
@@ -82,8 +85,12 @@ $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
 #$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\x0D\x0A<html>\x0D\x0A";
 $ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
 $ctrl{'htmlhead'} .= "<head>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<meta name=\"generator\" content=\"l00httpd, http://l00g33k.wikispaces.com/micro+HTTP+application+server\">\x0D\x0A".
-                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A";
+$ctrl{'htmlhead'} .= "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
+                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
+                     # so arrow keys scroll page in my browser
+                     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A";
+#                    "<meta http-equiv=\"x-ua-compatible\" content=\"text/html; IE=EmulateIE7; charset=utf-8\">\x0D\x0A";
+
 $ctrl{'htmlhead2'} = "</head>\x0D\x0A<body>\n";
 $ctrl{'htmlfoot'}  = "\x0D\x0A</body>\x0D\x0A</html>";
 $ctrl{'dlog'}  = \&dlog;
@@ -117,10 +124,15 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
             }
         }
     }
-} elsif (defined ($ENV{'windir'})) {
+} elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
 } else {
-    $ctrl{'os'} = 'lin';
+    if ($plpath =~ /\/var\/lib\/openshift\//) {
+        # on RHC
+        $ctrl{'os'} = 'rhc';
+    } else {
+        $ctrl{'os'} = 'lin';
+    }
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
@@ -171,12 +183,17 @@ while ($_ = shift) {
 		$open = 1;
 	}
 }
+$ctrl_port_first = $ctrl_port;
 
 
 $conf = "l00httpd.cfg";
 $tmp = $plpath; # first time, find in l00httpd script directory
-for ($cnt = 0; $cnt < 2; $cnt++) {
+for ($cnt = 0; $cnt < 3; $cnt++) {
     if (open (IN, "<$tmp$conf")) {
+        if ($cfgedit eq '') {
+            $cfgedit = "Edit l00httpd.cfg at:<br>\n";
+        }
+        $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
         print "Reading $tmp$conf...\n";;
         while (<IN>) {
             if (/^#/) {
@@ -206,7 +223,15 @@ for ($cnt = 0; $cnt < 2; $cnt++) {
         }
         close (IN);
     }
-    $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+    if ($cnt == 0) {
+        $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+	} else {
+        if (defined($ctrl{'altcfg'})) {
+            $tmp = $ctrl{'altcfg'};
+		} else {
+            last;
+		}
+	}
 }
 
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^[0-5]$/)) {
@@ -241,19 +266,19 @@ foreach $key (keys %ctrl) {
 }
 
 # RHC special: make clipath at Perl directory so everything below is viewable by default
-if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
+#if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
+if ($ctrl{'os'} eq 'rhc') {
     # on RHC
     $ctrl{'clipath'} =~ s/\/l00httpd\/pub\/$/\//;
     $ctrl{'nopwpath'} = $ctrl{'clipath'};
     $nopwtimeout = 0x7fffffff;
     # more RHC special
-    $ctrl{'alwayson_clip'} = 'y';
-    $ctrl{'alwayson_mobizoom'} = 'y';
-    $ctrl{'alwayson_hexview'} = 'y';
-    $ctrl{'alwayson_launcher'} = 'y';
-    $ctrl{'alwayson_solver'} = 'y';
-    $ctrl{'alwayson_timestamp'} = 'y';
-    $ctrl{'alwayson_tree'} = 'y';
+    $ctrl{'alwayson_clip'} = 'rhc';
+    $ctrl{'alwayson_debug'} = 'rhc';
+    $ctrl{'alwayson_launcher'} = 'rhc';
+    $ctrl{'alwayson_readme'} = 'rhc';
+    $ctrl{'alwayson_solver'} = 'rhc';
+    $ctrl{'alwayson_tree'} = 'rhc';
 }
 
 # check 'quick' from 'l00httpd.cfg'
@@ -273,9 +298,27 @@ if ($ctrl{'quick'} =~ m|^/ls\.htm|) {
         }
     }
 }
+if (!defined ($ctrl{'HOME'})) {
+    # sets default if not defined in l00httpd.txt
+    # make it available to modules
+    $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
+}
+# check if target exist
+if ($ctrl{'HOME'} =~ m|^/ls\.htm|) {
+    # points to ls.pl
+    if (($_) = $ctrl{'HOME'} =~ m|path=(.+)&*|) {
+        print "HOME target: $_\n";
+        if (!-f $_) {
+            print "target does not exist >$_<\n";
+            $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
+        }
+    }
+}
 
 
 sub loadmods {
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+        $size, $atime, $mtimea, $ctime, $blksize, $blocks);
     # scan directory
     if (opendir (DIR, $plpath)) {
         foreach $file (sort readdir (DIR)) {
@@ -288,36 +331,47 @@ sub loadmods {
     }
 
     # load modules
-    print "Loading modules from $plpath...\n";
+    print "(Re)Loading modules from $plpath...\n";
     foreach $mod (sort keys %httpmods) {
-        print "$mod ";
-        $rethash = do $httpmods{$mod};
-        if (!defined ($rethash)) {
-            if ($!) {
-                print "Can't read module '$httpmods{$mod}': $!\n";
-            } elsif ($@) {
-                print "Can't parse module '$httpmods{$mod}': $@\n";
+        ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+        $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+        = stat($httpmods{$mod});
+
+        if ((!defined($httpmodssig{$mod})) || 
+            ($httpmodssig{$mod} ne "$size $mtimea")) {
+            # never loaded or signature changed, reload
+            # remember file signature for smart reload
+            $httpmodssig{$mod} = "$size $mtimea";
+
+            print "$mod ";
+            $rethash = do $httpmods{$mod};
+            if (!defined ($rethash)) {
+                if ($!) {
+                    print "Can't read module '$httpmods{$mod}': $!\n";
+                } elsif ($@) {
+                    print "Can't parse module '$httpmods{$mod}': $@\n";
+                }
+            } else {
+                # default to disabled to non local clients
+                $modsinfo{"$mod:ena:checked"} = "";
+                $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
+                $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
+                $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
+                $subname = $modsinfo{"$mod:fn:desc"};
+                $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
+                $tmp = 'unknown:';
+                if ($moddesc{$mod} =~ /^( *[^ ]+ *[^ ]*)/) {
+                    $tmp = $1;
+                }
+                $tmp .= $mod;
+                $httpmodssort{$tmp} = $mod;
+                l00httpd::dbp("l00httpd", "Loaded $mod\n");
             }
-        } else {
-            # default to disabled to non local clients
-            $modsinfo{"$mod:ena:checked"} = "";
-            $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
-            $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
-            $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
-            $subname = $modsinfo{"$mod:fn:desc"};
-            $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
-            $tmp = 'unknown:';
-            if ($moddesc{$mod} =~ /^( *[^ ]+ *[^ ]*)/) {
-                $tmp = $1;
-            }
-            $tmp .= $mod;
-            $httpmodssort{$tmp} = $mod;
         }
     }
     print "\nReady\n";
 }
 
-&loadmods;
 
 
 
@@ -338,8 +392,23 @@ if (!$ctrl_lstn_sock) {
         Listen => 5, 
         Reuse => 1
     );
+    if (!$ctrl_lstn_sock) {
+        $ctrl_port += 10;
+        $ctrl_lstn_sock = IO::Socket::INET->new (
+            LocalPort => $ctrl_port,
+            LocalAddr => $host_ip,
+            Listen => 5, 
+            Reuse => 1
+        );
+    }
 }
 die "Can't create socket for listening: $!" unless $ctrl_lstn_sock;
+print "ctrl_port is $ctrl_port\n";
+$ctrl{'ctrl_port_first'}  = $ctrl_port_first;
+$ctrl{'ctrl_port'} = $ctrl_port;
+
+# load modules
+&loadmods;
 
 $cli_lstn_sock = IO::Socket::INET->new (
     LocalPort => $cli_port,
@@ -355,8 +424,18 @@ if (!$cli_lstn_sock) {
         Listen => 5, 
         Reuse => 1
     );
+    if (!$cli_lstn_sock) {
+        $cli_port += 10;
+        $cli_lstn_sock = IO::Socket::INET->new (
+            LocalPort => $cli_port,
+            LocalAddr => $host_ip,
+            Listen => 5, 
+            Reuse => 1
+        );
+    }
 }
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
+print "cli_port is $cli_port\n";
 
 my $readable = IO::Select->new;     # Create a new IO::Select object
 $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
@@ -401,7 +480,10 @@ if (open (OUT, ">$plpath"."l00httpd.log")) {
 
 $l00time = time;
 
-&periodictask ();
+if ($ctrl_port_first == $ctrl_port) {
+    # execute periodic tasks only on first instance
+    &periodictask ();
+}
 
 if ($ctrl{'os'} eq 'and') {
     $ctrl{'droid'}->makeToast("Welcome to l00httpd\nPlease browse to http://127.0.0.1:$ctrl_port\nSee Notification");
@@ -446,6 +528,66 @@ while(1) {
                 $ishost = 0;
             }
             $ctrl{'ishost'} = $ishost;
+            if ($ctrl{'os'} eq 'and') {
+                if ($ctrl{'machine'} eq 'Morrison') {
+                    $ip = `busybox ifconfig`;
+#               } elsif ($ctrl{'machine'} eq 'doubleshot') {
+                } else {
+                    $ip = `ip addr show`;
+                    undef %ifnet;
+                    foreach $_ (split ("\n", $ip)) {
+                        #1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
+                        if (/^\d+: *(\w+):/) {
+                            $tmp = $1;
+                        }
+                        #    inet 127.0.0.1/8 scope host lo
+                        if (/inet *(\d+\.\d+\.\d+\.\d+)\//) {
+                            $ifnet {$tmp} = $1;;
+                        }
+                    }
+                    $ip = '';
+                    foreach $_ (keys %ifnet) {
+                        if (/wlan/) {
+                            $ip .= "$ifnet{$_} ";
+                        } elsif (/eth/) {
+                            $ip .= "$ifnet{$_} ";
+                        }
+                    }
+                    if ($ip eq '') {
+                        # didn't find wifi, try mobile net
+                        foreach $_ (keys %ifnet) {
+                            if (/rmnet/) {
+                                $ip .= "$ifnet{$_} ";
+                            }
+                        }
+                    }
+#               } else {
+#                   # don't know how to find self IP yet
+#                   $ip = undef;
+                }
+            } elsif ($ctrl{'os'} eq 'win') {
+                $ip = `ipconfig`;
+            } else {
+                $ip = `/sbin/ifconfig`;
+            }
+            if ($ctrl{'os'} eq 'win') {
+                $ip = `ipconfig`;
+                if ($ip =~ /(192\.168\.\d+\.\d+)/) {
+                    $ip = $1;
+                }
+            } else {
+                if (defined ($ip)) {
+                    if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
+                        $ip = $1;
+                    } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
+                        $ip = $1;
+                    }
+                } else {
+                    $ip = '(unknown)';
+                }
+            }
+            $ip =~ s/ //g;
+            $ctrl{'myip'} = $ip;
             if (defined ($connected{$client_ip})) {
                 $connected{$client_ip}++;
             } else {
@@ -470,27 +612,20 @@ while(1) {
 
             # 3) Parse client HTTP submission and identify module plugin name
 
-# Does IE9 use keep-alive so sysread never return?
 #if (1) {
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
-#            select ($rout = $rin, undef, $eout = $rin, 1);
-            select ($rout = $rin, undef, $eout = $rin, 2); # public network needs 3 sec?
+            select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
             if (vec($eout,fileno($sock),1) == 1) {
-print "sock error\n";
-#                $sock->close;
+                print "sock error\n";
                 next;
             } elsif (vec($rout,fileno($sock),1) == 1) {
                 $httpsiz = sysread ($sock, $httpbuf, $httpmax);
-#print "read $httpsiz\n";
             } else {
-print "sock timeout 3s\n";
+                print "sock timeout 1s\n";
                 $sock->close;
                 next;
             }
-#} else {
-#           $httpsiz = sysread ($sock, $httpbuf, $httpmax);
-#}
             print "httpsiz $httpsiz\n", if ($debug >= 4);
             &dlog  ("client $client_ip ");
             $postlen = -1;
@@ -552,6 +687,7 @@ print "sock timeout 3s\n";
 
             # read in browser submission
             $httphdr =~ s/\r//g;
+            $postboundary = '';
             foreach $_ (split ("\n", $httphdr)) {
                 if (/^\x0D\x0A$/) {
                     # end of submission
@@ -566,6 +702,9 @@ print "sock timeout 3s\n";
                 } elsif (/POST (\/[^ ]*) HTTP/) {
                     # extract the URL after the domain
                     $urlparams = $1;
+                } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
+                    $postboundary = $1;
+                    l00httpd::dbp("l00httpd", "Content-Type: multipart/form-data; boundary=$postboundary\n");
                 }
             }
 
@@ -576,6 +715,13 @@ print "sock timeout 3s\n";
                 !(-d '/sdcard/l00httpd')    # not localized
                 ) {
                 # the form 'http://localhost:20337'
+                # point to welcome page
+                $modcalled = "ls";
+                $urlparams = "path=$plpath"."docs_demo/QuickStart.txt";
+            } elsif (($urlparams eq '/') &&      # no path
+                ($ctrl{'os'} eq 'rhc')           # on RHC
+                ) {
+                # the form 'http://localhost:20337/'
                 # point to welcome page
                 $modcalled = "ls";
                 $urlparams = "path=$plpath"."docs_demo/QuickStart.txt";
@@ -642,22 +788,53 @@ print "sock timeout 3s\n";
 
             # prepare to extract form data
             undef %FORM;
-            $urlparams =~ s/\r//g;
-            $urlparams =~ s/\n//g;
-            @cmd_param_pairs = split ('&', $urlparams);
-            foreach $cmd_param_pair (@cmd_param_pairs) {
-                ($name, $param) = split ('=', $cmd_param_pair);
-                if (defined ($name) && defined ($param)) {
-                    $param =~ tr/+/ /;
-                    $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
-                    $FORM{$name} = $param;
-                    if ($debug >= 3) {
-                        $tmp = substr ($FORM{$name}, 0, 160);
-                        print "FORMDATA $name=$tmp\n";
+            if ($postboundary ne '') {
+                # We saw Content-Type: multipart/form-data; boundary=---------------------------7de3003160be2
+                # because we specified enctype="multipart/form-data"
+                @cmd_param_pairs = split ("--$postboundary", $urlparams);
+                foreach $_ (@cmd_param_pairs) {
+                    # look for \r\n\r\n marking start of data
+                    $tmp = index ($_, "\x0D\x0A\x0D\x0A");
+                    if ($tmp >= 0) {
+                        $tmp += 4;
+                        # add 4 for \r\n\r\n
+                        # extract data
+                        $tmp = substr ($_, $tmp, length($_) - $tmp - 2);
+                        # - 2 to remove \r\n
+                    } else {
+                        $tmp = '';
                     }
-                    # convert \ to /
-                    if ($name eq 'path') {
-                        $FORM{$name} =~ tr/\\/\//;
+                    #Content-Disposition: form-data; name="myfile"; filename="C:\x\strings.xml"
+                    # 'myfile' must match l00http_uploadfile.pl
+                    #     print $sock "<input id=\"myfile\" name=\"myfile\" type=\"file\">\n";
+                    if (/Content-Disposition: form-data; name="myfile"; filename="([^"]+)"/i) {
+                        $FORM{'filename'} = $1;
+                        $FORM{'payload'} = $tmp;
+                        l00httpd::dbp("l00httpd", "FORM{'filename'}=>$FORM{'filename'}<\n");
+                        #print "FORM{'payload'}=>$FORM{'payload'}<\n";
+                    } elsif (/Content-Disposition: form-data; name="([^"]+)"/i) {
+                        $FORM{$1} = $tmp;
+                        l00httpd::dbp("l00httpd", "FORM{'$1'}=>$FORM{$1}<\n");
+                    }
+                }
+            } else {
+                $urlparams =~ s/\r//g;
+                $urlparams =~ s/\n//g;
+                @cmd_param_pairs = split ('&', $urlparams);
+                foreach $cmd_param_pair (@cmd_param_pairs) {
+                    ($name, $param) = split ('=', $cmd_param_pair);
+                    if (defined ($name) && defined ($param)) {
+                        $param =~ tr/+/ /;
+                        $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
+                        $FORM{$name} = $param;
+                        if ($debug >= 3) {
+                            $tmp = substr ($FORM{$name}, 0, 160);
+                            print "FORMDATA $name=$tmp\n";
+                        }
+                        # convert \ to /
+                        if ($name eq 'path') {
+                            $FORM{$name} =~ tr/\\/\//;
+                        }
                     }
                 }
             }
@@ -678,8 +855,8 @@ print "sock timeout 3s\n";
             }
 
             foreach $mod (sort keys %httpmods) {
-# what was the reason I disable this always on?
-                if (defined ($ctrl{"alwayson_$mod"})) {
+                if (defined ($ctrl{"alwayson_$mod"}) ||
+                    defined ($ctrl{'allappson'})) {
                     $modsinfo{"$mod:ena:checked"} = "checked";
                 }
 				if ($open) {
@@ -689,13 +866,15 @@ print "sock timeout 3s\n";
             }
 
             # reset to selected brightness (Slide lost screen brightness after camera)
-            if ($ctrl{'os'} eq 'and') {
+            if (($ctrl{'os'} eq 'and') && defined($ctrl{'slideCamBrighnessFix'})) {
+                # Define below in l00httpd.cfg to fix Slide camera brightness problem
+                # Slide auto switch to max brighness when camera is turned on but 
+                # doesn't always restore correctly
+                #slideCamBrighnessFix^justdefinethis
                 if (defined($ctrl{'screenbrightness'})) {
                     $tmp = $ctrl{'droid'}->getScreenBrightness ();
                     $tmp = $tmp->{'result'};
-                    if (($tmp != $ctrl{'screenbrightness'}) &&
-                        ($tmp != 255)) {
-                       # 255 is Fastbright, don't over write
+                    if ($tmp != $ctrl{'screenbrightness'}) {
                        $ctrl{'droid'}->makeToast("Resetting brightness from $tmp to $ctrl{'screenbrightness'}");
                        $ctrl{'droid'}->setScreenBrightness ($ctrl{'screenbrightness'});
                     }
@@ -707,6 +886,7 @@ print "sock timeout 3s\n";
                 $modcalled = '';
                 $shutdown = 0;
                 # reload all modules
+                l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
                 &loadmods;
             }
             if ($shutdown == 1) {
@@ -723,6 +903,15 @@ print "sock timeout 3s\n";
                 print $sock "Click <a href=\"/restart.htm\">here</a> to restart<p>\n";
                 print $sock $ctrl{'htmlfoot'};
                 next;
+            } elsif ($modcalled =~ /^redirect/) {
+                if (defined ($ctrl{$modcalled})) {
+                    $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=$ctrl{$modcalled}\">\r\n";
+                } else {
+                    $tmp = '';
+                }
+                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $tmp . $ctrl{'htmlhead2'};
+                print $sock "Redirect to <a href=\"$ctrl{$modcalled}\">$ctrl{$modcalled}</a><p>\n";
+                print $sock $ctrl{'htmlfoot'};
             } elsif (($modcalled ne 'httpd') &&                 # not server control
                 ((($ishost)) ||           # client enabled or is server
                  ((defined ($modsinfo{"$modcalled:ena:checked"})) &&
@@ -738,11 +927,26 @@ print "sock timeout 3s\n";
                 $ctrl{'sock'} = $sock;
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
-                $ctrl{'home'} = "<a href=\"/httpd.htm\">Home</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
-                if (defined($ctrl{'reminder'})) {
-                    # put reminder.pl message on title banner too
-                    $ctrl{'home'} = "<p><center>Reminder: <font style=\"color:yellow;background-color:red\">$ctrl{'reminder'}</font></center><p> $ctrl{'home'}";
+                $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
+
+                # a generic scheme to support system wide banner
+                # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
+                # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
+                foreach $_ (sort keys %ctrl) {
+                    if (/^BANNER:(.+)/) {
+                        #print "key $_\n";
+                        if (defined($ctrl{$_})) {
+                            #$ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                            #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                            # process banner content through wikihtml to make wiki links, etc.
+                            $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
+                            # remove ending <br> added
+                            s/<br>$//;
+                            $ctrl{'home'} = $_ . $ctrl{'home'};
+						}
+                    }
                 }
+
                 # invoke module
                 if (defined ($modsinfo{"$modcalled:fn:proc"})) {
                     $subname = $modsinfo{"$modcalled:fn:proc"};
@@ -789,29 +993,54 @@ print "sock timeout 3s\n";
                         (int ($FORM{'noclinav'}) <= 1)) {
                         $ctrl{'noclinav'} = $FORM{'noclinav'};
                     }
+                    if (defined ($FORM{'noclinavon'}) && ($FORM{'noclinavon'} eq 'on')) {
+                        $ctrl{'noclinav'} = 1;
+                    }
+                    if (defined ($FORM{'noclinavof'}) && ($FORM{'noclinavof'} eq 'on')) {
+                        $ctrl{'noclinav'} = 0;
+                    }
                     if (defined ($FORM{'clipath'}) &&
                         (length ($FORM{'clipath'}) > 0)) {
                         $ctrl{'clipath'} = $FORM{'clipath'};
                     }
-                    if ((defined ($FORM{'wake'})) && ($ctrl{'os'} eq 'and')) {
-                        if ($FORM{'wake'} eq 'on') {
+                    if (defined ($FORM{'clipathset'}) &&
+                        ($FORM{'clipathset'} =~ /(\S+)/)) {
+                        $ctrl{'clipath'} = $1;
+                    }
+                    if ($ctrl{'os'} eq 'and') {
+                        if ((defined ($FORM{'wake'})) && ($ctrl{'os'} eq 'and')) {
+                            if ($FORM{'wake'} eq 'on') {
+                                $ctrl{'droid'}->wakeLockAcquirePartial();
+                            }
+                            if ($FORM{'wake'} eq 'off') {
+                                $ctrl{'droid'}->wakeLockRelease();
+                            }
+                        }
+                        if (defined ($FORM{'wakeon'}) && ($FORM{'wakeon'} eq 'on')) {
                             $ctrl{'droid'}->wakeLockAcquirePartial();
                         }
-                        if ($FORM{'wake'} eq 'off') {
+                        if (defined ($FORM{'wakeof'}) && ($FORM{'wakeof'} eq 'on')) {
                             $ctrl{'droid'}->wakeLockRelease();
                         }
-                    }
-                    if ((defined ($FORM{'wifi'})) && ($ctrl{'os'} eq 'and')) {
-                        if ($FORM{'wifi'} eq 'on') {
+                        if (defined ($FORM{'wifi'})) {
+                            if ($FORM{'wifi'} eq 'on') {
+                                $ctrl{'droid'}->toggleWifiState (1);
+                            }
+                            if ($FORM{'wifi'} eq 'off') {
+                                $ctrl{'droid'}->toggleWifiState (0);
+                            }
+                        }
+                        if (defined ($FORM{'wifion'}) && ($FORM{'wifion'} eq 'on')) {
                             $ctrl{'droid'}->toggleWifiState (1);
                         }
-                        if ($FORM{'wifi'} eq 'off') {
+                        if (defined ($FORM{'wifiof'}) && ($FORM{'wifiof'} eq 'on')) {
                             $ctrl{'droid'}->toggleWifiState (0);
                         }
                     }
 
                     # enable all Applets overwrites
-                    if ((defined ($FORM{'allappson'})) && ($FORM{'allappson'} eq "on")) {
+                    if (((defined ($FORM{'allappson'})) && ($FORM{'allappson'} eq "on")) ||
+                        defined ($ctrl{'allappson'})) {
                         foreach $mod (sort keys %httpmods) {
                             if (defined ($modsinfo{"$mod:fn:proc"})) {
                                 $modsinfo{"$mod:ena:checked"} = "checked";
@@ -873,66 +1102,9 @@ print "sock timeout 3s\n";
                 # on client: provide a table of modules, and links if enabled
                 # Send HTTP and HTML headers
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
-                print $sock "$ctrl{'now_string'}: $client_ip connected to the Android phone. \n";
-                if ($ctrl{'os'} eq 'and') {
-                    if ($ctrl{'machine'} eq 'Morrison') {
-                        $ip = `busybox ifconfig`;
-#                   } elsif ($ctrl{'machine'} eq 'doubleshot') {
-                    } else {
-                        $ip = `ip addr show`;
-                        undef %ifnet;
-                        foreach $_ (split ("\n", $ip)) {
-                            #1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
-                            if (/^\d+: *(\w+):/) {
-                                $tmp = $1;
-                            }
-                            #    inet 127.0.0.1/8 scope host lo
-                            if (/inet *(\d+\.\d+\.\d+\.\d+)\//) {
-                                $ifnet {$tmp} = $1;;
-                            }
-                        }
-                        $ip = '';
-                        foreach $_ (keys %ifnet) {
-                            if (/wlan/) {
-                                $ip .= "$ifnet{$_} ";
-                            } elsif (/eth/) {
-                                $ip .= "$ifnet{$_} ";
-                            }
-                        }
-                        if ($ip eq '') {
-                            # didn't find wifi, try mobile net
-                            foreach $_ (keys %ifnet) {
-                                if (/rmnet/) {
-                                    $ip .= "$ifnet{$_} ";
-                                }
-                            }
-                        }
-#                   } else {
-#                       # don't know how to find self IP yet
-#                       $ip = undef;
-                    }
-                } elsif ($ctrl{'os'} eq 'win') {
-                    $ip = `ipconfig`;
-                } else {
-                    $ip = `/sbin/ifconfig`;
-                }
-                if ($ctrl{'os'} eq 'win') {
-                    $ip = `ipconfig`;
-                    if ($ip =~ /(192\.168\.\d+\.\d+)/) {
-                        $ip = $1;
-                    }
-                } else {
-                    if (defined ($ip)) {
-                        if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
-                            $ip = $1;
-                        } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
-                            $ip = $1;
-                        }
-                    } else {
-                        $ip = '(unknown)';
-                    }
-                }
-                print $sock "Phone IP: $ip, up: ";
+                print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland. \n";
+                print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm
+\">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns<p>\n";
                 
@@ -949,9 +1121,14 @@ print "sock timeout 3s\n";
                     # on server: display submit button
                     print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
                 }
-                print $sock "<a href=\"/httpd.htm\">Home</a> <a href=\"$ctrl{'quick'}\">Quick</a> \n";
+                print $sock "<a href=\"/httpd.htm\">#</a>\n";
+                print $sock "<a href=\"/ls.htm/HelpModl00httpd.htm?path=${plpath}docs_demo/HelpModl00httpd.txt\">?</a>\n";
+                print $sock "$ctrl{'HOME'}\n";
                 print $sock "<a href=\"/ls.htm/QuickStart.htm?path=$plpath"."docs_demo/QuickStart.txt\">QuickStart</a>\n";
                 print $sock "<a href=\"#end\">end</a> \n";
+                if ($ctrl{'os'} eq 'and') {
+                    print $sock "<a href=\"#wifi\">wifi</a> \n";
+                }
                 print $sock "<a href=\"#ram\">ram</a> \n";
                 print $sock "<p>\n";
  
@@ -964,7 +1141,8 @@ print "sock timeout 3s\n";
                     # on server: display debug option
                     print $sock "<tr>";
                     print $sock "<td><input type=\"text\" size=\"2\" name=\"debug\" value=\"$debug\"></td>\n";
-                    print $sock "<td>&nbsp;</td><td>Print debug messages to console</td>\n";
+                    print $sock "<td><a href=\"/view.htm?path=${plpath}l00httpd.pl\">l00httpd.pl</a></td>\n";
+                    print $sock "<td>Print debug messages to console</td>\n";
 
                     if ($nopwtimeout =~ /^ *\d+ *$/) {
                         if ($nopwtimeout > time) {
@@ -980,17 +1158,16 @@ print "sock timeout 3s\n";
                         }
                     }
                     print $sock "<tr>";
-                    print $sock "<td><input type=\"text\" size=\"5\" name=\"nopw\" value=\"$tmp\"></td>\n";
-                    print $sock "<td>&nbsp;</td><td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath')</td>\n";
+                    print $sock "<td><input type=\"text\" size=\"4\" name=\"nopw\" value=\"$tmp\"></td>\n";
+                    print $sock "<td><a href=\"/httpd?allappson=on&timeout=43200&noclinavof=on\">wide open</a></td>\n";
+                    print $sock "<td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath'.) <a href=\"/httpd.htm?defaulton=on&allappoff=on&timeout=300&noclinavon=on\">Default only</a></td>\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappson\">Apps on</td>\n";
-#                   print $sock "<td>&nbsp;</td><td>Enable all Applets for external clients</td>\n";
-                    print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients. <a href=\"/httpd.htm?defaulton=on\">Default only</a></td>\n";
+                    print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients.\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappsoff\">Apps off</td>\n";
-#                   print $sock "<td>&nbsp;</td><td>Disable all Applets for external clients</td>\n";
                     print $sock "<td><a href=\"/shutdown.htm\">(Shutdown)</a></td><td>Disable all Applets for external clients</td>\n";
 
                     $tmp = "stopped";
@@ -1017,11 +1194,11 @@ print "sock timeout 3s\n";
                         # on the server, display controls
                         print $sock "<tr>";
                         $checked = $modsinfo{"$mod:ena:checked"};
-#                       print $sock "<td><input type=\"checkbox\" name=\"$mod\" $checked>$mod</td>\n";
                         print $sock "<td><input type=\"checkbox\" name=\"$mod\" $checked>".
                             "<a href=\"/view.htm/$mod.htm?path=$plpath"."l00http_$mod.pl\">".
                             "$mod</a></td>\n";
                         print $sock "<td><a href=\"/$mod.htm\">$mod</a></td><td>$moddesc{$mod}</td>\n";
+                        print $sock "</tr>\n";
                     } else {
                         # on client, enable links if enabled
                         if ($modsinfo{"$mod:ena:checked"} eq "checked") {
@@ -1029,6 +1206,7 @@ print "sock timeout 3s\n";
                         } else {
                             print $sock "<tr><td>$mod</td><td>$moddesc{$mod}</td>\n";
                         }
+                        print $sock "</tr>\n";
                     }
                 }
                 # list clients
@@ -1056,14 +1234,46 @@ print "sock timeout 3s\n";
                     }
                     print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
                 }
+                if ($ishost) {
+                    print $sock "<tr>";
+                    print $sock "<td><input type=\"checkbox\" name=\"noclinavon\">on</td>\n";
+                    print $sock "<td><input type=\"checkbox\" name=\"noclinavof\">off</td>\n";
+                    print $sock "<td>noclinav: on to restrict client directory navigation</td>\n";
+                    print $sock "</tr>\n";
+
+                    print $sock "<tr>";
+                    print $sock "<td>clipath:</td>\n";
+                    print $sock "<td><input type=\"text\" size=\"2\" name=\"clipathset\" value=\"\"></td>\n";
+                    print $sock "<td>clipath: restrict client to directory below this</td>\n";
+                    print $sock "</tr>\n";
+
+                    if ($ctrl{'os'} eq 'and') {
+                        print $sock "<tr>";
+                        print $sock "<td><input type=\"checkbox\" name=\"wakeon\">on</td>\n";
+                        print $sock "<td><input type=\"checkbox\" name=\"wakeof\">off</td>\n";
+                        print $sock "<td>wake: on to prevent Android from sleeping</td>\n";
+                        print $sock "</tr>\n";
+
+                        print $sock "<tr>";
+                        print $sock "<td><input type=\"checkbox\" name=\"wifion\">on</td>\n";
+                        print $sock "<td><input type=\"checkbox\" name=\"wifiof\">off</td>\n";
+                        print $sock "<td>wifi: turn wifi on/off</td>\n";
+                        print $sock "</tr>\n";
+                    }
+                }
 
                 print $sock "</table>\n";
                 print $sock "<hr><a name=\"end\"></a>\n";
-                print $sock "<a href=\"#top\">top</a> \n";
+                print $sock "Scroll up for wiki/wake control. Jump to <a href=\"#top\">top</a> \n";
 
                 if ($ishost) {
+                    print $sock "<a name=\"wifi\"></a>\n";
                     # on server: display submit button
                     print $sock "</form>\n";
+
+                    if ($cfgedit ne '') {
+                        print $sock "$cfgedit\n";
+                    }
 
                     # dump all ctrl data
                     print $sock "<p>ctrl data:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -1107,8 +1317,10 @@ print "sock timeout 3s\n";
                 $tmp = $ctrl{'l00file'};
 
                 foreach $_ (sort keys %$tmp) {
+                    if (($_ eq 'l00://ram') ||
+                       (defined($ctrl{'l00file'}->{$_}) &&
+                        (length($ctrl{'l00file'}->{$_}) > 0))) {
 
-                    if (($_ eq 'l00://ram') || (length($ctrl{'l00file'}->{$_}) > 0)) {
                         print $sock "<tr>\n";
 
                         print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
@@ -1118,10 +1330,10 @@ print "sock timeout 3s\n";
                         print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
 
                         print $sock "</tr>\n";
-
 	            	}
                 }
-
+                print $sock "</table>\n";
+                print $sock "<p>End of page.<p>\n";
 
                 # send HTML footer and ends
                 print $sock $ctrl{'htmlfoot'};
@@ -1129,5 +1341,8 @@ print "sock timeout 3s\n";
             $sock->close;
         }
     }
-    &periodictask ();
+    if ($ctrl_port_first == $ctrl_port) {
+        # execute periodic tasks only on first instance
+        &periodictask ();
+    }
 }

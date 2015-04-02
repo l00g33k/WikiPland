@@ -14,9 +14,13 @@ print $sock "<br>\n";
 
 if (defined($ctrl->{'FORM'}->{'off'})) {
     $ret = $ctrl->{'droid'}->toggleAirplaneMode(false);
+    print $sock "turning airplane mode off\n";
 } else {
     $ret = $ctrl->{'droid'}->toggleAirplaneMode(true);
+    print $sock "turning airplane mode on\n";
 }
+print $sock "<br>\n";
+
 &l00httpd::dumphash ('ret', $ret);
 if ($ret->{'result'}) {
     print $sock "airplane mode is on\n";

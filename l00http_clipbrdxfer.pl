@@ -13,7 +13,7 @@ use l00httpd;
 my %config = (proc => "l00http_clipbrdxfer_proc",
               desc => "l00http_clipbrdxfer_desc");
 my ($url, $name, $pw);
-$url = "127.0.0.1:30337";
+$url = "127.0.0.1:50337";
 $name = 'p';
 $pw = 'p';
 
@@ -21,7 +21,7 @@ sub l00http_clipbrdxfer_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    " A: clipbrdxfer: Transfer clipboard between 2 WikiPland servers";
+    "clipbrdxfer: Transfer clipboard between 2 WikiPland servers";
 }
 
 
@@ -35,7 +35,7 @@ sub l00http_clipbrdxfer_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>clipbrdxfer</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
 
     if (defined ($form->{'url'})) {
         $url = $form->{'url'}
@@ -43,12 +43,12 @@ sub l00http_clipbrdxfer_proc (\%) {
     if (defined ($form->{'name'})) {
         $name = $form->{'name'}
     } else {
-        $name = '';
+#       $name = '';
     }
     if (defined ($form->{'pw'})) {
         $pw = $form->{'pw'}
     } else {
-        $pw = '';
+#       $pw = '';
     }
 
     print $sock "<form action=\"/clipbrdxfer.htm\" method=\"get\">\n";
@@ -78,15 +78,15 @@ sub l00http_clipbrdxfer_proc (\%) {
     if (defined ($form->{'submit'})) {
 	    $tmp = '';
 		if ($ctrl->{'os'} eq 'and') {
-            $buf = $ctrl->{'droid'}->getClipboard();
-            $buf = $buf->{'result'};
+            $buf = &l00httpd::l00getCB($ctrl);
             $tmp = &l00httpd::urlencode ($buf);
             $tmp = "clip.htm?update=Copy+to+clipboard&clip=$tmp";
         }
 		$geturl = "http://$url/$tmp";
         if ((!defined ($form->{'nofetch'})) ||
             ($form->{'nofetch'} ne 'on')) {
-            print $sock "<br>Fetching '$geturl'<br>\n";
+            l00httpd::dbp($config{'desc'}, "Fetching '$geturl'\n");
+            #print $sock "<br>Fetching '$geturl'<br>\n";
 
             if (($name ne '') || ($pw ne '')) {
                 ($hdr, $bdy) = &l00wget::wget ($geturl, "$name:$pw");
@@ -97,14 +97,19 @@ sub l00http_clipbrdxfer_proc (\%) {
             if (defined ($hdr)) {
                 print $sock "<p>Header length ",length($hdr), " bytes<br>\n";
                 print $sock "Body length ",length($bdy), " bytes<br>\n";
+                print $sock "<br>Pushing:<pre>$buf</pre>\n";
 
                 print $sock "<p><pre>$hdr</pre>\n";
                 $bdy =~ s/</&lt;/g;
                 $bdy =~ s/>/&gt;/g;
                 print $sock "<pre>$bdy</pre>\n";
+            } else {
+                print $sock "<p>Failed to push clipboard content to $url<p>\n";
+                print $sock "<br>Pushing:<pre>$buf</pre>\n";
             }
         } else {
             print $sock "<p>Failed to fetch '$geturl'\n";
+            print $sock "<br>Pushing:<pre>$buf</pre>\n";
         }
     }
 

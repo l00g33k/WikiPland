@@ -52,7 +52,7 @@ sub l00http_periocam_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">QUICK</a> <a href=\"/periocam.htm\">Refresh</a><p> \n";
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/periocam.htm\">Refresh</a><p> \n";
 
     print $sock "<form action=\"/periocam.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";

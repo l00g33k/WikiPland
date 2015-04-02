@@ -70,14 +70,25 @@ sub svg_curveXY2screenXY {
 
     # rescale
     if (defined ($svgparams{"$name"})) {
- 
-        $xx = ($xx - $svgparams{"$name:minx"}) / 
-              ($svgparams{"$name:maxx"} - $svgparams{"$name:minx"}) *
-              ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
-        $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
-              (($yy - $svgparams{"$name:$idx:miny"}) /
-               ($svgparams{"$name:$idx:maxy"} - $svgparams{"$name:$idx:miny"}) *
-               ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
+        if ($svgparams{"$name:maxx"} == $svgparams{"$name:minx"}) {
+            # a constant x
+            $xx = 0.5 *
+                  ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
+        } else {
+            $xx = ($xx - $svgparams{"$name:minx"}) / 
+                  ($svgparams{"$name:maxx"} - $svgparams{"$name:minx"}) *
+                  ($svgparams{"$name:wd"} - $mgl - $mgr) + $mgl;
+        }
+        if ($svgparams{"$name:$idx:maxy"} == $svgparams{"$name:$idx:miny"}) {
+            # a constant y
+            $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
+                  (0.5 * ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
+        } else {
+            $yy = ($svgparams{"$name:ht"} - $mgt - $mgb) - 
+                  (($yy - $svgparams{"$name:$idx:miny"}) /
+                   ($svgparams{"$name:$idx:maxy"} - $svgparams{"$name:$idx:miny"}) *
+                   ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
+        }
     } else {
         $xx = 0;
 		$yy = 0;
@@ -152,6 +163,35 @@ sub svg_convert_xy {
     $svg_xy2;
 }
 
+sub svg_convert_xy_mapoverlay {
+    my ($name, $svgxy, $idx, $wd, $ht) = (@_);
+    my ($svg_xy2, $xx, $yy, $cnt);
+    my (@flds);
+
+
+    # save data
+    $svgparams{"$name"} = $svgxy;
+    $svgparams{"$name:wd"} = $wd;
+    $svgparams{"$name:ht"} = $ht;
+    $svgparams{"$name:maxx"} = $wd;
+    $svgparams{"$name:minx"} = 0;
+    $svgparams{"$name:$idx:maxy"} = $ht;
+    $svgparams{"$name:$idx:miny"} = 0;
+
+    $svg_xy2 = '';
+    foreach $_ (split (' ', $svgxy)) {
+        if (($xx, $yy)  = split (',', $_)) {
+            # $xx,$yy is curve x,y
+            # rescale from curve x,y to screen x,y
+            ($xx, $yy) = &svg_curveXY2screenXY ($name, $idx, $xx, $yy);
+            # $xx,$yy has bene converted to screen x,y
+            $svg_xy2 .= "$xx,$yy ";
+        }
+    }
+
+    $svg_xy2;
+}
+
 # $data looks like '0,1 1,4 2,2 3,19'
 # or '0,1,2,4 1,4,4,1 2,2,5,8 3,19,11,3'
 # $wd, $ht is size of svg
@@ -181,7 +221,7 @@ sub plotsvg {
                     # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                     # print "sec $dummy\n";
                     # 1577865600 is 2020/1/1 00:00:00, must be a date
-                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = localtime ($minx);
+                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($minx);
                     $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                     $svg .= "<text x=\"$mgl\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$date</text>";
                 } else {
@@ -192,7 +232,7 @@ sub plotsvg {
                     # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                     # print "sec $dummy\n";
                     # 1577865600 is 2020/1/1 00:00:00, must be a date
-                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = localtime ($maxx);
+                    ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($maxx);
                     $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                     $svg .= "<text x=\"".int($wd-$txw-$mgr)."\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$date</text>";
                 } else {
@@ -242,5 +282,51 @@ sub getsvg {
 
     $svggraphs{$name};
 }
+
+sub plotsvgmapoverlay {
+    my ($name, $data, $wd, $ht, $path) = @_;
+    my ($svg, $div, $ii, $svg_xy2, $color, $date, $x1, $x2, $y1, $y2);
+    my ($se,$mi,$hr,$da,$mo,$yr,$dummy);
+    my (@tracks);
+
+    # overwrite with no plot margin
+    ($mgl, $mgr, $mgt, $mgb) = (0, 0, 0, 0);
+
+    $svg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+    $svg .= "<svg width=\"$wd"."px\" height=\"$ht"."px\" viewBox=\"0 0 $wd $ht\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"> ";
+
+    @tracks = split("::", $data);
+    foreach $data (@tracks) {
+        $svg_xy2 = &svg_convert_xy_mapoverlay ($name, $data, 0, $wd, $ht);
+        if ($svg_xy2 ne '') {
+            $svg .= "<polyline fill=\"none\" stroke=\"navy\" stroke-width=\"2\" points=\"$svg_xy2\" />";
+        }
+    }
+    $svg .= "</svg>";
+    $svggraphs{$name} = $svg;
+
+    l00httpd::dbp(__FILE__, "Tracks\n");
+    $svg =~ s/</&lt;/g;
+    $svg =~ s/>/&gt;/g;
+    l00httpd::dbp(__FILE__, "$svg\n");
+
+    # restore plot margin
+    ($mgl, $mgr, $mgt, $mgb) = (70, 10, 10, 60);
+
+    $svg = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+    $svg .= "<svg  x=\"0\" y=\"0\" width=\"$wd\" height=\"$ht\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $wd $ht\" preserveAspectRatio=\"xMidYMid meet\">";
+    $svg .= "<g id=\"bitmap\" style=\"display:online\"> ";
+    $svg .= "<image x=\"0\" y=\"0\" width=\"$wd\" height=\"$ht\" xlink:href=\"/ls.htm/$name?path=$path\" /> ";
+    $svg .= "</g> ";
+    $svg .= "<g id=\"$name\" style=\"display:online\"> <g transform=\"translate(0 0)\"> <g transform=\"scale(1.0)\"> <image x=\"0\" y=\"0\" width=\"$wd\" height=\"$ht\" xlink:href=\"/svg.htm?graph=$name\"/> </g> </g> </g>";
+    $svg .= "</svg>";
+    $svggraphs{"${name}.ovly.svg"} = $svg;
+
+    l00httpd::dbp(__FILE__, "Overlay\n");
+    $svg =~ s/</&lt;/g;
+    $svg =~ s/>/&gt;/g;
+    l00httpd::dbp(__FILE__, "$svg\n");
+}
+
 
 1;

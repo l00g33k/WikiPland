@@ -11,6 +11,7 @@ use l00svg;
 
 my %config = (proc => "l00http_svg_proc",
               desc => "l00http_svg_desc");
+my ($lastx, $lasty, $lastoff);
 
 sub l00http_svg_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -50,13 +51,11 @@ sub l00http_svg_proc {
                 }
                 ($xpix, $ypix) = &l00svg::svg_curveXY2screenXY (
                     $graphname, 0, $x, $y);
-#print "find #$off: ($x,$y) -> ($xpix, $ypix)\n";
-                if ($xpix < $form->{'x'}) {
+                if ($xpix >= $form->{'x'}) {
                     last;
                 }
                 $off++;    
             }
-#           print $sock "<div style=\"position: absolute; left:$form->{'x'}px; top:$form->{'y'}px;\">\n";
             print $sock "<div style=\"position: absolute; left:$xpix"."px; top:$ypix"."px;\">\n";
             print $sock "<font color=\"red\">X</font></div>\n";
         }
@@ -65,7 +64,7 @@ sub l00http_svg_proc {
         print $sock "<input type=\"hidden\" name=\"view\">\n";
         print $sock "</form>\n";
 
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
         print $sock "Click graph above.\n";
         if (defined ($form->{'x'})) {
             print $sock "You clicked: ($form->{'x'},$form->{'y'})<br>\n";
@@ -74,12 +73,22 @@ sub l00http_svg_proc {
                 # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                 # print "sec $dummy\n";
                 # 1577865600 is 2020/1/1 00:00:00, must be a date
-                ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = localtime ($x);
+                ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($x);
                 $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
-                print $sock "Values: ($date, $y)<br>\n";
+                print $sock "Values: ($date, $y) [#$off]<br>\n";
             } else {
-                print $sock "Values: ($x, $y)<br>\n";
+                print $sock "Values: ($x, $y) [#$off]<br>\n";
             }
+            if (defined($lastx)) {
+                if (($x > 946713600) && ($x < 1577865600)) {
+                    print $sock "Delta: (", ($x - $lastx) / 3600, " hr, ", $y - $lasty, " ) [#", $off - $lastoff, "]<br>\n";
+                } else {
+                    print $sock "Delta: (", $x - $lastx, ", ", $y - $lasty, " ) [#", $off - $lastoff, "]<br>\n";
+                }
+            }
+            $lastx = $x;
+            $lasty = $y;
+            $lastoff = $off;
         }
         print $sock "<p><a href=\"/svg.htm\">List of all graphs</a><br>\n";
 
@@ -104,11 +113,11 @@ sub l00http_svg_proc {
 
         # Send HTTP and HTML headers
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
 
         print $sock "<a href=\"/svg.htm?graph=demo&view=\">Viewer demo</a><br>\n";
         print $sock "SVG plotting demo:<p>\n";
-        print $sock "<a href=\"/svg.htm?graph=demo\">".
+        print $sock "<a href=\"/svg.htm?graph=demo&view=\">".
         "<img src=\"/svg.htm?graph=demo\">".
         "</a>\n";
 

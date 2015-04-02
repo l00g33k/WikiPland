@@ -82,8 +82,8 @@ sub l00http_schdo_proc {
     my ($yr, $mo, $da, $hr, $mi, $se);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
-    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
-        $dopl = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $dopl = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{"dopl"})) {
         $dopl = $form->{"dopl"};
@@ -111,7 +111,7 @@ sub l00http_schdo_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> <a href=\"/schdo.htm\">Refresh</a> \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/schdo.htm\">Refresh</a> \n";
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_schdo.txt\">$ctrl->{'workdir'}l00_schdo.txt</a><p> \n";
 

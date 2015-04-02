@@ -47,7 +47,7 @@ sub l00http_crypt_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     if (defined ($form->{'path'})) {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
@@ -61,7 +61,8 @@ sub l00http_crypt_proc (\%) {
     print $sock "<a href=\"#find\">find</a> Be patience, cryptography is slow in pure Perl on Android. $tmp<hr>\n";
 
 
-    if (defined ($form->{'save'})) {
+    if (defined ($form->{'save'}) ||
+        defined ($form->{'fromram'})) {
         if ((defined ($form->{'pass1'})) && 
             (defined ($form->{'pass2'})) && 
             ($form->{'pass1'} eq $form->{'pass2'})) {
@@ -92,6 +93,17 @@ sub l00http_crypt_proc (\%) {
 
     $buffer = '';
     $plain = '';
+    if (defined ($form->{'fromram'})) {
+        # retrieve from ram buffer, save, then clear ram buffer
+        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.pl")) {
+            $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
+            $form->{'save'} = 1;
+            # clear ram buffer
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');
+            &l00httpd::l00fwriteBuf($ctrl, '');
+            &l00httpd::l00fwriteClose($ctrl);
+		}
+    }
     if (defined ($form->{'save'})) {
         if (($pass ne '') &&
             (defined ($form->{'buffer'})) &&
@@ -224,17 +236,34 @@ sub l00http_crypt_proc (\%) {
     }
 
     # Render HTML with found text and translated plain2
-    $buffer = "$found$pre\n$cryptbound:$method:\n$plain2\n$cryptbound:$method:\n$post";
-    print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+    if ((defined ($form->{'savedecrypt'})) && 
+        (length($form->{'savedecrypt'}) > 0) &&
+        (!($form->{'savedecrypt'} =~ /^ *$/))) {
+        # save decrypted to file
+        if (open(OU, ">$form->{'savedecrypt'}")) {
+            binmode (OU);
+            print OU $plain;
+            close (OU);
+            print $sock "Decrypted content saved to: $form->{'savedecrypt'}<p>\n";
+        }
+    } else {
+        $buffer = "$found$pre\n$cryptbound:$method:\n$plain2\n$cryptbound:$method:\n$post";
+        print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+    }
+
     $buffer = "$pre\n$cryptbound:$method:\n$plain\n$cryptbound:$method:\n$post";
     # copy to clipboard
-    if ((defined ($form->{'edittocb'})) && ($ctrl->{'os'} eq 'and')) {
-        $ctrl->{'droid'}->setClipboard ($buffer);
+    if (defined ($form->{'edittocb'})) {
+        &l00httpd::l00setCB($ctrl, $buffer);
     }
-    if ((defined ($form->{'cbtoedit'})) && ($ctrl->{'os'} eq 'and')) {
+    if (defined ($form->{'cbtoedit'})) {
         # paste from clipboard
-        $buffer = $ctrl->{'droid'}->getClipboard();
-        $buffer = $buffer->{'result'};
+        $buffer = &l00httpd::l00getCB($ctrl);
+    }
+    if (defined ($form->{'toram'})) {
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');
+        &l00httpd::l00fwriteBuf($ctrl, $buffer);
+        &l00httpd::l00fwriteClose($ctrl);
     }
 
     print $sock "<hr><a name=\"end\"></a>\n";
@@ -261,6 +290,12 @@ sub l00http_crypt_proc (\%) {
     print $sock "Path:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"toram\" value=\"edit to ram\">\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"submit\" name=\"fromram\" value=\"save ram\">\n";
+    print $sock "<a href=\"/edit.htm?path=l00://crypt.pl\" target=\"newwin\">edit ram</a> \n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
@@ -295,6 +330,11 @@ sub l00http_crypt_proc (\%) {
     print $sock "Path:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Save decrypt:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"16\" name=\"savedecrypt\" value=\"\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";

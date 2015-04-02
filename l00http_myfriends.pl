@@ -13,7 +13,7 @@ my %config = (proc => "l00http_myfriends_proc",
 sub l00http_myfriends_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     $bookmark = 
-    " 0: myfriends: My friends, CLICK HERE TO START-> ".
+    "Demo: myfriends: My friends, CLICK HERE TO START-> ".
     "<a href=\"/ls.htm?path=$ctrl->{'workdir'}pub/index.txt\">index.txt</a> ";
         
     # Descriptions to be displayed in the list of modules table

@@ -27,7 +27,7 @@ my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx);
 my ($fmatch, $fmatches, $content, $fullname, $lineno, $lineno0, $maxlines, $sock);
-my ($wday, $yday, $year, @cols, @el, @els, $sendto, $prefmt, $srcdoc, $sortoffset);
+my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $srcdoc, $sortoffset);
 
 my ($path);
 
@@ -36,7 +36,7 @@ $fmatches = '';
 $content = '';
 $maxlines = 4000;
 $sendto = 'ls';
-$prefmt = 'checked';
+$wraptext = '';
 $srcdoc = '';
 $context = 0;
 $sortoffset = '';
@@ -66,10 +66,10 @@ sub l00http_find_search {
         $paren = 0;
     }
     $lineend = '<br>';
-    if ($prefmt eq '') {
+    if ($wraptext eq '') {
         $lineend = '';
         print $sock "<pre>\n";
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= "<pre>\n";
+        &l00httpd::l00fwriteBuf($ctrl, "<pre>\n");
     }
 
 
@@ -135,7 +135,8 @@ sub l00http_find_search {
                                                         $output .= 
                                                             "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
                                                             "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
-                                                        $output .= "($lineno): $_$lineend";
+                                                        #$output .= "($lineno): $_$lineend";
+                                                        $output .= "(<a href=\"/view.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$lineno</a>): $_$lineend";
                                                         #print $sock 
                                                         #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
                                                         #   "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
@@ -245,18 +246,18 @@ sub l00http_find_search {
     if (defined ($sortoffset) && (length($sortoffset) > 0) && 
         ($sortoffset > 0) && 
         ($content eq '') &&
-        ($prefmt eq '')) {
+        ($wraptext eq '')) {
         $output2 = join("\n", sort findsort split("\n", $output));
         print $sock $output2;
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= $output2;
+        &l00httpd::l00fwriteBuf($ctrl, $output2);
     } else {
         print $sock $output;
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= $output;
+        &l00httpd::l00fwriteBuf($ctrl, $output);
     }
 
-    if ($prefmt eq '') {
+    if ($wraptext eq '') {
         print $sock "</pre>\n";
-        $ctrl->{'l00file'}->{'l00://find.pl'} .= "</pre>\n";
+        &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
     }
 
     ($mypath) = @_;
@@ -266,7 +267,7 @@ sub l00http_find_search {
         print $sock "<p>Found $hitcnt occurance(s) in $filecnt file(s) in '$mypath'<br>".
             "Click path to visit directory, click filename to view file\n";
     }
-    print $sock "<p>Find results also in <a href=\"/ls.htm?path=l00://find.pl\">l00://find.pl</a>\n";
+    print $sock "<p>Find results also in <a href=\"/ls.htm?path=l00://find.htm\">l00://find.htm</a>\n";
 
     1;
 }
@@ -275,7 +276,8 @@ sub l00http_find_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($thispath, $pathcnt);
+    my ($thispath, $pathcnt, $dirlist);
+
 
     # special srcdoc.pl integration
     $srcdoc = '';
@@ -297,17 +299,19 @@ sub l00http_find_proc {
     } else {
         $recursive = "";
     }
-    if (defined ($form->{'prefmt'})) {
-        $prefmt = 'checked';
+    if (defined ($form->{'wraptext'})) {
+        $wraptext = 'checked';
     } else {
-        $prefmt = '';
+        $wraptext = '';
     }
     if (defined ($form->{'fmatch'})) {
         $fmatches = $form->{'fmatch'};
     }
     if (defined ($form->{'content'})) {
         $content = $form->{'content'};
-    }
+    } else {
+        $content = '';
+	}
     if (defined ($form->{'maxlines'})) {
         $maxlines = $form->{'maxlines'};
     }
@@ -318,6 +322,7 @@ sub l00http_find_proc {
         $sortoffset = $form->{'sortoffset'};
     }
 
+    $dirlist = '';
     $pathcnt = 0;
     foreach $thispath (split ('\|\|\|', $path)) {
         $pathcnt++;
@@ -347,21 +352,27 @@ sub l00http_find_proc {
             }
 
             print $sock "<a name=\"__top__\"></a>\n";
-            print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a><br>\n";
+            print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$thispath\">Path</a>: <a href=\"/ls.htm/ls.htm?path=$thispath\">$thispath</a> \n";
-            print $sock "<a href=\"#end\">Jump to end</a>\n";
-            print $sock "<a href=\"#find\">Find</a><hr>\n";
+            print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
             if ($srcdoc ne '') {
                 print $sock "<font style=\"color:black;background-color:lime\">Step 3: Find text and choose by clicking line number on the right of filename</font>\n";
             }
-            print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
+            $dirlist .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n"; $dirlist .=
+            $dirlist .= "<tr>\n";
+            $dirlist .= "<td>names</td>\n";
+            $dirlist .= "<td>bytes</td>\n";
+            $dirlist .= "<td>date/time</td>\n";
+            $dirlist .= "</tr>\n";
 
-            print $sock "<tr>\n";
-            print $sock "<td>names</td>\n";
-            print $sock "<td>bytes</td>\n";
-            print $sock "<td>date/time</td>\n";
-            print $sock "</tr>\n";
+#           print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+
+#           print $sock "<tr>\n";
+#           print $sock "<td>names</td>\n";
+#           print $sock "<td>bytes</td>\n";
+#           print $sock "<td>date/time</td>\n";
+#           print $sock "</tr>\n";
         
             # 3) If the path is a directory, make a table with links
 
@@ -379,22 +390,21 @@ sub l00http_find_proc {
                         }
                     }
                 
-                    print $sock "<tr>\n";
-                    print $sock "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
-                    print $sock "<td><small>&lt;dir&gt;</small></td>\n";
-                    print $sock "<td>&nbsp;</td>\n";
-                    print $sock "</tr>\n";
+                    $dirlist .= "<tr>\n";
+                    $dirlist .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
+                    $dirlist .= "<td><small>&lt;dir&gt;</small></td>\n";
+                    $dirlist .= "<td>&nbsp;</td>\n";
+                    $dirlist .= "</tr>\n";
                 }
             }
 
-            print $sock "</table>\n";
+            $dirlist .= "</table>\n";
             closedir (DIR);
         }
     }
 
     # 4) If not in raw mode, also display a control table
 
-    print $sock "<hr>\n";
     print $sock "<a name=\"find\"></a>\n";
     print $sock "<form action=\"/find.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -410,7 +420,7 @@ sub l00http_find_proc {
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td>Content (regex; !!):</td>\n";
+    print $sock "            <td>Content ((regex); !!):</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"content\" value=\"$content\"></td>\n";
     print $sock "        </tr>\n";
 
@@ -427,7 +437,7 @@ sub l00http_find_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
-    print $sock "        <td><input type=\"checkbox\" name=\"prefmt\" $prefmt>Unformatted text</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"wraptext\" $wraptext>Wrapped text</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
@@ -442,18 +452,23 @@ sub l00http_find_proc {
     }
     print $sock "</form>\n";
 
-    print $sock "!!: Prefix !! to regex to list files without matching pattern<p>\n";
+    print $sock "<br>!!: Prefix '!!' to regex to list files without matching pattern<p>\n";
 
     if ($content ne '!!') {
-        $ctrl->{'l00file'}->{'l00://find.pl'} = '';
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://find.htm');
         foreach $thispath (split ('\|\|\|', $path)) {
             &l00http_find_search ($thispath, $ctrl);
-#           &l00http_find_search ($thispath);
         }
+        &l00httpd::l00fwriteClose($ctrl);
     }
+
 
     print $sock "<a name=\"end\"></a>\n";
     print $sock "<p><a href=\"#__top__\">Jump to top</a><p>\n";
+
+    print $sock "<hr>\n";
+    print $sock $dirlist;
+
     print $sock $ctrl->{'htmlfoot'};
 
 }

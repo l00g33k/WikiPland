@@ -7,6 +7,60 @@ package l00httpd;
 #use l00httpd;      # used for findInBuf
 
 my ($readName, $readBuf, @readAllLines, $readIdx, $writeName, $writeBuf);
+my ($debuglog, $debuglogstate, %poorwhois);
+
+$debuglog = '';
+$debuglogstate = 0;
+
+#debugprint("calling $cnt\n");
+
+sub dbp {
+    my ($desc, $msg) = @_;
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    if ($debuglogstate == 0) {
+        # get name
+        if ($desc =~ /l00http_(.+?)_desc/) {
+            $desc = $1;
+        }
+        # last line was completed, print date/time
+        $debuglog .= sprintf ("%4d%02d%02d %02d%02d%02d: $desc: ", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+        $debuglog .= $msg;
+        if (!($msg =~ "\n")) {
+            # not a complete line, remember
+            $debuglogstate = 1;
+        }
+    } else {
+        # last line was not completed, just append
+        $debuglog .= $msg;
+        if ($msg =~ "\n") {
+            # complete line, reset
+            $debuglogstate = 0;
+        }
+    }
+
+    if (length($debuglog) > 1000000) {
+        $debuglog = substr($debuglog, length($debuglog) - 1000000, 1000000);
+    }
+
+    1;
+}
+sub dbphash {
+    my ($desc, $name, $hash) = @_;
+    my ($buf);
+
+    $buf = &dumphashbuf ($name, $hash);
+    &dbp($desc, "Dumping hash $name:\n$buf\n");
+}
+sub dbpget {
+    $debuglog;
+}
+sub dbpclr {
+    $debuglog = '';
+}
+
+
 
 
 #$buf = &l00httpd::urlencode ($buf);
@@ -16,32 +70,35 @@ sub urlencode {
     # http://search.cpan.org/~mithun/URI-Encode-0.09/lib/URI/Encode.pm
     # reserved char:
     #  ! * ' ( ) ; : @ & = + $ , / ? # [ ]
+    if (defined($buf)) {
+        $buf =~  s/!/%21/g;
+        $buf =~ s/\*/%2A/g;
+        $buf =~  s/'/%27/g;
+        $buf =~ s/\(/%28/g;
+        $buf =~ s/\)/%29/g;
+        $buf =~  s/;/%3B/g;
+        $buf =~  s/:/%3A/g;
+        $buf =~ s/\@/%40/g;
+        $buf =~  s/&/%26/g;
+        $buf =~  s/=/%3D/g;
+        $buf =~ s/\+/%2B/g;
+        $buf =~ s/\$/%24/g;
+        $buf =~  s/,/%2C/g;
+        $buf =~ s/\//%2F/g;
+        $buf =~ s/\?/%3F/g;
+        $buf =~  s/#/%23/g;
+        $buf =~ s/\[/%5B/g;
+        $buf =~ s/\]/%5D/g;
 
-    $buf =~  s/!/%21/g;
-    $buf =~ s/\*/%2A/g;
-    $buf =~  s/'/%27/g;
-    $buf =~ s/\(/%28/g;
-    $buf =~ s/\)/%29/g;
-    $buf =~  s/;/%3B/g;
-    $buf =~  s/:/%3A/g;
-    $buf =~ s/\@/%40/g;
-    $buf =~  s/&/%26/g;
-    $buf =~  s/=/%3D/g;
-    $buf =~ s/\+/%2B/g;
-    $buf =~ s/\$/%24/g;
-    $buf =~  s/,/%2C/g;
-    $buf =~ s/\//%2F/g;
-    $buf =~ s/\?/%3F/g;
-    $buf =~  s/#/%23/g;
-    $buf =~ s/\[/%5B/g;
-    $buf =~ s/\]/%5D/g;
+        $buf =~    s/ /+/g;
 
-    $buf =~    s/ /+/g;
-
-    $buf =~  s/"/%22/g;
-    $buf =~ s/\|/%7C/g;
-    $buf =~ s/\r/%0D/g;
-    $buf =~ s/\n/%0A/g;
+        $buf =~  s/"/%22/g;
+        $buf =~ s/\|/%7C/g;
+        $buf =~ s/\r/%0D/g;
+        $buf =~ s/\n/%0A/g;
+    } else {
+        $buf = '';
+    }
 
     $buf;
 }
@@ -57,6 +114,11 @@ sub dumphashbuf {
             $buf .= "$name->$key => $tmp\n";
             if (ref $tmp eq 'HASH') {
                 $buf .= &dumphashbuf ("$name->$key", $tmp);
+            } elsif (ref $tmp eq 'ARRAY') {
+                $buf .= "$name->$key => ";
+                $buf .= 'last index: ' . $#$tmp . "; content:\n";
+                $buf .= join ("\n", @$tmp);
+                $buf .= "\n";
             } elsif ($key eq 'result') {
 #               $buf .= &dumphashbuf ("$name->$key", $tmp);
             }
@@ -79,6 +141,11 @@ sub dumphash {
             print "$name->$key => $tmp\n";
             if (ref $tmp eq 'HASH') {
                 &dumphash ("$name->$key", $tmp);
+            } elsif (ref $tmp eq 'ARRAY') {
+                print "$name->$key => ";
+                print 'last index: ' . $#$tmp . "; content:\n";
+                print join ("\n", @$tmp);
+                print "\n";
             } elsif ($key eq 'result') {
 #               &dumphash ("$name->$key", $tmp);
             }
@@ -94,16 +161,26 @@ sub findInBuf  {
     # $block    : text block marker
     # $buf      : find string in $buf
     my ($findtext, $block, $buf) = @_;
-    my ($hit, $found, $blocktext, $line, $pattern);
+    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno);
 
  
     # find them
     $hit = 0;
     $found = '';
     $blocktext = '';
+    $llnno = 1;
     foreach $line (split ("\n", $buf)) {
         # remove %l00httpd:lnno:$lnno% metadata
-		$line =~ s/^%l00httpd:lnno:\d+%//;
+        # extract $lnno line number or count locally if not available
+		if (($lnno) = $line =~ /^%l00httpd:lnno:(\d+)%/) {
+            $lnno = sprintf("%04d: ", $lnno);
+#           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $lnno);
+		    $line =~ s/^%l00httpd:lnno:\d+%//;
+        } else {
+            $lnno = sprintf("%04d: ", $llnno);
+#           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $llnno);
+            $llnno++;
+        }
         if ($line =~ /$block/i) {
             # found new block
             if ($hit) {
@@ -130,7 +207,7 @@ sub findInBuf  {
         if (($blocktext eq '') && ($block ne '.')) {
             # block header and not line mode
             $blocktext .= "<font style=\"color:black;background-color:silver\">\n";
-            $blocktext .= "$line\n";
+            $blocktext .= "$lnno$line\n";
             $blocktext .= "</font>\n";
 #        } elsif ($block ne '.') {
 #            # not line mode, highlight hits
@@ -143,7 +220,7 @@ sub findInBuf  {
             foreach $pattern (split ('\|\|\|', $findtext)) {
                 $line =~ s/($pattern)/<font style=\"color:black;background-color:yellow\">$1<\/font>/gi;
             }
-            $blocktext .= "$line\n";
+            $blocktext .= "$lnno$line\n";
         }
     }
     if ($hit) {
@@ -158,8 +235,8 @@ sub findInBuf  {
     $found;
 }
 
-#&l00httpd::readOpen($ctrl, $fname);
-sub readOpen {
+#&l00httpd::l00freadOpen($ctrl, $fname);
+sub l00freadOpen {
     my ($ctrl, $fname) = @_;
     my ($ret);
 
@@ -193,33 +270,37 @@ sub readOpen {
     $ret;
 }
 
-#$buf = &l00httpd::readAll($ctrl);
-sub readAll {
+#$buf = &l00httpd::l00freadAll($ctrl);
+sub l00freadAll {
     my ($ctrl) = @_;
 
     $readBuf;
 }
 
-#$buf = &l00httpd::readLine($ctrl);
-sub readLine {
+#$buf = &l00httpd::l00freadLine($ctrl);
+sub l00freadLine {
     my ($ctrl) = @_;
     my ($buf);
 
-    if ($readIdx < 0) {
-	    # split monolithic buffer into array
-        @readAllLines = split("\n", $readBuf);
-		# reset index
-        $readIdx = 0;
-    }
+    if (defined($readBuf)) {
+        if ($readIdx < 0) {
+	        # split monolithic buffer into array
+            @readAllLines = split("\n", $readBuf);
+		    # reset index
+            $readIdx = 0;
+        }
 
-    if ($readIdx <= $#readAllLines) {
-	    # index in range of array
-        $buf = "$readAllLines[$readIdx]\n";
-        $readIdx++;
-	} else {
-	    # EOF
+        if ($readIdx <= $#readAllLines) {
+	        # index in range of array
+            $buf = "$readAllLines[$readIdx]\n";
+            $readIdx++;
+	    } else {
+	        # EOF
+            $buf = undef;
+	    }
+    } else {
         $buf = undef;
-	}
+    }
 
     $buf;
 }
@@ -227,8 +308,8 @@ sub readLine {
 
 #my ($readName, $readBuf, @readAllLines, $writeName, $writeBuf);
 #
-#&l00httpd::writeOpen($ctrl, $fname);
-sub writeOpen {
+#&l00httpd::l00fwriteOpen($ctrl, $fname);
+sub l00fwriteOpen {
     my ($ctrl, $fname) = @_;
 
     $writeName = $fname;
@@ -237,8 +318,8 @@ sub writeOpen {
     1;
 }
 
-#&l00httpd::writeBuf($ctrl, $buf);
-sub writeBuf {
+#&l00httpd::l00fwriteBuf($ctrl, $buf);
+sub l00fwriteBuf {
     my ($ctrl, $buf) = @_;
 
     $writeBuf .= $buf;
@@ -246,27 +327,183 @@ sub writeBuf {
     1;
 }
 
-#&l00httpd::writeClose($ctrl);
-sub writeClose {
+#&l00httpd::l00fwriteClose($ctrl);
+sub l00fwriteClose {
     my ($ctrl) = @_;
+    my ($ret);
+
+    $ret = 0;   # non zero error
 
     if ($writeName =~ /^l00:\/\/./) {
         # ram file
-        $ctrl->{'l00file'}->{$writeName} = $writeBuf;
+        if ($writeBuf eq '') {
+            $ctrl->{'l00file'}->{$writeName} = undef;
+        } else {
+            $ctrl->{'l00file'}->{$writeName} = $writeBuf;
+        }
     } else {
-	    if (open(OU, ">$writeName ")) {
-            print OU $writeBuf;
-			close (OU);
-		}
+        if ($writeBuf eq '') {
+            # write 0 bytes file is delete file.
+            unlink ($writeName);
+        } else {
+	        if (open(OU, ">$writeName")) {
+                print OU $writeBuf;
+			    close (OU);
+		    } else {
+                $ret = 1;
+            }
+        }
     }
-    1;
+    $ret;
 }
 
-#
-#&l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
-#
 
+
+#&l00httpd::l00npoormanrdns($ctrl, $myname, $fullpath);
+sub l00npoormanrdns {
+    my ($ctrl, $myname, $fullpath) = @_;
+    my ($ret, $patt, $name);
+    my ($leading, $st, $en, $trailing);
+
+    $ret = '';
+
+    &dbp($myname.'l00httpd.pm', "reading '$fullpath'\n");
+    if (open(IN, "<$fullpath")) {
+        undef %poorwhois;
+        while (<IN>) {
+            if (/^#/) {
+                next;
+            }
+            s/\r//;
+            s/\n//;
+            if (($patt, $name) = /(.*)=>(.*)/) {
+                $ret .= "$patt is $name\n";
+                &dbp($myname.'l00httpd.pm', "$patt is $name\n");
+                #46.51.248-254.*=>AMAZON_AWS
+                if (($leading, $st, $en, $trailing) = ($patt =~ /(.+?)\.(\d+)-(\d+)\.(.*)/)) {
+                    &dbp($myname.'l00httpd.pm', "range: $patt ($st, $en) is $name\n");
+                    for ($st..$en) {
+                        $patt = "$leading.$_.$trailing";
+                        &dbp($myname.'l00httpd.pm', "expanded: $patt is $name\n");
+                        $patt =~ s/\./\\./g;
+                        $patt =~ s/\*/\\d+/g;
+                        $poorwhois{$patt} = $name;
+                    }
+                } else {
+                    &dbp($myname.'l00httpd.pm', "full octet: $patt is $name\n");
+                    $patt =~ s/\./\\./g;
+                    $patt =~ s/\*/\\d+/g;
+                    $poorwhois{$patt} = $name;
+                }
+            }
+        }
+        close(IN);
+    }
+
+
+    $ret;
+}
+
+#&l00httpd::l00npoormanrdnshash($ctrl);
+sub l00npoormanrdnshash {
+
+    \%poorwhois
+}
+
+#&l00httpd::pcSyncCmdline($ctrl, $fullpath);
+sub pcSyncCmdline {
+    my ($ctrl, $fullpath) = @_;
+    my ($buf, $clip, $rsyncpath, $path, $fname, $pcpath);
+
+
+    if (defined($ctrl->{'adbpath'})) {
+        # use setting in l00httpd.cfg if defined
+        $pcpath = $ctrl->{'adbpath'};
+    } else {
+        $pcpath = 'c:/x/';
+    }
+
+    $buf = '';
+    $clip = '';
+
+    if (($path, $fname) = $fullpath =~ /^(.+\/)([^\/]+)$/) {
+        # Windows + cygwin
+        $rsyncpath = $pcpath;
+        $rsyncpath =~ s/^(\w):\\/\/cygdrive\/$1\//;
+        $rsyncpath =~ s/\\/\//g;
+
+        $buf .= "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
+        $buf .= "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
+
+        $buf .= "<pre>\n";
+        $buf .= "adb pull \"$path$fname\" \"$pcpath$fname\"\n";
+        $buf .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";
+        $buf .= "$pcpath$fname\n";
+
+        $buf .= "ssh 127.0.0.1 -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
+        $buf .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
+        $buf .= "${pcpath}adb.in\n";
+        $buf .= "</pre>\n";
+
+
+        #$clip .= "Send the clipboard to the host through port <a href=\"/clipbrdxfer.htm?url=127.0.0.1%3A50337&name=p&pw=p&nofetch=on\">50337</a><br>\n";        
+
+        $clip .= "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname\n";
+        $clip .= "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname\n";
+
+        $clip .= "adb pull \"$path$fname\" \"$pcpath$fname\"\n";
+        $clip .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";
+        $clip .= "$pcpath$fname\n";
+
+        $clip .= "ssh 127.0.0.1 -p 30339 'cat /sdcard/l00httpd/.whoami'\n";
+        $clip .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
+        $clip .= "${pcpath}adb.in\n";
+
+        $clip = urlencode ($clip);
+
+        $buf = "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $clip . "\" target=\"newclip\">clipboard</a>:<br>\n" . $buf;
+
+    }
+
+    $buf;
+}
+
+
+
+#&l00httpd::l00getCB($ctrl);
+sub l00getCB {
+    my ($ctrl) = @_;
+    my ($buf);
+
+    if ($ctrl->{'os'} eq 'and') {
+        $buf = $ctrl->{'droid'}->getClipboard(); print __LINE__," $buf\n";
+        $buf = $buf->{'result'};
+    } else {
+        &l00freadOpen($ctrl, 'l00://clipboard');
+        $buf = &l00freadAll($ctrl);
+    }
+    if (!defined ($buf)) {
+        $buf = '';
+    }
+
+    $buf;
+}
+
+#&l00httpd::l00setCB($ctrl, $buf);
+sub l00setCB {
+    my ($ctrl, $buf) = @_;
+
+    &l00fwriteOpen($ctrl, 'l00://clipboard');
+    &l00fwriteBuf($ctrl, $buf);
+    &l00fwriteClose($ctrl);
+
+    if ($ctrl->{'os'} eq 'and') {
+        $ctrl->{'droid'}->setClipboard ($buf);
+    } elsif ($ctrl->{'os'} eq 'win') {
+        # ::todo:: add windows special character escape
+        `echo $buf| clip`;
+    }
+}
 
 
 1;
-

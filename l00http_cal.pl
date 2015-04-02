@@ -59,19 +59,22 @@ sub l00http_cal_proc {
     ($thisweek, $now) = &l00mktime::weekno ($year, $mon, $mday);
 
     #: open input file and scan calendar inputs
-    if (defined ($form->{'pathname'}) && length ($form->{'pathname'}) > 6) {
-        $fullpathname = $form->{'pathname'};
+    if (defined ($form->{'path'}) && length ($form->{'path'}) > 6) {
+        $fullpathname = $form->{'path'};
     } else {
         $fullpathname = $ctrl->{'workdir'} . "l00_cal.txt";
     }
     print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
     ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
 
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} - <a href=\"$ctrl->{'quick'}\">Quick</a> - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
-
     # handling moving lnno to moveto
     if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {
+#       $tmp = "<META http-equiv=\"refresh\" content=\"3;URL=http://www.indiana.edu/~account/new-directory\">\r\n";
+        # redirect back to calendar
+        $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=/cal.htm?path=$fullpathname\">\r\n";
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $tmp . $ctrl->{'htmlhead2'};
+        print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+
         if (open (IN, "<$fullpathname")) {
             $buf = '';
             $lnno = 0;
@@ -90,10 +93,14 @@ sub l00http_cal_proc {
 			print OU $buf;
 			close (OU);
 		}
-        print $sock "<p><a href=\"/cal.htm?pathname=$fullpathname\">Return to calendar</a>\n";
+        print $sock "<p><a href=\"/cal.htm?path=$fullpathname\">Return to calendar</a>\n";
         print $sock $ctrl->{'htmlfoot'};
         return;
     }
+
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+    print $sock "<a name=\"top\"></a>\n";
 
     # remember parameters if new ones are provided
     if (defined ($form->{'cellwd'}) && $form->{'cellwd'} > 3) {
@@ -128,7 +135,7 @@ sub l00http_cal_proc {
                 if (defined ($form->{'movefrom'})) {
 				    # selected movefrom date, list items for picking
                     if ($date eq $form->{'movefrom'}) {
-                        print $sock "<br>Choose to move: <a href=\"/cal.htm?pathname=$fullpathname&movelnno=$lnno\">$_</a>\n";
+                        print $sock "<br>Choose to move: <a href=\"/cal.htm?path=$fullpathname&movelnno=$lnno\">$_</a>\n";
                     }
                 }
                 if (defined ($form->{'movelnno'})) {
@@ -175,6 +182,7 @@ sub l00http_cal_proc {
             ($year,$mon, $mday,) = split ('/', $date);
             $year -= 1900;
             ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+            #print __LINE__ . " ($thisweek, $julian) ($year, $mon, $mday)\n";
             $ldate = $date;
         }
         #print "cal: $date $rpt; j $julian ", $julian - $now, "\n";
@@ -242,9 +250,9 @@ sub l00http_cal_proc {
             $jj2 = sprintf ("%2d", $gsmday);
             $buf = "$gsyear%2F$gsmon%2F$gsmday";
             if (defined ($form->{'movelnno'})) {
-                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?pathname=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>\n";
+                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?path=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>\n";
             } else {
-                $jj = "<a href=\"/cal.htm?pathname=$fullpathname&movefrom=$buf\">$jj1</a>";
+                $jj = "<a href=\"/cal.htm?path=$fullpathname&movefrom=$buf\">$jj1</a>";
             }
             $buf = "$gsyear%2F$gsmon%2F$gsmday,1,";
             $jj .= "<a href=\"/blogtag.htm?path=$fullpathname&buffer=$buf&blog=\">$jj2</a>";
@@ -338,6 +346,7 @@ sub l00http_cal_proc {
 #   print $sock "</pre>\n";
 
     # 3) Display form controls
+    print $sock "<p><a href=\"#top\">Jump to top</a><be>\n";
 
     print $sock "<form action=\"/cal.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -359,7 +368,7 @@ sub l00http_cal_proc {
                                                 
     print $sock "        <tr>\n";
     print $sock "            <td>Full input file path and name:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"12\" name=\"pathname\" value=\"$fullpathname\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"12\" name=\"path\" value=\"$fullpathname\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";

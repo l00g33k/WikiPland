@@ -6,11 +6,11 @@ use warnings;
 # this is a simple template, a good starting point to make your own modules
 
 my ($lastcalled, $percnt, $thislog, $lastout);
-my ($known0loc1, $knost, $locst, $lastres);
+my ($known0loc1, $knost, $locst, $lastres, $datename, $fname);
 my %config = (proc => "l00http_gps_proc",
               desc => "l00http_gps_desc",
               perio => "l00http_gps_perio");
-my ($interval, $trkhdr, $wake, $lastcoor);
+my ($interval, $trkhdr, $wake, $lastcoor, $toast, $nexttoast);
 my ($lon, $lat, $EW, $NS, $lastgps, $lastpoll);
 my ($buf, $coor, $src, $dup, $dolog, $context);
 $interval = 0;
@@ -27,6 +27,10 @@ $lastcoor = '';
 $dup = 0;
 $dolog = 1;
 $context = 20;
+$toast = 0;
+$nexttoast = 0xffffffff;
+$datename = 0;
+$fname = 'gps.trk';
 
 my @mname = ( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
@@ -118,9 +122,12 @@ sub l00http_gps_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, @countinglines);
 
+
     if (defined ($form->{'stop'})) {
         $interval = 0;
         $lastcalled = 0;    # forces immediate periodic action
+        $toast = 0;
+        $nexttoast = 0xffffffff;
         if ($ctrl->{'os'} eq 'and') {
             $ctrl->{'droid'}->stopLocating();
             if ($wake != 0) {
@@ -140,7 +147,18 @@ sub l00http_gps_proc {
         } else {
             $dup = 0;
         }
+        if (defined ($form->{'datename'}) && ($form->{'datename'} eq 'on')) {
+            $datename = 1;
+        } else {
+            $datename = 0;
+        }
+        if (defined ($form->{'toast'}) && ($form->{'toast'} =~ /(\d+)/)) {
+            $toast = $1;
+        } else {
+            $toast = 0;
+        }
         if (defined ($form->{'dolog'}) && ($form->{'dolog'} eq 'on')) {
+            # no logging checked
             $dolog = 0;
         } else {
             $dolog = 1;
@@ -149,24 +167,40 @@ sub l00http_gps_proc {
         if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
             $interval = $form->{"interval"};
             $lastcalled = 0;    # forces immediate periodic action
+            if ($toast > 0) {
+                $nexttoast = 0;    # force first time
+            }
 
             if ($interval > 0) {
-                if (($ctrl->{'os'} eq 'and') &&
-                    (defined ($form->{"wake"}) && ($form->{"wake"} eq 'on'))) {
-                    if ($wake == 0) {
-                        $wake = 1;
-                        $ctrl->{'droid'}->wakeLockAcquirePartial();
+                if ($ctrl->{'os'} eq 'and') {
+                    if (defined ($form->{"wake"}) && ($form->{"wake"} eq 'on')) {
+                        if ($wake == 0) {
+                            $wake = 1;
+                            $ctrl->{'droid'}->wakeLockAcquirePartial();
+                        }
+                    } else {
+                        if ($wake != 0) {
+                            $wake = 0;
+                            $ctrl->{'droid'}->wakeLockRelease();
+                        }
                     }
                 }
                 if (($known0loc1 == 1) && ($ctrl->{'os'} eq 'and')) {
                     $ctrl->{'droid'}->startLocating ($interval * 1000, 1);
                 }
                 if ($dolog) {
-                    if (open (IN, "<$ctrl->{'workdir'}gps.trk")) {
-                        close (IN);
-                        open (OUT, ">>$ctrl->{'workdir'}gps.trk");
+                    if ($datename) {
+                        $fname = 'gps_' . 
+                            substr($ctrl->{'now_string'}, 0, 8) . '.trk';
                     } else {
-                        open (OUT, ">$ctrl->{'workdir'}gps.trk");
+                        $fname = 'gps.trk';
+                    }
+                    if (-f "$ctrl->{'workdir'}$fname") {
+                        # exist
+                        open (OUT, ">>$ctrl->{'workdir'}$fname");
+                    } else {
+                        # does not exist
+                        open (OUT, ">$ctrl->{'workdir'}$fname");
                         print OUT "$filhdr\n";
                     }
                     print OUT "$trkhdr\n";
@@ -182,21 +216,31 @@ sub l00http_gps_proc {
                 }
             }
         }
-    }
-
-    if (defined ($form->{"getgps"})) {
+    } elsif (defined ($form->{"markloc"})) {
+        if (!defined ($form->{"locremark"})) {
+            $form->{"locremark"} = '';
+	    }
         if ($ctrl->{'os'} eq 'and') {
             $buf = &android_get_gps ($ctrl);
-            $ctrl->{'droid'}->setClipboard ("$lon,$lat\n$buf");
+            open (OUT, ">>$ctrl->{'workdir'}gps.way");
+			print OUT "$lon,$lat $buf $form->{'locremark'}\n";
+			close(OUT);
         }
+    } elsif (defined ($form->{"getgps"})) {
+        &l00httpd::l00setCB($ctrl, "$lon,$lat\n$buf");
     }
-
+    if ($datename) {
+        $fname = 'gps_' . 
+            substr($ctrl->{'now_string'}, 0, 8) . '.trk';
+    } else {
+        $fname = 'gps.trk';
+    }
 
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} - <a href=\"/gps.htm\">Refresh</a> -  <a href=\"$ctrl->{'quick'}\">Quick</a> - ";
-    print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}gps.trk\">log</a> - \n";
+    print $sock "$ctrl->{'home'} - <a href=\"/gps.htm\">Refresh</a> -  $ctrl->{'HOME'} - ";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}$fname\">log</a> - \n";
     print $sock "<a href=\"#end\">Jump to end</a><br>\n";
     print $sock "<a name=\"top\"></a>\n";
  
@@ -238,6 +282,18 @@ sub l00http_gps_proc {
     print $sock "        <td><input type=\"submit\" name=\"stop\" value=\"Stop\"> Note: when phone sleeps, interval may be much longer than specified</td>\n";
     print $sock "    </tr>\n";
 
+    if ($datename) {
+        $buf = 'checked';
+    } else {
+        $buf = '';
+    }
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"datename\" $buf>date name</td>\n";
+    print $sock "        <td>Filename=gps_(date).trk (otherwise=gps.trk)</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+
     if ($dup) {
         $buf = 'checked';
     } else {
@@ -249,8 +305,19 @@ sub l00http_gps_proc {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
+
+    if ($dolog) {
+        $buf = '';
+    } else {
+        $buf = 'checked';
+    }
     print $sock "        <td><input type=\"checkbox\" name=\"dolog\" $buf>No logging</td>\n";
-    print $sock "        <td>Check to prevent writing to log file gps.trk</td>\n";
+    print $sock "        <td>Check to prevent writing to log file $fname</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td>Toast MPH</td>\n";
+    print $sock "        <td><input type=\"text\" size=\"6\" name=\"toast\" value=\"$toast\"> at seconds interval. 0 disables.</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -263,6 +330,19 @@ sub l00http_gps_proc {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"getgps\" value=\"Get GPS\"></td>\n";
     print $sock "        <td>paste to clipboard ($lastcoor)</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+
+    print $sock "<p>Mark current location in ";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}gps.way\">$ctrl->{'workdir'}gps.way</a>:\n";
+    print $sock "<form action=\"/gps.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"markloc\" value=\"Mark\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"12\" name=\"locremark\" value=\"\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -292,7 +372,8 @@ sub l00http_gps_proc {
     }
     print $sock "</pre><p>\n";
 
-    print $sock "view <a href=\"/view.htm?path=$ctrl->{'workdir'}gps.trk\">$ctrl->{'workdir'}gps.trk</a><p>\n";
+    print $sock "launcher <a href=\"/ls.htm?path=$ctrl->{'workdir'}\">$ctrl->{'workdir'}</a>";
+    print $sock "<a href=\"/launcher.htm?path=$ctrl->{'workdir'}$fname\">$fname</a><p>\n";
 
     print $sock "<a name=\"end\"></a><p>\n";
     print $sock "<a href=\"#top\">Jump to top</a><p>\n";
@@ -304,7 +385,7 @@ sub l00http_gps_proc {
 
 sub l00http_gps_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($out);
+    my ($out, $brightness);
 
     $lastpoll = time;
     if (($interval > 0) && 
@@ -321,18 +402,84 @@ sub l00http_gps_perio {
             if ($out ne '') {
                 if (($dup == 1) || ($out ne $lastout)) {
                     if ($dolog) {
-                        open (OUT, ">>$ctrl->{'workdir'}gps.trk");
+                        if ($datename) {
+                            $fname = 'gps_' . 
+                                substr($ctrl->{'now_string'}, 0, 8) . '.trk';
+                        } else {
+                            $fname = 'gps.trk';
+                        }
+                        if (-f "$ctrl->{'workdir'}$fname") {
+                            # exist
+                            open (OUT, ">>$ctrl->{'workdir'}$fname");
+                        } else {
+                            # does not exist
+                            open (OUT, ">$ctrl->{'workdir'}$fname");
+                            print OUT "$filhdr\n";
+                            print OUT "$trkhdr\n";
+                        }
                         printf OUT "$out\n";
                         close (OUT);
                     }
                     $thislog .= "$out\n";
                     $lastout = $out;
+                    # toast mph
+                    if (($toast > 0) &&
+                        ($nexttoast <= $lastpoll)) {
+# * x 30 == ' ' x 72
+#".******************************.\n".
+#".                                                                        .\n".
+
+
+$_ = "toast $nexttoast";
+$_ = 
+"    ***   ". ".      *     ".".  ****  .\n".
+"  *       *".".    **     ". ".           *.\n".
+"  *       *".".      *     ".".           *.\n".
+"  *       *".".      *     ".".  *****.\n".
+"  *       *".".      *     ".".           *.\n".
+"  *       *".".      *     ".".           *.\n".
+"    ***   ". ".   ***   "  . ".  ****  .\n".
+"\n".
+".*****. "     ."  *       *".  "  *****  \n".
+".  ****. "    ."  *       *".  "  *       *  \n".
+".     ***. "  ."  *       *".  "  *       *  \n".
+".       **. " ."  *****".      "  *****  \n".
+".         *. "."            *"."  *       *  \n".
+".*       *. " ."            *"."  *       *  \n".
+".*****. "     ."            *"."  *****  \n".
+"\n".
+"";
+
+
+
+"  *****"    ."  *****"    ."  *****  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *****"    ."  *****"    ."  *****  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *       *"."  *       *"."  *       *  \n".
+"  *****"    ."  *****"    ."  *****  \n".
+"";
+
+
+
+
+                        if ($ctrl->{'os'} eq 'and') {
+                            $ctrl->{'droid'}->makeToast($_);
+                        }
+                        if ($toast > 0) {
+                            $nexttoast = $lastpoll + $toast;
+                        } else {
+                            $nexttoast = 0;
+                        }
+                    }
                 }
             }
         }
         $lastcalled = time;
         $percnt++;
     }
+
 
     $interval;
 }

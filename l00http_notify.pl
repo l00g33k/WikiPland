@@ -14,27 +14,29 @@ sub l00http_notify_set {
     my ($ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($ttl, $msg);
 
-    if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
-        $ttl = '';
-        $msg = '';
-        while (<IN>) {
-            s/\r//g;
-            s/\n//g;
-            if (/^TTL:(.+)/) {
-                $ttl = $1;
-            }
-            if (/^MSG:(.+)/) {
-                $msg = $1;
-            }
-            if (($ttl ne '') && ($msg ne '')) {
-                if ($ctrl->{'os'} eq 'and') {
-                    $ctrl->{'droid'}->notify ($msg, $ttl);
+    if ($ctrl->{'ctrl_port_first'} == $ctrl->{'ctrl_port'}) {
+        if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
+            $ttl = '';
+            $msg = '';
+            while (<IN>) {
+                s/\r//g;
+                s/\n//g;
+                if (/^TTL:(.+)/) {
+                    $ttl = $1;
                 }
-                $ttl = '';
-                $msg = '';
+                if (/^MSG:(.+)/) {
+                    $msg = $1;
+                }
+                if (($ttl ne '') && ($msg ne '')) {
+                    if ($ctrl->{'os'} eq 'and') {
+                        $ctrl->{'droid'}->notify ($msg, $ttl);
+                    }
+                    $ttl = '';
+                    $msg = '';
+                }
             }
+            close (IN);
         }
-        close (IN);
     }
 }
 
@@ -65,11 +67,11 @@ sub l00http_notify_proc (\%) {
     if (defined ($form->{'msg'})) {
         $msg = $form->{'msg'};
     }
-    if ((defined ($form->{'paste'})) && ($ctrl->{'os'} eq 'and')) {
-        $msg = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'paste'})) {
+        $msg = &l00httpd::l00getCB($ctrl);
     }
-    if ((defined ($form->{'pasteset'})) && ($ctrl->{'os'} eq 'and')) {
-        $msg = $ctrl->{'droid'}->getClipboard()->{'result'};
+    if (defined ($form->{'pasteset'})) {
+        $msg = &l00httpd::l00getCB($ctrl);
         $form->{'submit'} = 'x'; # fake paste then submit
     }
     if (defined ($form->{'speech'})) {
@@ -80,12 +82,14 @@ sub l00http_notify_proc (\%) {
     }
     if (defined ($form->{'submit'})) {
         $msgsub = $msg;
+        $msgsub =~ s/\r/ /g;
+        $msgsub =~ s/\n/ /g;
         $msg = '';
     }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>notify</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">Quick</a> ";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} ";
     print $sock "<a href=\"/notify.htm\">Notify</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_notify.txt\">$ctrl->{'workdir'}l00_notify.txt</a>:<p>";
 

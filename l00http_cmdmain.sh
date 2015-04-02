@@ -4,7 +4,7 @@ echo a : l00httpd source codes aa: Part 2 aaa: ed aaaa: ed
 echo b : l00http_cmdedit.sh edit same file
 echo c : l00_tr.txt .......... cc: l00_reminder.txt
 echo d : NtHappenings.txt .... dd: LgStopWatch.txt ddd: Phrases
-echo e : l00_notify.txt
+echo e : l00_notify.txt ...... ee: LgNexus.txt
 echo f : l00_cal.txt ......... ff: l00_reminder.txt
 echo g : index.txt ........... gg: sl4a l00httpd script
 echo h : TmpTodoInc.txt ...... hh: TmpMoreTodoInc.txt
@@ -13,7 +13,7 @@ echo j : l00httpd.cfg ........ jj: CutPasteCheat.txt
 echo k : 0do.pl ..............
 echo l : l00sh_l00httpcode.sh. ll: l00sh_l00httpcode2.sh
 echo y : l00http_cmdedit.sh
-echo z : l00http_cmdmain.sh
+echo z : l00http_cmdmain.sh .. zz:WApp zzz:pod zzzz:came
 read sel
 echo $sel
 
@@ -54,6 +54,9 @@ vim /sdcard/l00httpd/NtStopWatchPhrases.txt; fi
 if [ $sel = "e" ]; then
 vim /sdcard/l00httpd/l00_notify.txt; fi
 
+if [ $sel = "ee" ]; then
+vim /sdcard/l00httpd/LgNexus.txt; fi
+
 if [ $sel = "f" ]; then
 vim /sdcard/l00httpd/l00_cal.txt; fi
 
@@ -77,9 +80,8 @@ vim /sdcard/sl4a/scripts/l00httpd/l00httpd__readme.txt; fi
 
 if [ $sel = "ii" ]; then
 vim /sdcard/sl4a/scripts/portfwrd.pl; fi
-
 if [ $sel = "j" ]; then
-vim /sdcard/sl4a/scripts/l00httpd/l00httpd.cfg; fi
+vim /sdcard/sl4a/scripts/l00httpd/l00httpd.cfg /sdcard/al/l00httpd.cfg; fi
 
 if [ $sel = "jj" ]; then
 vim /sdcard/l00httpd/CutPasteCheat.txt; fi
@@ -98,6 +100,15 @@ vim /sdcard/sl4a/scripts/l00httpd/l00http_cmdedit.sh; fi
 
 if [ $sel = "z" ]; then
 vim /sdcard/sl4a/scripts/l00httpd/l00http_cmdmain.sh; fi
+
+if [ $sel = "zz" ]; then
+vim /sdcard/l00httpd/l00_Whatsapp.pl ; fi
+
+if [ $sel = "zzz" ]; then
+vim /sdcard/sl4a/scripts/l00httpd/l00http_podplay.pl ; fi
+
+if [ $sel = "zzzz" ]; then
+vim /sdcard/sl4a/scripts/l00httpd/docs_demo/l00_camera.pl ; fi
 
 done
 fi
