@@ -1220,21 +1220,20 @@ while(1) {
                     print $sock "<td><input type=\"checkbox\" name=\"ipfilon\" $checked></td>\n";
                     print $sock "<td>Filter IP</td><td>Enable IP filtering</td>\n";
                 }
-                $ipallowed{"127.0.0.1"} = "yes";
-                for $key (sort keys %connected) {
-                    $val = $connected{$key};
-                    $tmp = "";
-                    if ($ishost) {
+                if ($ishost) {
+                    $ipallowed{"127.0.0.1"} = "yes";
+                    for $key (sort keys %connected) {
+                        $val = $connected{$key};
+                        $tmp = "";
                         if (defined ($ipallowed{$key})) {
                             $checked = "checked";
                         } else {
                             $checked = "";
                         }
                         $tmp = "<td><input type=\"checkbox\" name=\"$key\" $checked>allow</td>";
+                        print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
                     }
-                    print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
-                }
-                if ($ishost) {
+
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"noclinavon\">on</td>\n";
                     print $sock "<td><input type=\"checkbox\" name=\"noclinavof\">off</td>\n";

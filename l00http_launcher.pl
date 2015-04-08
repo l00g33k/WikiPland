@@ -72,7 +72,8 @@ sub l00http_launcher_proc {
         $extra = '';
         if ($name eq 'kml') {
            $extra = '.kml';
-        } elsif ($path =~ /\.txt$/) {
+#        } elsif ($path =~ /\.txt$/) {
+        } else {
            # add .htm as some browser won't open .txt as HTML
            $extra = '.htm';
         }
