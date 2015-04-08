@@ -168,6 +168,7 @@ sub l00http_reminder_proc {
                 }
             }
         }
+        $formmsg = '';
         # find earlest reminder
         &l00http_reminder_find ($ctrl);
     }
@@ -244,7 +245,7 @@ sub l00http_reminder_proc {
                                                 
     print $sock "        <tr>\n";
     print $sock "            <td>Msg:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"msg\" value=\"\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"msg\" value=\"$formmsg\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
