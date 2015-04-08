@@ -958,8 +958,8 @@ while(1) {
                 $shutdown = 0;
                 # process Home control data
                 if ($modcalled eq 'httpd') {
-                    if ((defined ($FORM{'debug'})) && ($FORM{'debug'} =~ /^[0-5]$/)) {
-                        $debug = $FORM{'debug'};
+                    if ((defined ($FORM{'debuglvl'})) && ($FORM{'debuglvl'} =~ /^[0-5]$/)) {
+                        $debug = $FORM{'debuglvl'};
                     }
                     # indivisual check marks
                     foreach $mod (sort keys %httpmods) {
@@ -1140,7 +1140,7 @@ while(1) {
 
                     # on server: display debug option
                     print $sock "<tr>";
-                    print $sock "<td><input type=\"text\" size=\"2\" name=\"debug\" value=\"$debug\"></td>\n";
+                    print $sock "<td><input type=\"text\" size=\"2\" name=\"debuglvl\" value=\"$debug\"></td>\n";
                     print $sock "<td><a href=\"/view.htm?path=${plpath}l00httpd.pl\">l00httpd.pl</a></td>\n";
                     print $sock "<td>Print debug messages to console</td>\n";
 
