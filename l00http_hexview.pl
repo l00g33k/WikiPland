@@ -4,11 +4,12 @@
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # this is a simple template, a good starting point to make your own modules
-my ($offset, $length, $width, $group);
+my ($offset, $length, $width, $group, $binary);
 $offset = 0;
 $length = 0x200;
 $width = 8;
 $group = 4;
+$binary = '';
 
 my %config = (proc => "l00http_hexview_proc",
               desc => "l00http_hexview_desc");
@@ -25,7 +26,7 @@ sub l00http_hexview_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $buffer2, $cryptex, $rethash, $line, $ii, $len);
-    my ($blklen, $tmp, $iiend, $hex, $ascii);
+    my ($blklen, $tmp, $iiend, $hex, $ascii, $binview, $jj);
 
     $sock = $ctrl->{'sock'};     # dereference network socket
 
@@ -34,6 +35,11 @@ sub l00http_hexview_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
     
+    if (defined ($form->{'binary'}) && ($form->{'binary'} eq 'on')) {
+        $binary = 'checked';
+    } else {
+        $binary = '';
+    }
     if (defined ($form->{'offset'})) {
         $offset = hex ($form->{'offset'});
     }
@@ -74,28 +80,42 @@ sub l00http_hexview_proc {
         print $sock "<pre>\n";
         $ascii = '';
         $hex = '';
+        $binview = '';
         for ($ii = 0; $ii < $iiend; $ii++) {
             if ((($ii) % $width) == 0) {
-                $tmp = "$hex $ascii\n";
+                $tmp = "$hex $ascii $binview\n";
                 $tmp =~ s/\\/\\\\/g;
                 $tmp =~ s/%/%%/g;
                 $tmp =~ s/</&lt;/g;
                 $tmp =~ s/>/&gt;/g;
                 printf $sock ($tmp);
-                #printf $sock ("$hex $ascii\n");
                 $hex = sprintf ("%06x", $ii + $offset);
                 $ascii = '';
+                $binview = '';
             }
             if ((($ii % $width) % $group) == 0) {
                 $hex .= ' ';
+                $binview .= ' ';
             }
             $hex .= sprintf (" %02x",
                 unpack ("C", substr ($buffer, $ii, 1)));
             $tmp = substr ($buffer, $ii, 1);
             $tmp =~ s/([^a-zA-Z0-9])/((ord($1)<32)||(ord($1)>95))?'.':$1/ge;
             $ascii .= "$tmp";
+
+            # binary view
+            if ($binary eq 'checked') {
+                for ($jj = 7; $jj >= 0; $jj--) {
+                    if ((1 << $jj) & unpack ("C", substr ($buffer, $ii, 1))) {
+                        $binview .= '1';
+                    } else {
+                        $binview .= '0';
+                    }
+                }
+                $binview .= ' ';
+            }
         }
-        printf $sock ("$hex $ascii\n");
+        printf $sock ("$hex $ascii $binview\n");
         print $sock "</pre>\n";
     } else {
         print $sock "Failed to open '$form->{'path'}'\n";
@@ -133,6 +153,11 @@ sub l00http_hexview_proc {
     print $sock "Group\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" name=\"group\" size=8 value=\"$group\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Views\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"binary\" $binary>binary output\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form><p>\n";
