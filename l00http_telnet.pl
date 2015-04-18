@@ -17,7 +17,7 @@ sub trans {
     my ($_) = @_;
 
     # translate \\, \r, \n to \\, 0x0D, and 0x0A
-    tr/\\rn/\\\r\n/;
+    tr/\\rn0/\\\r\n\x00/;
 
     $_;
 }
