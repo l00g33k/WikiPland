@@ -14,6 +14,7 @@ $treeto = '';
 my (@OLD, @NEW, $OC, $NC, $OLNO, $NLNO, @OA, @NA, %SYMBOL);
 my ($debug);
 
+$debug = 0;
 
 sub l00http_diff_output {
 	my ($ctrl, $oanchor) = @_;
@@ -22,9 +23,6 @@ sub l00http_diff_output {
     my ($out, $lastold, $lastnew, $wd);
     my ($blocksize, $blockstart, $mxblocksize, $mxblockstart);
 
-    print $sock "In l00http_diff_output\n";
-
-    print $sock "In l00http_diff_output: print start of new blocks\n";
 
     $lastold = -1;
     $blocksize = 1;
@@ -43,10 +41,10 @@ sub l00http_diff_output {
                 $mxblocksize  = $blocksize;
                 $mxblockstart = $blockstart;
             }
-            print $sock "blocksize $blocksize @ $blockstart\n";
+            print $sock "blocksize $blocksize @ $blockstart\n", if ($debug >= 3);
             $blocksize = 1;
             $blockstart = $oii;
-            print $sock "nw bk 1 ";
+            print $sock "nw bk 1 ", if ($debug >= 3);
         } else {
             $lastnew = -1;
             for ($nii = $OA[$oii]; $nii >= 0; $nii --) {
@@ -62,24 +60,24 @@ sub l00http_diff_output {
                     $mxblocksize  = $blocksize;
                     $mxblockstart = $blockstart;
                 }
-                print $sock "blocksize $blocksize @ $blockstart\n";
+                print $sock "blocksize $blocksize @ $blockstart\n", if ($debug >= 3);
                 $blocksize = 1;
                 $blockstart = $oii;
-                print $sock "nw bk 2 ";
+                print $sock "nw bk 2 ", if ($debug >= 3);
             } else {
-                print $sock "        ";
+                print $sock "        ", if ($debug >= 3);
                 $blocksize++;
             }
         }	
         $lastold = $oii; # old file last 'same' line number
-        print $sock "oii $oii -> $OA[$oii]\n";
+        print $sock "oii $oii -> $OA[$oii]\n", if ($debug >= 3);
     }
     if (($mxblocksize < 0) || ($blocksize > $mxblocksize)) {
         $mxblocksize  = $blocksize;
         $mxblockstart = $blockstart;
     }
-    print $sock "blocksize $blocksize @ $blockstart\n";
-    print $sock "mxblocksize $mxblocksize @ $mxblockstart\n";
+    print $sock "blocksize $blocksize @ $blockstart\n", if ($debug >= 3);
+    print $sock "mxblocksize $mxblocksize @ $mxblockstart\n", if ($debug >= 3);
 
 
 
@@ -201,7 +199,6 @@ sub l00http_diff_output {
 		}
     }
 
-    print $sock "------ OUTPUT --------\n";
     $out;
 }
 
@@ -211,7 +208,7 @@ sub l00http_diff_output {
 sub l00http_diff_compare {
 	my ($ctrl, $oname, $nname) = @_;
     my $sock = $ctrl->{'sock'};     # dereference network socket
-	my ($debug, $ln, $jj, $oii, $nii, $wd, $out, $nfor, $nptr);
+	my ($ln, $jj, $oii, $nii, $wd, $out, $nfor, $nptr);
 	my ($text, $mode);
 
     print $sock "<pre>\n";
@@ -219,7 +216,6 @@ sub l00http_diff_compare {
     print $sock "new: $nname\n";
 
 
-	$debug = 5;
 
 	# A technique for isolating differences between files
 	# Paul Heckel
@@ -470,101 +466,11 @@ sub l00http_diff_compare {
 			$oii++;
 			$nii++;
 		}
+    }
 
-        print $sock &l00http_diff_output ($ctrl, 0);
-
-
-
-	print $sock "--------------------------\n";
-
-
-		$oii = 0;
-		$nii = 0;
-		$out = '';
-		$mode = 1;
-		print $sock "mode is $mode\n\n";
-		while (($oii <= $#OLD) || ($nii <= $#NEW)) {
-			# print $sock deleted
-			if (($oii <= $#OLD) && ($OA[$oii] < 0)) {
-				$_ = sprintf (" %3d: %-${wd}s <\n", $oii, $OLD[$oii]);
-				$out .= $_;
-				$oii++;
-				next;
-			}
-			# print $sock added
-			if (($nii <= $#NEW) && ($NA[$nii] < 0)) {
-				$_ = sprintf (" %3d: %-${wd}s  ", $oii, ' ');
-				s/./ /g;
-				s/.$/>/;
-				$_ .= sprintf ("%3d: %-${wd}s\n", $nii, $NEW[$nii]);
-				$out .= $_;
-				$nii++;
-				next;
-			}
-			# print $sock identical
-			if (($oii <= $#OLD) && ($nii <= $#NEW) && ($OA[$oii] == $nii)) {
-				$_ = sprintf (" %3d: %-${wd}s =", $oii, $OLD[$oii]);
-				$_ .= sprintf ("%3d: %-${wd}s\n", $nii, $NEW[$nii]);
-				$out .= $_;
-				$oii++;
-				$nii++;
-				next;
-			}
-			# print $sock moved block
-			if ($mode) {
-				# anchor NEW file
-				# print $sock moved block in NEW
-				if ($NA[$nii] < $oii) {
-					$_ = sprintf (" %3d: %-${wd}s  ", $oii, ' ');
-					s/./ /g;
-					s/.$/[/;
-					$_ .= sprintf ("%3d: %-${wd}s\n", $nii, $NEW[$nii]);
-					$out .= $_;
-					$nii++;
-					next;
-				}
-				# print $sock moved block in NEW
-				if ($OA[$oii] > $nii) {
-					$_ = sprintf (" %3d: %-${wd}s ]\n", $oii, $OLD[$oii]);
-					$out .= $_;
-					$oii++;
-					next;
-				}
-			} else {
-				# anchor OLD file
-				# print $sock moved block in OLD
-				if ($NA[$nii] < $oii) {
-					$_ = sprintf (" %3d: %-${wd}s  ", $oii, ' ');
-					s/./ /g;
-					s/.$/[/;
-					$_ .= sprintf ("%3d: %-${wd}s\n", $nii, $NEW[$nii]);
-					$out .= $_;
-					$nii++;
-					next;
-				}
-				# print $sock moved block in NEW
-				if ($OA[$oii] > $nii) {
-					$_ = sprintf (" %3d: %-${wd}s ]\n", $oii, $OLD[$oii]);
-					$out .= $_;
-					$oii++;
-					next;
-				}
-			}
-
-			# fail safe
-			if ($oii <= $#OLD) {
-				$oii++;
-			}
-			if ($nii <= $#NEW) {
-				$nii++;
-			}
-		}
-		print $sock $out;
-	}
-
+    print $sock &l00http_diff_output ($ctrl, 0);
 
     print $sock "</pre>\n";
-
 
 }
 
@@ -602,6 +508,10 @@ $path2 = '';
     print $sock "<a href=\"/diff.htm?path=$form->{'path'}\">Refresh</a>\n";
     print $sock "<p>\n";
 
+
+    if (defined ($form->{'debug'})) {
+        $debug = $form->{'debug'};
+    }
 
     # copy paste target
     if (defined ($form->{'paste2'})) {
