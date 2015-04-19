@@ -9,12 +9,13 @@ use l00httpd;
 
 my %config = (proc => "l00http_diff_proc",
               desc => "l00http_diff_desc");
-my ($treeto, $treefilecnt, $treedircnt, $width, $oldfile, $newfile);
+my ($treeto, $treefilecnt, $treedircnt, $width, $oldfile, $newfile, $hide);
 $treeto = '';
 $width = 20;
 #$form->{'path'}
 $oldfile = '';
 $newfile = '';
+$hide = '';
 
 my (@OLD, @NEW, $OC, $NC, $OLNO, $NLNO, @OA, @NA, %SYMBOL);
 my ($debug);
@@ -37,8 +38,9 @@ sub l00http_diff_make_outline {
         $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $clip, $tmp);
     } else {
         # make a string of space of same length
-        $oout = '';
-        $ospc = '';
+        $ospc = sprintf ("%3d: %-${width}s", 0, ' ');
+        $ospc =~ s/./ /g;
+        $oout = $ospc;
     }
     if (($nii >= 0) && ($nii <= $#NEW)) {
         $tmp = sprintf ("%-${width}s", substr($NEW[$nii],0,$width));
@@ -57,7 +59,7 @@ sub l00http_diff_make_outline {
 sub l00http_diff_output {
 	my ($ctrl, $oanchor) = @_;
     my $sock = $ctrl->{'sock'};     # dereference network socket
-	my ($ln, $jj, $oii, $nii, $nfor, $nptr);
+	my ($ln, $jj, $oii, $nii, $nfor, $nptr, $hiding, $hiding2);
     my ($out, $lastold, $lastnew, $oout, $nout, $ospc);
     my ($blocksize, $blockstart, $mxblocksize, $mxblockstart);
 
@@ -125,7 +127,10 @@ sub l00http_diff_output {
 	$out = '';
 
     # print forward of largest matched block
+    $hiding = 0;
+    $hiding2 = 0;
 	while (($oii <= $#OLD) || ($nii <= $#NEW)) {
+        $hiding++;
         # prepare outputs
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii);
 		# print $sock deleted
@@ -145,15 +150,27 @@ sub l00http_diff_output {
 		}
 		# print $sock identical
 		if (($oii <= $#OLD) && ($nii <= $#NEW) && ($OA[$oii] == $nii)) {
-			$_ = " $oout =";
-			$_ .= "$nout\n";
-			$out .= $_;
+            if ($hide ne 'checked') {
+                # print if not hiding
+			    $_ = " $oout =";
+			    $_ .= "$nout\n";
+			    $out .= $_;
+            } else {
+                # print a note about hidden lines
+                $hiding2++;
+                if ($hiding2 != $hiding) {
+                    $hiding2 = $hiding;
+                    $out .= sprintf ("%-${width}s%-${width}s--- same omitted ---\n", '-'x$width, '-'x$width);
+                }
+            }
 			$oii++;
 			$nii++;
 			next;
 		}
 		# print $sock moved block in NEW
 		if ($NA[$nii] < $oii) {
+			$_ = sprintf ("(%d)", $NA[$nii] + 1);
+            substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
 			$_ = " $ospc [";
 			$_ .= "$nout\n";
 			$out .= $_;
@@ -162,7 +179,7 @@ sub l00http_diff_output {
 		}
 		# print $sock moved block in NEW
 		if ($OA[$oii] > $nii) {
-			$_ = " $oout ]\n";
+			$_ = sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1);
 			$out .= $_;
 			$oii++;
 			next;
@@ -181,7 +198,10 @@ sub l00http_diff_output {
     $nii = $OA[$mxblockstart] - 1;
 
     # print backward from largest matched block
+    $hiding = 0;
+    $hiding2 = 0;
 	while (($oii >= 0) || ($nii >= 0)) {
+        $hiding++;
         # prepare outputs
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii);
 		# print $sock deleted
@@ -201,15 +221,27 @@ sub l00http_diff_output {
 		}
 		# print $sock identical
 		if (($oii >= 0) && ($nii >= 0) && ($OA[$oii] == $nii)) {
-			$_ = " $oout =";
-			$_ .= "$nout\n";
-			$out = "$_$out";
+            if ($hide ne 'checked') {
+                # print if not hiding
+			    $_ = " $oout =";
+			    $_ .= "$nout\n";
+    			$out = "$_$out";
+            } else {
+                # print a note about hidden lines
+                $hiding2++;
+                if ($hiding2 != $hiding) {
+                    $hiding2 = $hiding;
+                    $out .= sprintf ("%-${width}s%-${width}s--- same omitted ---\n", '-'x$width, '-'x$width);
+                }
+            }
 			$oii--;
 			$nii--;
 			next;
 		}
 		# print $sock moved block in NEW
 		if ($NA[$nii] < $oii) {
+			$_ = sprintf ("(%d)", $NA[$nii] + 1);
+            substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
 			$_ = " $ospc [";
 			$_ .= "$nout\n";
 			$out = "$_$out";
@@ -218,7 +250,7 @@ sub l00http_diff_output {
 		}
 		# print $sock moved block in NEW
 		if ($OA[$oii] > $nii) {
-			$_ = " $oout ]\n";
+			$_ = sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1);
 			$out = "$_$out";
 			$oii--;
 			next;
@@ -552,6 +584,12 @@ sub l00http_diff_proc {
         }
     }
 
+    if (defined ($form->{'hide'}) && ($form->{'hide'} eq 'on')) {
+        $hide = 'checked';
+    } else {
+        $hide = '';
+    }
+
     if (defined ($form->{'width'})) {
         if ($form->{'width'} =~ /(\d+)/) {
             $width = $1;
@@ -605,7 +643,7 @@ sub l00http_diff_proc {
 #   print $sock "&nbsp;";
     print $sock "<input type=\"checkbox\" name=\"debug\">debug";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"complete\">Display complete files\n";
+    print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide same lines\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
