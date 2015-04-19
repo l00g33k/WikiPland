@@ -9,13 +9,15 @@ use l00httpd;
 
 my %config = (proc => "l00http_diff_proc",
               desc => "l00http_diff_desc");
-my ($treeto, $treefilecnt, $treedircnt, $width, $oldfile, $newfile, $hide);
+my ($treeto, $treefilecnt, $treedircnt, $width, $oldfile, $newfile);
+my ($hide, $maxline);
 $treeto = '';
 $width = 20;
 #$form->{'path'}
 $oldfile = '';
 $newfile = '';
 $hide = '';
+$maxline = 1000;
 
 my (@OLD, @NEW, $OC, $NC, $OLNO, $NLNO, @OA, @NA, %SYMBOL);
 my ($debug);
@@ -24,7 +26,7 @@ $debug = 0;
 
 sub l00http_diff_make_outline {
     my ($oii, $nii) = @_;
-    my ($oout, $nout, $ospc, $tmp, $clip);
+    my ($oout, $nout, $ospc, $tmp, $clip, $view, $lineno0, $lineno);
 
 
     if (($oii >= 0) && ($oii <= $#OLD)) {
@@ -33,9 +35,16 @@ sub l00http_diff_make_outline {
         $ospc =~ s/./ /g;
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
-        $clip = &l00httpd::urlencode ($OLD[$oii]);
-        $clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
-        $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $clip, $tmp);
+        #$clip = &l00httpd::urlencode ($OLD[$oii]);
+        #$clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
+
+        $lineno = $oii + 1;
+        $lineno0 = $lineno - 3;
+        if ($lineno0 < 1) {
+            $lineno0 = 1;
+        }
+        $view = "/view.htm?path=$oldfile&hiliteln=$lineno&lineno=on#line$lineno0";
+        $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
     } else {
         # make a string of space of same length
         $ospc = sprintf ("%3d: %-${width}s", 0, ' ');
@@ -46,9 +55,16 @@ sub l00http_diff_make_outline {
         $tmp = sprintf ("%-${width}s", substr($NEW[$nii],0,$width));
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
-        $clip = &l00httpd::urlencode ($NEW[$nii]);
-        $clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
-		$nout = sprintf ("%3d<a href=\"%s\">:</a> %s", $nii + 1, $clip, $tmp);
+        #$clip = &l00httpd::urlencode ($NEW[$nii]);
+        #$clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
+
+        $lineno = $nii + 1;
+        $lineno0 = $lineno - 3;
+        if ($lineno0 < 1) {
+            $lineno0 = 1;
+        }
+        $view = "/view.htm?path=$newfile&hiliteln=$lineno&lineno=on#line$lineno0";
+		$nout = sprintf ("%3d<a href=\"%s\">:</a> %s", $nii + 1, $view, $tmp);
     } else {
         $nout = '';
     }
@@ -273,40 +289,48 @@ sub l00http_diff_output {
 #perl d:\x\diff.pl d:\x\new.txt d:\x\old.txt > d:\x\x10.txt
 #perl d:\x\diff.pl d:\x\old2.txt d:\x\new2.txt > d:\x\x10.txt
 sub l00http_diff_compare {
-	my ($ctrl, $oname, $nname) = @_;
+	my ($ctrl) = @_;
     my $sock = $ctrl->{'sock'};     # dereference network socket
 	my ($ln, $jj, $oii, $nii, $out, $nfor, $nptr);
-	my ($text, $mode);
+	my ($text, $mode, $cnt);
 
     print $sock "<pre>\n";
-    print $sock "&gt; New file: $nname\n";
-    print $sock "&lt; Old file: $oname\n\n";
 
 
 	# A technique for isolating differences between files
 	# Paul Heckel
 	# http://documents.scribd.com/docs/10ro9oowpo1h81pgh1as.pdf
 
-#$oname = 'c:/x/ram/old.txt';
-#$nname = 'c:/x/ram/new.txt';
-#$oname = '/sdcard/al/w/diff/old.txt';
-#$nname = '/sdcard/al/w/diff/new.txt';
+	open (LF, "<$oldfile") || print $sock "$oldfile open failed\n";
 
-	open (LF, "<$oname") || print $sock "$oname open failed\n";
-	open (RT, "<$nname") || print $sock "$nname open failed\n";
-
+    print $sock "&lt; Old file: $oldfile\n\n";
     undef @OLD;
+    $cnt = 0;
 	while (<LF>) {
+        $cnt++;
 		s/\r//;
 		s/\n//;
 		push (@OLD, $_);
+        if ($cnt >= $maxline) {
+            print $sock "    read only $maxline lines from $oldfile\n";
+            last;
+        }
 	}
 
+	open (RT, "<$newfile") || print $sock "$newfile open failed\n";
+
+    print $sock "&gt; New file: $newfile\n";
     undef @NEW;
+    $cnt = 0;
 	while (<RT>) {
+        $cnt++;
 		s/\r//;
 		s/\n//;
 		push (@NEW, $_);
+        if ($cnt >= $maxline) {
+            print $sock "    read only $maxline lines from $newfile\n";
+            last;
+        }
 	}
 
 
@@ -595,6 +619,11 @@ sub l00http_diff_proc {
             $width = $1;
         }
     }
+    if (defined ($form->{'maxline'})) {
+        if ($form->{'maxline'} =~ /(\d+)/) {
+            $maxline = $1;
+        }
+    }
 
     # copy paste target
     if (defined ($form->{'pasteold'})) {
@@ -645,12 +674,16 @@ sub l00http_diff_proc {
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide same lines\n";
     print $sock "</td></tr>\n";
+
+    print $sock "<tr><td>\n";
+    print $sock "&nbsp;";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max\n";
+    print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 
 
-#&l00http_diff_compare ($ctrl, '/sdcard/al/w/diff/old.txt', '/sdcard/al/w/diff/new.txt');
-#&l00http_diff_compare ($ctrl, '/sdcard/al/w/diff/new.txt', '/sdcard/al/w/diff/old.txt');
     if (defined ($form->{'compare'})) {
 	    &l00http_diff_compare ($ctrl, $oldfile, $newfile);
     }
