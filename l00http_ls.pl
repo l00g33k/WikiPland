@@ -1034,7 +1034,7 @@ print;
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
-            print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite <a href=\"/ls.htm?path=$pname$fname&timestamp=on\">time-stamps</a></td>\n";
             print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
             print $sock "    </tr>\n";
 

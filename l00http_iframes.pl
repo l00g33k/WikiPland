@@ -10,7 +10,7 @@ my %config = (proc => "l00http_iframes_proc",
 
 my ($height, $spec, $overwritehtflag);
 
-$height = 350;
+$height = 300;
 $spec = '';
 $overwritehtflag = '';
 
