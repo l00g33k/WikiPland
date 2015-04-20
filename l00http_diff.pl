@@ -76,8 +76,9 @@ sub l00http_diff_output {
 	my ($ctrl, $oanchor) = @_;
     my $sock = $ctrl->{'sock'};     # dereference network socket
 	my ($ln, $jj, $oii, $nii, $nfor, $nptr, $hiding, $hiding2);
-    my ($out, $lastold, $lastnew, $oout, $nout, $ospc);
+    my ($lastold, $lastnew, $oout, $nout, $ospc);
     my ($blocksize, $blockstart, $mxblocksize, $mxblockstart);
+    my ($out, $outlinks, $deleted, $added, $moved, $same, $lastact, $firstact, $anchor);
 
 
     $lastold = -1;
@@ -141,6 +142,16 @@ sub l00http_diff_output {
     $nii = $OA[$oii];
 
 	$out = '';
+    $outlinks = '';
+
+    # collect statistics
+    $deleted = 0;
+    $added = 0;
+    $moved = 0;
+    $same = 0;
+    $lastact = '';
+    $firstact = '';
+    $anchor = 1;
 
     # print forward of largest matched block
     $hiding = 0;
@@ -151,23 +162,56 @@ sub l00http_diff_output {
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii);
 		# print $sock deleted
 		if (($oii <= $#OLD) && ($OA[$oii] < 0)) {
+            if ($lastact ne '<') {
+                $lastact = '<';
+                # make link to changes
+                $_ = $oii + 1;
+                $outlinks .= "<a href=\"#change$anchor\">delete($_)</a> ";
+                $out .= "<a name=\"change$anchor\"></a>";
+                $anchor++;
+            }
+            if ($firstact eq '') {
+                $firstact = $lastact;
+            }
+
 			$_ = " $oout &lt;\n";
 			$out .= $_;
 			$oii++;
+            $deleted++;
 			next;
 		}
 		# print $sock added
 		if (($nii <= $#NEW) && ($NA[$nii] < 0)) {
+            if ($lastact ne '>') {
+                $lastact = '>';
+                # make link to changes
+                $_ = $nii + 1;
+                $outlinks .= "<a href=\"#change$anchor\">add[$_]</a> ";
+                $out .= "<a name=\"change$anchor\"></a>";
+                $anchor++;
+            }
+            if ($firstact eq '') {
+                $firstact = $lastact;
+            }
+
             $_ = " $ospc &gt;";
 			$_ .= "$nout\n";
 			$out .= $_;
 			$nii++;
+            $added++;
 			next;
 		}
 		# print $sock identical
 		if (($oii <= $#OLD) && ($nii <= $#NEW) && ($OA[$oii] == $nii)) {
             if ($hide ne 'checked') {
                 # print if not hiding
+                if ($lastact ne '=') {
+                    # make link to changes
+                    $_ = $nii + 1;
+                    $outlinks .= "<a href=\"#change$anchor\">same[$_]</a> ";
+                    $out .= "<a name=\"change$anchor\"></a>";
+                    $anchor++;
+                }
 			    $_ = " $oout =";
 			    $_ .= "$nout\n";
 			    $out .= $_;
@@ -179,22 +223,50 @@ sub l00http_diff_output {
                     $out .= sprintf ("%-${width}s%-${width}s--- same omitted ---\n", '-'x$width, '-'x$width);
                 }
             }
+            $lastact = '=';
+            if ($firstact eq '') {
+                $firstact = $lastact;
+            }
 			$oii++;
 			$nii++;
+            $same++;
 			next;
 		}
 		# print $sock moved block in NEW
 		if ($NA[$nii] < $oii) {
+            if ($lastact ne '[') {
+                $lastact = '[';
+                # make link to changes
+                $_ = $nii + 1;
+                $outlinks .= "<a href=\"#change$anchor\">move[$_]</a> ";
+                $out .= "<a name=\"change$anchor\"></a>";
+                $anchor++;
+            }
+            if ($firstact eq '') {
+                $firstact = $lastact;
+            }
 			$_ = sprintf ("(%d)", $NA[$nii] + 1);
             substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
 			$_ = " $ospc [";
 			$_ .= "$nout\n";
 			$out .= $_;
 			$nii++;
+            $moved++;
 			next;
 		}
-		# print $sock moved block in NEW
+		# print $sock moved block in OLD
 		if ($OA[$oii] > $nii) {
+            if ($lastact ne ']') {
+                $lastact = ']';
+                # make link to changes
+                $_ = $oii + 1;
+                $outlinks .= "<a href=\"#change$anchor\">move($_)</a> ";
+                $out .= "<a name=\"change$anchor\"></a>";
+                $anchor++;
+            }
+            if ($firstact eq '') {
+                $firstact = $lastact;
+            }
 			$_ = sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1);
 			$out .= $_;
 			$oii++;
@@ -216,29 +288,118 @@ sub l00http_diff_output {
     # print backward from largest matched block
     $hiding = 0;
     $hiding2 = 0;
+    $lastact = $firstact;
+    #$outlinks = "backward debug " . $outlinks;
+
 	while (($oii >= 0) || ($nii >= 0)) {
         $hiding++;
         # prepare outputs
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii);
 		# print $sock deleted
 		if (($oii >= 0) && ($OA[$oii] < 0)) {
+            if ($lastact ne '<') {
+                # make link to changes
+                if ($lastact eq '>') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">add[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '=') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">1same[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq ']') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move($_)</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '[') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move[$_]</a> " . $outlinks;
+                    }
+                }
+                $out = "<a name=\"change$anchor\"></a>" . $out;
+                $anchor++;
+                $lastact = '<';
+            }
+
 			$_ = " $oout &lt;\n";
 			$out = "$_$out";
 			$oii--;
+            $deleted++;
 			next;
 		}
 		# print $sock added
 		if (($nii >= 0) && ($NA[$nii] < 0)) {
+            if ($lastact ne '>') {
+                # make link to changes
+                if ($lastact eq '<') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">delete($_)</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '=') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">2same[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '[') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq ']') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move($_)</a> " . $outlinks;
+                    }
+                }
+                $out = "<a name=\"change$anchor\"></a>" . $out;
+                $anchor++;
+                $lastact = '>';
+            }
+
             $_ = " $ospc &gt;";
 			$_ .= "$nout\n";
 			$out = "$_$out";
 			$nii--;
+            $added++;
 			next;
 		}
 		# print $sock identical
 		if (($oii >= 0) && ($nii >= 0) && ($OA[$oii] == $nii)) {
             if ($hide ne 'checked') {
                 # print if not hiding
+                if ($lastact ne '=') {
+                    # make link to changes
+                    if ($lastact eq '>') {
+                        if ($nii >= 0) {
+                            $_ = $nii + 2;
+                            $outlinks = "<a href=\"#change$anchor\">add[$_]</a> " . $outlinks;
+                        }
+                    } elsif ($lastact eq '<') {
+                        if ($oii >= 0) {
+                            $_ = $oii + 2;
+                            $outlinks = "<a href=\"#change$anchor\">delete($_)</a> " . $outlinks;
+                        }
+                    } elsif ($lastact eq '[') {
+                        if ($nii >= 0) {
+                            $_ = $nii + 2;
+                            $outlinks = "<a href=\"#change$anchor\">move[$_]</a> " . $outlinks;
+                        }
+                    } elsif ($lastact eq ']') {
+                        if ($oii >= 0) {
+                            $_ = $oii + 2;
+                            $outlinks = "<a href=\"#change$anchor\">move($_)</a> " . $outlinks;
+                        }
+                    }
+                    $out = "<a name=\"change$anchor\"></a>" . $out;
+                    $anchor++;
+                    $lastact = '=';
+                }
+
 			    $_ = " $oout =";
 			    $_ .= "$nout\n";
     			$out = "$_$out";
@@ -250,22 +411,82 @@ sub l00http_diff_output {
                     $out .= sprintf ("%-${width}s%-${width}s--- same omitted ---\n", '-'x$width, '-'x$width);
                 }
             }
+            $lastact = '=';
+
 			$oii--;
 			$nii--;
+            $same++;
 			next;
 		}
 		# print $sock moved block in NEW
 		if ($NA[$nii] < $oii) {
+            if ($lastact ne '[') {
+                # make link to changes
+                if ($lastact eq '>') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">add[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '<') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">delete($_)</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '=') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">3same[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq ']') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move($_)</a> " . $outlinks;
+                    }
+                }
+                $out = "<a name=\"change$anchor\"></a>" . $out;
+                $anchor++;
+                $lastact = '[';
+            }
+
 			$_ = sprintf ("(%d)", $NA[$nii] + 1);
             substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
 			$_ = " $ospc [";
 			$_ .= "$nout\n";
 			$out = "$_$out";
 			$nii--;
+            $moved++;
 			next;
 		}
-		# print $sock moved block in NEW
+		# print $sock moved block in OLD
 		if ($OA[$oii] > $nii) {
+            if ($lastact ne ']') {
+                # make link to changes
+                if ($lastact eq '>') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">add[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '<') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">delete($_)</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '=') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">4same[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '[') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move[$_]</a> " . $outlinks;
+                    }
+                }
+                $out = "<a name=\"change$anchor\"></a>" . $out;
+                $anchor++;
+                $lastact = ']';
+            }
+
 			$_ = sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1);
 			$out = "$_$out";
 			$oii--;
@@ -281,8 +502,15 @@ sub l00http_diff_output {
 		}
     }
 
+    $outlinks = sprintf ("Deleted %4d lines\n" .
+                         "Added   %4d lines\n" . 
+                         "Moved   %4d lines\n" . 
+                         "Same    %4d lines\n", 
+                         $deleted, $added, $moved, $same) . 
+                "</pre>Links to modified blocks, (old line#), [new line#]: " . $outlinks . "<pre>\n";
 
-    $out;
+    $outlinks . $out;
+    #."\n</pre>Links to modified blocks, (old line#), [new line#]: " . $outlinks . "<pre>\n";
 }
 
 #perl d:\x\diff.pl d:\x\old.txt d:\x\new.txt > d:\x\x10.txt
@@ -303,7 +531,7 @@ sub l00http_diff_compare {
 
 	open (LF, "<$oldfile") || print $sock "$oldfile open failed\n";
 
-    print $sock "&lt; Old file: $oldfile\n\n";
+    print $sock "&lt; Old file: $oldfile\n";
     undef @OLD;
     $cnt = 0;
 	while (<LF>) {
@@ -312,10 +540,10 @@ sub l00http_diff_compare {
 		s/\n//;
 		push (@OLD, $_);
         if ($cnt >= $maxline) {
-            print $sock "    read only $maxline lines from $oldfile\n";
             last;
         }
 	}
+    print $sock "    read $cnt lines\n";
 
 	open (RT, "<$newfile") || print $sock "$newfile open failed\n";
 
@@ -328,11 +556,10 @@ sub l00http_diff_compare {
 		s/\n//;
 		push (@NEW, $_);
         if ($cnt >= $maxline) {
-            print $sock "    read only $maxline lines from $newfile\n";
             last;
         }
 	}
-
+    print $sock "    read $cnt lines\n\n";
 
 	close (LF);
 	close (RT);
