@@ -3,6 +3,7 @@ use warnings;
 use l00backup;
 use l00httpd;
 
+
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # deletes files for now, rename, move and copy possible
@@ -11,6 +12,9 @@ my %config = (proc => "l00http_diff_proc",
               desc => "l00http_diff_desc");
 my ($treeto, $treefilecnt, $treedircnt, $width, $oldfile, $newfile);
 my ($hide, $maxline, @diffout);
+my (@OLD, @NEW, $OC, $NC, $OLNO, $NLNO, @OA, @NA, %SYMBOL);
+my ($debug);
+
 $treeto = '';
 $width = 20;
 #$form->{'path'}
@@ -18,10 +22,6 @@ $oldfile = '';
 $newfile = '';
 $hide = '';
 $maxline = 1000;
-
-my (@OLD, @NEW, $OC, $NC, $OLNO, $NLNO, @OA, @NA, %SYMBOL);
-my ($debug);
-
 $debug = 0;
 
 sub l00http_diff_make_outline {
@@ -74,7 +74,7 @@ sub l00http_diff_make_outline {
 
 sub l00http_diff_output {
 	my ($ln, $jj, $oii, $nii, $nfor, $nptr, $hiding, $hiding2);
-    my ($lastold, $lastnew, $oout, $nout, $ospc, $out);
+    my ($lastold, $lastnew, $oout, $nout, $ospc, $out, $debugbuf);
     my ($blocksize, $blockstart, $mxblocksize, $mxblockstart);
     my ($outlinks, $deleted, $added, $moved, $same, $lastact, $firstact, $anchor);
 
@@ -82,6 +82,7 @@ sub l00http_diff_output {
     $lastold = -1;
     $blocksize = 1;
     $mxblocksize = -1;
+	$debugbuf = '';
     for ($oii = 0; $oii <= $#OLD; $oii++) {
         if ($OA[$oii] < 0) {
             next;
@@ -96,10 +97,13 @@ sub l00http_diff_output {
                 $mxblocksize  = $blocksize;
                 $mxblockstart = $blockstart;
             }
-            print "blocksize $blocksize @ $blockstart\n", if ($debug >= 3);
+			if ($debug >= 3) {
+				$debugbuf .= "blocksize $blocksize @ $blockstart\n";
+				l00httpd::dbp($config{'desc'}, $debugbuf);
+				$debugbuf = 'nw bk 1 ';
+			}
             $blocksize = 1;
             $blockstart = $oii;
-            print "nw bk 1 ", if ($debug >= 3);
         } else {
             $lastnew = -1;
             for ($nii = $OA[$oii]; $nii >= 0; $nii --) {
@@ -115,24 +119,35 @@ sub l00http_diff_output {
                     $mxblocksize  = $blocksize;
                     $mxblockstart = $blockstart;
                 }
-                print "blocksize $blocksize @ $blockstart\n", if ($debug >= 3);
+				if ($debug >= 3) {
+					$debugbuf .= "blocksize $blocksize @ $blockstart\n";
+					l00httpd::dbp($config{'desc'}, $debugbuf);
+					$debugbuf = 'nw bk 2 ';
+				}
                 $blocksize = 1;
                 $blockstart = $oii;
-                print "nw bk 2 ", if ($debug >= 3);
             } else {
-                print "        ", if ($debug >= 3);
+				if ($debug >= 3) {
+					$debugbuf .= '        ';
+				}
                 $blocksize++;
             }
         }	
         $lastold = $oii; # old file last 'same' line number
-        print "oii $oii -> $OA[$oii]\n", if ($debug >= 3);
+		if ($debug >= 3) {
+			$debugbuf .= "oii $oii -> $OA[$oii]\n";
+			l00httpd::dbp($config{'desc'}, $debugbuf);
+			$debugbuf = '';
+		}
     }
     if (($mxblocksize < 0) || ($blocksize > $mxblocksize)) {
         $mxblocksize  = $blocksize;
         $mxblockstart = $blockstart;
     }
-    print "blocksize $blocksize @ $blockstart\n", if ($debug >= 3);
-    print "mxblocksize $mxblocksize @ $mxblockstart\n", if ($debug >= 3);
+	if ($debug >= 3) {
+		l00httpd::dbp($config{'desc'}, "blocksize $blocksize @ $blockstart\n");
+		l00httpd::dbp($config{'desc'}, "mxblocksize $mxblocksize @ $mxblockstart\n");
+	}
 
 
 
@@ -508,7 +523,7 @@ sub l00http_diff_output {
 sub l00http_diff_compare {
 	my ($sock) = @_;
 	my ($ln, $jj, $oii, $nii, $out, $nfor, $nptr);
-	my ($text, $mode, $cnt);
+	my ($text, $mode, $cnt, $debugbuf);
 
     print $sock "<pre>\n";
 
@@ -577,7 +592,7 @@ sub l00http_diff_compare {
     undef %SYMBOL;
 	# Pass 1
 	if ($debug >= 1) {
-		print $sock "Pass 1: Fill SYMBOL table with OLD file content\n";
+        l00httpd::dbp($config{'desc'}, "Pass 1: Fill SYMBOL table with OLD file content\n");
 	}
 	for ($ln = 0; $ln <= $#OLD; $ln++) {
 		# Examining current line $OLD[$ln]
@@ -602,14 +617,14 @@ sub l00http_diff_compare {
 	}
 	if ($debug >= 5) {
 		for ($ln = 0; $ln <= $#OLD; $ln++) {
-			print $sock "$ln: OC $SYMBOL{$OLD[$ln]}[$OC] OLNO $SYMBOL{$OLD[$ln]}[$OLNO] >$OLD[$ln]<\n";
+            l00httpd::dbp($config{'desc'}, "$ln: OC $SYMBOL{$OLD[$ln]}[$OC] OLNO $SYMBOL{$OLD[$ln]}[$OLNO] >$OLD[$ln]<\n");
 		}
 	}
 
 
 	# Pass 2
 	if ($debug >= 1) {
-		print $sock "Pass 2: Fill SYMBOL table with NEW file content\n";
+        l00httpd::dbp($config{'desc'}, "Pass 2: Fill SYMBOL table with NEW file content\n");
 	}
 	for ($ln = 0; $ln <= $#NEW; $ln++) {
 		# Examining current line $NEW[$ln]
@@ -639,14 +654,14 @@ sub l00http_diff_compare {
 	}
 	if ($debug >= 5) {
 		for ($ln = 0; $ln <= $#NEW; $ln++) {
-			print $sock "$ln: NC $SYMBOL{$NEW[$ln]}[$NC] >$NEW[$ln]<\n";
+            l00httpd::dbp($config{'desc'}, "$ln: NC $SYMBOL{$NEW[$ln]}[$NC] >$NEW[$ln]<\n");
 		}
 	}
 
 
 	# Pass 3
 	if ($debug >= 1) {
-		print $sock "Pass 3: Establish match for unique lines\n";
+        l00httpd::dbp($config{'desc'}, "Pass 3: Establish match for unique lines\n");
 	}
 	foreach $text (keys %SYMBOL) {
 		if (($SYMBOL{$text}[$OC] == 1) &&
@@ -656,14 +671,14 @@ sub l00http_diff_compare {
 			# OA OLD array points to NLNO NEW line number
 			$OA[$SYMBOL{$text}[$OLNO]] = $SYMBOL{$text}[$NLNO];
 			if ($debug >= 5) {
-				print $sock "NA $NA[$SYMBOL{$text}[$NLNO]] OA $OA[$SYMBOL{$text}[$OLNO]] >$text<\n";
+                l00httpd::dbp($config{'desc'}, "NA $NA[$SYMBOL{$text}[$NLNO]] OA $OA[$SYMBOL{$text}[$OLNO]] >$text<\n");
 			}
 		}
 	}
 
 	# Pass 4
 	if ($debug >= 1) {
-		print $sock "Pass 4: Match non unique lines by context going forward\n";
+        l00httpd::dbp($config{'desc'}, "Pass 4: Match non unique lines by context going forward\n");
 	}
 	for ($ln = 0; $ln < $#NEW; $ln++) { # skip last line which has no next
 		# $ln is new line number
@@ -679,7 +694,8 @@ sub l00http_diff_compare {
 				$OA[$jj + 1] = $ln + 1;
 				$NA[$ln + 1] = $jj + 1;
 				if ($debug >= 5) {
-					print $sock "NA ", $jj + 1, " OA ", $ln + 1, " >", $NEW[$ln + 1], "<\n";
+					$debugbuf = printf ("NA %d OA %d >%s<\n", $jj + 1, $ln + 1, $NEW[$ln + 1]);
+					l00httpd::dbp($config{'desc'}, $debugbuf);
 				}
 			}
 		}
@@ -688,7 +704,7 @@ sub l00http_diff_compare {
 
 	# Pass 5
 	if ($debug >= 1) {
-		print $sock "Pass 5: Match non unique lines by context going backword\n";
+        l00httpd::dbp($config{'desc'}, "Pass 5: Match non unique lines by context going backword\n");
 	}
 	for ($ln = $#NEW; $ln > 0; $ln--) { # skip first line which has no previous
 		# $ln is new line number
@@ -704,7 +720,8 @@ sub l00http_diff_compare {
 				$OA[$jj - 1] = $ln - 1;
 				$NA[$ln - 1] = $jj - 1;
 				if ($debug >= 5) {
-					print $sock "NA ", $jj - 1, " OA ", $ln - 1, " >", $NEW[$ln - 1], "<\n";
+					$debugbuf = printf ("NA %d OA %s >%s<\n", $jj - 1, $ln - 1, $NEW[$ln - 1]);
+					l00httpd::dbp($config{'desc'}, $debugbuf);
 				}
 			}
 		}
@@ -712,7 +729,7 @@ sub l00http_diff_compare {
 
 	# Pass 6
 	if ($debug >= 1) {
-		print $sock "Pass 6: Output results\n";
+        l00httpd::dbp($config{'desc'}, "Pass 6: Output results\n");
 		$oii = 0;
 		$nii = 0;
 		$out = '';
@@ -735,9 +752,11 @@ sub l00http_diff_compare {
 			$out .= $_;
 			$out .= "\n";
 		}
-		print $sock $out;
+		foreach $_ (split ("\n", $out)) {
+			l00httpd::dbp($config{'desc'}, "$_\n");
+		}
 
-    	print $sock "--------------------------\n";
+		l00httpd::dbp($config{'desc'}, "--------------------------\n");
 
 		$oii = 0;
 		$nii = 0;
@@ -835,7 +854,11 @@ sub l00http_diff_proc {
     }
 
     # copy paste target
-    if (defined ($form->{'pasteold'})) {
+    if (defined ($form->{'swap'})) {
+        $_ = $newfile;
+        $newfile = $oldfile;
+        $oldfile = $_;
+    } elsif (defined ($form->{'pasteold'})) {
         # if pasting old file
         # this takes precedence over 'path'
         $oldfile = &l00httpd::l00getCB($ctrl);
@@ -886,6 +909,7 @@ sub l00http_diff_proc {
 
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
+    print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max\n";
     print $sock "</td></tr>\n";

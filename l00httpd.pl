@@ -611,8 +611,6 @@ while(1) {
             print "--------------------------------------------\n", if ($debug >= 2);
 
             # 3) Parse client HTTP submission and identify module plugin name
-
-#if (1) {
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
             select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
