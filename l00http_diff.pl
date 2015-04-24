@@ -74,53 +74,72 @@ sub l00http_diff_make_outline {
 
 sub l00http_diff_output {
 	my ($ln, $jj, $oii, $nii, $nfor, $nptr, $hiding, $hiding2);
-    my ($lastold, $lastnew, $oout, $nout, $ospc, $out, $debugbuf);
-    my ($blocksize, $blockstart, $mxblocksize, $mxblockstart);
+    my ($lastold, $oldFromNew, $oout, $nout, $ospc, $out, $debugbuf);
+    my ($blocksize, $blockstart, $mxblocksize, $mxblockstart, $firstnew);
     my ($outlinks, $deleted, $added, $moved, $same, $lastact, $firstact, $anchor);
+	my ($mxblockstartNew);
 
+	# find first non added lines in NEW
+	$firstnew = -1;
+    for ($nii = 0; $nii <= $#NEW; $nii++) {
+        if ($NA[$nii] < 0) {
+			# an added line, skip it
+            next;
+        }
+		$firstnew = $nii;
+		last;
+	}
 
+	# find largest same block and start location
     $lastold = -1;
     $blocksize = 1;
     $mxblocksize = -1;
 	$debugbuf = '';
     for ($oii = 0; $oii <= $#OLD; $oii++) {
         if ($OA[$oii] < 0) {
+			# a deleted line, skip it
             next;
         }
         # not a deleted line so there is a match in NEW
         if (($lastold == -1) ||  # first line is a start of a block
-            ($OA[$oii] == 0)) {	# same as first line in NEW is start; not right
+            ($OA[$oii] == $firstnew)) {	 # the same line as the first line in NEW
             if ($lastold == -1) {
                 $blockstart = $oii;
+				if ($debug >= 3) {
+					l00httpd::dbp($config{'desc'}, "first same in old: blockstart $blockstart\n");
+				}
             }
             if (($mxblocksize < 0) || ($blocksize > $mxblocksize)) {
+				# end of last block counting, record max
                 $mxblocksize  = $blocksize;
                 $mxblockstart = $blockstart;
             }
 			if ($debug >= 3) {
-				$debugbuf .= "blocksize $blocksize @ $blockstart\n";
+				$debugbuf .= "blocksize A $blocksize @ $blockstart\n";
 				l00httpd::dbp($config{'desc'}, $debugbuf);
 				$debugbuf = 'nw bk 1 ';
 			}
+			# start new block count
             $blocksize = 1;
             $blockstart = $oii;
         } else {
-            $lastnew = -1;
-            for ($nii = $OA[$oii]; $nii >= 0; $nii --) {
+			# we are counting more line in the same block
+            $oldFromNew = -1;
+            for ($nii = $OA[$oii] - 1; $nii >= 0; $nii--) {
                 if ($NA[$nii] < 0) {
                     # added lines
                     next;
                 }
-                $lastnew = $nii;
+                $oldFromNew = $NA[$nii];
                 last;
             }
-            if ($lastold == $lastnew) {
+            if ($lastold != $oldFromNew) {
                 if (($mxblocksize < 0) || ($blocksize > $mxblocksize)) {
                     $mxblocksize  = $blocksize;
                     $mxblockstart = $blockstart;
                 }
 				if ($debug >= 3) {
-					$debugbuf .= "blocksize $blocksize @ $blockstart\n";
+					$debugbuf .= "blocksize B $blocksize @ $blockstart\n";
 					l00httpd::dbp($config{'desc'}, $debugbuf);
 					$debugbuf = 'nw bk 2 ';
 				}
@@ -132,7 +151,7 @@ sub l00http_diff_output {
 				}
                 $blocksize++;
             }
-        }	
+        }
         $lastold = $oii; # old file last 'same' line number
 		if ($debug >= 3) {
 			$debugbuf .= "oii $oii -> $OA[$oii]\n";
@@ -145,7 +164,7 @@ sub l00http_diff_output {
         $mxblockstart = $blockstart;
     }
 	if ($debug >= 3) {
-		l00httpd::dbp($config{'desc'}, "blocksize $blocksize @ $blockstart\n");
+		l00httpd::dbp($config{'desc'}, "blocksize C $blocksize @ $blockstart\n");
 		l00httpd::dbp($config{'desc'}, "mxblocksize $mxblocksize @ $mxblockstart\n");
 	}
 
@@ -153,6 +172,7 @@ sub l00http_diff_output {
 
     $oii = $mxblockstart;
     $nii = $OA[$oii];
+	$mxblockstartNew = $nii;
 
 	undef @diffout;
     $outlinks = '';
@@ -261,7 +281,7 @@ sub l00http_diff_output {
 			next;
 		}
 		# print moved block in OLD
-		if ($OA[$oii] > $nii) {
+		if ($OA[$oii] < $nii) {
             if ($lastact ne ']') {
                 $lastact = ']';
                 # make link to changes
@@ -288,7 +308,12 @@ sub l00http_diff_output {
 	}
 
     $oii = $mxblockstart - 1;
-    $nii = $OA[$mxblockstart] - 1;
+    $nii = $mxblockstartNew - 1;
+
+	if ($debug >= 3) {
+		l00httpd::dbp($config{'desc'}, "list backward from start of largest block\n");
+		l00httpd::dbp($config{'desc'}, "oii $oii nii $nii\n");
+	}
 
     # print backward from largest matched block
     $hiding = 0;
