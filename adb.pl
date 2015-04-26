@@ -28,7 +28,7 @@ if (opendir (DIR, $idir)) {
     }
     closedir (DIR);
     `explorer $idir2`;
-    print "\n^C now to terminate.\n";
+    print "\n^C now to terminate. <Enter> to continue.\n";
     <>;
     opendir (DIR, $idir);
     $cnt = 0;

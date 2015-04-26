@@ -461,7 +461,7 @@ sub pcSyncCmdline {
 
         $clip = urlencode ($clip);
 
-        $buf = "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $clip . "\" target=\"newclip\">clipboard</a>:<br>\n" . $buf;
+        $buf = "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\">clipboard</a>:<br>\n" . $buf;
 
     }
 
