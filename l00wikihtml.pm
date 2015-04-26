@@ -544,11 +544,14 @@ if(1){
             next;
         }
         if ($_ eq '') {
-            # If in markdown mode, blank line is end of paragraph
             if ($mode0unknown1twiki2markdown == 2) {
+                # If in markdown mode, blank line is end of paragraph
                 if ($markdownparanobr) {
                     $oubuf .=  "<p>\n";
                 }
+            } else {
+                # otherwise blank line is new paragraph
+                $oubuf .=  "<p>\n";
             }
             next;
         }
