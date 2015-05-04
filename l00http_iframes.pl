@@ -147,7 +147,7 @@ sub l00http_iframes_proc (\%) {
         l00httpd::dbp($config{'desc'}, "form: spec )$spec(\n");
         foreach $row (split ('   ', $spec)) {
             l00httpd::dbp($config{'desc'}, "form: row )$row(\n");
-            $out .= "<p>\n";
+            $out .= "<br>\n";
                 $nocol = 0;
                 $nocolstar = 0;
                 $colwd = 0;
