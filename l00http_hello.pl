@@ -9,7 +9,7 @@ my ($name, $key, $val);
 my %config = (proc => "l00http_hello_proc",
               desc => "l00http_hello_desc");
 
-
+$name = '';
 sub l00http_hello_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -24,7 +24,7 @@ sub l00http_hello_proc (\%) {
     if (defined ($form->{'helloname'})) {
         $name = $form->{'helloname'};
     } else {
-        $name = "";
+#        $name = "";
     }
 
     # Send HTTP and HTML headers
