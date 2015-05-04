@@ -284,7 +284,7 @@ sub l00http_reminder_proc {
 	for($ii = 0; $ii < 60; $ii += 5) {
         $selected = '';
         if ($ii == 0) {
-            $selected = 'selected';
+#            $selected = 'selected';
         }
 	    $temp = sprintf("%02d", $ii);
         print $sock "        <option value=\"$temp"."m\" $selected>$temp</option>\n";
