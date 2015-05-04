@@ -9,10 +9,12 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_reader_proc",
               desc => "l00http_reader_desc");
-my ($hostpath, $zoom, $maxarts);
+my ($hostpath, $zoom, $maxarts, $readln, $lastpath);
 $hostpath = "c:\\x\\";
 $zoom = 150;
 $maxarts = 20;
+$readln = 1;
+$lastpath = '';
 
 sub l00http_reader_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -25,7 +27,7 @@ sub l00http_reader_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $fname, $lnno, $lnno2, $readln, $tmp, $curr, $buf, $font0, $font1);
+    my ($path, $fname, $lnno, $lnno2, $tmp, $curr, $buf, $font0, $font1);
 	my ($cachepath, $cachename, $cachelink, $url, $morepage, $tmp2, %duplicate, $cnt);
     my ($docaching);
 
@@ -36,8 +38,8 @@ sub l00http_reader_proc (\%) {
 
     if (defined ($form->{'readln'})) {
         $readln = $form->{'readln'};
-    } else {
-        $readln = 1;
+#   } else {
+#       $readln = 1;
     }
     if (defined ($form->{'next'})) {
         $readln++;
@@ -53,6 +55,11 @@ sub l00http_reader_proc (\%) {
     $lnno = 0;
     $lnno2 = 0;
     if (defined ($form->{'path'})) {
+        if ($lastpath ne $form->{'path'}) {
+            # reset readln when switching to different file
+            $lastpath = $form->{'path'};
+            $readln = 1;
+        }
         if (open(IN, "<$form->{'path'}")) {
             $buf = '';
             while (<IN>) {
@@ -192,6 +199,7 @@ sub l00http_reader_proc (\%) {
                     if (defined ($form->{'download'}) && 
                         !(-e $cachename) &&
                         $docaching &&
+                        ($lnno >= $readln) && # start from read
                         ($cnt < $maxarts)) {   # download at most 50 articles at once
                         # downloading and not yet cached. cache now
 						$tmp = $_;
