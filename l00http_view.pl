@@ -9,7 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
-my ($hostpath);
+my ($hostpath, $lastpath);
 my ($findtext, $block, $wraptext, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
@@ -18,6 +18,7 @@ $wraptext = '';
 $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
+$lastpath = '';
 
 sub l00http_view_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -38,9 +39,9 @@ sub l00http_view_proc {
     print $sock "<a href=\"#end\">Jump to end</a>\n";
     print $sock "<a name=\"top\"></a>\n";
 
-    $form->{'path'} =~ s/\r//g;
-    $form->{'path'} =~ s/\n//g;
     if (defined ($form->{'path'})) {
+        $form->{'path'} =~ s/\r//g;
+        $form->{'path'} =~ s/\n//g;
         $tmp = $form->{'path'};
         if ($ctrl->{'os'} eq 'win') {
             $tmp =~ s/\//\\/g;
@@ -54,6 +55,12 @@ sub l00http_view_proc {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
         print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>\n";
+        if ($lastpath ne $form->{'path'}) {
+            # reset skip and length for different file
+            $skip = 0;
+            $maxln = 1000;
+            $lastpath = $form->{'path'};
+        }
     }
 
 
