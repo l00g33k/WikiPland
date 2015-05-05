@@ -75,6 +75,9 @@ sub l00http_view_proc {
         }
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
+            if ($skip < 0) {
+                $skip = 0;
+            }
         }
 #    } else {
 #        $skip = 0;
