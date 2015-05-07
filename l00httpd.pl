@@ -901,6 +901,7 @@ while(1) {
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "Click <a href=\"/\">here</a> to initiate shutdown.  Note: If this is an APK installation, you must uninstall to update l00httpd.\n";
                 print $sock $ctrl{'htmlfoot'};
+                print "shutting down by shutdown module\n";
                 exit (1);
             } elsif ($modcalled eq "shutdown") {
                 $shutdown = 1;
