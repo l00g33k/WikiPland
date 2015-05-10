@@ -54,7 +54,8 @@ sub l00http_view_proc {
         } else {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
-        print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>\n";
+        print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
         if ($lastpath ne $form->{'path'}) {
             # reset skip and length for different file
             $skip = 0;
@@ -144,6 +145,13 @@ sub l00http_view_proc {
         $found = '';
 
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            # launch editor
+            if (($ctrl->{'os'} eq 'and') && 
+                defined ($form->{'exteditor'}) &&
+                (!($form->{'path'} =~ /^l00:\/\//))) {
+                $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$form->{'path'}", "text/plain");
+            }
+
             $buffer = &l00httpd::l00freadAll($ctrl);
 
             # Some has only \r as line endings. So convert DOS \r\n to Unix \n

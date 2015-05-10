@@ -317,6 +317,10 @@ sub l00http_ls_proc {
                     close (OUT);
                 }
             }
+            # launch editor
+            if (($ctrl->{'os'} eq 'and') && defined ($form->{'exteditor'})) {
+                $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
+            }
             my $urlraw = 0;
             if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
                 $urlraw = 1;
@@ -454,7 +458,8 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
                     }
                     print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                    print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
+                    print $sock "<a href=\"/edit.htm?path=$path\">Ed</a>/";
+                    print $sock "<a href=\"/ls.htm?path=$path&exteditor=on\">ext</a>\n";
                     print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
                     if (defined ($form->{'bkvish'})) {
                         print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
@@ -1154,7 +1159,8 @@ print;
                 $dir = $path;
                 $dir =~ s/\/[^\/]+$/\//;
                 print $sock "<p><a href=\"/find.htm?path=$dir&fmatch=%5C.txt%24\">find in files</a> in $dir\n";
-                print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>\n";
+                print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>.\n";
+                print $sock "<a href=\"/ls.htm?path=$path&raw=on\">Raw</a>\n";
                 print $sock "<p><a href=\"/view.htm?path=$path\">View</a> $path\n";
                 print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
