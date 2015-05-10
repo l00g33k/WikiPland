@@ -1051,7 +1051,7 @@ print;
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
-            print $sock "        <td>&nbsp;</td>\n";
+            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&bare=on\">Bare without forms</a></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
