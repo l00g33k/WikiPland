@@ -21,7 +21,7 @@ $width = 20;
 $oldfile = '';
 $newfile = '';
 $hide = '';
-$maxline = 1000;
+$maxline = 4000;
 $debug = 0;
 
 sub l00http_diff_make_outline {
