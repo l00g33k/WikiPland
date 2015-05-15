@@ -125,7 +125,7 @@ sub l00http_slideshow_proc {
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
                         $outbuf .= "<br>\n";
-                        $outbuf .= sprintf ("%4d/%02d/%02d %02d:%02d:%02d:<br>\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                        $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:<br>\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
 
                         if (($width =~ /^\d/) && ($height =~ /^\d/)) {
                             $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
@@ -153,6 +153,12 @@ sub l00http_slideshow_proc {
         print $sock "<a href=\"/slideshow.htm?path=$next\">Next</a> \n";
     }
 
+    print $sock "<p>\n";
+    for ($ii = 1; $ii < $#allpics; $ii++) {
+        $file = $allpics[$#allpics - $ii + 1];
+        print $sock "<a href=\"/slideshow.htm?path=$path$file\">$ii</a>\n";
+    }
+    print $sock "<p>\n";
 
     print $sock "<form action=\"/slideshow.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
