@@ -9,8 +9,8 @@ use l00wikihtml;
 my %config = (proc => "l00http_slideshow_proc",
               desc => "l00http_slideshow_desc");
 my ($width, $height, $llspath, $picsperpage);
-$width = '50%';
-$height = '50%';
+$width = '100%';
+$height = '';
 $picsperpage = 6;
 
 sub llsfn2 {
@@ -57,7 +57,7 @@ sub l00http_slideshow_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+    print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a>\n";
 
     if (defined ($form->{'set'})) {
         if (defined ($form->{'width'})) {
@@ -127,11 +127,11 @@ sub l00http_slideshow_proc {
                         $outbuf .= "<br>\n";
                         $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:<br>\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
 
-                        if (($width =~ /^\d/) && ($height =~ /^\d/)) {
+#                       if (($width =~ /^\d/) && ($height =~ /^\d/)) {
                             $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
-                        } else {
-                            $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\"><a/>\n";
-                        }
+#                       } else {
+#                           $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\"><a/>\n";
+#                       }
                         $phase++;
                     }
                 }
@@ -160,16 +160,17 @@ sub l00http_slideshow_proc {
     }
     print $sock "<p>\n";
 
-    print $sock "<form action=\"/slideshow.htm\" method=\"get\">\n";
+    print $sock "<a name=\"end\"><a/>";
+    print $sock "<a/><form action=\"/slideshow.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"><br>Image size, e.g.: 1024 or 100%\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "Height: <input type=\"text\" size=\"4\" name=\"height\" value=\"$height\">\n";
+    print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
+    print $sock "Height: <input type=\"text\" size=\"4\" name=\"height\" value=\"$height\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Pic per page: <input type=\"text\" size=\"3\" name=\"picsperpage\" value=\"$picsperpage\">\n";
@@ -178,7 +179,7 @@ sub l00http_slideshow_proc {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
-    print $sock "<p>clip: <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}\">$form->{'path'}</a><br>\n";
+    print $sock "<p>Jump to <a href=\"#top\">top</a>. clip: <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}\">$form->{'path'}</a><br>\n";
     print $sock "<a href=\"/ls.htm?path=$path\">$path</a>\n";
 
     # send HTML footer and ends
