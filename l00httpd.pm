@@ -520,9 +520,10 @@ sub l00setCB {
 
     if ($ctrl->{'os'} eq 'and') {
         $ctrl->{'droid'}->setClipboard ($buf);
-    } elsif ($ctrl->{'os'} eq 'win') {
+    } elsif ($ctrl->{'os'} eq 'cyg') {
         # ::todo:: add windows special character escape
         `echo $buf| clip`;
+    } elsif ($ctrl->{'os'} eq 'win') {
         # Use Perl module
         eval 'use Win32::Clipboard';
         $clip = Win32::Clipboard();
