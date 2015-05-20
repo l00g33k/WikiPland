@@ -27,6 +27,7 @@ sub l00http_hexview_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $buffer2, $cryptex, $rethash, $line, $ii, $len);
     my ($blklen, $tmp, $iiend, $hex, $ascii, $binview, $jj);
+	my ($pname, $fname);
 
     $sock = $ctrl->{'sock'};     # dereference network socket
 
@@ -54,7 +55,10 @@ sub l00http_hexview_proc {
     }
 
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+        ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
+        print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a><p>\n";
     } else {
         print $sock "Path: <a href=\"/ls.htm?path=$ctrl->{'workdir'}\">Select solver equation file</a> and 'Set' to 'solver'<p>\n";
         # send HTML footer and ends
