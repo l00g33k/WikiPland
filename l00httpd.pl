@@ -124,8 +124,10 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
             }
         }
     }
-} elsif (defined ($ENV{'OSTYPE'}) || ($ENV{'OSTYPE'} eq 'cygwin')) {
+} elsif ($^O eq 'cygwin')) {
     $ctrl{'os'} = 'cyg';
+} elsif ($^O eq 'MSwin32')) {
+    $ctrl{'os'} = 'win';
 } elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
 } else {
