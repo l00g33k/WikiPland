@@ -124,9 +124,9 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
             }
         }
     }
-} elsif ($^O eq 'cygwin')) {
+} elsif ($^O eq 'cygwin') {
     $ctrl{'os'} = 'cyg';
-} elsif ($^O eq 'MSwin32')) {
+} elsif ($^O eq 'MSwin32') {
     $ctrl{'os'} = 'win';
 } elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
@@ -569,12 +569,12 @@ while(1) {
 #                   # don't know how to find self IP yet
 #                   $ip = undef;
                 }
-            } elsif ($ctrl{'os'} eq 'win') {
+            } elsif (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
             } else {
                 $ip = `/sbin/ifconfig`;
             }
-            if ($ctrl{'os'} eq 'win') {
+            if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
                 if ($ip =~ /(192\.168\.\d+\.\d+)/) {
                     $ip = $1;
