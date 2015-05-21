@@ -259,12 +259,12 @@ if (!defined ($ctrl{'workdir'})) {
 foreach $key (keys %ctrl) {
     if ($ctrl{$key} =~ /%PLPATH%/) {
         print "$ctrl{$key} => ";
-        $ctrl{$key} =~ s/%PLPATH%/$plpath/;
+        $ctrl{$key} =~ s/%PLPATH%/$plpath/g;
         print "$ctrl{$key}\n";
     }
     if ($ctrl{$key} =~ /%WORKDIR%/) {
         print "$ctrl{$key} => ";
-        $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/;
+        $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
         print "$ctrl{$key}\n";
     }
 }

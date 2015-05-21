@@ -241,7 +241,7 @@ sub l00http_ls_proc {
                             }
                             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
                         }
-                        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+                        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                         print $sock "<a href=\"#end\">end</a>\n";
                         print $sock "<a href=\"#__toc__\">TOC</a>\n";
                         if (defined ($form->{'bkvish'})) {
@@ -449,7 +449,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
                     }
-                    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+                    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                     print $sock "<a href=\"#end\">end</a>\n";
                     print $sock "<a href=\"#__toc__\">TOC</a>\n";
                     if (defined ($form->{'bkvish'})) {
@@ -695,12 +695,14 @@ print;
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on\">no header/footer</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on&chno=on\">+ ch no</a>";
                                 $found .= "\n";
                                 foreach $_ (sort keys %showdir) {
                                     $found .= "* $_:";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on\">no header/footer</a>";
+                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on&chno=on\">+ ch no</a>";
                                     $found .= "\n";
                                 }
                                 $buf = "$found$buf";
@@ -812,7 +814,7 @@ print;
             close (FILE);
         } else {
             print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-            print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+            print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
             print $sock "<a href=\"#end\">end</a><br>\n";
             print $sock "Path: $path<hr>\n";
             print $sock "Unable to open file '$path'<br>\n";
@@ -839,7 +841,7 @@ print;
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path\n";
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
         print $sock "<a href=\"/dirnotes.htm?path=$path"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
