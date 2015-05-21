@@ -87,6 +87,10 @@ sub l00http_notify_proc (\%) {
         $msg = '';
     }
 
+    # text field doesn't like "?
+    $msg =~ s/"//g;
+
+
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>notify</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} ";

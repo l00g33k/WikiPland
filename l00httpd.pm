@@ -492,7 +492,7 @@ sub l00getCB {
 #   $ctrl{'os'} = 'lin';
 
     if ($ctrl->{'os'} eq 'and') {
-        $buf = $ctrl->{'droid'}->getClipboard(); print __LINE__," $buf\n";
+        $buf = $ctrl->{'droid'}->getClipboard();
         $buf = $buf->{'result'};
     } elsif ($ctrl->{'os'} eq 'win') {
         # Use Perl module
