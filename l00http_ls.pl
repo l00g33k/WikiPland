@@ -140,9 +140,14 @@ sub l00http_ls_proc {
         }
     } else {
         # restrict remote directory navigation is enabled
-        if (($ctrl->{'noclinav'}) && 
-            ($ctrl->{'clipath'} ne substr ($path, 0, length ($ctrl->{'clipath'})))) {
-            $path = $ctrl->{'clipath'};
+        if ($ctrl->{'noclinav'}) {
+            if (($ctrl->{'clipath'} ne '*') &&  
+                # not * (wide open)
+                ($ctrl->{'clipath'} ne substr ($path, 0, length ($ctrl->{'clipath'})))) {
+                # and not approved path
+                # then dset to approved path
+                $path = $ctrl->{'clipath'};
+            }
         }
     }
     $path =~ s/%20/ /g;
