@@ -546,7 +546,7 @@ sub l00http_diff_output {
 #perl d:\x\diff.pl d:\x\new.txt d:\x\old.txt > d:\x\x10.txt
 #perl d:\x\diff.pl d:\x\old2.txt d:\x\new2.txt > d:\x\x10.txt
 sub l00http_diff_compare {
-	my ($sock) = @_;
+	my ($ctrl, $sock) = @_;
 	my ($ln, $jj, $oii, $nii, $out, $nfor, $nptr);
 	my ($text, $mode, $cnt, $debugbuf);
 
@@ -557,34 +557,41 @@ sub l00http_diff_compare {
 	# Paul Heckel
 	# http://documents.scribd.com/docs/10ro9oowpo1h81pgh1as.pdf
 
-	open (LF, "<$oldfile") || print $sock "$oldfile open failed\n";
+#    open (LF, "<$oldfile") || print $sock "$oldfile open failed\n";
+    if (&l00httpd::l00freadOpen($ctrl, "$oldfile")) {
+        print $sock "&lt; Old file: $oldfile\n";
+        undef @OLD;
+        $cnt = 0;
+#    while (<LF>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            $cnt++;
+	    	s/\r//;
+	    	s/\n//;
+	    	push (@OLD, $_);
+	    }
+        print $sock "    read $cnt lines\n";
+    } else {
+        print $sock "$oldfile open failed\n";
+    }
 
-    print $sock "&lt; Old file: $oldfile\n";
-    undef @OLD;
-    $cnt = 0;
-	while (<LF>) {
-        $cnt++;
-		s/\r//;
-		s/\n//;
-		push (@OLD, $_);
-	}
-    print $sock "    read $cnt lines\n";
-
-	open (RT, "<$newfile") || print $sock "$newfile open failed\n";
-
-    print $sock "&gt; New file: $newfile\n";
-    undef @NEW;
-    $cnt = 0;
-	while (<RT>) {
-        $cnt++;
-		s/\r//;
-		s/\n//;
-		push (@NEW, $_);
-	}
-    print $sock "    read $cnt lines\n\n";
-
-	close (LF);
-	close (RT);
+#   open (RT, "<$newfile") || print $sock "$newfile open failed\n";
+    if (&l00httpd::l00freadOpen($ctrl, "$newfile")) {
+        print $sock "&gt; New file: $newfile\n";
+        undef @NEW;
+        $cnt = 0;
+#    while (<LF>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            $cnt++;
+	     	s/\r//;
+	     	s/\n//;
+	     	push (@NEW, $_);
+        }
+        print $sock "    read $cnt lines\n\n";
+    } else {
+        print $sock "$newfile open failed\n";
+    }
+#    close (LF);
+#    close (RT);
 
 	#for ($ln = 0; $ln <= $#OLD; $ln++) {
 	#    print $sock "$ln: <  $OLD[$ln]\n";
@@ -943,7 +950,7 @@ sub l00http_diff_proc {
 
 
     if (defined ($form->{'compare'})) {
-	    &l00http_diff_compare ($sock);
+	    &l00http_diff_compare ($ctrl, $sock);
     }
 
 
