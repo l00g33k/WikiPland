@@ -500,7 +500,7 @@ sub l00getCB {
         $clip = Win32::Clipboard();
         $buf = $clip->Get();
     } else {
-        &l00freadOpen($ctrl, 'l00://clipboard');
+        &l00freadOpen($ctrl, 'l00://clipboard.txt');
         $buf = &l00freadAll($ctrl);
     }
     if (!defined ($buf)) {
@@ -514,7 +514,7 @@ sub l00setCB {
     my ($ctrl, $buf) = @_;
     my ($clip);
 
-    &l00fwriteOpen($ctrl, 'l00://clipboard');
+    &l00fwriteOpen($ctrl, 'l00://clipboard.txt');
     &l00fwriteBuf($ctrl, $buf);
     &l00fwriteClose($ctrl);
 
