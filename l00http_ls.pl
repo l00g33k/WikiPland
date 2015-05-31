@@ -710,7 +710,7 @@ print;
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on&chno=on\">+ ch no</a>";
                                     $found .= "\n";
                                 }
-                                $buf = "$found$buf";
+                                $buf = "$found\n$buf";
                             }
                         }
                         $found = '';
