@@ -33,7 +33,7 @@ sub l00http_filecrypt_proc (\%) {
     my ($hout, $raw, $httphdr, $size, $fext, $targetfname);
     my ($line, $pre, $post, $phase, $lineno, $path, $fname, $binlen);
     my ($crypt, $plain, $plain2, $filemethod, $tmp, $action, $tnext);
-    my ($filecmt, $filemeta, $encr1decy2, $bytesent, $timst);
+    my ($filecmt, $filemeta, $encr1decy2, $bytesent, $timst, $more);
     $crypt = '';
     $plain = '';
     $tmp = '';
@@ -272,7 +272,9 @@ sub l00http_filecrypt_proc (\%) {
                 $tnext = time;
                 while ($bytesent < $binlen) {
                     if ((time - $tnext) >= 3) {
-                        print "$binlen : $bytesent [", int (100 * $bytesent / $binlen), "%] (", time - $timst, "s)\n";
+                        #print "$binlen : $bytesent [", int (100 * $bytesent / $binlen), "%] (", time - $timst, "s)\n";
+                        $more = int ((time - $timst) / ($bytesent / $binlen) + 0.5) - (time - $timst);
+                        print "$binlen:[", int (100 * $bytesent / $binlen), "%] (", time - $timst, "s/${more}s)\n";
                         $tnext = time;
                     }
                     ($plain, $binlen, $filecmt, $filemeta) = l00crypt::l00decryptbin ($pass, $buffer, $bytesent, 8192);

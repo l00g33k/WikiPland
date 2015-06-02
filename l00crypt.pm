@@ -118,7 +118,7 @@ sub l00encryptbin {
     my ($phrase, $buffer, $comment, $meta, $encoff, $enclen) = @_;
     my ($out, $ln, $cmtlen, $hdrbuf);
     my ($len, $ii, $hdrlen, $metalen);
-    my ($timst, $tnext);
+    my ($timst, $tnext, $more);
 
 
     # blowfish; make passphrase >= i bytes; <= ty bytes
@@ -156,7 +156,12 @@ sub l00encryptbin {
         substr ($out, $ii + $hdrlen, 8) =
             $cipher->encrypt(substr ($buffer,$ii,8));
         if ((time - $tnext) >= 3) {
-            print "$len : $ii [", int(100 * $ii / $len), "%] (", time - $timst, "s)\n";
+            if ($ii > 3) {
+                $more = int ((time - $timst) / ($ii / $len) + 0.5) - (time - $timst);
+            } else {
+                $more = 'inf';
+            }
+            print "$len: [", int(100 * $ii / $len), "%] (", time - $timst, "s/${more}s)\n";
             $tnext = time;
         }
     }
