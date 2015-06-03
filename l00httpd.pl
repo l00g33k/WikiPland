@@ -496,6 +496,7 @@ if ($ctrl{'os'} eq 'and') {
 
 while(1) {
     # Get a list of sockets that are ready to talk to us.
+    print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
@@ -503,8 +504,10 @@ while(1) {
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
+        print "curr_socket = $curr_socket\n", if ($debug >= 5);
         if(($curr_socket == $ctrl_lstn_sock) ||
            ($curr_socket == $cli_lstn_sock)) {
+            print "ready curr_socket = $curr_socket\n", if ($debug >= 5);
             $clicnt++;
             if($curr_socket == $ctrl_lstn_sock) {
                 # some one sent to our listening socket
@@ -1352,8 +1355,11 @@ while(1) {
             $sock->close;
         }
     }
+    print "no more socket ready\n", if ($debug >= 5);
     if ($ctrl_port_first == $ctrl_port) {
         # execute periodic tasks only on first instance
         &periodictask ();
     }
 }
+
+print "WikiPland forever loop existed at now_string = $ctrl{'now_string'}\n", if ($debug >= 1);
