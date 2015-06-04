@@ -523,6 +523,7 @@ while(1) {
                 next;
             }
             $client_ip = inet_ntoa ($addr);     # convert to readable
+            print "client_ip = $client_ip\n", if ($debug >= 5);
             if($curr_socket == $ctrl_lstn_sock) {
                 if ((($host_ip ne '0.0.0.0') &&
                     ($client_ip eq $host_ip)) ||
@@ -594,6 +595,7 @@ while(1) {
                 }
             }
             $ip =~ s/ //g;
+            print "ip = $ip\n", if ($debug >= 5);
             $ctrl{'myip'} = $ip;
             if (defined ($connected{$client_ip})) {
                 $connected{$client_ip}++;
@@ -615,7 +617,7 @@ while(1) {
             $modcalled = "_none_";     # aka module name
 
             # print date, time, client IP, password, and module names
-            print "--------------------------------------------\n", if ($debug >= 2);
+            print "------------ processing HTTP request header ----------------------\n", if ($debug >= 2);
 
             # 3) Parse client HTTP submission and identify module plugin name
             $rin = '';
