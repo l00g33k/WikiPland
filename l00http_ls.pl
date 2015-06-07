@@ -236,7 +236,7 @@ sub l00http_ls_proc {
                             if ($ctrl->{'os'} eq 'win') {
                                 $tmp =~ s/\//\\/g;
                             }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                         } else {
                             print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                             # clip.pl with \ on Windows
@@ -244,7 +244,7 @@ sub l00http_ls_proc {
                             if ($ctrl->{'os'} eq 'win') {
                                 $tmp =~ s/\//\\/g;
                             }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
                         }
                         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                         print $sock "<a href=\"#end\">end</a>\n";
@@ -444,7 +444,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         if ($ctrl->{'os'} eq 'win') {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                     } else {
                         print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                         # clip.pl with \ on Windows
@@ -452,7 +452,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         if ($ctrl->{'os'} eq 'win') {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
                     }
                     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                     print $sock "<a href=\"#end\">end</a>\n";
@@ -845,7 +845,7 @@ print;
         if ($ctrl->{'os'} eq 'win') {
             $tmp =~ s/\//\\/g;
         }
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path\n";
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path\n";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
         print $sock "<a href=\"/dirnotes.htm?path=$path"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
