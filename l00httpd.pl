@@ -576,8 +576,10 @@ while(1) {
             } elsif (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
             } else {
+                print "shell /sbin/ifconfig\n", if ($debug >= 5);
                 $ip = `/sbin/ifconfig`;
             }
+            print "raw ip = $ip\n", if ($debug >= 5);
             if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
                 if ($ip =~ /(192\.168\.\d+\.\d+)/) {
