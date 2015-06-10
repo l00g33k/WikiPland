@@ -67,7 +67,9 @@ $cfgedit = '';
 
 undef $timeout;
 
-
+# Flushing the print buffers.
+# http://www.perlmonks.org/?node_id=669369
+$| = 1;
 
 sub dlog {
     my $logm = pop;
