@@ -449,7 +449,7 @@ $readable->add($cli_lstn_sock);    # Add the lstnsock to it
 
 
 sub periodictask {
-    $tickdelta = 0x7fffffff;
+    $tickdelta = 3600;	# tick once an hour
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
     foreach $mod (sort keys %httpmods) {
@@ -471,7 +471,7 @@ sub periodictask {
     print "tickdelta $tickdelta $timeis\n", if ($debug >= 4);
 }
 
-$tickdelta = 0;
+$tickdelta = 3600;
 $uptime = time;
 $ttlconns = 0;
 
