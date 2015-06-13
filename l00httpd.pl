@@ -500,6 +500,7 @@ while(1) {
     # Get a list of sockets that are ready to talk to us.
     print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
+    print "After Select->select()\n", if ($debug >= 5);
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
     &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
