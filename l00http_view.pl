@@ -31,7 +31,8 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx, $tmpno, $tmpln, $tmptop);
+    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
+    my ($tmpno, $tmpln, $tmptop, $foundcnt);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -177,7 +178,9 @@ sub l00http_view_proc {
                 $found .= &l00httpd::findInBuf ($findtext, $block, $buffer);
                 if ($wraptext eq '') {
 				    $tmp = '';
+                    $foundcnt = 0;
 					foreach $_ (split("\n", $found)) {
+                        $foundcnt++;
 					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
                             # extract if we find parathesis
                             if (($findtext =~ /[^\\]\(.+[^\\]\)/) ||
@@ -195,8 +198,15 @@ sub l00http_view_proc {
 					}
 					$found = $tmp;
                     $found .= "</pre>\n";
+                } else {
+                    $foundcnt = 0;
+					foreach $_ (split("\n", $found)) {
+                        $foundcnt++;
+                    }
                 }
-                $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
+                $foundcnt -= 2; # adjustment
+                $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.<hr>\n";
+                $found = "Found $foundcnt matches. $found";
                 print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, 0);
                 print $sock "<p>\n";
             }
