@@ -166,31 +166,6 @@ $ctrl{'plpath'} = $plpath;      # make it available to modules
 
 $ctrl{'clipath'}  = $plpath;
 
-# parse commandline arguments
-while ($_ = shift) {
-    # perl l00httpd.pl cliport=8080 ctrlport=10000 hostip=?
-    if (/^ctrlport=(\d+)/) {
-        $ctrl_port = $1;
-        print "ctrlport set to $ctrl_port\n";
-    } elsif (/^cliport=(\d+)/) {
-        $cli_port = $1;
-        print "cliport set to $cli_port\n";
-    } elsif (/^hostip=(.+)/) {
-        $host_ip = $1;
-        print "hostip set to $host_ip\n";
-    } elsif (/^debug=(.+)/) {
-        $debug = $1;
-        $ctrl{'debug'} = $debug;
-        print "debug set to $debug\n";
-    } elsif (/^open$/) {
-	    $nopwtimeout = 0x7fffffff;
-        $ctrl{'noclinav'}  = 0;
-        $ctrl{'clipath'}  = '/';
-		$open = 1;
-	}
-}
-$ctrl_port_first = $ctrl_port;
-
 
 $conf = "l00httpd.cfg";
 $tmp = $plpath; # first time, find in l00httpd script directory
@@ -239,6 +214,32 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
 		}
 	}
 }
+
+# parse commandline arguments
+while ($_ = shift) {
+    # perl l00httpd.pl cliport=8080 ctrlport=10000 hostip=?
+    if (/^ctrlport=(\d+)/) {
+        $ctrl_port = $1;
+        print "ctrlport set to $ctrl_port\n";
+    } elsif (/^cliport=(\d+)/) {
+        $cli_port = $1;
+        print "cliport set to $cli_port\n";
+    } elsif (/^hostip=(.+)/) {
+        $host_ip = $1;
+        print "hostip set to $host_ip\n";
+    } elsif (/^debug=(.+)/) {
+        $debug = $1;
+        $ctrl{'debug'} = $debug;
+        print "debug set to $debug\n";
+    } elsif (/^open$/) {
+	    $nopwtimeout = 0x7fffffff;
+        $ctrl{'noclinav'}  = 0;
+        $ctrl{'clipath'}  = '/';
+		$open = 1;
+	}
+}
+$ctrl_port_first = $ctrl_port;
+
 
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^[0-5]$/)) {
     $debug = $ctrl{'debug'};
