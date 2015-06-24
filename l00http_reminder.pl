@@ -124,7 +124,6 @@ sub l00http_reminder_proc {
     my ($yr, $mo, $da, $hr, $mi, $se, $pausewant);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
-#   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
     $formmsg = '';
 
@@ -284,7 +283,7 @@ sub l00http_reminder_proc {
 	for($ii = 0; $ii < 60; $ii += 5) {
         $selected = '';
         if ($ii == 0) {
-#            $selected = 'selected';
+            #$selected = 'selected';
         }
 	    $temp = sprintf("%02d", $ii);
         print $sock "        <option value=\"$temp"."m\" $selected>$temp</option>\n";
@@ -355,14 +354,7 @@ sub l00http_reminder_perio {
         (time - $utcoffsec >= $starttime)) {
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
-            # reload if file modified later
-#           my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
-#           $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-#               = stat("$ctrl->{'workdir'}l00_reminder.txt");
-#           # remember file mod time
-#           if ($filetime != $mtimea) {
-                &l00http_reminder_find ($ctrl);
-#           }
+            &l00http_reminder_find ($ctrl);
         }
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
@@ -370,7 +362,7 @@ sub l00http_reminder_perio {
             $pause = 0;
 
             $ctrl->{'reminder'} = $msgtoast;
-            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a>: <font style=\"color:yellow;background-color:red\">$msgtoast</font></center>";
+            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> <a href=\"/ls.htm?path=/sdcard/l00httpd/l00_reminder.txt\">:::</a> <font style=\"color:yellow;background-color:red\">$msgtoast</font></center>";
 
             if (($ctrl->{'os'} eq 'and') &&
                 (!($msgtoast =~ /^ *$/))) {
