@@ -147,23 +147,22 @@ sub l00http_iframes_proc (\%) {
         l00httpd::dbp($config{'desc'}, "form: spec )$spec(\n");
         foreach $row (split ('   ', $spec)) {
             l00httpd::dbp($config{'desc'}, "form: row )$row(\n");
-            $out .= "<br>\n";
-                $nocol = 0;
-                $nocolstar = 0;
-                $colwd = 0;
-                foreach $frame (split ('  ', $row)) {
-                    l00httpd::dbp($config{'desc'}, "frame $frame\n");
-                    $nocol++;
-                    if ($frame =~ / \* \d+$/) {
-                        $nocolstar++;
-                    } elsif ($frame =~ / (\d+) \d+$/) {
-                        $colwd += $1;
-                    }
+            $nocol = 0;
+            $nocolstar = 0;
+            $colwd = 0;
+            foreach $frame (split ('  ', $row)) {
+                l00httpd::dbp($config{'desc'}, "frame $frame\n");
+                $nocol++;
+                if ($frame =~ / \* \d+$/) {
+                    $nocolstar++;
+                } elsif ($frame =~ / (\d+) \d+$/) {
+                    $colwd += $1;
                 }
-                l00httpd::dbp($config{'desc'}, "nocol $nocol, nocolstar $nocolstar, colwd $colwd\n");
-                $colidx = 0;
-                foreach $frame (split ('  ', $row)) {
-                    ($u, $wd, $ht) = split (' ', $frame);
+            }
+            l00httpd::dbp($config{'desc'}, "nocol $nocol, nocolstar $nocolstar, colwd $colwd\n");
+            $colidx = 0;
+            foreach $frame (split ('  ', $row)) {
+                ($u, $wd, $ht) = split (' ', $frame);
 
                 $formout .= "    <tr>\n";
                 $formout .= "        <td>Row $rowidx</td>\n";
@@ -189,6 +188,7 @@ sub l00http_iframes_proc (\%) {
                 }
                 l00httpd::dbp($config{'desc'}, "($u, $wd, $ht) colwd $colwd\n");
                 $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\">iframe not supported by your browser.</iframe>";
+            $out .= "<br>\n";
 
                 $colidx++;
             }
