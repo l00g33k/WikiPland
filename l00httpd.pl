@@ -114,6 +114,7 @@ $nopwtimeout = 0;
 
 
 $ctrl{'bbox'} = '';
+# overwritable from l00httpd.cfg
 $ctrl{'machine'} = '(unknown)';
 if (defined ($ENV{'ANDROID_ROOT'})) {
     $ctrl{'os'} = 'and';
@@ -128,16 +129,21 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     }
 } elsif ($^O eq 'cygwin') {
     $ctrl{'os'} = 'cyg';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } elsif ($^O eq 'MSwin32') {
     $ctrl{'os'} = 'win';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } else {
     if ($plpath =~ /\/var\/lib\/openshift\//) {
         # on RHC
         $ctrl{'os'} = 'rhc';
+        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     } else {
         $ctrl{'os'} = 'lin';
+        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     }
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
