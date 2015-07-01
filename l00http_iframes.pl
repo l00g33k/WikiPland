@@ -188,10 +188,10 @@ sub l00http_iframes_proc (\%) {
                 }
                 l00httpd::dbp($config{'desc'}, "($u, $wd, $ht) colwd $colwd\n");
                 $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\">iframe not supported by your browser.</iframe>";
-            $out .= "<br>\n";
 
                 $colidx++;
             }
+            $out .= "<br>\n";
         }
     }
     $tmp = $out;
