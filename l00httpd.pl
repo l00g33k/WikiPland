@@ -395,7 +395,7 @@ $ctrl_lstn_sock = IO::Socket::INET->new (
     LocalPort => $ctrl_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    Reuse => 1
+    ReuseAddr => 0  # Reuse => 1
 );
 if (!$ctrl_lstn_sock) {
     $ctrl_port += 10;
@@ -403,7 +403,7 @@ if (!$ctrl_lstn_sock) {
         LocalPort => $ctrl_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        Reuse => 1
+        ReuseAddr => 0  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
         $ctrl_port += 10;
@@ -411,7 +411,7 @@ if (!$ctrl_lstn_sock) {
             LocalPort => $ctrl_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            Reuse => 1
+            ReuseAddr => 0  # Reuse => 1
         );
     }
 }
@@ -427,7 +427,7 @@ $cli_lstn_sock = IO::Socket::INET->new (
     LocalPort => $cli_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    Reuse => 1
+    ReuseAddr => 0  # Reuse => 1
 );
 if (!$cli_lstn_sock) {
     $cli_port += 10;
@@ -435,7 +435,7 @@ if (!$cli_lstn_sock) {
         LocalPort => $cli_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        Reuse => 1
+        ReuseAddr => 0  # Reuse => 1
     );
     if (!$cli_lstn_sock) {
         $cli_port += 10;
@@ -443,7 +443,7 @@ if (!$cli_lstn_sock) {
             LocalPort => $cli_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            Reuse => 1
+            ReuseAddr => 0  # Reuse => 1
         );
     }
 }
