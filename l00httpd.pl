@@ -53,6 +53,7 @@ $httpmax = 1024 * 1024 * 10 + 4096;
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0);
 
 
 # set listening port
@@ -82,16 +83,18 @@ sub dlog {
 }
 
 # predefined to make it easy for the modules
-#$ctrl{'httphead'}  = "HTTP/1.0 200 OK\r\n\r\n";
 $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
-#$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\x0D\x0A<html>\x0D\x0A";
-$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<head>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
-                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
-                     # so arrow keys scroll page in my browser
-                     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A";
-#                    "<meta http-equiv=\"x-ua-compatible\" content=\"text/html; IE=EmulateIE7; charset=utf-8\">\x0D\x0A";
+#::now::f705
+$htmlheadV1 = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
+$htmlheadV2 = "<!DOCTYPE html>\x0D\x0A";
+$htmlheadB0 = "<html>\x0D\x0A".
+              "<head>\x0D\x0A".
+              "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
+              "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
+              # so arrow keys scroll page in my browser
+              "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A".
+              "";
+$ctrl{'htmlhead'} = $htmlheadV1 . $htmlheadB0;
 
 $ctrl{'htmlhead2'} = "</head>\x0D\x0A<body>\n";
 $ctrl{'htmlfoot'}  = "\x0D\x0A</body>\x0D\x0A</html>";
@@ -707,6 +710,7 @@ while(1) {
             # read in browser submission
             $httphdr =~ s/\r//g;
             $postboundary = '';
+            $ctrl{'htmlhead'} = $htmlheadV1 . $htmlheadB0;
             foreach $_ (split ("\n", $httphdr)) {
                 if (/^\x0D\x0A$/) {
                     # end of submission
@@ -730,6 +734,10 @@ while(1) {
                     } else {
                         $connected{$client_ip} = 1;
                     }
+                } elsif (/^User-Agent:.*Android +5/i) {
+                    # Android 5.1: <!DOCTYPE html XHTML Mobile seems to make single colume display
+                    # This makes it more compact
+                    $ctrl{'htmlhead'} = $htmlheadV2 . $htmlheadB0;
                 } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
                     $postboundary = $1;
                     l00httpd::dbp("l00httpd", "Content-Type: multipart/form-data; boundary=$postboundary\n");
