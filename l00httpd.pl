@@ -630,7 +630,7 @@ while(1) {
             }
             $idpw = "";
             $urlparams = "";
-            $modcalled = "_none_";     # aka module name
+            $modcalled = "hello";     # aka module name
 
             # print date, time, client IP, password, and module names
             print "------------ processing HTTP request header ----------------------\n", if ($debug >= 2);
