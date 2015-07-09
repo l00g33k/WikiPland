@@ -489,7 +489,7 @@ sub l00http_periobattery_proc {
 
 sub l00http_periobattery_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($tempe, $bstat, $noln);
+    my ($tempe, $bstat, $noln, $gotvol);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
 
     if (($interval > 0) && 
@@ -498,6 +498,7 @@ sub l00http_periobattery_perio {
 
         $tempe = '';
         if ($ctrl->{'os'} eq 'and') {
+            $gotvol = 0;
             # This SL4A call doesn't work for my Slide:(
             #$tmp = $ctrl->{'droid'}->batteryGetLevel();
             #print $sock "batteryGetLevel $tmp\n";
@@ -506,44 +507,49 @@ sub l00http_periobattery_perio {
             #print $sock "batteryGetStatus $tmp\n";
             #&l00httpd::dumphash ("tmp", $tmp);
 
-            # On Slide, dmesg contains battery status:
-            #<6>[ 7765.397493] [BATT] ID=2, level=89, vol=4209, temp=326, curr=-214, dis_curr=0, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at 7765326083644 (2013-12-11 12:08:08.239292486 UTC)
-            $bstat = 'Only my Slide, dmesg contains a line with battery level: [BATT] ID=2, level=89, vol=4209, temp=326... If you see this line, either dmesg did not work, or the line format is different. Contact me to support it.';
-            foreach $_ (split("\n", `dmesg`)) {
-                if (/\[BATT\] ID=2/) {
-                    $bstat = $_;
-                }
-            }
-            if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
-                 = $bstat =~ /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+) at \d+ \((.+? UTC)\)/) {
-                if ($lasttimestamp ne $timestamp) {
-                    $lasttimestamp = $timestamp;
-                    $battperc = $level;
-                    $battvolts = $vol / 1000;
-                    $batttemp = $temp / 10;
-                    $battmA = $curr + $dis_curr;
-                    $tempe = "$ctrl->{'now_string'}: $bstat\n";
-                    $battcnt++;
-
-                    if ($firstdmesg eq '') {
-                        $firstdmesg = $tempe;
-					}
-                    $lastdmesg = $tempe;
-
-                    # populate no save table
-                    $chg_src =~ s/0/0\/off/;
-                    $chg_src =~ s/1/1\/usb/;
-                    $chg_src =~ s/2/2\/wall/;
-                    $chg_en =~ s/0/0\/off/;
-                    $chg_en =~ s/1/1\/usb/;
-                    $chg_en =~ s/2/2\/wall/;
-                    $table = "||$battcnt||$level||$vol||$temp||$battmA||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
-                    # trim if too long
-                    $noln = $table =~ s/\n/\n/g;
-                    while ($noln > $maxreclen) {
-                        $table   =~ s/\n.*?$//;   # trim from the end, oldest
-                        $noln = $table =~ s/\n/\n/g;
+            if ($ctrl->{'machine'} eq 'Morrison') {
+                # On Slide, dmesg contains battery status:
+                #<6>[ 7765.397493] [BATT] ID=2, level=89, vol=4209, temp=326, curr=-214, dis_curr=0, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at 7765326083644 (2013-12-11 12:08:08.239292486 UTC)
+                $bstat = 'Only my Slide, dmesg contains a line with battery level: [BATT] ID=2, level=89, vol=4209, temp=326... If you see this line, either dmesg did not work, or the line format is different. Contact me to support it.';
+            
+                foreach $_ (split("\n", `dmesg`)) {
+                    if (/\[BATT\] ID=2/) {
+                        $bstat = $_;
                     }
+                }
+                if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
+                     = $bstat =~ /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+) at \d+ \((.+? UTC)\)/) {
+                    $gotvol = 1;
+                }
+            } else {
+            }
+            if (($gotvol) && ($lasttimestamp ne $timestamp)) {
+                $lasttimestamp = $timestamp;
+                $battperc = $level;
+                $battvolts = $vol / 1000;
+                $batttemp = $temp / 10;
+                $battmA = $curr + $dis_curr;
+                $tempe = "$ctrl->{'now_string'}: $bstat\n";
+                $battcnt++;
+
+                if ($firstdmesg eq '') {
+                    $firstdmesg = $tempe;
+                }
+                $lastdmesg = $tempe;
+
+                # populate no save table
+                $chg_src =~ s/0/0\/off/;
+                $chg_src =~ s/1/1\/usb/;
+                $chg_src =~ s/2/2\/wall/;
+                $chg_en =~ s/0/0\/off/;
+                $chg_en =~ s/1/1\/usb/;
+                $chg_en =~ s/2/2\/wall/;
+                $table = "||$battcnt||$level||$vol||$temp||$battmA||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
+                # trim if too long
+                $noln = $table =~ s/\n/\n/g;
+                while ($noln > $maxreclen) {
+                    $table   =~ s/\n.*?$//;   # trim from the end, oldest
+                    $noln = $table =~ s/\n/\n/g;
                 }
             }
         }
