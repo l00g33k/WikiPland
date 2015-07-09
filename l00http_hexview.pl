@@ -72,8 +72,6 @@ sub l00http_hexview_proc {
     # read the file
     if (open (IN, "<$form->{'path'}")) {
         binmode (IN);
-        # http://www.perlmonks.org/?node_id=1952
-        local $/ = undef;
         seek (IN, $offset, 0);
         read (IN, $buffer, $length);
         close (IN);

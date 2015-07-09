@@ -228,6 +228,7 @@ sub l00http_view_proc {
                 }
                 s/\r//g;
                 s/\n//g;
+                s/&/&amp;/g;
                 s/</&lt;/g;
                 s/>/&gt;/g;
                 if (defined($form->{'hidelnno'}) && 

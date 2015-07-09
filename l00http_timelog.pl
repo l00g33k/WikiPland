@@ -26,7 +26,8 @@ sub l00http_timelog_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $ii, $battlvl);
+    my (@alllines, $line, $lineno, $ii, $battlvl, $filecontent);
+    my (@quicktext);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
@@ -38,21 +39,20 @@ sub l00http_timelog_proc {
     print $sock "<a name=\"__top__\"></a> ";
     if ($ctrl->{'os'} eq 'and') {
         $battlvl = $ctrl->{'droid'}->batteryGetLevel(); 
-#&l00httpd::dumphash ("battlvl", $battlvl);
-#        print $sock "batt=$battlvl->{'result'} % ";
     }
     print $sock "<a href=\"#__end__\">Jump to end</a><br>\n";
 
     $buffer = "";
-    if (defined ($form->{'save'})) {
+    if (defined ($form->{'save'}) || defined ($form->{'quick'})) {
         if (($justsaved == 0) &&
             (defined ($form->{'buffer'})) &&
             ((defined ($form->{'path'})) && 
             (length ($form->{'path'}) > 0))) {
             if ($form->{'buffer'} ne $lastbuf) {
+                if (defined ($form->{'quick'})) {
+                    $form->{'buffer'} .= $form->{'quick'};
+                }
                 $lastbuf = $form->{'buffer'};
-#               $justsaved = 1;
-#               &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 4);
                 &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 9);
                 if (open (IN, "<$form->{'path'}")) {
                     local $/;
@@ -85,7 +85,6 @@ sub l00http_timelog_proc {
     } else {
         # disallow 2 succesive save in a row; the 2nd save likely is refresh
         # get newtime to reset
-#       $justsaved = 0;
     }
 #08/09/10  8:54:23 ad tc
 #08/09/10  9:35:23 ad em
@@ -116,6 +115,24 @@ sub l00http_timelog_proc {
     $buffer .= sprintf ("%02d/%02d/%02d %2d:%02d:%02d ", 
         $mon+1, $mday, $year-100, $hour, $min, $sec);
 
+    # dump file content
+    $filecontent = '';
+    $lineno = 1;
+    undef @quicktext;
+    if (open (IN, "<$form->{'path'}")) {
+        $filecontent = "<pre>\n";
+        while (<IN>) {
+            s/\r//g;
+            s/\n//g;
+            if (/^#(.+)/) {
+                push (@quicktext, $1);
+            }
+            $filecontent .= sprintf ("%04d: ", $lineno++) . "$_\n";
+        }
+        close (IN);
+        $filecontent .= "</pre>\n";
+    }
+
     print $sock "<form action=\"/timelog.htm\" method=\"post\">\n";
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
     print $sock "<p>\n";
@@ -130,20 +147,14 @@ sub l00http_timelog_proc {
 
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
+    $lineno = 0;
+    foreach $_ (@quicktext) {
+        print $sock "<input type=\"submit\" name=\"quick\" value=\"$_\">\n";
+    }
     print $sock "</form>\n";
 
-    # get submitted name and print greeting
-    $lineno = 1;
-    if (open (IN, "<$form->{'path'}")) {
-        print $sock "<pre>\n";
-        while (<IN>) {
-            s/\r//g;
-            s/\n//g;
-            print $sock sprintf ("%04d: ", $lineno++) . "$_\n";
-        }
-        close (IN);
-        print $sock "</pre>\n";
-    }
+
+    print $sock $filecontent;
     print $sock "<a href=\"#__top__\">Jump to top</a>\n";
     print $sock "<a name=\"__end__\"></a><br>\n";
 

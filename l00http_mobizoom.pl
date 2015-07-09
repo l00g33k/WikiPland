@@ -166,26 +166,45 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
-    my ($skip, $tmp, $wgetall, $urlorg);
+    my ($skip, $tmp, $wgetall, $urlorg, $title);
 
     $url = '';
     if (defined ($form->{'url'})) {
         $url = $form->{'url'};
     }
 
+    $title = 'Mobilizer Zoom';
     if ((defined ($form->{'path'})) && ($ctrl->{'os'} ne 'rhc')) {
         # only when not on RHC
         $mode1online2offline4download = 4;
     } elsif (&l00httpd::l00freadOpen($ctrl, $url)) {
         $mode1online2offline4download = 2;
         $wget = &l00httpd::l00freadAll($ctrl);
+        # find embedded page title
+        foreach $_ (split("\n", $wget)) {
+            if ($title eq 'NEXTLINEISTITLE') {
+                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
+                if (length ($_) < 10) {
+                    # title less than 10 char, can't be
+                    $title = 'Mobilizer Zoom';
+                } else {
+                    $title = $_;
+                }
+                last;
+            }
+            if (/<title>/) {
+                # next line should be page title
+                $title = 'NEXTLINEISTITLE';
+                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
+            }
+        }
     } else {
         $mode1online2offline4download = 1;
     }
 
     if ($mode1online2offline4download & 3) {
         # standard mode
-        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Mobilizer Zoom</title>" . $ctrl->{'htmlhead2'};
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$title</title>" . $ctrl->{'htmlhead2'};
         print $sock "<a name=\"__top__\"></a>\n";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#__end__\">Jump to end</a><hr>\n";

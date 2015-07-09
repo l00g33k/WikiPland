@@ -53,6 +53,7 @@ $httpmax = 1024 * 1024 * 10 + 4096;
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0);
 
 
 # set listening port
@@ -82,16 +83,18 @@ sub dlog {
 }
 
 # predefined to make it easy for the modules
-#$ctrl{'httphead'}  = "HTTP/1.0 200 OK\r\n\r\n";
 $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
-#$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\x0D\x0A<html>\x0D\x0A";
-$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<head>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
-                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
-                     # so arrow keys scroll page in my browser
-                     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A";
-#                    "<meta http-equiv=\"x-ua-compatible\" content=\"text/html; IE=EmulateIE7; charset=utf-8\">\x0D\x0A";
+#::now::f705
+$htmlheadV1 = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
+$htmlheadV2 = "<!DOCTYPE html>\x0D\x0A";
+$htmlheadB0 = "<html>\x0D\x0A".
+              "<head>\x0D\x0A".
+              "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
+              "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
+              # so arrow keys scroll page in my browser
+              "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A".
+              "";
+$ctrl{'htmlhead'} = $htmlheadV1 . $htmlheadB0;
 
 $ctrl{'htmlhead2'} = "</head>\x0D\x0A<body>\n";
 $ctrl{'htmlfoot'}  = "\x0D\x0A</body>\x0D\x0A</html>";
@@ -114,6 +117,7 @@ $nopwtimeout = 0;
 
 
 $ctrl{'bbox'} = '';
+# overwritable from l00httpd.cfg
 $ctrl{'machine'} = '(unknown)';
 if (defined ($ENV{'ANDROID_ROOT'})) {
     $ctrl{'os'} = 'and';
@@ -128,16 +132,21 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     }
 } elsif ($^O eq 'cygwin') {
     $ctrl{'os'} = 'cyg';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } elsif ($^O eq 'MSwin32') {
     $ctrl{'os'} = 'win';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } else {
     if ($plpath =~ /\/var\/lib\/openshift\//) {
         # on RHC
         $ctrl{'os'} = 'rhc';
+        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     } else {
         $ctrl{'os'} = 'lin';
+        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     }
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
@@ -389,7 +398,7 @@ $ctrl_lstn_sock = IO::Socket::INET->new (
     LocalPort => $ctrl_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    Reuse => 1
+    ReuseAddr => 0  # Reuse => 1
 );
 if (!$ctrl_lstn_sock) {
     $ctrl_port += 10;
@@ -397,7 +406,7 @@ if (!$ctrl_lstn_sock) {
         LocalPort => $ctrl_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        Reuse => 1
+        ReuseAddr => 0  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
         $ctrl_port += 10;
@@ -405,7 +414,7 @@ if (!$ctrl_lstn_sock) {
             LocalPort => $ctrl_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            Reuse => 1
+            ReuseAddr => 0  # Reuse => 1
         );
     }
 }
@@ -421,7 +430,7 @@ $cli_lstn_sock = IO::Socket::INET->new (
     LocalPort => $cli_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    Reuse => 1
+    ReuseAddr => 0  # Reuse => 1
 );
 if (!$cli_lstn_sock) {
     $cli_port += 10;
@@ -429,7 +438,7 @@ if (!$cli_lstn_sock) {
         LocalPort => $cli_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        Reuse => 1
+        ReuseAddr => 0  # Reuse => 1
     );
     if (!$cli_lstn_sock) {
         $cli_port += 10;
@@ -437,12 +446,13 @@ if (!$cli_lstn_sock) {
             LocalPort => $cli_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            Reuse => 1
+            ReuseAddr => 0  # Reuse => 1
         );
     }
 }
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
-print "cli_port is $cli_port\n";
+print "ctrl_port is $ctrl_port\n";
+print "cli_port  is $cli_port\n";
 
 my $readable = IO::Select->new;     # Create a new IO::Select object
 $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
@@ -620,7 +630,7 @@ while(1) {
             }
             $idpw = "";
             $urlparams = "";
-            $modcalled = "_none_";     # aka module name
+            $modcalled = "hello";     # aka module name
 
             # print date, time, client IP, password, and module names
             print "------------ processing HTTP request header ----------------------\n", if ($debug >= 2);
@@ -701,6 +711,7 @@ while(1) {
             # read in browser submission
             $httphdr =~ s/\r//g;
             $postboundary = '';
+            $ctrl{'htmlhead'} = $htmlheadV1 . $htmlheadB0;
             foreach $_ (split ("\n", $httphdr)) {
                 if (/^\x0D\x0A$/) {
                     # end of submission
@@ -724,6 +735,10 @@ while(1) {
                     } else {
                         $connected{$client_ip} = 1;
                     }
+                } elsif (/^User-Agent:.*Android +5/i) {
+                    # Android 5.1: <!DOCTYPE html XHTML Mobile seems to make single colume display
+                    # This makes it more compact
+                    $ctrl{'htmlhead'} = $htmlheadV2 . $htmlheadB0;
                 } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
                     $postboundary = $1;
                     l00httpd::dbp("l00httpd", "Content-Type: multipart/form-data; boundary=$postboundary\n");
