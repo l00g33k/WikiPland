@@ -630,7 +630,14 @@ while(1) {
             }
             $idpw = "";
             $urlparams = "";
-            $modcalled = "hello";     # aka module name
+            if (($ishost) ||           # client enabled or is server
+                ((defined ($modsinfo{"ls:ena:checked"})) &&
+                 ($modsinfo{"ls:ena:checked"} eq "checked"))) {
+                $modcalled = "_none_";     # aka module name
+            } else {
+                # invoke 'hello' if not host and 'ls' not enabled
+                $modcalled = "hello";     # aka module name
+            }
 
             # print date, time, client IP, password, and module names
             print "------------ processing HTTP request header ----------------------\n", if ($debug >= 2);
