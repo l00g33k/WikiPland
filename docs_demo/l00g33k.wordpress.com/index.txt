@@ -1,4 +1,12 @@
 %TOC%
+=New Plan 2015=
+==Introductions==
+* IntroOverview
+* IntroSimple
+* IntroAdvanced
+** DemoCamera
+* IntroDeveloper
+=Old plan=
 =Phase 0: Preparing=
 * Notations:
 ** *l*Todo now**
