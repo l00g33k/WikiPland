@@ -860,6 +860,8 @@ while(1) {
                     }
                 }
             }
+            print "FORM: completed urlparams processing\n", if ($debug >= 5);
+
             # zap mod='httpd' if no args
             if (($modcalled eq 'httpd') &&
                 !($urlparams =~ /=/)) {
@@ -904,11 +906,13 @@ while(1) {
             }
 
             # handle URL
+            print "Start handling URL\n", if ($debug >= 5);
             if ($modcalled eq "restart") {
                 $modcalled = '';
                 $shutdown = 0;
                 # reload all modules
                 l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
+                print "Restart/reloading modules\n", if ($debug >= 2);
                 &loadmods;
             }
             if ($shutdown == 1) {
@@ -940,6 +944,7 @@ while(1) {
                  ((defined ($modsinfo{"$modcalled:ena:checked"})) &&
                   ($modsinfo{"$modcalled:ena:checked"} eq "checked"))) &&
                 (defined $httpmods{$modcalled})) {         # and module defined
+                print "Start handling $modcalled\n", if ($debug >= 5);
                 $shutdown = 0;
 
                 # 3.1) if found, invoke module
@@ -978,9 +983,11 @@ while(1) {
                     &dlog  ($ctrl{'msglog'}."\n");
                 }
             } else {
+                print "Start handling host control\n", if ($debug >= 5);
                 $shutdown = 0;
                 # process Home control data
                 if ($modcalled eq 'httpd') {
+                    print "Start processing host control\n", if ($debug >= 5);
                     if ((defined ($FORM{'debuglvl'})) && ($FORM{'debuglvl'} =~ /^[0-5]$/)) {
                         $debug = $FORM{'debuglvl'};
                     }
@@ -1124,6 +1131,7 @@ while(1) {
                 # on server: provide client control
                 # on client: provide a table of modules, and links if enabled
                 # Send HTTP and HTML headers
+                print "Send host control HTTP header\n", if ($debug >= 5);
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland. \n";
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm
@@ -1207,6 +1215,7 @@ while(1) {
                     print $sock "<tr><td>Plugins</td><td>Descriptions</td>\n";
                 }
                 # list all modules
+                print "List all modules\n", if ($debug >= 5);
                 foreach $tmp (sort keys %httpmodssort) {
                     $mod = $httpmodssort{$tmp};
                     # get description
@@ -1359,6 +1368,7 @@ while(1) {
 
                 # send HTML footer and ends
                 print $sock $ctrl{'htmlfoot'};
+                print "Completed host control page\n", if ($debug >= 5);
             }
             $sock->close;
         }
