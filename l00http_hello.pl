@@ -5,18 +5,17 @@ use warnings;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($name, $key, $val, $hellomsg);
+my ($key, $val, $hellomsg);
 my %config = (proc => "l00http_hello_proc",
               desc => "l00http_hello_desc");
 
-$name = '';
 $hellomsg = '';
 
 sub l00http_hello_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "hello: Hello, World! And listing all FORM data";
+    "1: hello: Hello, World! And listing all FORM data";
 }
 
 sub l00http_hello_proc (\%) {
@@ -28,13 +27,14 @@ sub l00http_hello_proc (\%) {
         $hellomsg = '';
     }
 
-    if ((defined ($form->{'message'})) && (defined ($form->{'submit'}))) {
-        $name = $form->{'message'};
-        $name =~ s/</&lt;/g;
-        $name =~ s/>/&gt;/g;
-        $hellomsg = "<pre>$ctrl->{'now_string'}, $ctrl->{'client_ip'} said:</pre>\n$name\n<p>$hellomsg";
-    } else {
-        $name = '';
+    if ((defined ($form->{'message'})) && 
+        (length ($form->{'message'}) > 0) && 
+        (defined ($form->{'submit'}))) {
+        $form->{'message'} =~ s/</&lt;/g;
+        $form->{'message'} =~ s/>/&gt;/g;
+        # shows only last 6 IP digits
+        $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
+        $hellomsg = "<pre>$ctrl->{'now_string'}, $_ said:</pre>\n$form->{'message'}\n<p>$hellomsg";
     }
 
     # Send HTTP and HTML headers
@@ -48,7 +48,7 @@ sub l00http_hello_proc (\%) {
 
     print $sock "        <tr>\n";
     print $sock "            <td>Your message:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"message\" value=\"$name\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"message\" value=\"\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
@@ -72,6 +72,15 @@ sub l00http_hello_proc (\%) {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     for $key (keys %$form) {
         $val = $form->{$key};
+        if (!defined ($val) || ($val =~ /^ *$/)) {
+            $val = '&nbsp;';
+        }
+#        if (!$ctrl->{'ishost'}) {
+#            # show only last 6 ip to public
+#            if ($key eq 'ip') {
+#                $val = substr ($val, length ($val) - 6, 6);
+#            }
+#        }
         print $sock "<tr><td>$key</td><td>$val</td>\n";
     }
     print $sock "</table>\n";
