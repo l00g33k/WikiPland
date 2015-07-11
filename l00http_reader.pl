@@ -29,7 +29,7 @@ sub l00http_reader_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $fname, $lnno, $lnno2, $tmp, $curr, $buf, $font0, $font1);
 	my ($cachepath, $cachename, $cachelink, $url, $morepage, $tmp2, %duplicate, $cnt);
-    my ($docaching);
+    my ($docaching, $noart, $nodownload);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>reader</title>" . $ctrl->{'htmlhead2'};
@@ -177,10 +177,15 @@ sub l00http_reader_proc (\%) {
             $lnno = 1;
             $cnt = 0;
             $docaching = 1;
+            $noart = 0;
+            $nodownload = 0;
             while (<IN>) {
                 if (/^---/) {
                     # --- ends attempt to cache
+                    # change to
+                    # --- ends readmarks
                     $docaching = 0;
+                    last;
                 }
                 if (-f "$ctrl->{'workdir'}SigReaderDownloadStop.txt") {
                     # Existence of file signal stop downloading
@@ -188,6 +193,7 @@ sub l00http_reader_proc (\%) {
                     $docaching = 0;
                 }
                 if (/^(\d{8,8} \d{6,6}) /) {
+                    $noart++;
 					$cachename = $1;
 					$cachename =~ s/ /_/;
 					$cachepath = "$form->{'path'}.cached/";
@@ -280,6 +286,7 @@ sub l00http_reader_proc (\%) {
                         $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                             = stat($cachename);
                         $cachelink = sprintf("<a href=\"/view.htm?path=$cachename\">(%6d)</a> ", $size);;
+                        $nodownload++;
 					} else {
 					    $cachelink = '';
 					}
@@ -301,6 +308,8 @@ sub l00http_reader_proc (\%) {
         }
         print $sock "<hr>\n";
         print $sock "<a name=\"end\"></a><a href=\"#top\">Jump to top</a>. Full file:\n";
+        $_ = $noart - $nodownload;
+        print $sock "There are $noart articles, $nodownload cached, $_ uncached\n";
         print $sock "<hr>\n";
         if (open(IN, "<$form->{'path'}")) {
             $lnno = 1;
