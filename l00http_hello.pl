@@ -5,11 +5,10 @@ use warnings;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($key, $val, $hellomsg);
+my ($key, $val);
 my %config = (proc => "l00http_hello_proc",
               desc => "l00http_hello_desc");
 
-$hellomsg = '';
 
 sub l00http_hello_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -22,9 +21,20 @@ sub l00http_hello_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my ($hellomsg, $delimiter);
 
+    $hellomsg = '';
     if (defined ($form->{'clear'})) {
-        $hellomsg = '';
+        unlink ("$ctrl->{'workdir'}l00_hello.txt");
+    } else {
+        # if not clearing, load from file
+        $delimiter = $/;
+        local $/ = undef;
+        if (open (IN, "<$ctrl->{'workdir'}l00_hello.txt")) {
+            $hellomsg = <IN>;
+            close (IN);
+        }
+        $/ = $delimiter;
     }
 
     if ((defined ($form->{'message'})) && 
@@ -35,6 +45,10 @@ sub l00http_hello_proc (\%) {
         # shows only last 6 IP digits
         $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
         $hellomsg = "<pre>$ctrl->{'now_string'}, $_ said:</pre>\n$form->{'message'}\n<p>$hellomsg";
+        if (open (OU, ">$ctrl->{'workdir'}l00_hello.txt")) {
+            print OU $hellomsg;
+            close (OU);
+        }
     }
 
     # Send HTTP and HTML headers
@@ -65,6 +79,10 @@ sub l00http_hello_proc (\%) {
     print $sock "<INPUT TYPE=\"hidden\" NAME=\"ip\" VALUE=\"$ctrl->{'client_ip'}\">\n";
     print $sock "</form>\n";
 
+    if ($ctrl->{'ishost'}) {
+        print $sock "View <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_hello.txt\">$ctrl->{'workdir'}l00_hello.txt</a><p>\n";
+    }
+
     # get submitted name and print greeting
     print $sock "$hellomsg\n";
 
@@ -75,12 +93,6 @@ sub l00http_hello_proc (\%) {
         if (!defined ($val) || ($val =~ /^ *$/)) {
             $val = '&nbsp;';
         }
-#        if (!$ctrl->{'ishost'}) {
-#            # show only last 6 ip to public
-#            if ($key eq 'ip') {
-#                $val = substr ($val, length ($val) - 6, 6);
-#            }
-#        }
         print $sock "<tr><td>$key</td><td>$val</td>\n";
     }
     print $sock "</table>\n";
