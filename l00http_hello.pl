@@ -42,6 +42,8 @@ sub l00http_hello_proc (\%) {
         (defined ($form->{'submit'}))) {
         $form->{'message'} =~ s/</&lt;/g;
         $form->{'message'} =~ s/>/&gt;/g;
+        $form->{'message'} =~ s/\r//g;
+        $form->{'message'} =~ s/\n/<br>\n/g;
         # shows only last 6 IP digits
         $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
         $hellomsg = "<pre>$ctrl->{'now_string'}, $_ said:</pre>\n$form->{'message'}\n<p>$hellomsg";
@@ -62,7 +64,8 @@ sub l00http_hello_proc (\%) {
 
     print $sock "        <tr>\n";
     print $sock "            <td>Your message:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"message\" value=\"\"></td>\n";
+#   print $sock "            <td><input type=\"text\" size=\"16\" name=\"message\" value=\"\"></td>\n";
+    print $sock "            <td><textarea name=\"message\" cols=\"16\" rows=\"4\"></textarea></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
