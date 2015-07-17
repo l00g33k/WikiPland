@@ -415,7 +415,7 @@ sub l00npoormanrdnshash {
 #&l00httpd::pcSyncCmdline($ctrl, $fullpath);
 sub pcSyncCmdline {
     my ($ctrl, $fullpath) = @_;
-    my ($buf, $clip, $rsyncpath, $path, $fname, $pcpath);
+    my ($buf, $clip, $rsyncpath, $path, $fname, $pcpath, $tmp);
 
 
     if (defined($ctrl->{'adbpath'})) {
@@ -461,9 +461,19 @@ sub pcSyncCmdline {
         $clip .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $clip .= "${pcpath}adb.in\n";
 
+        # append in RAM
+        &l00freadOpen($ctrl, 'l00://pcSyncCmdline');
+        $tmp = &l00freadAll($ctrl);
+        &l00fwriteOpen($ctrl, 'l00://pcSyncCmdline');
+        &l00fwriteBuf($ctrl, "$tmp\n$clip\n");
+        &l00fwriteClose($ctrl);
+
         $clip = urlencode ($clip);
 
-        $buf = "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\">clipboard</a>:<br>\n" . $buf;
+        $buf = "View <a href=\"/view.htm?path=l00://pcSyncCmdline\">l00://pcSyncCmdline</a>. \n"
+                . "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\">clipboard</a>:<br>\n"
+                . $buf;
+
 
     }
 

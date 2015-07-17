@@ -392,13 +392,20 @@ sub loadmods {
 
 
 # 2) Open a listening socket
+my ($reuseflag);
+if ($ctrl{'os'} eq 'win') {
+    $reuseflag = 0;
+} else {
+    # so won't have to wait to reuse same port on Android
+    $reuseflag = 1;
+}
 
 # create a listening socket 
 $ctrl_lstn_sock = IO::Socket::INET->new (
     LocalPort => $ctrl_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    ReuseAddr => 0  # Reuse => 1
+    ReuseAddr => $reuseflag  # Reuse => 1
 );
 if (!$ctrl_lstn_sock) {
     $ctrl_port += 10;
@@ -406,7 +413,7 @@ if (!$ctrl_lstn_sock) {
         LocalPort => $ctrl_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        ReuseAddr => 0  # Reuse => 1
+        ReuseAddr => $reuseflag  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
         $ctrl_port += 10;
@@ -414,7 +421,7 @@ if (!$ctrl_lstn_sock) {
             LocalPort => $ctrl_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            ReuseAddr => 0  # Reuse => 1
+            ReuseAddr => #reuseflag  # Reuse => 1
         );
     }
 }
