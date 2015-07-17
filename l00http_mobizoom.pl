@@ -367,6 +367,11 @@ sub l00http_mobizoom_proc {
             }
             &l00httpd::l00fwriteBuf($ctrl, $wgetall);
             &l00httpd::l00fwriteClose($ctrl);
+            if (($mode1online2offline4download == 4) && (length ($wgetall) < 5000)) {
+                # download too small, delete it
+                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                &l00httpd::l00fwriteClose($ctrl);
+            }
         }
     }
 

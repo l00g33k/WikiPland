@@ -106,14 +106,13 @@ sub l00http_notify_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
-    print $sock "            <td>Message:</td>\n";
+    print $sock "            <td>Msg:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"msg\" value=\"$msg\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-#   print $sock "        <td><input type=\"submit\" name=\"paste\" value=\"PasteSet\"> <input type=\"submit\" name=\"speech\" value=\"Speech2Txt\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"pasteset\" value=\"PasteSet\"></td>\n";
-    print $sock "        <td valign=\"top\"><input type=\"submit\" name=\"submit\" value=\"Set\"> <input type=\"submit\" name=\"paste\" value=\"Paste\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Set\"></td>\n";
+    print $sock "        <td valign=\"top\"><input type=\"submit\" name=\"paste\" value=\"Paste\"> <input type=\"submit\" name=\"pasteset\" value=\"PasteSet\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";

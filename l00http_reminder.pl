@@ -248,8 +248,8 @@ sub l00http_reminder_proc {
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"stop\" value=\"Stop\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"> <input type=\"submit\" name=\"paste\" value=\"Paste\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"stop\" value=\"Stop\"> <input type=\"submit\" name=\"paste\" value=\"Paste\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
