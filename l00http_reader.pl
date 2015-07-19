@@ -259,7 +259,7 @@ sub l00http_reader_proc (\%) {
                                                         if (!defined($duplicate{$url})) {
                                                             # remember it
                                                             $duplicate{$url} = 1;
-                                                            print "off-line cache: $url\n";
+                                                            print "off-line cache: $url ($lnno/$lnno2)\n";
                                                             # fetch it
                                                             $path = $form->{'path'};
                                                             $morepage =~ s/\.txt$/_.txt/;   # grow _.txt :)
