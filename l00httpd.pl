@@ -82,6 +82,14 @@ sub dlog {
     }
 }
 
+sub updateNow_string {
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    $ctrl{'now_day'} = $wday;
+}
+&updateNow_string ();
+
+
 # predefined to make it easy for the modules
 $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
 #::now::f705
@@ -465,11 +473,9 @@ my $readable = IO::Select->new;     # Create a new IO::Select object
 $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
 $readable->add($cli_lstn_sock);    # Add the lstnsock to it
 
-
 sub periodictask {
     $tickdelta = 3600;	# tick once an hour
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-    $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    &updateNow_string ();
     foreach $mod (sort keys %httpmods) {
         if (defined ($modsinfo{"$mod:fn:perio"})) {
             $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
@@ -494,8 +500,7 @@ $uptime = time;
 $ttlconns = 0;
 
 
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-$ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+&updateNow_string ();
 if (open (OUT, ">$plpath"."l00httpd.log")) {
     print OUT "$ctrl{'now_string'} l00httpd starts\n";
     close OUT;
@@ -519,8 +524,7 @@ while(1) {
     print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
     print "After Select->select()\n", if ($debug >= 5);
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-    $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    &updateNow_string ();
     &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
     $l00time = time;
     $clicnt = 0;
