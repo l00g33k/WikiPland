@@ -1,3 +1,6 @@
+20150725 094257 Adding cron like capability
+20150712 215142 hello.pl now saves messages to file and restore from file
+20150711 103210 hello.pl only display partial IP for privacy
 20150709 073048 Now will show hello.pl when client access to ls.pl is disabled as a trivial chat server. Access may be disabled by IP
 20150709 073012 Using cronjob as a fallback to restart the script if it crash minutely. Can't figure out why it keeps crashing.
 20150624 231545 Trying to figure out why WikiPland runnong on Red Hat Openshift crashes within 100 hours

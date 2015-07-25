@@ -1,0 +1,37 @@
+%TOC%
+* wiki
+c:\2\x\IntroOverview.txt
+c:\2\x\IntroSimple.txt
+c:\2\x\IntroAdvanced.txt
+c:\2\x\IntroDeveloper.txt
+c:\x\ram\l00\IntroOverview.txt
+c:\x\ram\l00\IntroSimple.txt
+c:\x\ram\l00\IntroAdvanced.txt
+c:\x\ram\l00\IntroDeveloper.txt
+
+=Introduction=
+
+!WikiPland is a general purpose wiki server that was developed on the Android phone for the Android phones and the desktops. This article is focusing on simple daily uses. For an overview introduction please read the IntroOverview.
+
+=Audience=
+
+The intended audience of this article are those who are interested in getting immediate benefits without having to invest time to learn new concepts and understand. Just quickly show me what it does and how to use it.
+
+=Instant Gratifications=
+The following sub-sections describe a few feature that are easy to use.
+
+==Reading Web Pages In Giant Size Font==
+
+Many web sites are not truly designed for viewing on the phones with screen size up to 30 times smaller than a desktop computer. While zooming works to some extends, sometimes there are limits to maximum zoom level, and other times the text are not reflowed so you have to swipe left and swipe right for every lines. This makes it very difficult to read long artcles on the phone if your eye sights are not like that of the teens'.
+
+Google Mobilizer has been quite useful. It is a Google service that reformat any web page into a text only page. But there are a couple of short comes. First of all is that that text does not reflow on my favorite mobile browser so I still have to swipe left and right. On top of lack of reflow, my favorite mobile browser also limits the maximul zoom level and I can't make the font large enough for comfortable reading. Further more, it breaks the page into multiple sub pages. After you have read one sub page, you have to wait to load the next sub page.
+
+The 'mobizoom' module addresses this problem. It take a URL as input and retrieve all Google Mobilizer sub pages and store locally so that once it has been loaded, you can read from start to end without have to wait again. Further more, is also take a zoom factor parameter so you can make the font as large as you will. You can make the font so large that you can see only two words on the entire screen at a time!
+
+A more advanced feature leverages on this capability to store the retrieved web page on local storage so you can read the article off the air. It is great to read long articles in multiple sessions. There is a bookmarking feature that allows you to mark the exact paragraph that you hae read and let you resume from that point later.
+
+==Persistent Silent Reminder==
+
+I'm a big procrestinator and need a lot of proddings. I believe in using a spectrum of reminders. There are the urgent kind and you can use an alarm. There are the ignorable kind and you can just write a note. Between these two extremes, there is a kind that needs constant naggings, one that does not stop, but is not too intrusive like an alarm.
+
+The 'reminder' module is such a solution. You can set one to go off at any future date and time. When it goes off, it displays an on screen toast which disappear in a few seconds. But it does it once every 10 seconds. Your phone is still completely functional, so you can just ignore it. You can dismiss it or postpone it for a period of time.
