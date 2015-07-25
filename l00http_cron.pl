@@ -23,14 +23,13 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($lastcalled, $percnt, $interval, $starttime, $filetime,
+my ($percnt, $interval, $starttime, $filetime,
     $utcoffsec);
 my %config = (proc => "l00http_cron_proc",
               desc => "l00http_cron_desc",
               perio => "l00http_cron_perio");
 $interval = 0;
 $starttime = 0x7fffffff;
-$lastcalled = 0;
 $percnt = 0;
 $filetime = 0;
 
@@ -171,14 +170,15 @@ sub l00http_cron_nextEventJ {
 }
 
 
-sub l00http_cron_find {
+sub l00http_cron_when_next {
     # find active cron (oldest)
     my $ctrl = pop;
     my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
-    my ($vb, $vs, $vb0, $vs0, $secs);
+    my ($vb, $vs, $vb0, $vs0, $secs, $lnno);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
     my ($yr, $mo, $da, $hr, $mi, $se, $nstring);
-    my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd);
+    my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0);
+
 
     # compute UTC and localtime offset in seconds
 	# Compute all times in UTC but the time to display is in local time
@@ -195,7 +195,10 @@ sub l00http_cron_find {
     #print sprintf ("utc localtime: %04d/%02d/%02d %2d:%02d:%02d<br>\n", $year+1900, $mon+1, $mday, $hour, $min, $sec);
     #print "utcoffsec $utcoffsec\n";
 
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://cron.htm');
+    &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/cron.htm\">cron</a> module.\n");
 
+    $starttime0 = 0x7fffffff;
     if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}l00_cron.txt")) {
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $ctime, $blksize, $blocks)
@@ -207,7 +210,9 @@ sub l00http_cron_find {
         # :# * * * * * cmd
         # :# m h d m w cmd
         # :1 * * * * cmd
+        $lnno = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            $lnno++;
             chomp;
             if (/^#/) {
                 next;
@@ -218,10 +223,23 @@ sub l00http_cron_find {
                 # starting with current time
                 $secs = time;
                 $secs = &l00http_cron_nextEventJ ($ctrl, $secs, $mnly, $hrly, $dyly, $mhly, $wkly);
+                &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
+
+                ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
+                    &l00http_cron_j2now_string ($secs);
+
+                &l00httpd::l00fwriteBuf($ctrl, "TIME:$secs: $nstring dayofweek $wday\n");
+                &l00httpd::l00fwriteBuf($ctrl, "CMD:$cmd\n");
+                if ($starttime0 > $secs) {
+                    $starttime0 = $secs;
+                }
 
             }
         }
     }
+    &l00httpd::l00fwriteClose($ctrl);
+
+    $starttime0;
 }
 
 
@@ -230,22 +248,22 @@ sub l00http_cron_desc {
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
 
-    &l00http_cron_find ($ctrl);
+    $starttime = &l00http_cron_when_next ($ctrl);
 
-    "cron: A cron task demo.  Click and change 'Run interval' to non zero";
+    "cron: A cron task dispatcher. Add task in <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_cron.txt\">l00_cron.txt</a>";
 }
 
 sub l00http_cron_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    # see notes in l00http_cron_find() about time + $utcoffsec
+    # see notes in l00http_cron_when_next() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
+    my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday, $timenow);
 
-    if (defined ($form->{"status"})) {
+    if (defined ($form->{"reload"})) {
         # Force load and check
-        &l00http_cron_find ($ctrl);
-        $starttime = 0;
+        $starttime = &l00http_cron_when_next ($ctrl);
     }
 
 
@@ -253,19 +271,24 @@ sub l00http_cron_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/cron.htm\">Refresh</a> \n";
     print $sock "<a href=\"#end\">Jump to end</a> \n";
-    print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_cron.txt\">$ctrl->{'workdir'}l00_cron.txt</a><p> \n";
+    print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_cron.txt\">$ctrl->{'workdir'}l00_cron.txt</a> \n";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}l00_cron.txt\">View</a><p> \n";
 
     print $sock "<form action=\"/cron.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td><input type=\"submit\" name=\"status\" value=\"Status\"></td>\n";
-    print $sock "            <td>none</td>\n";
+    print $sock "            <td><input type=\"submit\" name=\"reload\" value=\"Reload\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "</table>\n";
     print $sock "</form></p>\n";
                                                 
+    print $sock "View scheduler: <a href=\"/view.htm?path=l00://cron.htm\">l00://cron.htm</a><p>\n";
+    $timenow = time;
+    ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
+        &l00http_cron_j2now_string ($timenow);
+    print $sock "Time is now $timenow, or $nstring and day of week $wday<p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
@@ -273,23 +296,41 @@ sub l00http_cron_proc {
 
 sub l00http_cron_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($retval);
+    my ($retval, $eventtime, $cmd);
 
-    # see notes in l00http_cron_find() about time + $utcoffsec
+    # see notes in l00http_cron_when_next() about time + $utcoffsec
     if (time - $utcoffsec >= $starttime) {
-        if (($interval > 0) &&  (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $interval)))) {
-            $lastcalled = time - $utcoffsec;
+        l00httpd::dbp($config{'desc'}, "Now ", time - $utcoffsec, 
+            " is later than next start time ", $starttime, "\n"), if ($ctrl->{'debug'} >= 5);
 
-            # check all tasks
-            &l00http_cron_find ($ctrl);
-
-            $percnt++;
+        # do task
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://cron.htm')) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                chomp;
+                if (/^#/) {
+                    next;
+                }
+                if (/^TIME:(\d+):/) {
+                    $eventtime = $1;
+                }
+                if (/^CMD:(.+)/) {
+                    $cmd = $1;
+                    if (time - $utcoffsec >= $eventtime) {
+                        l00httpd::dbp($config{'desc'}, "Time is $eventtime; execute >$cmd<\n"), if ($ctrl->{'debug'} >= 5);
+                    }
+                }
+            }
         }
-        $retval = $interval;
-    } else {
-        $retval = $starttime - time + $utcoffsec;
-        # time not due yet, clear title banner message
+
+
+        # compute next task time
+        $starttime = &l00http_cron_when_next ($ctrl);
+
+        $percnt++;
     }
+
+    # time not due yet, compute how much more
+    $retval = $starttime - (time - $utcoffsec);
 
     $retval;
 }
