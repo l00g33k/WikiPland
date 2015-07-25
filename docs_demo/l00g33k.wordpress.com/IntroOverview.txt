@@ -1,0 +1,35 @@
+* wiki
+c:\2\x\IntroOverview.txt
+c:\2\x\IntroSimple.txt
+c:\2\x\IntroAdvanced.txt
+c:\2\x\IntroDeveloper.txt
+c:\x\ram\l00\IntroOverview.txt
+c:\x\ram\l00\IntroSimple.txt
+c:\x\ram\l00\IntroAdvanced.txt
+c:\x\ram\l00\IntroDeveloper.txt
+
+=Introduction=
+
+!WikiPland is a general purpose wiki server that was developed on the Android phone for the Android phones, but it also works well on the desktops. The primary obojective of WikiPland is to bring wiki style organizer capability to the phones without requiring cloud connection nor cloud sotrage. It is designed for both daily use as well as for advanced users employing regular expressions and even Perl languager developers for extending its capability.
+
+=General Overviews=
+
+!WikiPland is written in Perl and can be deployed by either installing an Android APK or install the Perl interpreter and the !WikiPland source code. Android APK installation is recommended for the casual users since it is very straight forward.
+
+In operation !WikiPland runs as a background process. You can keep it running in the background all the time so that it is available whenever you need to use it. I have observed little impact on battery life. The interaction with !WikiPland is through any web browser to visit a local web page. Because it is web based, you can easily connect to it from your desktop computer with a large screen and a full size keyboard when your phone is connected to the same wifi network. You have control over what features and content can be accessed through the wifi connection. See WikiPlandGettingStarted for details.
+
+=Targetted Introductions=
+
+Instead of writing a long winded introduction covering the full spectrum of !WikiPland's features that is sure have some thing boring to every readers, I have written three separate introductions that target three different classes of audience:
+
+* IntroSimple: The focus is on simple daily uses that requires little learning. You will read about some useful features that you can start using immediately.
+
+* IntroAdvanced: 
+
+* IntroDeveloper: This is for users who are Perl programmers or interested in learning Perl. Since both the Perl intepreter and the source code are hosted on the phone itself, you can modify or add to the source code and restart to see immediate update. You can extend capability in two different ways. You can clone a sample module to create a new module to implement anything you need. You can also create ad hoc extensions to implement something for a specific need.
+
+---
+
+=Move to where?=
+Android APK installation is recommended for casual users but it is less well tested compared to the source code installation. Another benefit of the source code installation is that it makes it easy to update to my latest git updates. The Android APK is only frequently updated.
+
