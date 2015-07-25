@@ -482,7 +482,7 @@ sub periodictask {
             $subname = $modsinfo{"$mod:fn:perio"};
             $retval = 60;
             $retval = __PACKAGE__->$subname(\%ctrl);
-            print "$mod:fn:perio -> $retval\n", if ($debug >= 4);
+            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
             if (defined ($retval) && ($retval > 0)) {
                 if ($tickdelta > $retval) {
                     $tickdelta = $retval;
@@ -492,7 +492,7 @@ sub periodictask {
     }
     my ($timeis);
     $timeis = localtime (time);
-    print "tickdelta $tickdelta $timeis\n", if ($debug >= 4);
+    print "perio: tickdelta $tickdelta $timeis\n", if ($debug >= 4);
 }
 
 $tickdelta = 3600;
@@ -1358,6 +1358,22 @@ while(1) {
                     }
                     print $sock "</table>\n";
 
+                    # list all periodic tasks
+                    print $sock "<p>Perio task:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                    print $sock "<tr><td>mod name</td><td>secs to fire</td></tr>\n";
+                    foreach $mod (sort keys %httpmods) {
+                        if (defined ($modsinfo{"$mod:fn:perio"})) {
+                            $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
+                            $subname = $modsinfo{"$mod:fn:perio"};
+                            $retval = 60;
+                            $retval = __PACKAGE__->$subname(\%ctrl);
+                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
+                            print $sock "<tr><td>$mod</td><td>$retval secs</td></tr>\n";
+                        }
+                    }
+                    print $sock "</table>\n";
+
+
                     # dump all form data
                     if ($modcalled eq 'httpd') {
                         print $sock "<p>FORM data:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -1365,7 +1381,7 @@ while(1) {
                             $val = $FORM{$key};
                             $val =~ s/</&lt;/g;
                             $val =~ s/>/&gt;/g;
-                            print $sock "<tr><td>$key</td><td>$val</td>\n";
+                            print $sock "<tr><td>$key</td><td>$val</td></tr>\n";
                         }
                         print $sock "</table>\n";
                     }
