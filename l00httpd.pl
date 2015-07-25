@@ -990,21 +990,23 @@ while(1) {
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
 
-                # a generic scheme to support system wide banner
-                # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
-                # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
-                foreach $_ (sort keys %ctrl) {
-                    if (/^BANNER:(.+)/) {
-                        #print "key $_\n";
-                        if (defined($ctrl{$_})) {
-                            #$ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
-                            #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
-                            # process banner content through wikihtml to make wiki links, etc.
-                            $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
-                            # remove ending <br> added
-                            s/<br>$//;
-                            $ctrl{'home'} = $_ . $ctrl{'home'};
-						}
+                if ($ishost) {
+                    # a generic scheme to support system wide banner
+                    # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
+                    # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
+                    foreach $_ (sort keys %ctrl) {
+                        if (/^BANNER:(.+)/) {
+                            #print "key $_\n";
+                            if (defined($ctrl{$_})) {
+                                #$ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                                #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                                # process banner content through wikihtml to make wiki links, etc.
+                                $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
+                                # remove ending <br> added
+                                s/<br>$//;
+                                $ctrl{'home'} = $_ . $ctrl{'home'};
+                            }
+                        }
                     }
                 }
 
