@@ -393,8 +393,33 @@ sub loadmods {
             }
         }
     }
+
     print "\nReady\n";
 }
+
+
+
+
+sub callmod {
+    my ($modcalled, $FORM) = @_;
+
+    #print "printed in callmod modcalled $modcalled\n";
+    #for $_ (keys %$FORM) {
+    #    print "printed in callmod >$_< >$FORM->{$_}\n";
+    #}
+
+    if (defined ($modsinfo{"$modcalled:fn:proc"})) {
+        $subname = $modsinfo{"$modcalled:fn:proc"};
+        #print "subname $subname\n";
+        $ctrl{'FORM'} = $FORM;
+        $ctrl{'sock'} = 0;
+        $ctrl{'msglog'} = "";
+        $retval = __PACKAGE__->$subname(\%ctrl);
+        &dlog  ($ctrl{'msglog'}."\n");
+    }
+
+}
+$ctrl{'callmod'} = \&callmod;
 
 
 

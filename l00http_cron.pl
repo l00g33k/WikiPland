@@ -1,4 +1,11 @@
 #::now::
+#adb pull /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl D:\x\ram\l00\l00http_cron.pl
+#adb pull /sdcard/l00httpd/l00_cron.txt D:\x\ram\l00\l00_cron.txt
+#difm D:\x\ram\l00\l00http_cron.pl D:\2\safe\gits\WikiPlandShadow\l00httpd\l00http_cron.pl
+#difm D:\x\ram\l00\l00_cron.txt D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd\l00_cron.txt
+
+#adb pull /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl D:\2\safe\gits\WikiPlandShadow\l00httpd\l00http_cron.pl
+#adb pull /sdcard/l00httpd/l00_cron.txt D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd\l00_cron.txt
 #adb push D:\2\safe\gits\WikiPlandShadow\l00httpd\l00http_cron.pl /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl
 #adb push D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd\l00_cron.txt /sdcard/l00httpd/l00_cron.txt
 
@@ -16,8 +23,13 @@
 
 use strict;
 use warnings;
+use IO::Socket;
+use IO::Select;
+use l00wget;
 
 use l00mktime;
+
+#use main;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -179,12 +191,12 @@ sub l00http_cron_when_next {
     my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0);
 
 
-    &l00httpd::l00fwriteOpen($ctrl, 'l00://cron.htm');
-    &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/cron.htm\">cron</a> module.\n");
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
+    &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/crontab.htm\">cron</a> module.\n");
     $_ = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($_);
-    &l00httpd::l00fwriteBuf($ctrl, "# This page generated at: $_ / $nstring.\n");
+    &l00httpd::l00fwriteBuf($ctrl, "# This page generated at: $_ / $nstring.\n\n");
 
     $starttime0 = 0x7fffffff;
     if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}l00_cron.txt")) {
@@ -217,7 +229,7 @@ sub l00http_cron_when_next {
                     &l00http_cron_j2now_string ($secs);
 
                 &l00httpd::l00fwriteBuf($ctrl, "TIME:$secs: $nstring dayofweek $wday\n");
-                &l00httpd::l00fwriteBuf($ctrl, "CMD:$cmd\n");
+                &l00httpd::l00fwriteBuf($ctrl, "CMD:$cmd\n\n");
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
@@ -246,7 +258,7 @@ sub l00http_cron_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-    my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday, $timenow);
+    my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $timenow);
 
     if (defined ($form->{"reload"})) {
         # Force load and check
@@ -280,7 +292,7 @@ sub l00http_cron_proc {
     print $sock "</table>\n";
     print $sock "</form></p>\n";
                                                 
-    print $sock "View scheduler: <a href=\"/view.htm?path=l00://cron.htm\">l00://cron.htm</a><p>\n";
+    print $sock "View scheduler: <a href=\"/view.htm?path=l00://crontab.htm\">l00://crontab.htm</a><p>\n";
     $timenow = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($timenow);
@@ -292,7 +304,10 @@ sub l00http_cron_proc {
 
 sub l00http_cron_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($retval, $eventtime, $cmd);
+    my ($retval, $eventtime, $cmd, $lnno, $cronspec, $l00name, $hdr, $bdy);
+    my ($tmp, $urlpath, %FORM, $modcalled, $urlparams, @cmd_param_pairs);
+    my ($cmd_param_pair, $name, $param, $subname);
+
 
 
     if ($toggle eq 'Resume') {
@@ -300,14 +315,21 @@ sub l00http_cron_perio {
         $retval = 0;
     } else {
         if (time >= $starttime) {
-            l00httpd::dbp($config{'desc'}, "Now ", time, 
-                " is later than next start time ", $starttime, "\n"), if ($ctrl->{'debug'} >= 5);
+            $_ = time;
+            l00httpd::dbp($config{'desc'}, "Now $_ is later than next start time $starttime\n"), if ($ctrl->{'debug'} >= 4);
 
             # do task
-            if (&l00httpd::l00freadOpen($ctrl, 'l00://cron.htm')) {
+            if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
                 while ($_ = &l00httpd::l00freadLine($ctrl)) {
                     s/\n//;
                     s/\r//;
+
+                    if (($lnno, $cronspec) = /# ORG\((\d+)\):([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+) /) {
+                        # make l00 filename
+                        $l00name = "cron${lnno}_$cronspec";
+                        $l00name =~ s/ /_/g;
+                        $l00name =~ s/\*/x/g;
+                    }
                     if (/^#/) {
                         next;
                     }
@@ -317,7 +339,60 @@ sub l00http_cron_perio {
                     if (/^CMD:(.+)/) {
                         $cmd = $1;
                         if (time >= $eventtime) {
-                            l00httpd::dbp($config{'desc'}, "Time is $eventtime; execute >$cmd<\n"), if ($ctrl->{'debug'} >= 5);
+                            # 3 kinds of commands are supported
+                            if (($tmp, $urlpath) = $cmd =~ m!^http://(localhost|127\.0\.0\.1):$ctrl->{'ctrl_port_first'}(.+)!) {
+                                # 1) wget self. Since we aren't multi-thread, we have to simulate by 
+                                # creating the %FORM and call the module directly
+                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; Simulate wget self >$urlpath<\n"), if ($ctrl->{'debug'} >= 4);
+                                # http://localhost:20337/shell.htm?buffer=msg+%25USERNAME%25+%2FTIME%3A1+WikiPland+says+ello&exec=Exec
+                                undef %FORM;
+                                if ($urlpath =~ /^\/(\w+)\.(pl|htm)[^?]*\?*(.*)$/) {
+                                    # of form: http://localhost:20337/ls.htm?path=/sdcard
+                                    $modcalled = $1;
+                                    $urlparams = $3;
+                                    #print "CRON self: >$modcalled< >$urlparams<\n";
+
+                                    @cmd_param_pairs = split ('&', $urlparams);
+                                    foreach $cmd_param_pair (@cmd_param_pairs) {
+                                        ($name, $param) = split ('=', $cmd_param_pair);
+                                        if (defined ($name) && defined ($param)) {
+                                            $param =~ tr/+/ /;
+                                            $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
+                                            $FORM{$name} = $param;
+                                            # convert \ to /
+                                            if ($name eq 'path') {
+                                                $FORM{$name} =~ tr/\\/\//;
+                                            }
+                                            #print "CRON self: >$name< >$param<\n";
+                                        }
+                                    }
+                                    # invoke module
+                                    $ctrl->{'callmod'} ($modcalled, \%FORM);
+                                }
+
+                            } elsif ($cmd =~ m!^http://!) {
+                                # 2) a normal HTTP. use l00http_wget.pl
+                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
+                                # http://wikipland-l00g33k.rhcloud.com/httpd.htm
+                                ($hdr, $bdy) = &l00wget::wget ($cmd);
+                                &l00httpd::l00fwriteOpen($ctrl, "l00://$l00name.wget.hdr");
+                                &l00httpd::l00fwriteBuf($ctrl, "shell >$cmd<; output:\n");
+                                &l00httpd::l00fwriteBuf($ctrl, "$hdr");
+                                &l00httpd::l00fwriteClose($ctrl);
+
+                                &l00httpd::l00fwriteOpen($ctrl, "l00://$l00name.wget.htm");
+                                &l00httpd::l00fwriteBuf($ctrl, "$bdy");
+                                &l00httpd::l00fwriteClose($ctrl);
+                            } else {
+                                # 3) assume to be a shell command. user be warned
+                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; shell >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
+                                # msg %USERNAME% /TIME:1 Shell says hello
+                                $_ =`$cmd`;
+                                &l00httpd::l00fwriteOpen($ctrl, "l00://$l00name.shell.htm");
+                                &l00httpd::l00fwriteBuf($ctrl, "shell >$cmd<; output:\n");
+                                &l00httpd::l00fwriteBuf($ctrl, "$_");
+                                &l00httpd::l00fwriteClose($ctrl);
+                            }
                         }
                     }
                 }
