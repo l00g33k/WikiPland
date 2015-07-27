@@ -35,7 +35,7 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($percnt, $interval, $starttime, $filetime, $toggle);
+my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot);
 my %config = (proc => "l00http_cron_proc",
               desc => "l00http_cron_desc",
               perio => "l00http_cron_perio");
@@ -44,6 +44,7 @@ $starttime = 0x7fffffff;
 $percnt = 0;
 $filetime = 0;
 $toggle = 'Pause';
+$atboot = 1;
 
 sub l00http_cron_j2now_string {
     my ($secs) = @_;
@@ -241,6 +242,20 @@ sub l00http_cron_when_next {
                 next;
             }
 
+            if (($atboot) && (($cmd) = (/^\@boot +(.+)$/))) {
+                l00httpd::dbp($config{'desc'}, "CRON: (\@boot $cmd)\n"), if ($ctrl->{'debug'} >= 5);
+                $secs = time + 0;
+                &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
+
+                ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
+                    &l00http_cron_j2now_string ($secs);
+
+                &l00httpd::l00fwriteBuf($ctrl, "TIME:$secs: $nstring dayofweek $wday\n");
+                &l00httpd::l00fwriteBuf($ctrl, "CMD:$cmd\n\n");
+                if ($starttime0 > $secs) {
+                    $starttime0 = $secs;
+                }
+            }
             if (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
                 l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 5);
@@ -257,7 +272,6 @@ sub l00http_cron_when_next {
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
-
             }
         }
     }
@@ -432,6 +446,7 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$_");
                                 &l00httpd::l00fwriteClose($ctrl);
                             }
+                            $atboot = 0;
                         }
                     }
                 }
