@@ -188,7 +188,7 @@ sub l00http_cron_when_next {
     my ($vb, $vs, $vb0, $vs0, $secs, $lnno);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
     my ($yr, $mo, $da, $hr, $mi, $se, $nstring);
-    my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0);
+    my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0, $skip, $skipfilter);
 
 
     &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
@@ -196,7 +196,12 @@ sub l00http_cron_when_next {
     $_ = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($_);
-    &l00httpd::l00fwriteBuf($ctrl, "# This page generated at: $_ / $nstring.\n\n");
+    &l00httpd::l00fwriteBuf($ctrl, "# This page wasgenerated at: $_ / $nstring.\n");
+    if ($toggle eq 'Pause') {
+        &l00httpd::l00fwriteBuf($ctrl, "# cron is now running\n\n");
+    } else {
+        &l00httpd::l00fwriteBuf($ctrl, "# cron is now paused\n\n");
+    }
 
     $starttime0 = 0x7fffffff;
     if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}l00_cron.txt")) {
@@ -205,6 +210,10 @@ sub l00http_cron_when_next {
             = stat("$ctrl->{'workdir'}l00_cron.txt");
         # remember file mod time
         $filetime = $mtimea;
+
+        # machine specific filter
+        $skip = 0;
+        $skipfilter = '.';
 
         # file format:
         # :# * * * * * cmd
@@ -217,6 +226,21 @@ sub l00http_cron_when_next {
             if (/^#/) {
                 next;
             }
+            if (/^machine=~\/(.+)\/ */) {
+                # new machine filter
+                $skipfilter = $1;
+                if ($ctrl->{'machine'} =~ /$skipfilter/) {
+                    # matched, don't skip
+                    $skip = 0;
+                } else {
+                    # no match, skipping
+                    $skip = 1;
+                }
+            }
+            if ($skip) {
+                next;
+            }
+
             if (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
                 l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 5);
@@ -306,7 +330,7 @@ sub l00http_cron_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($retval, $eventtime, $cmd, $lnno, $cronspec, $l00name, $hdr, $bdy);
     my ($tmp, $urlpath, %FORM, $modcalled, $urlparams, @cmd_param_pairs);
-    my ($cmd_param_pair, $name, $param, $subname);
+    my ($cmd_param_pair, $name, $param, $subname, $socknul);
 
 
 
@@ -367,7 +391,22 @@ sub l00http_cron_perio {
                                         }
                                     }
                                     # invoke module
-                                    $ctrl->{'callmod'} ($modcalled, \%FORM);
+#                                   $ctrl->{'callmod'} ($modcalled, \%FORM);
+                                    if (defined ($ctrl->{'modsinfo'}->{"$modcalled:fn:proc"})) {
+                                        $subname = $ctrl->{'modsinfo'}->{"$modcalled:fn:proc"};
+                                        print "CRON: callmod $subname\n", if ($ctrl->{'debug'} >= 4);
+                                        $ctrl->{'FORM'} = \%FORM;
+                                        if ($ctrl->{'os'} eq 'win') {
+                                            open ($socknul, ">nul");
+                                        } else {
+                                            open ($socknul, ">/dev/null");
+                                        }
+                                        $ctrl->{'sock'} = $socknul;
+                                        $ctrl->{'msglog'} = "";
+                                        __PACKAGE__->$subname($ctrl);
+                                        close ($socknul);
+                                        &dlog  ($ctrl->{'msglog'}."\n");
+                                    }
                                 }
 
                             } elsif ($cmd =~ m!^http://!) {

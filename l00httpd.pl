@@ -396,30 +396,38 @@ sub loadmods {
 
     print "\nReady\n";
 }
+$ctrl{'modsinfo'} = \%modsinfo;
 
 
 
 
-sub callmod {
-    my ($modcalled, $FORM) = @_;
-
-    #print "printed in callmod modcalled $modcalled\n";
-    #for $_ (keys %$FORM) {
-    #    print "printed in callmod >$_< >$FORM->{$_}\n";
-    #}
-
-    if (defined ($modsinfo{"$modcalled:fn:proc"})) {
-        $subname = $modsinfo{"$modcalled:fn:proc"};
-        #print "subname $subname\n";
-        $ctrl{'FORM'} = $FORM;
-        $ctrl{'sock'} = 0;
-        $ctrl{'msglog'} = "";
-        $retval = __PACKAGE__->$subname(\%ctrl);
-        &dlog  ($ctrl{'msglog'}."\n");
-    }
-
-}
-$ctrl{'callmod'} = \&callmod;
+#sub callmod {
+#    my ($modcalled, $FORM) = @_;
+#
+#    #print "printed in callmod modcalled $modcalled\n";
+#    #for $_ (keys %$FORM) {
+#    #    print "printed in callmod >$_< >$FORM->{$_}\n";
+#    #}
+#
+#    if (defined ($modsinfo{"$modcalled:fn:proc"})) {
+#        $subname = $modsinfo{"$modcalled:fn:proc"};
+#        print "CRON: callmod $subname\n", if ($debug >= 5);
+#        $ctrl{'FORM'} = $FORM;
+#        $ctrl{'sock'} = 0;
+#        if ($ctrl{'os'} eq 'win') {
+#            open ($socknul, ">nul");
+#        } else {
+#            open ($socknul, ">/dev/null");
+#        }
+#        $ctrl{'sock'} = $socknul;
+#        $ctrl{'msglog'} = "";
+#        $retval = __PACKAGE__->$subname(\%ctrl);
+#        close ($ctrl{'sock'});
+#        &dlog  ($ctrl{'msglog'}."\n");
+#    }
+#
+#}
+#$ctrl{'callmod'} = \&callmod;
 
 
 
