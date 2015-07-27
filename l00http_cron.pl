@@ -191,13 +191,12 @@ sub l00http_cron_when_next {
     my ($yr, $mo, $da, $hr, $mi, $se, $nstring);
     my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0, $skip, $skipfilter);
 
-
     &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
     &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/crontab.htm\">cron</a> module.\n");
     $_ = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($_);
-    &l00httpd::l00fwriteBuf($ctrl, "# This page wasgenerated at: $_ / $nstring.\n");
+    &l00httpd::l00fwriteBuf($ctrl, "# This page was generated at: $_ / $nstring.\n");
     if ($toggle eq 'Pause') {
         &l00httpd::l00fwriteBuf($ctrl, "# cron is now running\n\n");
     } else {
@@ -255,8 +254,7 @@ sub l00http_cron_when_next {
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
-            }
-            if (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
+            } elsif (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
                 l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 5);
                 # starting with current time
@@ -410,6 +408,12 @@ sub l00http_cron_perio {
                                         $subname = $ctrl->{'modsinfo'}->{"$modcalled:fn:proc"};
                                         print "CRON: callmod $subname\n", if ($ctrl->{'debug'} >= 4);
                                         $ctrl->{'FORM'} = \%FORM;
+                                        $ctrl->{'home'} = '';
+                                        $ctrl->{'httphead'} = '';
+                                        $ctrl->{'htmlhead'} = '';
+                                        $ctrl->{'htmlttl'} = '';
+                                        $ctrl->{'htmlhead2'} = '';
+                                       $ctrl->{'client_ip'} = 0;
                                         if ($ctrl->{'os'} eq 'win') {
                                             open ($socknul, ">nul");
                                         } else {
@@ -446,10 +450,10 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$_");
                                 &l00httpd::l00fwriteClose($ctrl);
                             }
-                            $atboot = 0;
                         }
                     }
                 }
+                $atboot = 0;
             }
 
 
