@@ -53,7 +53,7 @@ $httpmax = 1024 * 1024 * 10 + 4096;
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
-my ($htmlheadV1, $htmlheadV2, $htmlheadB0);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter);
 
 
 # set listening port
@@ -193,6 +193,9 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
         }
         $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
         print "Reading $tmp$conf...\n";;
+        # machine specific filter
+        $skip = 0;
+        $skipfilter = '.';
         while (<IN>) {
             if (/^#/) {
                 next;
@@ -200,6 +203,21 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
         
             s/\r//g;
             s/\n//g;
+            if (/^machine=~\/(.+)\/ */) {
+                # new machine filter
+                $skipfilter = $1;
+                if ($ctrl{'machine'} =~ /$skipfilter/) {
+                    # matched, don't skip
+                    $skip = 0;
+                } else {
+                    # no match, skipping
+                    $skip = 1;
+                }
+            }
+            if ($skip) {
+                next;
+            }
+
             ($key, $val) = split ('\^');
             if ((defined ($key)) &&
                 (length ($key) > 0) && 
@@ -1201,7 +1219,7 @@ while(1) {
                 # Send HTTP and HTML headers
                 print "Send host control HTTP header\n", if ($debug >= 5);
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
-                print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland. \n";
+                print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland running on '$ctrl{'machine'}'. \n";
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm
 \">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
@@ -1401,7 +1419,7 @@ while(1) {
                             $retval = 60;
                             $retval = __PACKAGE__->$subname(\%ctrl);
                             print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
-                            print $sock "<tr><td>$mod</td><td>$retval secs</td></tr>\n";
+                            print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>$retval secs</td></tr>\n";
                         }
                     }
                     print $sock "</table>\n";

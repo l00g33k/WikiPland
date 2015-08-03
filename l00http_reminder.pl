@@ -223,17 +223,6 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_reminder.txt\">$ctrl->{'workdir'}l00_reminder.txt</a><p> \n";
 
-    print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
-    print $sock "        <tr>\n";
-    print $sock "            <td><input type=\"submit\" name=\"pause\" value=\"Pause\"></td>\n";
-    print $sock "            <td><input type=\"text\" size=\"4\" name=\"min\" value=\"$pausewant\">min.</td>\n";
-    print $sock "        </tr>\n";
-
-    print $sock "</table>\n";
-    print $sock "</form></p>\n";
-                                                
     print $sock "<form action=\"/reminder.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
@@ -313,9 +302,20 @@ sub l00http_reminder_proc {
     print $sock "        </tr>\n";
 
     print $sock "</table>\n";
-    print $sock "</form>\n";
+    print $sock "</form><p>\n";
 
-    print $sock "<br>Interval: $interval Msg: $formmsg<br>\n";
+    print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td><input type=\"submit\" name=\"pause\" value=\"Pause\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"4\" name=\"min\" value=\"$pausewant\">min.</td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form></p>\n";
+                                                
+    print $sock "Interval: $interval Msg: $formmsg<br>\n";
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($starttime);
     print $sock sprintf ("Start: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
