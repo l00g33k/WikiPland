@@ -324,7 +324,7 @@ sub l00http_gps_proc {
     print $sock "</form>\n";
 
 
-    print $sock "<p><form action=\"/gps.htm\" method=\"get\">\n";
+    print $sock "<p><a name=\"mark\"><form action=\"/gps.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "    <tr>\n";
