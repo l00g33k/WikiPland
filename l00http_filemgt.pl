@@ -128,7 +128,32 @@ sub l00http_filemgt_proc {
                 close (OU);
             }
         }
-	}
+    }
+
+    if ((defined ($form->{'move'})) &&
+        (defined ($form->{'path'}) && 
+        (length ($form->{'path'}) > 0)) &&
+        (defined ($form->{'path2'}) && 
+        (length ($form->{'path2'}) > 0))) {
+        if (defined ($form->{'urlonly'})) {
+            # URL only, do nothing
+        } else {
+            local $/ = undef;
+            if (open (IN, "<$form->{'path'}")) {
+                $buffer = <IN>;
+                close (IN);
+                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
+                }
+                if (open (OU, ">$form->{'path2'}")) {
+                    print OU $buffer;
+                    close (OU);
+                    # delete original
+                    unlink ($form->{'path'});
+                }
+            }
+        }
+    }
 
     if ((defined ($form->{'rename'})) &&
         (defined ($form->{'path'}) && 
@@ -186,7 +211,12 @@ sub l00http_filemgt_proc {
     print $sock "<input type=\"submit\" name=\"delete\" value=\"Delete\">\n";
     print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"nobak\">Do not backup\n";
+    if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+        $_ = '';
+    } else {
+        $_ = 'checked';
+    }
+    print $sock "<input type=\"checkbox\" name=\"nobak\" $_>Do not backup\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
@@ -200,20 +230,23 @@ sub l00http_filemgt_proc {
         $path2 = $form->{'path2'};
     } else {
         if ((length ($form->{'path'}) > 0) &&
-            (length ($form->{'path2'}) == 0)) {
+            ((!defined ($form->{'path2'})) ||
+            (length ($form->{'path2'}) == 0))) {
             $path2 = $form->{'path'};
             # if filename contains extension
             if (!($path2 =~ /\/[^\/.]+$/)) {
                 # insert '.2' before extension as target file
                 $path2 =~ s/(\.[^.]+)$/.2$1/;
             }
+        } else {
+            $path2 = $form->{'path2'};
         }
     }
-    print $sock "<form action=\"/filemgt.htm\" method=\"post\">\n";
+    print $sock "<form action=\"/filemgt.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"copy\" value=\"Copy\">\n";
-    #print $sock "<input type=\"submit\" name=\"rename\" value=\"Move\">\n";
+    print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "fr: <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
@@ -222,7 +255,12 @@ sub l00http_filemgt_proc {
     print $sock "to: <input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"nobak\">Do not backup\n";
+    if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+        $_ = '';
+    } else {
+        $_ = 'checked';
+    }
+    print $sock "<input type=\"checkbox\" name=\"nobak\" $_>Do not backup\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"urlonly\">Make URL only\n";
@@ -248,7 +286,7 @@ sub l00http_filemgt_proc {
     # copy directory Tree
 	# Remove filename leaving directory as source
     $form->{'path'} =~ s/\/[^\/]+$/\//;
-    print $sock "<form action=\"/filemgt.htm\" method=\"post\">\n";
+    print $sock "<form action=\"/filemgt.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"copytree\" value=\"Copy Tree\">\n";
