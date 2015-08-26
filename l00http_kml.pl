@@ -111,24 +111,28 @@ sub l00http_kml_proc {
             $phase = 0;
             if ($buffer =~ /^<\?xml/) {
                 # reading real .kml file
-                print $sock "$httphdr<pre>\n";
+                print $sock "$httphdr<br>\n";
+                print $sock "Extracted waypoints: <a href=\"/view.htm?path=l00://way.txt\">l00://way.txt</a>\n<pre>";
                 $httphdr = '';
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://way.txt');
                 foreach $_ (split ("\n", $buffer)) {
                     s/\r//g;
                     s/\n//g;
                     if (/<Placemark>/) {
                         $phase++;
                     } elsif (/<\/Placemark>/) {
-                        print $sock "$lonlat,$name\n";
+                        print $sock "$lonlat $name\n";
+                        &l00httpd::l00fwriteBuf($ctrl, "$lonlat $name\n");
                     } elsif ((/<name>(.+)<\/name>/) && ($phase != 0)) {
                         $name = $1;
-                    } elsif ((/<coordinates>(.+),(.+),0<\/coordinates>/) && ($phase != 0)) {
-                        $lonlat = "$1,$2";
+                    } elsif ((/<coordinates>(.+),(.+),0.*<\/coordinates>/) && ($phase != 0)) {
+                        $lonlat = "$2,$1";
                     } elsif (/Style id/) {
                         s/</&lt;/g;
                         s/>/&gt;/g;
                     }
                 }
+                &l00httpd::l00fwriteClose($ctrl);
                 print $sock "<\/pre>\n";
             } elsif ($buffer =~ /^H  SOFTWARE NAME & VERSION/) {
                 my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
