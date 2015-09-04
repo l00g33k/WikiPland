@@ -63,8 +63,14 @@ sub l00http_kml_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
-    my ($lat, $lon, $name);
+    my ($lat, $lon, $name, $trkname, $trackheight);
+
     $rawkml = 0;
+
+    $trackheight = 100;
+    if (defined ($ctrl->{'kml_trackheight'})) {
+        $trackheight = $ctrl->{'kml_trackheight'};
+    }
 
     # create HTTP and HTML headers
     $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
@@ -159,8 +165,12 @@ sub l00http_kml_proc {
 			                # not first time
 			                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
 		                }
+                        $trkname = "Track $trackno";
+                        if (/^T +[NS].+; (.+)/) {
+                            $trkname = "Track $1";
+                        }
 		                $tracks = $tracks . 
-			                "\t\t<Placemark><name>Track $trackno</name>\n" .
+			                "\t\t<Placemark><name>$trkname</name>\n" .
 			                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
 			                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
 			                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
