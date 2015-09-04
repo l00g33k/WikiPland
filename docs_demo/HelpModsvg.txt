@@ -1,0 +1,8 @@
+* Paste these into /eval.htm:
+    @g=undef;
+    push(@g,"0,0\n");
+    push(@g,"1,1\n");
+    push(@g,"2,2\n");
+    push(@g,"3,3\n");
+    push(@g,"4,20\n");
+    &l00svg::plotsvg ('ram', join (' ', @g), 500, 300);

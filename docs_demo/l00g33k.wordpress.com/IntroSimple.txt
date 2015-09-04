@@ -35,3 +35,6 @@ A more advanced feature leverages on this capability to store the retrieved web 
 I'm a big procrestinator and need a lot of proddings. I believe in using a spectrum of reminders. There are the urgent kind and you can use an alarm. There are the ignorable kind and you can just write a note. Between these two extremes, there is a kind that needs constant naggings, one that does not stop, but is not too intrusive like an alarm.
 
 The 'reminder' module is such a solution. You can set one to go off at any future date and time. When it goes off, it displays an on screen toast which disappear in a few seconds. But it does it once every 10 seconds. Your phone is still completely functional, so you can just ignore it. You can dismiss it or postpone it for a period of time.
+
+==Vibrating alarm when you are flying==
+* 

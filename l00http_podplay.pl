@@ -8,12 +8,12 @@ my %config = (proc => "l00http_podplay_proc",
 
 
 my ($rate, $jumpstep, $lib, %played, @playlist);
-my ($seq, $state, $lstate, $track, $playlist_cnt, $podplayLast);
+my ($seq, $AndPlayerState, $lstate, $track, $playlist_cnt, $podplayLast);
 
 $lib = '/sdcard/podcasts/';
 $rate = 3;  # secs, refresh rate
 $jumpstep = 30; # seconds
-$state = 'off';
+$AndPlayerState = 'off';
 $lstate = '';
 $track = 0;
 $seq = 0;
@@ -34,46 +34,45 @@ sub l00http_podplay_proc (\%) {
     my ($info, $podplayElapse, $refreshtag, $timems, $seqnxt, $out);
     my ($tmp, $url, $hdr, $bdy, $domain, $tail, $podname, $fname);
 
-    # read in played files
+    # read in files that have been marked played
     undef %played;
     if (open (IN, "<${lib}played.txt")) {
         while (<IN>) {
             s/\n//;
             s/\r//;
             if (/^#(.+)$/) {
-                # to ignore track marked with # in colume 0
+                # to ignore tracks/files marked with # in colume 0
                 $played{$1} = 1;
             }
         }
         close (IN);
     }
 
-    # scan $lib to make playlist
+    # scan directory $lib to make playlist
     undef @playlist;
     if (opendir (DIR, $lib)) {
         foreach $_ (readdir (DIR)) {
             if (/\.mp3$/) {
                 if (!defined ($played{$_})) {
                     push (@playlist, $_);
-                } else {
                 }
             }
         }
     }
 
 
-    # Query Android for player state
-    $lstate = $state;
-    $state = 'off';
+    # Query Android player state
+    $lstate = $AndPlayerState;
+    $AndPlayerState = 'off';
     $info = $ctrl->{'droid'}->mediaPlayInfo('l00pod');
     if (defined ($info->{'result'})) {
         $info = $info->{'result'};
         if (defined ($info->{'loaded'})) {
             if ($info->{'loaded'} eq 'true') {
                 if ($info->{'isplaying'} eq 'true') {
-                    $state = 'playing';
+                    $AndPlayerState = 'playing';
                 } else {
-                    $state = 'pause';
+                    $AndPlayerState = 'pause';
                 }
             }
         }
@@ -90,10 +89,10 @@ sub l00http_podplay_proc (\%) {
         $seq++;
         $track = 0;
         $ctrl->{'droid'}->mediaPlay("$lib$playlist[$track]", 'l00pod');
-        $state = 'playing';
+        $AndPlayerState = 'playing';
     } elsif (defined ($ctrl->{'FORM'}->{'stop'})) {
         $ctrl->{'droid'}->mediaPlayClose('l00pod');
-        $state = 'off';
+        $AndPlayerState = 'off';
     } elsif ((defined ($ctrl->{'FORM'}->{'lasttrk'})) &&
         defined ($ctrl->{'FORM'}->{'seq'}) &&
         ($ctrl->{'FORM'}->{'seq'} != $seq)) {
@@ -104,7 +103,7 @@ sub l00http_podplay_proc (\%) {
             $track = 0;
         }
         $ctrl->{'droid'}->mediaPlay("$lib$playlist[$track]", 'l00pod');
-        $state = 'playing';
+        $AndPlayerState = 'playing';
     } elsif ((defined ($ctrl->{'FORM'}->{'nexttrk'})) &&
         defined ($ctrl->{'FORM'}->{'seq'}) &&
         ($ctrl->{'FORM'}->{'seq'} != $seq)) {
@@ -115,14 +114,14 @@ sub l00http_podplay_proc (\%) {
             $track = $#playlist;
         }
         $ctrl->{'droid'}->mediaPlay("$lib$playlist[$track]", 'l00pod');
-        $state = 'playing';
+        $AndPlayerState = 'playing';
     } elsif (defined ($ctrl->{'FORM'}->{'pause'})) {
         $ctrl->{'droid'}->mediaPlayPause('l00pod');
-        $state = 'pause';
+        $AndPlayerState = 'pause';
     } elsif (defined ($ctrl->{'FORM'}->{'cont'})) {
         $refreshtag = "<meta http-equiv=\"refresh\" content=\"$rate\"> ";
         $ctrl->{'droid'}->mediaPlayStart('l00pod');
-        $state = 'playing';
+        $AndPlayerState = 'playing';
     } elsif ((defined ($ctrl->{'FORM'}->{'back'})) &&
         defined ($ctrl->{'FORM'}->{'seq'}) &&
         ($ctrl->{'FORM'}->{'seq'} != $seq)) {
@@ -132,10 +131,10 @@ sub l00http_podplay_proc (\%) {
         if ($timems < 0) {
             $timems = 0;
         }
-        printf $sock ("Rewind $jumpstep secs from %d to %d secs.<br>\n", 
-            $info->{'position'} / 1000, $timems / 1000);
+#       printf $sock ("Rewind $jumpstep secs from %d to %d secs.<br>\n", 
+#           $info->{'position'} / 1000, $timems / 1000);
         $ctrl->{'droid'}->mediaPlaySeek($timems, 'l00pod');
-        $state = 'playing';
+        $AndPlayerState = 'playing';
     } elsif ((defined ($ctrl->{'FORM'}->{'forward'})) &&
         defined ($ctrl->{'FORM'}->{'seq'}) &&
         ($ctrl->{'FORM'}->{'seq'} != $seq)) {
@@ -145,16 +144,16 @@ sub l00http_podplay_proc (\%) {
         if ($timems > $info->{'duration'}) {
             $timems = $info->{'duration'} - $jumpstep * 1000;;
         }
-        printf $sock ("Forward $jumpstep secs from %d to %d secs.<br>\n", 
-            $info->{'position'} / 1000, $timems / 1000);
+#       printf $sock ("Forward $jumpstep secs from %d to %d secs.<br>\n", 
+#           $info->{'position'} / 1000, $timems / 1000);
         $ctrl->{'droid'}->mediaPlaySeek($timems, 'l00pod');
-        $state = 'playing';
-    } elsif (($lstate eq 'playing') && ($state eq 'pause') &&
+        $AndPlayerState = 'playing';
+    } elsif (($lstate eq 'playing') && ($AndPlayerState eq 'pause') &&
         defined ($ctrl->{'FORM'}->{'seq'}) &&
         ($ctrl->{'FORM'}->{'seq'} == $seq)) {
         if ($track + 1 <= $#playlist) {
-            printf $sock ("Track #%d endded. Start #%d<br>\n",
-                $track + 1, $track + 2);
+#           printf $sock ("Track #%d endded. Start #%d<br>\n",
+#               $track + 1, $track + 2);
             if (open (OU, ">>${lib}played.txt")) {
                 # record played tracks
                 print OU "$playlist[$track]\n";
@@ -162,7 +161,7 @@ sub l00http_podplay_proc (\%) {
             }
             $track++;
             $ctrl->{'droid'}->mediaPlay("$lib$playlist[$track]", 'l00pod');
-            $state = 'playing';
+            $AndPlayerState = 'playing';
         }
     } elsif (defined ($ctrl->{'FORM'}->{'refresh'})) {
         $refreshtag = "<meta http-equiv=\"refresh\" content=\"$rate\"> ";
@@ -178,8 +177,8 @@ $out = '';
 #       $seq++;
 #       $track = 0;
 #       $ctrl->{'droid'}->mediaPlay($tmp, 'l00pod');
-        $state = 'playing';
-        $state = '';
+        $AndPlayerState = 'playing';
+        $AndPlayerState = '';
 
 # Extract URL from clipboard
 $url = &l00httpd::l00getCB($ctrl);
@@ -276,30 +275,30 @@ if (defined($bdy)) {
 
 
 print $sock $out;
-    print $sock "<form action=\"/podplay.htm\" method=\"get\">\n";
+    print $sock "<br><form action=\"/podplay.htm\" method=\"get\">\n";
 
 
     # make bit 'buttons'
     #$podsame = "<a href=\"/do.htm?path=/sdcard/l00httpd/l00_play_podcast.pl";
     $seqnxt = $seq + 1;
-    if ($state eq 'off') {
+    if ($AndPlayerState eq 'off') {
         print $sock "<input type=\"submit\" name=\"play\" value=\"Play\">\n";
     }
-    if ($state eq 'playing') {
-        print $sock "<input type=\"submit\" name=\"lasttrk\" value=\"<<\">\n";
+    if ($AndPlayerState eq 'playing') {
+        print $sock "<input type=\"submit\" name=\"lasttrk\" value=\"<<<\">\n";
         print $sock "<input type=\"submit\" name=\"back\" value=\"<-\">\n";
         print $sock "<input type=\"submit\" name=\"pause\" value=\"Pause\">\n";
         print $sock "<input type=\"submit\" name=\"forward\" value=\"->\">\n";
-        print $sock "<input type=\"submit\" name=\"nexttrk\" value=\">>\">\n";
+        print $sock "<input type=\"submit\" name=\"nexttrk\" value=\">>>\">\n";
     }
-    if ($state eq 'pause') {
-        print $sock "<input type=\"submit\" name=\"lasttrk\" value=\"<<\">\n";
+    if ($AndPlayerState eq 'pause') {
+        print $sock "<input type=\"submit\" name=\"lasttrk\" value=\"<<<\">\n";
         print $sock "<input type=\"submit\" name=\"back\" value=\"<-\">\n";
         print $sock "<input type=\"submit\" name=\"cont\" value=\"Cont\">\n";
         print $sock "<input type=\"submit\" name=\"forward\" value=\"->\">\n";
-        print $sock "<input type=\"submit\" name=\"nexttrk\" value=\">>\">\n";
+        print $sock "<input type=\"submit\" name=\"nexttrk\" value=\">>>\">\n";
     }
-    if ($state ne 'off') {
+    if ($AndPlayerState ne 'off') {
         print $sock "<input type=\"submit\" name=\"stop\" value=\"Stop\">\n";
     }
     print $sock "<br>\n";
@@ -319,14 +318,14 @@ print $sock "<input type=\"submit\" name=\"clip\" value=\"Fetch .mp3 URL\">\n";
 
     # progress
     if (defined ($info->{'position'})) {
-        printf $sock ("At %d/%d secs. \n", 
+        printf $sock ("Playing %d/%d secs. \n", 
             $info->{'position'} / 1000,
             $info->{'duration'} / 1000);
         printf $sock ("Track %d/%d.\n", 
             $track + 1, $#playlist + 1);
     }
-    print $sock "<a href=\"/ls.htm?path=$lib\">ls tracks</a>.\n";
-    print $sock "<a href=\"/recedit.htm?record1=.&path=${lib}played.txt\">played.txt</a>.\n";
+    print $sock "<a href=\"/ls.htm?path=$lib\">list tracks</a>.\n";
+    print $sock "Mark played in <a href=\"/recedit.htm?record1=.&path=${lib}played.txt\">played.txt</a>.\n";
     print $sock "<br>\n";
 
     # last call when?
@@ -343,14 +342,22 @@ print $sock "<input type=\"submit\" name=\"clip\" value=\"Fetch .mp3 URL\">\n";
     print $sock "</pre>\n";
 
     $podplayLast = time;
-    print $sock "Audio found in $lib\n";
+    print $sock "Audio found in <a href=\"/ls.htm?path=$lib\">$lib</a>\n";
     print $sock "<pre>\n";
-    print $sock join ("\n", @playlist);
+    $tmp = 1;
+    foreach $_ (@playlist) {
+        print $sock "$tmp: $_\n";
+        $tmp++;
+    }
     print $sock "</pre>\n";
 
-    print $sock "Played in $lib\n";
+    print $sock "Played in <a href=\"/ls.htm?path=$lib\">$lib</a>\n";
     print $sock "<pre>\n";
-    print $sock join ("\n", keys %played);
+    $tmp = 1;
+    foreach $_ (keys %played) {
+        print $sock "$tmp: $_\n";
+        $tmp++;
+    }
     print $sock "</pre>\n";
 
 
