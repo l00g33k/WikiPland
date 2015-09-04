@@ -10,7 +10,7 @@ my %config = (proc => "l00http_periobattery_proc",
               perio => "l00http_periobattery_perio");
 my ($savedpath, $battperc, $battvolts, $batttemp, $battmA, $lasttimestamp);
 my ($table, $tablehdr, $firstdmesg, $lastdmesg, $maxreclen, $skip, $len);
-my ($graphwd, $graphht);
+my ($graphwd, $graphht, $mAAvgLen);
 my $interval = 0, $lastcalled = 0;
 $battcnt = 0;
 $perltime = 0;
@@ -29,9 +29,9 @@ $lastdmesg = '';
 $maxreclen = 60 * 24 * 7;
 $skip = -1;
 $len = 60 * 12;
-$graphwd = 500;
+$graphwd = 400;
 $graphht = 300;
-
+$mAAvgLen = 7;
 
 sub l00http_periobattery_suspend {
     my ($ctrl) = @_;
@@ -175,9 +175,10 @@ sub l00http_periobattery_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lnno, $keep, $noln);
-    my ($svgperc, $svgvolt, $svgtemp, $svgmA);
+    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg);
     my ($yr, $mo, $da, $hr, $mi, $se, $now);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
+    my (@svgmAAvgBuf, $mAsum);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -216,6 +217,9 @@ sub l00http_periobattery_proc {
     }
     if ((defined ($form->{'graphht'})) && ($form->{'graphht'} =~ /(\d+)/)) {
         $graphht = $1;
+    }
+    if ((defined ($form->{'mAAvgLen'})) && ($form->{'mAAvgLen'} =~ /(\d+)/)) {
+        $mAAvgLen = $1;
     }
     if (defined ($form->{"suspend"})) {
         &l00http_periobattery_suspend($ctrl);
@@ -298,6 +302,8 @@ sub l00http_periobattery_proc {
         $svgvolt = '';
         $svgtemp = '';
         $svgmA = '';
+        $svgmAAvg = '';
+        undef @svgmAAvgBuf;
         $lnno = 0;
         $noln = $battlog =~ s/\n/\n/g;
         foreach $_ (split("\n", $battlog)) {
@@ -322,6 +328,17 @@ sub l00http_periobattery_proc {
                         $svgtemp .= "$now,$temp ";
                         $tmp = $curr + $dis_curr;
                         $svgmA .= "$now,$tmp ";
+                        push (@svgmAAvgBuf, $tmp);
+                        if ($#svgmAAvgBuf >= $mAAvgLen) {
+                            # trim history buffer to $mAAvgLen
+                            shift (@svgmAAvgBuf);
+                        }
+                        $mAsum = 0;
+                        foreach $tmp (@svgmAAvgBuf) {
+                            $mAsum += $tmp;
+                        }
+                        $mAsum /= ($#svgmAAvgBuf + 1);
+                        $svgmAAvg .= "$now,$mAsum ";
                     }
                 }
             }
@@ -339,6 +356,10 @@ sub l00http_periobattery_proc {
         if ($svgmA ne '') {
             &l00svg::plotsvg ('battmA', $svgmA, $graphwd, $graphht);
             print $sock "<p>mA:<br><a href=\"/svg.htm?graph=battmA&view=\"><img src=\"/svg.htm?graph=battmA\" alt=\"charge/discharge current over time\"></a>\n";
+        }
+        if ($svgmAAvg ne '') {
+            &l00svg::plotsvg ('battmAavg', $svgmAAvg, $graphwd, $graphht);
+            print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg.htm?graph=battmAavg&view=\"><img src=\"/svg.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
         }
         if ($svgtemp ne '') {
             &l00svg::plotsvg ('batttemp', $svgtemp, $graphwd, $graphht);
@@ -466,7 +487,8 @@ sub l00http_periobattery_proc {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"graphsz\" value=\"Set\"> \n";
     print $sock "        <td>Graph width: <input type=\"text\" size=\"6\" name=\"graphwd\" value=\"$graphwd\">\n";
-    print $sock "                 height: <input type=\"text\" size=\"6\" name=\"graphht\" value=\"$graphht\"></td>\n";
+    print $sock "                 height: <input type=\"text\" size=\"6\" name=\"graphht\" value=\"$graphht\">\n";
+    print $sock "                 mA avg len: <input type=\"text\" size=\"6\" name=\"mAAvgLen\" value=\"$mAAvgLen\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
@@ -522,6 +544,44 @@ sub l00http_periobattery_perio {
                     $gotvol = 1;
                 }
             } else {
+                # Does this work for all others?
+                if (open (IN, "</sys/class/power_supply/battery/uevent")) {
+                    # 2013-12-16 14:08:37.807146248 UTC
+                    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+                    $timestamp = sprintf ("%4d-%02d-%02d %02d:%02d:%02d.000 UTC", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+                    $chg_src = 0;
+                    $chg_en = 0;
+                    $over_vchg = 0;
+                    $batt_state = 0;
+                    while (<IN>) {
+                        #l00httpd::dbp($config{'desc'}, "$_");
+                        # POWER_SUPPLY_VOLTAGE_NOW=4176000
+                        if (/POWER_SUPPLY_VOLTAGE_NOW=(\d+)/) {
+                            $vol = $1 / 1000;
+                        }
+                        # POWER_SUPPLY_TEMP=315
+                        if (/POWER_SUPPLY_TEMP=(\d+)/) {
+                            $temp = $1;
+                        }
+                        # POWER_SUPPLY_CAPACITY=83
+                        if (/POWER_SUPPLY_CAPACITY=(\d+)/) {
+                            $level = $1;
+                        }
+                        # POWER_SUPPLY_CURRENT_NOW=-334840
+                        if (/POWER_SUPPLY_CURRENT_NOW=(-*\d+)/) {
+                            $curr = int ($1 / 1000);
+                            $dis_curr = 0;
+                        }
+
+                    }
+                    #<6>[ 7765.397493] [BATT] ID=2, level=89, vol=4209, temp=326, curr=-214, dis_curr=0, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at 7765326083644 (2013-12-11 12:08:08.239292486 UTC)
+                    $_ = time;
+                    $bstat = "<0>[ 0.0] [BATT] ID=0, level=$level, vol=$vol, temp=$temp, curr=$curr, dis_curr=$dis_curr, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at $_ ($timestamp)";
+
+                    $gotvol = 1;
+                    #l00httpd::dbp($config{'desc'}, "(\$level, \$vol, \$temp, \$curr, \$dis_curr, \$chg_src, \$chg_en, \$over_vchg, \$batt_state, \$timestamp)\n");
+                    #l00httpd::dbp($config{'desc'}, "($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp)\n");
+                }
             }
             if (($gotvol) && ($lasttimestamp ne $timestamp)) {
                 $lasttimestamp = $timestamp;
