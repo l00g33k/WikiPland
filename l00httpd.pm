@@ -2,6 +2,8 @@
 use warnings;
 use strict;
 
+
+
 package l00httpd;
 
 #use l00httpd;      # used for findInBuf
@@ -413,7 +415,7 @@ sub l00npoormanrdnshash {
 #&l00httpd::pcSyncCmdline($ctrl, $fullpath);
 sub pcSyncCmdline {
     my ($ctrl, $fullpath) = @_;
-    my ($buf, $clip, $rsyncpath, $path, $fname, $pcpath);
+    my ($buf, $clip, $rsyncpath, $path, $fname, $pcpath, $tmp);
 
 
     if (defined($ctrl->{'adbpath'})) {
@@ -459,9 +461,19 @@ sub pcSyncCmdline {
         $clip .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $clip .= "${pcpath}adb.in\n";
 
+        # append in RAM
+        &l00freadOpen($ctrl, 'l00://pcSyncCmdline');
+        $tmp = &l00freadAll($ctrl);
+        &l00fwriteOpen($ctrl, 'l00://pcSyncCmdline');
+        &l00fwriteBuf($ctrl, "$tmp\n$clip\n");
+        &l00fwriteClose($ctrl);
+
         $clip = urlencode ($clip);
 
-        $buf = "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $clip . "\" target=\"newclip\">clipboard</a>:<br>\n" . $buf;
+        $buf = "View <a href=\"/view.htm?path=l00://pcSyncCmdline\">l00://pcSyncCmdline</a>. \n"
+                . "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\">clipboard</a>:<br>\n"
+                . $buf;
+
 
     }
 
@@ -469,22 +481,40 @@ sub pcSyncCmdline {
 }
 
 
+#use Win32::Clipboard;
+#$clip = Win32::Clipboard();
+#print "Type your name: ";
+#$input = <>;
+#chomp $input;
+#$clip->Set("Hello, $input!");
+#print "You may now paste!\n";
+#print $clip->Get();
+#
 
 #&l00httpd::l00getCB($ctrl);
 sub l00getCB {
     my ($ctrl) = @_;
     my ($buf);
+    my ($clip);
+
+#   $ctrl{'os'} = 'win';
+#   $ctrl{'os'} = 'rhc';
+#   $ctrl{'os'} = 'lin';
 
     if ($ctrl->{'os'} eq 'and') {
-        $buf = $ctrl->{'droid'}->getClipboard(); print __LINE__," $buf\n";
+        $buf = $ctrl->{'droid'}->getClipboard();
         $buf = $buf->{'result'};
+    } elsif ($ctrl->{'os'} eq 'win') {
+        # Use Perl module
+        eval 'use Win32::Clipboard';
+        $clip = Win32::Clipboard();
+        $buf = $clip->Get();
     } else {
-        &l00freadOpen($ctrl, 'l00://clipboard');
+        &l00freadOpen($ctrl, 'l00://clipboard.txt');
         $buf = &l00freadAll($ctrl);
     }
     if (!defined ($buf)) {
-        $buf = '';
-    }
+        $buf = ''; }
 
     $buf;
 }
@@ -492,16 +522,22 @@ sub l00getCB {
 #&l00httpd::l00setCB($ctrl, $buf);
 sub l00setCB {
     my ($ctrl, $buf) = @_;
+    my ($clip);
 
-    &l00fwriteOpen($ctrl, 'l00://clipboard');
+    &l00fwriteOpen($ctrl, 'l00://clipboard.txt');
     &l00fwriteBuf($ctrl, $buf);
     &l00fwriteClose($ctrl);
 
     if ($ctrl->{'os'} eq 'and') {
         $ctrl->{'droid'}->setClipboard ($buf);
-    } elsif ($ctrl->{'os'} eq 'win') {
+    } elsif ($ctrl->{'os'} eq 'cyg') {
         # ::todo:: add windows special character escape
         `echo $buf| clip`;
+    } elsif ($ctrl->{'os'} eq 'win') {
+        # Use Perl module
+        eval 'use Win32::Clipboard';
+        $clip = Win32::Clipboard();
+        $clip->Set($buf);
     }
 }
 

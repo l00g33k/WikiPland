@@ -63,8 +63,14 @@ sub l00http_kml_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
-    my ($lat, $lon, $name);
+    my ($lat, $lon, $name, $trkname, $trackheight);
+
     $rawkml = 0;
+
+    $trackheight = 100;
+    if (defined ($ctrl->{'kml_trackheight'})) {
+        $trackheight = $ctrl->{'kml_trackheight'};
+    }
 
     # create HTTP and HTML headers
     $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
@@ -111,24 +117,28 @@ sub l00http_kml_proc {
             $phase = 0;
             if ($buffer =~ /^<\?xml/) {
                 # reading real .kml file
-                print $sock "$httphdr<pre>\n";
+                print $sock "$httphdr<br>\n";
+                print $sock "Extracted waypoints: <a href=\"/view.htm?path=l00://way.txt\">l00://way.txt</a>\n<pre>";
                 $httphdr = '';
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://way.txt');
                 foreach $_ (split ("\n", $buffer)) {
                     s/\r//g;
                     s/\n//g;
                     if (/<Placemark>/) {
                         $phase++;
                     } elsif (/<\/Placemark>/) {
-                        print $sock "$lonlat,$name\n";
+                        print $sock "$lonlat $name\n";
+                        &l00httpd::l00fwriteBuf($ctrl, "$lonlat $name\n");
                     } elsif ((/<name>(.+)<\/name>/) && ($phase != 0)) {
                         $name = $1;
-                    } elsif ((/<coordinates>(.+),(.+),0<\/coordinates>/) && ($phase != 0)) {
-                        $lonlat = "$1,$2";
+                    } elsif ((/<coordinates>(.+),(.+),0.*<\/coordinates>/) && ($phase != 0)) {
+                        $lonlat = "$2,$1";
                     } elsif (/Style id/) {
                         s/</&lt;/g;
                         s/>/&gt;/g;
                     }
                 }
+                &l00httpd::l00fwriteClose($ctrl);
                 print $sock "<\/pre>\n";
             } elsif ($buffer =~ /^H  SOFTWARE NAME & VERSION/) {
                 my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
@@ -155,8 +165,12 @@ sub l00http_kml_proc {
 			                # not first time
 			                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
 		                }
+                        $trkname = "Track $trackno";
+                        if (/^T +[NS].+; (.+)/) {
+                            $trkname = "Track $1";
+                        }
 		                $tracks = $tracks . 
-			                "\t\t<Placemark><name>Track $trackno</name>\n" .
+			                "\t\t<Placemark><name>$trkname</name>\n" .
 			                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
 			                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
 			                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
@@ -201,7 +215,7 @@ sub l00http_kml_proc {
                     #-118.0347581348814,33.80816583075773,Place1
                     if (/^#/) {
                         next;
-                    } elsif (($lon, $lat, $name) = /^([^,]+),([^,]+)[, ]+(.+)$/) {
+                    } elsif (($lat, $lon, $name) = /^([^,]+),([^,]+)[, ]+(.+)$/) {
                         $kmlbuf .= 
 		                "\t\t<Placemark>\n".
 			            "\t\t\t<name>$name</name>\n".

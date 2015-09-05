@@ -94,16 +94,16 @@ sub l00http_periocalrem_perio {
                         ($julian - $juliannow <= $days))  {
                         l00httpd::dbp($config{'desc'}, "found >$todo<\n"), if ($ctrl->{'debug'} >= 5);
                         $eventnear .= "$todo\n";
-                        if ($julian - $juliannow < 0) {
+                        if ($julian - $juliannow <= 0) {
                             $calremcolor{$todo} = 'red';
                             $calremfont{$todo} = 'yellow';
-                        } elsif ($julian - $juliannow < 1) {
+                        } elsif ($julian - $juliannow <= 1) {
                             $calremcolor{$todo} = 'yellow';
                             $calremfont{$todo} = 'black';
-                        } elsif ($julian - $juliannow < 2) {
+                        } elsif ($julian - $juliannow <= 2) {
                             $calremcolor{$todo} = 'lime';
                             $calremfont{$todo} = 'black';
-                        } elsif ($julian - $juliannow < 3) {
+                        } elsif ($julian - $juliannow <= 3) {
                             $calremcolor{$todo} = 'aqua';
                             $calremfont{$todo} = 'black';
                         }

@@ -28,7 +28,7 @@ if (opendir (DIR, $idir)) {
     }
     closedir (DIR);
     `explorer $idir2`;
-    print "\n^C now to terminate.\n";
+    print "\n^C now to terminate. <Enter> to continue.\n";
     <>;
     opendir (DIR, $idir);
     $cnt = 0;
@@ -82,7 +82,7 @@ while (1) {
                 # rsync -v -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:/sdcard/l00httpd/NtCompTw700.txt /cygdrive/D/x/ram/l00/NtCompTw700.txt
                 # rsync -v -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:/sdcard/l00httpd/NtCompTw700.txt 
                 # /cygdrive/D/x/ram/l00/NtCompTw700.txt
-                if (($cygpath) = /^rsync -v -e .*(\/cygdrive\/\S+)$/) {
+                if (($cygpath) = /^rsync -v +-e .*(\/cygdrive\/\S+)$/) {
                     $pcpath = $cygpath;
                     $pcpath =~ s|^/cygdrive/(.)/|$1:\\|;
                     $pcpath =~ s/\//\\/g;

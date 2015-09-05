@@ -60,6 +60,11 @@ sub l00http_sleep_proc {
                     $ctrl->{'screenbrightness'} = $form->{'bright'};
                 }
             }
+            if (($ctrl->{'os'} eq 'and') &&
+                defined ($form->{'offwakelock'}) && 
+                ($form->{'offwakelock'} eq 'on')) {
+                $ctrl->{'droid'}->wakeLockRelease();
+            }
         }
     }
 
@@ -79,6 +84,11 @@ sub l00http_sleep_proc {
     print $sock "Brightness:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"6\" name=\"bright\" value=\"\"> 0-255\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Wakelock:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"offwakelock\">Turn off wakelock\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save to file\">\n";

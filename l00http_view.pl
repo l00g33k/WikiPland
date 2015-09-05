@@ -9,7 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
-my ($hostpath);
+my ($hostpath, $lastpath);
 my ($findtext, $block, $wraptext, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
@@ -18,6 +18,7 @@ $wraptext = '';
 $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
+$lastpath = '';
 
 sub l00http_view_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -30,7 +31,8 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx, $tmpno, $tmpln, $tmptop);
+    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
+    my ($tmpno, $tmpln, $tmptop, $foundcnt);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -38,9 +40,9 @@ sub l00http_view_proc {
     print $sock "<a href=\"#end\">Jump to end</a>\n";
     print $sock "<a name=\"top\"></a>\n";
 
-    $form->{'path'} =~ s/\r//g;
-    $form->{'path'} =~ s/\n//g;
     if (defined ($form->{'path'})) {
+        $form->{'path'} =~ s/\r//g;
+        $form->{'path'} =~ s/\n//g;
         $tmp = $form->{'path'};
         if ($ctrl->{'os'} eq 'win') {
             $tmp =~ s/\//\\/g;
@@ -53,7 +55,14 @@ sub l00http_view_proc {
         } else {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
-        print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>\n";
+        print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
+        if ($lastpath ne $form->{'path'}) {
+            # reset skip and length for different file
+            $skip = 0;
+            $maxln = 1000;
+            $lastpath = $form->{'path'};
+        }
     }
 
 
@@ -68,6 +77,9 @@ sub l00http_view_proc {
         }
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
+            if ($skip < 0) {
+                $skip = 0;
+            }
         }
 #    } else {
 #        $skip = 0;
@@ -134,6 +146,13 @@ sub l00http_view_proc {
         $found = '';
 
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            # launch editor
+            if (($ctrl->{'os'} eq 'and') && 
+                defined ($form->{'exteditor'}) &&
+                (!($form->{'path'} =~ /^l00:\/\//))) {
+                $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$form->{'path'}", "text/plain");
+            }
+
             $buffer = &l00httpd::l00freadAll($ctrl);
 
             # Some has only \r as line endings. So convert DOS \r\n to Unix \n
@@ -159,7 +178,9 @@ sub l00http_view_proc {
                 $found .= &l00httpd::findInBuf ($findtext, $block, $buffer);
                 if ($wraptext eq '') {
 				    $tmp = '';
+                    $foundcnt = 0;
 					foreach $_ (split("\n", $found)) {
+                        $foundcnt++;
 					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
                             # extract if we find parathesis
                             if (($findtext =~ /[^\\]\(.+[^\\]\)/) ||
@@ -177,8 +198,15 @@ sub l00http_view_proc {
 					}
 					$found = $tmp;
                     $found .= "</pre>\n";
+                } else {
+                    $foundcnt = 0;
+					foreach $_ (split("\n", $found)) {
+                        $foundcnt++;
+                    }
                 }
-                $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
+                $foundcnt -= 2; # adjustment
+                $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.<hr>\n";
+                $found = "Found $foundcnt matches. $found";
                 print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, 0);
                 print $sock "<p>\n";
             }
@@ -200,6 +228,7 @@ sub l00http_view_proc {
                 }
                 s/\r//g;
                 s/\n//g;
+                s/&/&amp;/g;
                 s/</&lt;/g;
                 s/>/&gt;/g;
                 if (defined($form->{'hidelnno'}) && 

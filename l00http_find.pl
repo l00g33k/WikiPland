@@ -55,6 +55,8 @@ sub l00http_find_search {
 #   my ($ctrl, $mypath) = @_;
     my $hitcnt = 0;
     my $filecnt = 0;
+    my $totalbytes = 0;
+    my $totalfiles = 0;
     my ($paren, @allparen, $lineend, $tmp, $fstat, $lnout);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $output, $output2,
 	 $size, $atime, $mtime, $ctime, $blksize, $blocks);
@@ -229,6 +231,8 @@ sub l00http_find_search {
                                         "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
                                         "<a href=\"/$sendto.htm?path=$fullname\">$file</a>".
                                         "$lineend\n";
+                                    $totalfiles++;
+                                    $totalbytes += $size;
                                     #print $sock 
                                     #   "$fstat ".
                                     #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
@@ -267,6 +271,7 @@ sub l00http_find_search {
         print $sock "<p>Found $hitcnt occurance(s) in $filecnt file(s) in '$mypath'<br>".
             "Click path to visit directory, click filename to view file\n";
     }
+    print $sock "<br>Total $totalbytes bytes in $totalfiles files\n";
     print $sock "<p>Find results also in <a href=\"/ls.htm?path=l00://find.htm\">l00://find.htm</a>\n";
 
     1;

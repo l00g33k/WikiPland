@@ -5,7 +5,7 @@ use warnings;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($name, $key, $val);
+my ($key, $val);
 my %config = (proc => "l00http_hello_proc",
               desc => "l00http_hello_desc");
 
@@ -14,50 +14,92 @@ sub l00http_hello_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "hello: Hello, World! And listing all FORM data";
+    " 1: hello: Hello, World! And listing all FORM data";
 }
 
 sub l00http_hello_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    if (defined ($form->{'helloname'})) {
-        $name = $form->{'helloname'};
+    my ($hellomsg, $delimiter);
+
+    $hellomsg = '';
+    if (defined ($form->{'clear'})) {
+        unlink ("$ctrl->{'workdir'}l00_hello.txt");
     } else {
-        $name = "";
+        # if not clearing, load from file
+        $delimiter = $/;
+        local $/ = undef;
+        if (open (IN, "<$ctrl->{'workdir'}l00_hello.txt")) {
+            $hellomsg = <IN>;
+            close (IN);
+        }
+        $/ = $delimiter;
+    }
+
+    if ((defined ($form->{'message'})) && 
+        (length ($form->{'message'}) > 0) && 
+        (defined ($form->{'submit'}))) {
+        $form->{'message'} =~ s/</&lt;/g;
+        $form->{'message'} =~ s/>/&gt;/g;
+        $form->{'message'} =~ s/\r//g;
+        $form->{'message'} =~ s/\n/<br>\n/g;
+        # shows only last 6 IP digits
+        $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
+        $hellomsg = "<pre>$ctrl->{'now_string'}, $_ said:</pre>\n$form->{'message'}\n<p>$hellomsg";
+        if (open (OU, ">$ctrl->{'workdir'}l00_hello.txt")) {
+            print OU $hellomsg;
+            close (OU);
+        }
     }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>hello</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} \n";
+    if ($ctrl->{'ishost'}) {
+        print $sock "$ctrl->{'home'} \n";
+    }
 
     print $sock "<form action=\"/hello.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td>Your name:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"helloname\" value=\"$name\"></td>\n";
+    print $sock "            <td>Your message:</td>\n";
+#   print $sock "            <td><input type=\"text\" size=\"16\" name=\"message\" value=\"\"></td>\n";
+    print $sock "            <td><textarea name=\"message\" cols=\"16\" rows=\"4\"></textarea></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
-    print $sock "        <td>&nbsp;</td>\n";
+    if ($ctrl->{'ishost'}) {
+        print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\">\n";
+        print $sock "        <input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
+    } else {
+        print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\"></td>\n";
+    }
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
     print $sock "<INPUT TYPE=\"hidden\" NAME=\"ip\" VALUE=\"$ctrl->{'client_ip'}\">\n";
     print $sock "</form>\n";
 
+    if ($ctrl->{'ishost'}) {
+        print $sock "View <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_hello.txt\">$ctrl->{'workdir'}l00_hello.txt</a><p>\n";
+    }
+
     # get submitted name and print greeting
-    print $sock "Hello, $name, here are all the form data:<p>\n";
+    print $sock "$hellomsg\n";
 
     # dump all form data\
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     for $key (keys %$form) {
         $val = $form->{$key};
+        if (!defined ($val) || ($val =~ /^ *$/)) {
+            $val = '&nbsp;';
+        }
         print $sock "<tr><td>$key</td><td>$val</td>\n";
     }
     print $sock "</table>\n";
+
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

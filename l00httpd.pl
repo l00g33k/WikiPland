@@ -53,6 +53,7 @@ $httpmax = 1024 * 1024 * 10 + 4096;
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter);
 
 
 # set listening port
@@ -67,7 +68,9 @@ $cfgedit = '';
 
 undef $timeout;
 
-
+# Flushing the print buffers.
+# http://www.perlmonks.org/?node_id=669369
+$| = 1;
 
 sub dlog {
     my $logm = pop;
@@ -79,17 +82,27 @@ sub dlog {
     }
 }
 
+sub updateNow_string {
+    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+    $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    $ctrl{'now_day'} = $wday;
+}
+&updateNow_string ();
+
+
 # predefined to make it easy for the modules
-#$ctrl{'httphead'}  = "HTTP/1.0 200 OK\r\n\r\n";
 $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
-#$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\x0D\x0A<html>\x0D\x0A";
-$ctrl{'htmlhead'}  = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<head>\x0D\x0A";
-$ctrl{'htmlhead'} .= "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
-                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
-                     # so arrow keys scroll page in my browser
-                     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A";
-#                    "<meta http-equiv=\"x-ua-compatible\" content=\"text/html; IE=EmulateIE7; charset=utf-8\">\x0D\x0A";
+#::now::f705
+$htmlheadV1 = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
+$htmlheadV2 = "<!DOCTYPE html>\x0D\x0A";
+$htmlheadB0 = "<html>\x0D\x0A".
+              "<head>\x0D\x0A".
+              "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
+              "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
+              # so arrow keys scroll page in my browser
+              "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A".
+              "";
+$ctrl{'htmlhead'} = $htmlheadV1 . $htmlheadB0;
 
 $ctrl{'htmlhead2'} = "</head>\x0D\x0A<body>\n";
 $ctrl{'htmlfoot'}  = "\x0D\x0A</body>\x0D\x0A</html>";
@@ -112,6 +125,7 @@ $nopwtimeout = 0;
 
 
 $ctrl{'bbox'} = '';
+# overwritable from l00httpd.cfg
 $ctrl{'machine'} = '(unknown)';
 if (defined ($ENV{'ANDROID_ROOT'})) {
     $ctrl{'os'} = 'and';
@@ -124,14 +138,23 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
             }
         }
     }
+} elsif ($^O eq 'cygwin') {
+    $ctrl{'os'} = 'cyg';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
+} elsif ($^O eq 'MSwin32') {
+    $ctrl{'os'} = 'win';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
+    $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } else {
     if ($plpath =~ /\/var\/lib\/openshift\//) {
         # on RHC
         $ctrl{'os'} = 'rhc';
+        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     } else {
         $ctrl{'os'} = 'lin';
+        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     }
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
@@ -160,31 +183,6 @@ $ctrl{'plpath'} = $plpath;      # make it available to modules
 
 $ctrl{'clipath'}  = $plpath;
 
-# parse commandline arguments
-while ($_ = shift) {
-    # perl l00httpd.pl cliport=8080 ctrlport=10000 hostip=?
-    if (/^ctrlport=(\d+)/) {
-        $ctrl_port = $1;
-        print "ctrlport set to $ctrl_port\n";
-    } elsif (/^cliport=(\d+)/) {
-        $cli_port = $1;
-        print "cliport set to $cli_port\n";
-    } elsif (/^hostip=(.+)/) {
-        $host_ip = $1;
-        print "hostip set to $host_ip\n";
-    } elsif (/^debug=(.+)/) {
-        $debug = $1;
-        $ctrl{'debug'} = $debug;
-        print "debug set to $debug\n";
-    } elsif (/^open$/) {
-	    $nopwtimeout = 0x7fffffff;
-        $ctrl{'noclinav'}  = 0;
-        $ctrl{'clipath'}  = '/';
-		$open = 1;
-	}
-}
-$ctrl_port_first = $ctrl_port;
-
 
 $conf = "l00httpd.cfg";
 $tmp = $plpath; # first time, find in l00httpd script directory
@@ -195,6 +193,9 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
         }
         $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
         print "Reading $tmp$conf...\n";;
+        # machine specific filter
+        $skip = 0;
+        $skipfilter = '.';
         while (<IN>) {
             if (/^#/) {
                 next;
@@ -202,6 +203,21 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
         
             s/\r//g;
             s/\n//g;
+            if (/^machine=~\/(.+)\/ */) {
+                # new machine filter
+                $skipfilter = $1;
+                if ($ctrl{'machine'} =~ /$skipfilter/) {
+                    # matched, don't skip
+                    $skip = 0;
+                } else {
+                    # no match, skipping
+                    $skip = 1;
+                }
+            }
+            if ($skip) {
+                next;
+            }
+
             ($key, $val) = split ('\^');
             if ((defined ($key)) &&
                 (length ($key) > 0) && 
@@ -234,6 +250,32 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
 	}
 }
 
+# parse commandline arguments
+while ($_ = shift) {
+    # perl l00httpd.pl cliport=8080 ctrlport=10000 hostip=?
+    if (/^ctrlport=(\d+)/) {
+        $ctrl_port = $1;
+        print "ctrlport set to $ctrl_port\n";
+    } elsif (/^cliport=(\d+)/) {
+        $cli_port = $1;
+        print "cliport set to $cli_port\n";
+    } elsif (/^hostip=(.+)/) {
+        $host_ip = $1;
+        print "hostip set to $host_ip\n";
+    } elsif (/^debug=(.+)/) {
+        $debug = $1;
+        $ctrl{'debug'} = $debug;
+        print "debug set to $debug\n";
+    } elsif (/^open$/) {
+	    $nopwtimeout = 0x7fffffff;
+        $ctrl{'noclinav'}  = 0;
+        $ctrl{'clipath'}  = '/';
+		$open = 1;
+	}
+}
+$ctrl_port_first = $ctrl_port;
+
+
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^[0-5]$/)) {
     $debug = $ctrl{'debug'};
 }
@@ -255,12 +297,12 @@ if (!defined ($ctrl{'workdir'})) {
 foreach $key (keys %ctrl) {
     if ($ctrl{$key} =~ /%PLPATH%/) {
         print "$ctrl{$key} => ";
-        $ctrl{$key} =~ s/%PLPATH%/$plpath/;
+        $ctrl{$key} =~ s/%PLPATH%/$plpath/g;
         print "$ctrl{$key}\n";
     }
     if ($ctrl{$key} =~ /%WORKDIR%/) {
         print "$ctrl{$key} => ";
-        $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/;
+        $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
         print "$ctrl{$key}\n";
     }
 }
@@ -369,20 +411,60 @@ sub loadmods {
             }
         }
     }
+
     print "\nReady\n";
 }
+$ctrl{'modsinfo'} = \%modsinfo;
+
+
+
+
+#sub callmod {
+#    my ($modcalled, $FORM) = @_;
+#
+#    #print "printed in callmod modcalled $modcalled\n";
+#    #for $_ (keys %$FORM) {
+#    #    print "printed in callmod >$_< >$FORM->{$_}\n";
+#    #}
+#
+#    if (defined ($modsinfo{"$modcalled:fn:proc"})) {
+#        $subname = $modsinfo{"$modcalled:fn:proc"};
+#        print "CRON: callmod $subname\n", if ($debug >= 5);
+#        $ctrl{'FORM'} = $FORM;
+#        $ctrl{'sock'} = 0;
+#        if ($ctrl{'os'} eq 'win') {
+#            open ($socknul, ">nul");
+#        } else {
+#            open ($socknul, ">/dev/null");
+#        }
+#        $ctrl{'sock'} = $socknul;
+#        $ctrl{'msglog'} = "";
+#        $retval = __PACKAGE__->$subname(\%ctrl);
+#        close ($ctrl{'sock'});
+#        &dlog  ($ctrl{'msglog'}."\n");
+#    }
+#
+#}
+#$ctrl{'callmod'} = \&callmod;
 
 
 
 
 # 2) Open a listening socket
+my ($reuseflag);
+if ($ctrl{'os'} eq 'win') {
+    $reuseflag = 0;
+} else {
+    # so won't have to wait to reuse same port on Android
+    $reuseflag = 1;
+}
 
 # create a listening socket 
 $ctrl_lstn_sock = IO::Socket::INET->new (
     LocalPort => $ctrl_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    Reuse => 1
+    ReuseAddr => $reuseflag  # Reuse => 1
 );
 if (!$ctrl_lstn_sock) {
     $ctrl_port += 10;
@@ -390,7 +472,7 @@ if (!$ctrl_lstn_sock) {
         LocalPort => $ctrl_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        Reuse => 1
+        ReuseAddr => $reuseflag  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
         $ctrl_port += 10;
@@ -398,7 +480,7 @@ if (!$ctrl_lstn_sock) {
             LocalPort => $ctrl_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            Reuse => 1
+            ReuseAddr => #reuseflag  # Reuse => 1
         );
     }
 }
@@ -414,7 +496,7 @@ $cli_lstn_sock = IO::Socket::INET->new (
     LocalPort => $cli_port,
     LocalAddr => $host_ip,
     Listen => 5, 
-    Reuse => 1
+    ReuseAddr => 0  # Reuse => 1
 );
 if (!$cli_lstn_sock) {
     $cli_port += 10;
@@ -422,7 +504,7 @@ if (!$cli_lstn_sock) {
         LocalPort => $cli_port,
         LocalAddr => $host_ip,
         Listen => 5, 
-        Reuse => 1
+        ReuseAddr => 0  # Reuse => 1
     );
     if (!$cli_lstn_sock) {
         $cli_port += 10;
@@ -430,29 +512,28 @@ if (!$cli_lstn_sock) {
             LocalPort => $cli_port,
             LocalAddr => $host_ip,
             Listen => 5, 
-            Reuse => 1
+            ReuseAddr => 0  # Reuse => 1
         );
     }
 }
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
-print "cli_port is $cli_port\n";
+print "ctrl_port is $ctrl_port\n";
+print "cli_port  is $cli_port\n";
 
 my $readable = IO::Select->new;     # Create a new IO::Select object
 $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
 $readable->add($cli_lstn_sock);    # Add the lstnsock to it
 
-
 sub periodictask {
-    $tickdelta = 0x7fffffff;
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-    $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    $tickdelta = 3600;	# tick once an hour
+    &updateNow_string ();
     foreach $mod (sort keys %httpmods) {
         if (defined ($modsinfo{"$mod:fn:perio"})) {
             $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
             $subname = $modsinfo{"$mod:fn:perio"};
             $retval = 60;
             $retval = __PACKAGE__->$subname(\%ctrl);
-            print "$mod:fn:perio -> $retval\n", if ($debug >= 4);
+            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
             if (defined ($retval) && ($retval > 0)) {
                 if ($tickdelta > $retval) {
                     $tickdelta = $retval;
@@ -462,16 +543,15 @@ sub periodictask {
     }
     my ($timeis);
     $timeis = localtime (time);
-    print "tickdelta $tickdelta $timeis\n", if ($debug >= 4);
+    print "perio: tickdelta $tickdelta $timeis\n", if ($debug >= 4);
 }
 
-$tickdelta = 0;
+$tickdelta = 3600;
 $uptime = time;
 $ttlconns = 0;
 
 
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-$ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+&updateNow_string ();
 if (open (OUT, ">$plpath"."l00httpd.log")) {
     print OUT "$ctrl{'now_string'} l00httpd starts\n";
     close OUT;
@@ -492,15 +572,18 @@ if ($ctrl{'os'} eq 'and') {
 
 while(1) {
     # Get a list of sockets that are ready to talk to us.
+    print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
-    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
-    $ctrl{'now_string'} = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    print "After Select->select()\n", if ($debug >= 5);
+    &updateNow_string ();
     &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
+        print "curr_socket = $curr_socket\n", if ($debug >= 5);
         if(($curr_socket == $ctrl_lstn_sock) ||
            ($curr_socket == $cli_lstn_sock)) {
+            print "ready curr_socket = $curr_socket\n", if ($debug >= 5);
             $clicnt++;
             if($curr_socket == $ctrl_lstn_sock) {
                 # some one sent to our listening socket
@@ -516,6 +599,7 @@ while(1) {
                 next;
             }
             $client_ip = inet_ntoa ($addr);     # convert to readable
+            print "client_ip = $client_ip\n", if ($debug >= 5);
             if($curr_socket == $ctrl_lstn_sock) {
                 if ((($host_ip ne '0.0.0.0') &&
                     ($client_ip eq $host_ip)) ||
@@ -565,12 +649,14 @@ while(1) {
 #                   # don't know how to find self IP yet
 #                   $ip = undef;
                 }
-            } elsif ($ctrl{'os'} eq 'win') {
+            } elsif (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
             } else {
+                print "shell /sbin/ifconfig\n", if ($debug >= 5);
                 $ip = `/sbin/ifconfig`;
             }
-            if ($ctrl{'os'} eq 'win') {
+            print "raw ip = $ip\n", if ($debug >= 5);
+            if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
                 if ($ip =~ /(192\.168\.\d+\.\d+)/) {
                     $ip = $1;
@@ -587,6 +673,7 @@ while(1) {
                 }
             }
             $ip =~ s/ //g;
+            print "ip = $ip\n", if ($debug >= 5);
             $ctrl{'myip'} = $ip;
             if (defined ($connected{$client_ip})) {
                 $connected{$client_ip}++;
@@ -605,14 +692,19 @@ while(1) {
             }
             $idpw = "";
             $urlparams = "";
-            $modcalled = "_none_";     # aka module name
+            if (($ishost) ||           # client enabled or is server
+                ((defined ($modsinfo{"ls:ena:checked"})) &&
+                 ($modsinfo{"ls:ena:checked"} eq "checked"))) {
+                $modcalled = "_none_";     # aka module name
+            } else {
+                # invoke 'hello' if not host and 'ls' not enabled
+                $modcalled = "hello";     # aka module name
+            }
 
             # print date, time, client IP, password, and module names
-            print "--------------------------------------------\n", if ($debug >= 2);
+            print "------------ processing HTTP request header ----------------------\n", if ($debug >= 2);
 
             # 3) Parse client HTTP submission and identify module plugin name
-
-#if (1) {
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
             select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
@@ -688,6 +780,7 @@ while(1) {
             # read in browser submission
             $httphdr =~ s/\r//g;
             $postboundary = '';
+            $ctrl{'htmlhead'} = $htmlheadV1 . $htmlheadB0;
             foreach $_ (split ("\n", $httphdr)) {
                 if (/^\x0D\x0A$/) {
                     # end of submission
@@ -702,6 +795,19 @@ while(1) {
                 } elsif (/POST (\/[^ ]*) HTTP/) {
                     # extract the URL after the domain
                     $urlparams = $1;
+                } elsif (/^X-Client-IP: ([0-9.:a-fA-F]+)/) {
+                    # extract the client IP when hosting on rhcloud.com
+                    $client_ip = $1;
+                    # double IP recording but that's ok
+                    if (defined ($connected{$client_ip})) {
+                        $connected{$client_ip}++;
+                    } else {
+                        $connected{$client_ip} = 1;
+                    }
+                } elsif (/^User-Agent:.*Android +5/i) {
+                    # Android 5.1: <!DOCTYPE html XHTML Mobile seems to make single colume display
+                    # This makes it more compact
+                    $ctrl{'htmlhead'} = $htmlheadV2 . $htmlheadB0;
                 } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
                     $postboundary = $1;
                     l00httpd::dbp("l00httpd", "Content-Type: multipart/form-data; boundary=$postboundary\n");
@@ -838,6 +944,8 @@ while(1) {
                     }
                 }
             }
+            print "FORM: completed urlparams processing\n", if ($debug >= 5);
+
             # zap mod='httpd' if no args
             if (($modcalled eq 'httpd') &&
                 !($urlparams =~ /=/)) {
@@ -882,11 +990,13 @@ while(1) {
             }
 
             # handle URL
+            print "Start handling URL\n", if ($debug >= 5);
             if ($modcalled eq "restart") {
                 $modcalled = '';
                 $shutdown = 0;
                 # reload all modules
                 l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
+                print "Restart/reloading modules\n", if ($debug >= 2);
                 &loadmods;
             }
             if ($shutdown == 1) {
@@ -894,6 +1004,7 @@ while(1) {
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "Click <a href=\"/\">here</a> to initiate shutdown.  Note: If this is an APK installation, you must uninstall to update l00httpd.\n";
                 print $sock $ctrl{'htmlfoot'};
+                print "shutting down by shutdown module\n";
                 exit (1);
             } elsif ($modcalled eq "shutdown") {
                 $shutdown = 1;
@@ -917,6 +1028,7 @@ while(1) {
                  ((defined ($modsinfo{"$modcalled:ena:checked"})) &&
                   ($modsinfo{"$modcalled:ena:checked"} eq "checked"))) &&
                 (defined $httpmods{$modcalled})) {         # and module defined
+                print "Start handling $modcalled\n", if ($debug >= 5);
                 $shutdown = 0;
 
                 # 3.1) if found, invoke module
@@ -929,21 +1041,23 @@ while(1) {
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
 
-                # a generic scheme to support system wide banner
-                # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
-                # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
-                foreach $_ (sort keys %ctrl) {
-                    if (/^BANNER:(.+)/) {
-                        #print "key $_\n";
-                        if (defined($ctrl{$_})) {
-                            #$ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
-                            #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
-                            # process banner content through wikihtml to make wiki links, etc.
-                            $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
-                            # remove ending <br> added
-                            s/<br>$//;
-                            $ctrl{'home'} = $_ . $ctrl{'home'};
-						}
+                if ($ishost) {
+                    # a generic scheme to support system wide banner
+                    # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
+                    # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
+                    foreach $_ (sort keys %ctrl) {
+                        if (/^BANNER:(.+)/) {
+                            #print "key $_\n";
+                            if (defined($ctrl{$_})) {
+                                #$ctrl{'home'} = $ctrl{$_} . $ctrl{'home'};
+                                #$buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                                # process banner content through wikihtml to make wiki links, etc.
+                                $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
+                                # remove ending <br> added
+                                s/<br>$//;
+                                $ctrl{'home'} = $_ . $ctrl{'home'};
+                            }
+                        }
                     }
                 }
 
@@ -955,11 +1069,13 @@ while(1) {
                     &dlog  ($ctrl{'msglog'}."\n");
                 }
             } else {
+                print "Start handling host control\n", if ($debug >= 5);
                 $shutdown = 0;
                 # process Home control data
                 if ($modcalled eq 'httpd') {
-                    if ((defined ($FORM{'debug'})) && ($FORM{'debug'} =~ /^[0-5]$/)) {
-                        $debug = $FORM{'debug'};
+                    print "Start processing host control\n", if ($debug >= 5);
+                    if ((defined ($FORM{'debuglvl'})) && ($FORM{'debuglvl'} =~ /^[0-5]$/)) {
+                        $debug = $FORM{'debuglvl'};
                     }
                     # indivisual check marks
                     foreach $mod (sort keys %httpmods) {
@@ -1101,12 +1217,14 @@ while(1) {
                 # on server: provide client control
                 # on client: provide a table of modules, and links if enabled
                 # Send HTTP and HTML headers
+                print "Send host control HTTP header\n", if ($debug >= 5);
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
-                print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland. \n";
+                print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland running on '$ctrl{'machine'}'. \n";
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm\">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns<p>\n";
-                
+
+                print "Send host control HTTP form\n", if ($debug >= 6);
                 print $sock "<a name=\"top\"></a>\n";
                 print $sock "<form action=\"/httpd\" method=\"get\">\n";
                 print $sock "<input type=\"submit\" value=\"Edit box size\">\n";
@@ -1132,6 +1250,7 @@ while(1) {
                 print $sock "<p>\n";
  
                 # build table of modules
+                print "build table of modules\n", if ($debug >= 6);
                 print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
                 if ($ishost) {
                     # with link control
@@ -1139,7 +1258,7 @@ while(1) {
 
                     # on server: display debug option
                     print $sock "<tr>";
-                    print $sock "<td><input type=\"text\" size=\"2\" name=\"debug\" value=\"$debug\"></td>\n";
+                    print $sock "<td><input type=\"text\" size=\"2\" name=\"debuglvl\" value=\"$debug\"></td>\n";
                     print $sock "<td><a href=\"/view.htm?path=${plpath}l00httpd.pl\">l00httpd.pl</a></td>\n";
                     print $sock "<td>Print debug messages to console</td>\n";
 
@@ -1183,6 +1302,7 @@ while(1) {
                     print $sock "<tr><td>Plugins</td><td>Descriptions</td>\n";
                 }
                 # list all modules
+                print "List all modules\n", if ($debug >= 5);
                 foreach $tmp (sort keys %httpmodssort) {
                     $mod = $httpmodssort{$tmp};
                     # get description
@@ -1219,21 +1339,20 @@ while(1) {
                     print $sock "<td><input type=\"checkbox\" name=\"ipfilon\" $checked></td>\n";
                     print $sock "<td>Filter IP</td><td>Enable IP filtering</td>\n";
                 }
-                $ipallowed{"127.0.0.1"} = "yes";
-                for $key (sort keys %connected) {
-                    $val = $connected{$key};
-                    $tmp = "";
-                    if ($ishost) {
+                if ($ishost) {
+                    $ipallowed{"127.0.0.1"} = "yes";
+                    for $key (sort keys %connected) {
+                        $val = $connected{$key};
+                        $tmp = "";
                         if (defined ($ipallowed{$key})) {
                             $checked = "checked";
                         } else {
                             $checked = "";
                         }
                         $tmp = "<td><input type=\"checkbox\" name=\"$key\" $checked>allow</td>";
+                        print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
                     }
-                    print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
-                }
-                if ($ishost) {
+
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"noclinavon\">on</td>\n";
                     print $sock "<td><input type=\"checkbox\" name=\"noclinavof\">off</td>\n";
@@ -1291,6 +1410,22 @@ while(1) {
                     }
                     print $sock "</table>\n";
 
+                    # list all periodic tasks
+                    print $sock "<p>Perio task:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                    print $sock "<tr><td>mod name</td><td>secs to fire</td></tr>\n";
+                    foreach $mod (sort keys %httpmods) {
+                        if (defined ($modsinfo{"$mod:fn:perio"})) {
+                            $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
+                            $subname = $modsinfo{"$mod:fn:perio"};
+                            $retval = 60;
+                            $retval = __PACKAGE__->$subname(\%ctrl);
+                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
+                            print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>$retval secs</td></tr>\n";
+                        }
+                    }
+                    print $sock "</table>\n";
+
+
                     # dump all form data
                     if ($modcalled eq 'httpd') {
                         print $sock "<p>FORM data:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -1298,7 +1433,7 @@ while(1) {
                             $val = $FORM{$key};
                             $val =~ s/</&lt;/g;
                             $val =~ s/>/&gt;/g;
-                            print $sock "<tr><td>$key</td><td>$val</td>\n";
+                            print $sock "<tr><td>$key</td><td>$val</td></tr>\n";
                         }
                         print $sock "</table>\n";
                     }
@@ -1336,12 +1471,16 @@ while(1) {
 
                 # send HTML footer and ends
                 print $sock $ctrl{'htmlfoot'};
+                print "Completed host control page\n", if ($debug >= 5);
             }
             $sock->close;
         }
     }
+    print "no more socket ready\n", if ($debug >= 5);
     if ($ctrl_port_first == $ctrl_port) {
         # execute periodic tasks only on first instance
         &periodictask ();
     }
 }
+
+print "WikiPland forever loop existed at now_string = $ctrl{'now_string'}\n", if ($debug >= 1);

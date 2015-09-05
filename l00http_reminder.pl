@@ -124,7 +124,6 @@ sub l00http_reminder_proc {
     my ($yr, $mo, $da, $hr, $mi, $se, $pausewant);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
-#   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
     $formmsg = '';
 
@@ -168,6 +167,7 @@ sub l00http_reminder_proc {
                 }
             }
         }
+        $formmsg = '';
         # find earlest reminder
         &l00http_reminder_find ($ctrl);
     }
@@ -223,17 +223,6 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_reminder.txt\">$ctrl->{'workdir'}l00_reminder.txt</a><p> \n";
 
-    print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
-    print $sock "        <tr>\n";
-    print $sock "            <td><input type=\"submit\" name=\"pause\" value=\"Pause\"></td>\n";
-    print $sock "            <td><input type=\"text\" size=\"4\" name=\"min\" value=\"$pausewant\">min.</td>\n";
-    print $sock "        </tr>\n";
-
-    print $sock "</table>\n";
-    print $sock "</form></p>\n";
-                                                
     print $sock "<form action=\"/reminder.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
@@ -244,12 +233,12 @@ sub l00http_reminder_proc {
                                                 
     print $sock "        <tr>\n";
     print $sock "            <td>Msg:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"msg\" value=\"\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"msg\" value=\"$formmsg\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"stop\" value=\"Stop\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"> <input type=\"submit\" name=\"paste\" value=\"Paste\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"stop\" value=\"Stop\"> <input type=\"submit\" name=\"paste\" value=\"Paste\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
@@ -313,9 +302,20 @@ sub l00http_reminder_proc {
     print $sock "        </tr>\n";
 
     print $sock "</table>\n";
-    print $sock "</form>\n";
+    print $sock "</form><p>\n";
 
-    print $sock "<br>Interval: $interval Msg: $formmsg<br>\n";
+    print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td><input type=\"submit\" name=\"pause\" value=\"Pause\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"4\" name=\"min\" value=\"$pausewant\">min.</td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form></p>\n";
+                                                
+    print $sock "Interval: $interval Msg: $formmsg<br>\n";
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($starttime);
     print $sock sprintf ("Start: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
@@ -354,14 +354,7 @@ sub l00http_reminder_perio {
         (time - $utcoffsec >= $starttime)) {
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
-            # reload if file modified later
-#           my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
-#           $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-#               = stat("$ctrl->{'workdir'}l00_reminder.txt");
-#           # remember file mod time
-#           if ($filetime != $mtimea) {
-                &l00http_reminder_find ($ctrl);
-#           }
+            &l00http_reminder_find ($ctrl);
         }
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
@@ -369,7 +362,7 @@ sub l00http_reminder_perio {
             $pause = 0;
 
             $ctrl->{'reminder'} = $msgtoast;
-            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a>: <font style=\"color:yellow;background-color:red\">$msgtoast</font></center>";
+            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> <a href=\"/ls.htm?path=/sdcard/l00httpd/l00_reminder.txt\">:::</a> <font style=\"color:yellow;background-color:red\">$msgtoast</font></center>";
 
             if (($ctrl->{'os'} eq 'and') &&
                 (!($msgtoast =~ /^ *$/))) {

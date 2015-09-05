@@ -32,6 +32,9 @@ sub l00http_launcher_proc {
         $path = $form->{'path'};
         $path =~ s/\r//g;
         $path =~ s/\n//g;
+        if ($ctrl->{'os'} eq 'win') {
+            $path =~ s/\//\\/g;
+        }
         print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$path\">Path</a>:";
         print $sock " <a href=\"/ls.htm?path=$path\">$path</a>\n";
     } else {
@@ -72,7 +75,8 @@ sub l00http_launcher_proc {
         $extra = '';
         if ($name eq 'kml') {
            $extra = '.kml';
-        } elsif ($path =~ /\.txt$/) {
+#        } elsif ($path =~ /\.txt$/) {
+        } else {
            # add .htm as some browser won't open .txt as HTML
            $extra = '.htm';
         }

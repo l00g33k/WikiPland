@@ -53,7 +53,10 @@ sub l00http_toast_proc (\%) {
 
     if ($ctrl->{'os'} eq 'and') {
         $ctrl->{'droid'}->makeToast($name);
+    } elsif ($ctrl->{'os'} eq 'win') {
+        `msg %USERNAME% /TIME:1 $name`;
     }
+
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

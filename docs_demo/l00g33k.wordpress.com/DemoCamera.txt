@@ -1,0 +1,27 @@
+%TOC
+=Introduction=
+
+=Taking Pictures=
+
+=Retriving Pictures=
+* If you are using the APK instead of using the !WikiPland source and the SL4A Perl interpreter, and are using the default setup without setting your workdir to sdcard, the pictures you took will be saved in the internal data partition. An if you did not root, then the only way to access the pictures is throught the !WikiPland app itself. And you can trivially retriving them just by browsing to the picture from any browser and just save target as. However, if you have taken any significant number of pictures, you want something automated.
+* The easiest way is the semi-automated method. You would browse to the directory for a list of all file names. Then you extract the list of file names using your favorite editor and methodology. For example, I simply grab all the text on this page:
+** http://192.168.0.160:20337/ls.pl/ls.htm?path=/data/data/com.android.perl/files/l00httpd/l00httpd/pub/
+** The captured text might look like this:
+    Path: /data/data/com.android.perl/files/l00httpd/l00httpd/pub/ Home ? Quick Jump to end NtDirNotes
+    --------------------------------------------------------------------------------
+
+    names bytes date/time 
+    ../ <dir>   
+    l00_cam.jpg 634880 2015/04/26 17:08:14 
+    l00_cam_20131006_164505.jpg 783351 2013/10/06 16:47:26 
+    l00_cam_20140615_233034.jpg 559330 2014/06/15 23:30:42 
+* Then I used keyboard macro to trim and leave only the file names.
+* The last preparation is to again use keyboard macro to create the wget command line:
+    wget --http-user=p --http-password=p http://192.168.0.160:20337/ls.pl/l00_cam.jpg?path=/data/data/com.android.perl/files/l00httpd/l00httpd/pub/l00_cam_20131006_164505.jpg -O l00_cam_20131006_164505.jpg 
+    wget --http-user=p --http-password=p http://192.168.0.160:20337/ls.pl/l00_cam.jpg?path=/data/data/com.android.perl/files/l00httpd/l00httpd/pub/l00_cam_20140615_233034.jpg -O l00_cam_20140615_233034.jpg 
+* Finally source the file (or Windows batch file if you are using cygwin):
+    source wget.sh
+* Lastly if you want to delete the pictures:
+
+::now::f430::

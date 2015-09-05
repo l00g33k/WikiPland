@@ -506,6 +506,13 @@ if(1){
                 $markdownparanobr = /^\w/;
             }
         }
+
+        # was in a table but not any more, close table
+        if (!(/^\|\|/) && ($intbl == 1)) {
+            $intbl = 0;
+            $oubuf .= "</table>\n";
+        }
+
         # make ^    <pre> for all
         # code, 2 or more indents make <pre>code</pre>
         $tmp = $_;
@@ -543,15 +550,21 @@ if(1){
             $_ = '';
             next;
         }
+		# blank line, add <p> or not
         if ($_ eq '') {
-            # If in markdown mode, blank line is end of paragraph
             if ($mode0unknown1twiki2markdown == 2) {
+                # If in markdown mode, blank line is end of paragraph
                 if ($markdownparanobr) {
                     $oubuf .=  "<p>\n";
                 }
+            } else {
+                # otherwise blank line is new paragraph
+                $oubuf .=  "<p>\n";
             }
             next;
         }
+
+
 
         # %DATETIME% expansion
         if (/%DATETIME%/) {
@@ -831,11 +844,6 @@ if(1){
             $oubuf .= "</tr>\n";
             # skip bullet processing
             next;
-        } else {
-            if ($intbl == 1) {
-                $intbl = 0;
-                $oubuf .= "</table>\n";
-            }
         }
 
         # find <hr> and clear bullet level
@@ -1019,10 +1027,6 @@ if(1){
             $oubuf .=  "</ul>";
         }
         $oubuf .= "\n";
-    }
-    if ($intbl == 1) {
-        # generate closing table
-        $oubuf .= "</table>\n";
     }
 
 

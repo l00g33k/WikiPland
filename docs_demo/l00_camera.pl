@@ -69,7 +69,8 @@ if ($autoloading) {
 }
 
 $cnt += 1;
-print $sock "<img src=\"/ls.htm?path=$jpgpath"."l00_cam.jpg&cnt=$cnt\" width=\"384\" height=\"512\"><br>";
+#print $sock "<img src=\"/ls.htm?path=$jpgpath"."l00_cam.jpg&cnt=$cnt\" width=\"384\" height=\"512\"><br>";
+print $sock "<a href=\"/ls.htm?path=$jpgpath"."l00_cam.jpg&cnt=$cnt\"><img src=\"/ls.htm?path=$jpgpath"."l00_cam.jpg&cnt=$cnt\" width=\"384\" height=\"512\"></a><br>";
 
 print $sock "<a href=\"/ls.htm?path=$jpgpath\">List of pictures</a><br>\n";
 if (opendir (DIR, "$jpgpath")) {

@@ -53,6 +53,7 @@ sub l00http_tree_proc {
     my ($buffer, $path2, $path, $file, $cnt, $cntbak, $crc32, $export, $buf);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
+    my (%countext, $ext);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -95,6 +96,7 @@ sub l00http_tree_proc {
 	$export = '';
 	$time0 = time;
     $nobytes = 0;
+    undef %countext;
     foreach $file (sort @list) {
         if (defined($form->{'showbak'}) ||
            (!($file =~ /\.bak$/))) {
@@ -140,6 +142,17 @@ sub l00http_tree_proc {
                     $nodir++;
                 } else {
                     $nofile++;
+                    # count extension
+                    if ($file =~ /\.([^.]+)$/) {
+                        $ext = $1;
+                    } else {
+                        $ext = '(no ext)';
+                    }
+                    if (defined ($countext{$ext})) {
+                        $countext{$ext}++;
+                    } else {
+                        $countext{$ext} = 1;
+                    }
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
                 $export .= sprintf("%4d %8d %s\n",$cnt, $size, $path.$file);
@@ -156,6 +169,25 @@ sub l00http_tree_proc {
     print $sock "</pre>";
 
     print $sock "<p>There are $nobytes bytes in $nofile files $nodir directories\n";
+
+    print $sock "<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<tr>\n";
+    print $sock "<td>#</td>\n";
+    print $sock "<td>Extension</td>\n";
+    print $sock "<td>Count</td>\n";
+    print $sock "</tr>\n";
+    $cnt = 1;
+    foreach $ext (sort keys %countext) {
+        print $sock "<tr>\n";
+        print $sock "<td>$cnt</td>\n";
+        print $sock "<td>$ext</td>\n";
+        print $sock "<td>$countext{$ext}</td>\n";
+        print $sock "</tr>\n";
+        $cnt++;
+    }
+    print $sock "</table>\n";
+
+
     print $sock "<p>$cntbak '*.bak' files not shown\n";
     &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
     &l00httpd::l00fwriteBuf($ctrl, $export);

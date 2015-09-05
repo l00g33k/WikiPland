@@ -140,9 +140,14 @@ sub l00http_ls_proc {
         }
     } else {
         # restrict remote directory navigation is enabled
-        if (($ctrl->{'noclinav'}) && 
-            ($ctrl->{'clipath'} ne substr ($path, 0, length ($ctrl->{'clipath'})))) {
-            $path = $ctrl->{'clipath'};
+        if ($ctrl->{'noclinav'}) {
+            if (($ctrl->{'clipath'} ne '*') &&  
+                # not * (wide open)
+                ($ctrl->{'clipath'} ne substr ($path, 0, length ($ctrl->{'clipath'})))) {
+                # and not approved path
+                # then dset to approved path
+                $path = $ctrl->{'clipath'};
+            }
         }
     }
     $path =~ s/%20/ /g;
@@ -231,7 +236,7 @@ sub l00http_ls_proc {
                             if ($ctrl->{'os'} eq 'win') {
                                 $tmp =~ s/\//\\/g;
                             }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                         } else {
                             print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                             # clip.pl with \ on Windows
@@ -239,9 +244,9 @@ sub l00http_ls_proc {
                             if ($ctrl->{'os'} eq 'win') {
                                 $tmp =~ s/\//\\/g;
                             }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
                         }
-                        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+                        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                         print $sock "<a href=\"#end\">end</a>\n";
                         print $sock "<a href=\"#__toc__\">TOC</a>\n";
                         if (defined ($form->{'bkvish'})) {
@@ -316,6 +321,10 @@ sub l00http_ls_proc {
                     print OUT "vim $path\n";
                     close (OUT);
                 }
+            }
+            # launch editor
+            if (($ctrl->{'os'} eq 'and') && defined ($form->{'exteditor'})) {
+                $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
             }
             my $urlraw = 0;
             if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
@@ -435,7 +444,7 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         if ($ctrl->{'os'} eq 'win') {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                     } else {
                         print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                         # clip.pl with \ on Windows
@@ -443,9 +452,9 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         if ($ctrl->{'os'} eq 'win') {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path<br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
                     }
-                    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+                    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                     print $sock "<a href=\"#end\">end</a>\n";
                     print $sock "<a href=\"#__toc__\">TOC</a>\n";
                     if (defined ($form->{'bkvish'})) {
@@ -454,7 +463,8 @@ $httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.km
                         print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
                     }
                     print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                    print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
+                    print $sock "<a href=\"/edit.htm?path=$path\">Ed</a>/";
+                    print $sock "<a href=\"/ls.htm?path=$path&exteditor=on\">ext</a>\n";
                     print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
                     if (defined ($form->{'bkvish'})) {
                         print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
@@ -690,15 +700,17 @@ print;
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on\">no header/footer</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on&chno=on\">+ ch no</a>";
                                 $found .= "\n";
                                 foreach $_ (sort keys %showdir) {
                                     $found .= "* $_:";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on\">no header/footer</a>";
+                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on&chno=on\">+ ch no</a>";
                                     $found .= "\n";
                                 }
-                                $buf = "$found$buf";
+                                $buf = "$found\n$buf";
                             }
                         }
                         $found = '';
@@ -807,7 +819,7 @@ print;
             close (FILE);
         } else {
             print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-            print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+            print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
             print $sock "<a href=\"#end\">end</a><br>\n";
             print $sock "Path: $path<hr>\n";
             print $sock "Unable to open file '$path'<br>\n";
@@ -833,8 +845,8 @@ print;
         if ($ctrl->{'os'} eq 'win') {
             $tmp =~ s/\//\\/g;
         }
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: $path\n";
-        print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> \n";
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
         print $sock "<a href=\"/dirnotes.htm?path=$path"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -1034,7 +1046,7 @@ print;
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
-            print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite time-stamps</td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite <a href=\"/ls.htm?path=$pname$fname&timestamp=on\">time-stamps</a></td>\n";
             print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
             print $sock "    </tr>\n";
 
@@ -1046,7 +1058,7 @@ print;
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
-            print $sock "        <td>&nbsp;</td>\n";
+            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&bare=on\">Bare without forms</a></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
@@ -1154,7 +1166,8 @@ print;
                 $dir = $path;
                 $dir =~ s/\/[^\/]+$/\//;
                 print $sock "<p><a href=\"/find.htm?path=$dir&fmatch=%5C.txt%24\">find in files</a> in $dir\n";
-                print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>\n";
+                print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>.\n";
+                print $sock "<a href=\"/ls.htm?path=$path&raw=on\">Raw</a>\n";
                 print $sock "<p><a href=\"/view.htm?path=$path\">View</a> $path\n";
                 print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
