@@ -11,7 +11,9 @@ use l00crc32;
 my %config = (proc => "l00http_tree_proc",
               desc => "l00http_tree_desc");
 
-my (@list, $lvl);
+my (@list, $lvl, $md5support);
+
+$md5support = -1;
 
 sub l00http_tree_list {
     my ($sock, $path) = @_;
@@ -25,7 +27,7 @@ sub l00http_tree_list {
       	        if ($file =~ /^\.+$/) {
 			        next;
                 }
-      	    if (-d $path.$file) {
+      	        if (-d $path.$file) {
                     &l00http_tree_list ($sock, "$path$file/");
                     push (@list, $path.$file.":");
                 } else {
@@ -54,6 +56,21 @@ sub l00http_tree_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
     my (%countext, $ext);
+
+
+    if ($md5support < 0) {
+        $md5support = 0;
+        if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+            $_ = `certutil`;
+            l00httpd::dbp($config{'desc'}, "Windows testing certutil: $_\n");
+            if (/command completed successfully/) {
+                $md5support = 1;
+            }
+        } elsif ($ctrl->{'os'} eq 'and') {
+        } elsif ($ctrl->{'os'} eq 'lin') {
+        }
+        
+    }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -136,6 +153,29 @@ sub l00http_tree_proc {
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                 $export .= sprintf("%4d %8d %08x %s\n",$cnt, $size, $crc32, $path.$file);
+            } elsif (defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
+                if ($isdir) {
+                    $file = "$file/ &lt;dir&gt;";
+                    $nodir++;
+                    $crc32 = "                                ";
+                } else {
+                    $nofile++;
+                    # make command line to call certutil.exe
+                    $_ = "certutil -hashfile \"$path$file\" md5";
+                    # shell
+                    $_ = `$_`;
+                    # extract the second line
+                    @_ = split ("\n", $_);
+                    $_ = $_[1];
+                    # delete \n, \r, ' '
+                    s/\n//g;
+                    s/\r//g;
+                    s/ //g;
+                    # results
+                    $crc32 = "$_";
+                }
+                print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
+                $export .= sprintf("%4d %8d %s %s\n",$cnt, $size, $crc32, $path.$file);
             } else {
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
@@ -195,12 +235,15 @@ sub l00http_tree_proc {
     print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw listing</a><p>\n";
     print $sock sprintf("Computed %d bytes in %d seconds for %d bytes/sec.<p>", $nobytes, time - $time0, $nobytes / (time - $time0 + 1));
 
-    print $sock "<hr><form action=\"/tree.htm\" method=\"post\">\n";
+    print $sock "<form action=\"/tree.htm\" method=\"post\"><hr>\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
 $form->{'filter'} = 'not implemented';
     print $sock "<br>Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
+    if ($md5support > 0) {
+        print $sock "<br><input type=\"checkbox\" name=\"md5\">compute md5 (shell to native)\n";
+    }
     print $sock "<br><input type=\"checkbox\" name=\"showbak\" $showbak>Show *.bak too\n";
     print $sock "</form>\n";
 

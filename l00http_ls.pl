@@ -911,7 +911,7 @@ print;
                 $dirout .= "<tr>\n";
                 $dirout .= "<td><small><a href=\"/ls.htm?path=$fullpath/\">$file/</a></small></td>\n";
                 if ($file eq '..') {
-                    $dirout .= "<td><small>&lt;dir&gt;</small></td>\n";
+                    $dirout .= "<td><small><a href=\"/tree.htm?path=$path\">&lt;dir&gt;</a></small></td>\n";
                 } else {
                     $dirout .= "<td><small><a href=\"/tree.htm?path=$fullpath/\">&lt;dir&gt;</a></small></td>\n";
                 }
