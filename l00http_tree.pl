@@ -153,26 +153,32 @@ sub l00http_tree_proc {
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                 $export .= sprintf("%4d %8d %08x %s\n",$cnt, $size, $crc32, $path.$file);
-            } elsif (defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
+            } elsif (($md5support > 0) && 
+                defined($form->{'md5'}) && 
+                ($form->{'md5'} eq 'on')) {
+                $crc32 = "                                ";
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
                     $nodir++;
-                    $crc32 = "                                ";
                 } else {
                     $nofile++;
-                    # make command line to call certutil.exe
-                    $_ = "certutil -hashfile \"$path$file\" md5";
-                    # shell
-                    $_ = `$_`;
-                    # extract the second line
-                    @_ = split ("\n", $_);
-                    $_ = $_[1];
-                    # delete \n, \r, ' '
-                    s/\n//g;
-                    s/\r//g;
-                    s/ //g;
-                    # results
-                    $crc32 = "$_";
+                    if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+                        # make command line to call certutil.exe
+                        $_ = "certutil -hashfile \"$path$file\" md5";
+                        # shell
+                        $_ = `$_`;
+                        # extract the second line
+                        @_ = split ("\n", $_);
+                        $_ = $_[1];
+                        # delete \n, \r, ' '
+                        s/\n//g;
+                        s/\r//g;
+                        s/ //g;
+                        # results
+                        $crc32 = "$_";
+                    } elsif ($ctrl->{'os'} eq 'and') {
+                    } elsif ($ctrl->{'os'} eq 'lin') {
+                    }
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
                 $export .= sprintf("%4d %8d %s %s\n",$cnt, $size, $crc32, $path.$file);
