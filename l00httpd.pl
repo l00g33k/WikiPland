@@ -1220,11 +1220,11 @@ while(1) {
                 print "Send host control HTTP header\n", if ($debug >= 5);
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland running on '$ctrl{'machine'}'. \n";
-                print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm
-\">$ip</a>, up: ";
+                print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm\">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns<p>\n";
-                
+
+                print "Send host control HTTP form\n", if ($debug >= 6);
                 print $sock "<a name=\"top\"></a>\n";
                 print $sock "<form action=\"/httpd\" method=\"get\">\n";
                 print $sock "<input type=\"submit\" value=\"Edit box size\">\n";
@@ -1250,6 +1250,7 @@ while(1) {
                 print $sock "<p>\n";
  
                 # build table of modules
+                print "build table of modules\n", if ($debug >= 6);
                 print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
                 if ($ishost) {
                     # with link control
