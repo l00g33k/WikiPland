@@ -15,6 +15,63 @@ my (@list, $lvl, $md5support);
 
 $md5support = -1;
 
+sub l00Http_tree_proxy {
+    my ($sock, $target) = @_;
+    my ($server_socket, $result, $ctrl_lstn_sock, $retry, $retrymax);
+
+    $retrymax = 1000;
+
+    $result = '';
+
+    $retry = 0;
+    while ($retry++ < $retrymax) {
+        $server_socket = IO::Socket::INET->new(
+            PeerAddr => '127.0.0.1',
+            PeerPort => 20336,
+            Timeout  => 1,
+            Proto    => 'tcp');
+        if (defined($server_socket)) {
+            last;
+        }
+    }
+    #print "cmd retry $retry\n";
+    if (defined($server_socket)) {
+        #print "connected to 20336\n";
+        print $server_socket $target;
+        #print "target $target\n";
+        $server_socket->close;
+
+        $retry = 0;
+        while ($retry++ < $retrymax) {
+            $server_socket = IO::Socket::INET->new(
+                PeerAddr => '127.0.0.1',
+                PeerPort => 20335,
+                Timeout  => 1,
+                Proto    => 'tcp');
+            if (defined($server_socket)) {
+                last;
+            }
+        }
+        #print "rst retry $retry\n";
+        if (defined($server_socket)) {
+            #print "connected to 20335\n";
+            sysread ($server_socket, $result, 2048);
+            #print "md5sum $result\n";
+            $server_socket->close;
+            $result =~ s/ .*//;
+            $result =~ s/\r//g;
+            $result =~ s/\n//g;
+        } else {
+            $md5support = 0;
+        }
+    } else {
+        $md5support = 0;
+    }
+
+    $result;
+}
+
+
 sub l00http_tree_list {
     my ($sock, $path) = @_;
 	my ($file);
@@ -58,6 +115,13 @@ sub l00http_tree_proc {
     my (%countext, $ext);
 
 
+    $time0 = time;
+
+    if (defined($form->{'md5svr'}) && ($form->{'md5svr'} eq 'on')) {
+        # check md5sum service again
+        $md5support = -1;
+    }
+
     if ($md5support < 0) {
         $md5support = 0;
         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
@@ -67,6 +131,10 @@ sub l00http_tree_proc {
                 $md5support = 1;
             }
         } elsif ($ctrl->{'os'} eq 'and') {
+            $_ = &l00Http_tree_proxy($sock, "$ctrl->{'plpath'}l00httpd.pl");
+            if ($_ ne '') {
+                $md5support = 1;
+            }
         } elsif ($ctrl->{'os'} eq 'lin') {
         }
         
@@ -153,9 +221,7 @@ sub l00http_tree_proc {
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                 $export .= sprintf("%4d %8d %08x %s\n",$cnt, $size, $crc32, $path.$file);
-            } elsif (($md5support > 0) && 
-                defined($form->{'md5'}) && 
-                ($form->{'md5'} eq 'on')) {
+            } elsif (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
                 $crc32 = "                                ";
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
@@ -177,6 +243,7 @@ sub l00http_tree_proc {
                         # results
                         $crc32 = "$_";
                     } elsif ($ctrl->{'os'} eq 'and') {
+                        $crc32 = &l00Http_tree_proxy($sock, "$path$file");
                     } elsif ($ctrl->{'os'} eq 'lin') {
                     }
                 }
@@ -214,7 +281,8 @@ sub l00http_tree_proc {
     }
     print $sock "</pre>";
 
-    print $sock "<p>There are $nobytes bytes in $nofile files $nodir directories\n";
+    print $sock "<p>There are $nobytes bytes in $nofile files $nodir directories ";
+    print $sock sprintf("in %d seconds for %d bytes/sec.\n", time - $time0, $nobytes / (time - $time0 + 1));
 
     print $sock "<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr>\n";
@@ -239,7 +307,6 @@ sub l00http_tree_proc {
     &l00httpd::l00fwriteBuf($ctrl, $export);
     &l00httpd::l00fwriteClose($ctrl);
     print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw listing</a><p>\n";
-    print $sock sprintf("Computed %d bytes in %d seconds for %d bytes/sec.<p>", $nobytes, time - $time0, $nobytes / (time - $time0 + 1));
 
     print $sock "<form action=\"/tree.htm\" method=\"post\"><hr>\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
@@ -247,8 +314,17 @@ sub l00http_tree_proc {
 $form->{'filter'} = 'not implemented';
     print $sock "<br>Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
-    if ($md5support > 0) {
-        print $sock "<br><input type=\"checkbox\" name=\"md5\">compute md5 (shell to native)\n";
+    if ($ctrl->{'os'} eq 'and') {
+        if ($md5support > 0) {
+            print $sock "<br><input type=\"checkbox\" name=\"md5\">compute md5 (use TerminalIDE service)\n";
+        } else {
+            print $sock "<br><input type=\"checkbox\" name=\"md5svr\">check TerminalIDE md5sum service. ".
+                "(<a href=\"/clip.htm?update=Copy+to+CB&clip=source+$ctrl->{'plpath'}md5sumservice.sh\">start it</a>)\n";
+        }
+    } else {
+        if ($md5support > 0) {
+            print $sock "<br><input type=\"checkbox\" name=\"md5\">compute md5 (shell to native)\n";
+        }
     }
     print $sock "<br><input type=\"checkbox\" name=\"showbak\" $showbak>Show *.bak too\n";
     print $sock "</form>\n";

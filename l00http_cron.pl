@@ -192,7 +192,7 @@ sub l00http_cron_when_next {
     my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0, $skip, $skipfilter);
 
     &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
-    &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/crontab.htm\">cron</a> module.\n");
+    &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/cron.htm\">cron</a> module.\n");
     $_ = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($_);
