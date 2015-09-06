@@ -220,9 +220,9 @@ sub l00http_tree_proc {
                     $crc32 = &l00crc32::crc32($buf);
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
-                $export .= sprintf("%4d %8d %08x %s\n",$cnt, $size, $crc32, $path.$file);
+                $export .= sprintf("%8d %08x %s\n",$size, $crc32, $path.$file);
             } elsif (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
-                $crc32 = "                                ";
+                $crc32 = "00000000000000000000000000000000";
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
                     $nodir++;
@@ -248,7 +248,7 @@ sub l00http_tree_proc {
                     }
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
-                $export .= sprintf("%4d %8d %s %s\n",$cnt, $size, $crc32, $path.$file);
+                $export .= sprintf("%8d %s %s\n",$size, $crc32, $path.$file);
             } else {
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
@@ -268,7 +268,7 @@ sub l00http_tree_proc {
                     }
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
-                $export .= sprintf("%4d %8d %s\n",$cnt, $size, $path.$file);
+                $export .= sprintf("%8d %s\n",$size, $path.$file);
             }
             # show path from base down only
 			$path2 = $path;

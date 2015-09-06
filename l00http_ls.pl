@@ -988,6 +988,13 @@ print;
     }
 
     # 4) If not in raw mode, also display a control table
+    if (!defined($pname)) {
+        $pname = '';
+    }
+
+    if (!defined($fname)) {
+        $fname = '';
+    }
 
     if ($htmlend) {
         if (!defined ($form->{'bare'})) {
