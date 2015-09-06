@@ -230,7 +230,7 @@ sub l00http_tree_proc {
                     $nofile++;
                     if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                         # make command line to call certutil.exe
-                        $_ = "certutil -hashfile \"$path$file\" md5";
+                        $_ = "certutil -hashfile \"$path$file\" MD5";
                         # shell
                         $_ = `$_`;
                         # extract the second line
