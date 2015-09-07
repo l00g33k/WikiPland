@@ -3,6 +3,7 @@ use warnings;
 use l00wikihtml;
 use l00backup;
 use l00httpd;
+use l00crc32;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -107,7 +108,7 @@ sub l00http_ls_proc {
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
-    my ($clipdir, $clipfile);
+    my ($clipdir, $clipfile, $docrc32, $crc32);
 
     $wikihtmlflags = 0;
 
@@ -838,6 +839,12 @@ print;
         } else {
             $showbak = 0;
         }
+        if ((defined ($form->{'crc32'})) && ($form->{'crc32'} eq 'on')) {
+            $docrc32 = 1;
+        } else {
+            $docrc32 = 0;
+        }
+
         
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
         # clip.pl with \ on Windows
@@ -854,6 +861,7 @@ print;
         print $sock "<tr>\n";
         print $sock "<td>names</td>\n";
         print $sock "<td>bytes</td>\n";
+        print $sock "<td>crc32</td>\n", if ($docrc32);
         print $sock "<td>date/time</td>\n";
         print $sock "</tr>\n";
         
@@ -875,6 +883,7 @@ print;
                     $dirout .= "<tr>\n";
                     $dirout .= "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
                     $dirout .= "<td><small>" . length($ctrl->{'l00file'}->{$_}) . "</small></td>\n";
+                    $dirout .= "<td>&nbsp;</td>\n", if ($docrc32);
                     $dirout .= "<td><small><a href=\"/$ctrl->{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
                     $dirout .= "</tr>\n";
                 }
@@ -915,6 +924,7 @@ print;
                 } else {
                     $dirout .= "<td><small><a href=\"/tree.htm?path=$fullpath/\">&lt;dir&gt;</a></small></td>\n";
                 }
+                $dirout .= "<td>&nbsp;</td>\n", if ($docrc32);
                 $dirout .= "<td>&nbsp;</td>\n";
                 $dirout .= "</tr>\n";
                 $nodirs++;
@@ -939,6 +949,20 @@ print;
                 $buf .= "<td align=right><small>"
                     ."<a href=\"/$ctrl->{'lssize'}.htm?path=$path$file\">$size</a>"
                     ."</small></td>\n";
+                # compute crc32
+                if ($docrc32) {
+                    my ($crcbuf);
+                    local $/ = undef;
+                    if(open(IN, "<$path$file")) {
+                        binmode (IN);
+                        $crcbuf = <IN>;
+                        close(IN);
+                    } else {
+                        $buf = '';
+                    }
+                    $crc32 = sprintf("%08x", &l00crc32::crc32($crcbuf));
+                    $buf .= "<td><small>$crc32</small></td>\n";
+                }
                 $buf .= "<td><small>". 
                     sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec) 
                     ."</small></td>\n";
@@ -1066,6 +1090,11 @@ print;
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
             print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&bare=on\">Bare without forms</a></td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"crc32\">Compute crc32</td>\n";
+            print $sock "        <td>&nbsp;</td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
