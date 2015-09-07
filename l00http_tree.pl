@@ -11,9 +11,10 @@ use l00crc32;
 my %config = (proc => "l00http_tree_proc",
               desc => "l00http_tree_desc");
 
-my (@list, $lvl, $md5support);
+my (@list, $lvl, $md5support, $depthmax);
 
 $md5support = -1;
+$depthmax = 20;
 
 sub l00Http_tree_proxy {
     my ($sock, $target) = @_;
@@ -76,9 +77,9 @@ sub l00http_tree_list {
     my ($sock, $path) = @_;
 	my ($file);
 
-    $lvl++;
 
-    if ($lvl < 20) {
+    if ($lvl <= $depthmax) {
+        $lvl++;
         if (opendir (DIR, $path)) {
             foreach $file (readdir (DIR)) {
       	        if ($file =~ /^\.+$/) {
@@ -92,8 +93,8 @@ sub l00http_tree_list {
                 }
             }
         }
+        $lvl--;
     }
-    $lvl--;
 }
 
 
@@ -120,6 +121,12 @@ sub l00http_tree_proc {
     if (defined($form->{'md5svr'}) && ($form->{'md5svr'} eq 'on')) {
         # check md5sum service again
         $md5support = -1;
+    }
+    if (defined($form->{'depth'}) && ($form->{'depth'} =~ /(\d+)/)) {
+        # max directory depth
+        $depthmax = $1;
+    } else {
+        $depthmax = 20;
     }
 
     if ($md5support < 0) {
@@ -324,6 +331,7 @@ sub l00http_tree_proc {
 
         print $sock "<p>There are $nobytes bytes in $nofile files $nodir directories ";
         print $sock sprintf("in %d seconds for %d bytes/sec.\n", time - $time0, $nobytes / (time - $time0 + 1));
+        print $sock "<p>Showing maximum $depthmax directories deep\n";
         print $sock "<p>$cntbak '*.bak' files not shown\n";
 
         print $sock "<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -354,6 +362,7 @@ sub l00http_tree_proc {
     print $sock "<form action=\"/tree.htm\" method=\"post\"><hr>\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
 $form->{'filter'} = 'not implemented';
     print $sock "<br>Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
