@@ -237,6 +237,28 @@ sub findInBuf  {
     $found;
 }
 
+#&l00httpd::l00fstat($ctrl, $fname);
+sub l00fstat {
+    my ($ctrl, $fname) = @_;
+    my ($ret);
+
+    $ret = undef;
+	
+    if ($fname =~ /^l00:\/\/./) {
+        # ram file
+        if (defined($ctrl->{'l00file'}->{$fname})) {
+		    # ram file exist
+            $ret = length($ctrl->{'l00file'}->{$fname});
+		}
+    } else {
+        my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                = stat($fname);
+        $ret = $size;
+    }
+    $ret;
+}
+
 #&l00httpd::l00freadOpen($ctrl, $fname);
 sub l00freadOpen {
     my ($ctrl, $fname) = @_;
