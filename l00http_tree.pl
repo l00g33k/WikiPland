@@ -220,7 +220,7 @@ sub l00http_tree_proc {
                     $crc32 = &l00crc32::crc32($buf);
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
-                $export .= sprintf("%8d %08x %s\n",$size, $crc32, $path.$file);
+                $export .= sprintf("|| %8d || %08x || %s ||\n",$size, $crc32, $path.$file);
             } elsif (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
                 $crc32 = "00000000000000000000000000000000";
                 if ($isdir) {
@@ -248,7 +248,7 @@ sub l00http_tree_proc {
                     }
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
-                $export .= sprintf("%8d %s %s\n",$size, $crc32, $path.$file);
+                $export .= sprintf("|| %8d || %s || %s ||\n",$size, $crc32, $path.$file);
             } else {
                 if ($isdir) {
                     $file = "$file/ &lt;dir&gt;";
@@ -268,7 +268,7 @@ sub l00http_tree_proc {
                     }
                 }
                 print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
-                $export .= sprintf("%8d %s\n",$size, $path.$file);
+                $export .= sprintf("|| %8d || %s ||\n",$size, $path.$file);
             }
             # show path from base down only
 			$path2 = $path;
@@ -304,7 +304,7 @@ sub l00http_tree_proc {
 
     print $sock "<p>$cntbak '*.bak' files not shown\n";
     &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
-    &l00httpd::l00fwriteBuf($ctrl, $export);
+    &l00httpd::l00fwriteBuf($ctrl, "* wiki\n\n$export\n\n");
     &l00httpd::l00fwriteClose($ctrl);
     print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw listing</a><p>\n";
 

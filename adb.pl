@@ -11,9 +11,6 @@ $ifname = shift;
 $idir = $ifname;
 $idir =~ s/([\/\\])([^\/\\]+)$/$1/;
 
-$idir2 = $idir;
-$idir2 =~ s/\\/\\\\/g;
-
 print "adb.in directory is $idir\n\n";
 
 if (opendir (DIR, $idir)) {
@@ -27,7 +24,7 @@ if (opendir (DIR, $idir)) {
         }
     }
     closedir (DIR);
-    `explorer $idir2`;
+    `explorer $idir`;
     print "\n^C now to terminate. <Enter> to continue.\n";
     <>;
     opendir (DIR, $idir);
@@ -98,8 +95,6 @@ while (1) {
                 # /cygdrive/D/x/ram/l00/NtCompTw700.txt 
                 # 127.0.0.1:/sdcard/l00httpd/NtCompTw700.txt
                 if (($cygpath) = /^rsync -vv -e .*(\/cygdrive\/\S+) 127/) {
-                    s/\n//;
-                    s/\r//;
                     $pcpath = $cygpath;
                     $pcpath =~ s|^/cygdrive/(.)/|$1:\\|;
                     $pcpath =~ s/\//\\/g;
