@@ -186,6 +186,7 @@ sub l00http_tree_proc {
             while (<IN>) {
                 s/\n//;
                 s/\r//;
+                s/ <dir>//;
                 # cygwin md5sum puts *./. Delete *
                 s/ \*\.\// .\//;
                 #print $sock "$_\n";
@@ -381,12 +382,15 @@ $form->{'filter'} = 'not implemented';
     print $sock "<br><input type=\"checkbox\" name=\"showbak\" $showbak>Show *.bak too\n";
     print $sock "</form><br>\n";
 
+    my ($logname);
+    $logname = "md5_size_$ctrl->{'now_string'}.txt";
+    $logname =~ s/ /_/g;
     print $sock "# md5sum computation can be accelerated by using bash commands as follow:<br>\n";
     print $sock "du -h<br>\n";
-    print $sock "rm name_stat_md5sum.txt<br>\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> name_stat_md5sum.txt<br>\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> name_stat_md5sum.txt<br>\n";
-    print $sock "# and send name_stat_md5sum.txt to <a href=\"/tree.htm\">tree.htm</a> for processing<br>\n";
+    print $sock "pwd > $logname<br>\n";
+    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> $logname<br>\n";
+    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> $logname<br>\n";
+    print $sock "# and send $logname to <a href=\"/tree.htm\">tree.htm</a> for processing<br>\n";
     print $sock "#speed is approximately 12-26 secs/GB<p>\n";
 
 
