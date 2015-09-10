@@ -746,7 +746,7 @@ while(1) {
                     }
                     $tmp = index ($httpbuf, "Content-Length:");
                     if ($tmp >= 0) {
-                        if (substr ($httpbuf, $tmp + 15, 8)  =~ /(\d+)/) {
+                        if (substr ($httpbuf, $tmp + 15, 10)  =~ /(\d+)/) {
                             $postlen = $1;
                         }
                     }
