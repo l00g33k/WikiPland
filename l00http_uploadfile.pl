@@ -64,7 +64,11 @@ sub l00http_uploadfile_proc {
             # backup
             &l00backup::backupfile ($ctrl, $path, 1, 5);
         }
-        $_ = &l00crc32::crc32($form->{'payload'});
+        if (length($form->{'payload'}) < 100000) { 
+            $_ = &l00crc32::crc32($form->{'payload'});
+        } else {
+            $_ = 0;
+        }
         open(DBG2,">$path");
         binmode(DBG2);
         print DBG2 $form->{'payload'};
