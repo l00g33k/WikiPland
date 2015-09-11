@@ -6,6 +6,16 @@ if (!defined($ctrl->{'FORM'}->{'arg1'})) {
     print $sock "Arg1: $ctrl->{'FORM'}->{'arg1'}\n";
     ($left, $right) = split("::", $ctrl->{'FORM'}->{'arg1'});
 
+    $jumper = "  ".
+         "<a href=\"#top\">top</a> ".
+         "<a href=\"#dup\">dup</a> ".
+         "<a href=\"#left\">left</a> ".
+         "<a href=\"#right\">right</a> ".
+         "<a href=\"#end\">end</a> ".
+         "\n";
+
+    print $sock "$jumper\n\n";
+
     # read in left files undef %bysize;
     undef %bymd5sum;
     undef %bypath;
@@ -33,7 +43,7 @@ if (!defined($ctrl->{'FORM'}->{'arg1'})) {
                         $pfname =~ s/ *$//;
                         ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
 #print $sock "$size $md5sum $pname $fname\n";
-                        $bymd5sum{$sname}{$md5sum}{$fname} = $pfname;
+                        $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
                         $bypath{$sname}{$pname} = $md5sum;
                         $byname{$sname}{$fname}{$pfname} = $md5sum;
                         $cnt++;
@@ -45,19 +55,46 @@ if (!defined($ctrl->{'FORM'}->{'arg1'})) {
             $files++;
         }
     }
+    print $sock "\n";
 
-    # rename
+    print $sock "<a name=\"dup\"></a>Duplicates:\n";
+    print $sock "$jumper\n";
     foreach $sname (('LEFT ', 'RIGHT')) {
+        print $sock "  $sname:\n";
         foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
-            @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
-            if ($#_ > 0) {
-                print $sock "md5sum rename $sname: $#_ $md5sum:\n   ".join("\n   ", @_)."\n";
+            if ($md5sum != 0) {
+                @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                if ($#_ > 0) {
+                    print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
+                }
             }
         }
-
     }
+    print $sock "\n";
+
+    print $sock "<a name=\"left\"></a>Left only: $left\n";
+    print $sock "$jumper\n";
+    foreach $md5sum (sort keys %{$bymd5sum{'LEFT '}}) {
+        if (($md5sum != 0) && !defined($bymd5sum{'RIGHT'}{$md5sum})) {
+            @_ = (keys %{$bymd5sum{'LEFT '}{$md5sum}});
+            print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
+        }
+    }
+    print $sock "\n";
+
+    print $sock "<a name=\"right\"></a>Right only: $right\n";
+    print $sock "$jumper\n";
+    foreach $md5sum (sort keys %{$bymd5sum{'RIGHT'}}) {
+        if (($md5sum != 0) && !defined($bymd5sum{'LEFT '}{$md5sum})) {
+            @_ = (keys %{$bymd5sum{'RIGHT'}{$md5sum}});
+            print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
+        }
+    }
+    print $sock "\n";
+
+
+    print $sock "$jumper\n";
 
     print $sock "</pre>\n";
-
 }
 
