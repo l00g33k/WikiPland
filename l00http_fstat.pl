@@ -34,7 +34,7 @@ sub l00http_fstat_proc {
         s/\//\\/g;
     }
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">Path</a>:\n";
-    print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+    print $sock "Launcher <a href=\"/launcher.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
 
     if ((defined ($form->{'path'})) && (-f $form->{'path'})) {
         my ($buf, $crc32, $crc);
