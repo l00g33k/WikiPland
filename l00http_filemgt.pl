@@ -7,8 +7,10 @@ use l00backup;
 
 my %config = (proc => "l00http_filemgt_proc",
               desc => "l00http_filemgt_desc");
-my ($treeto, $treefilecnt, $treedircnt);
+my ($treeto, $treefilecnt, $treedircnt, $nodirmask, $nofilemask);
 $treeto = '';
+$nodirmask = '';
+$nofilemask = '';
 
 sub copytree {
     my ($ctrl, $fr, $to) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -36,22 +38,29 @@ sub copytree {
                     next;
                 }
                 if (-d $fr.$file) {
+                    # directory $file
                     #print "dir >$file<\n";
-                    &copytree($ctrl, "$fr$file/", "$to$file/");
+                    if (($nodirmask eq '') || !($file =~ /$nodirmask/i)) {
+                        # if no mask or matched mask, case insensitive
+                        &copytree($ctrl, "$fr$file/", "$to$file/");
+                    }
                 } else {
-                    print "cp $to$file\n";
-                    # This is not available on Android: use File::Copy qw(copy); 
-                    # manually copying...
-                    if (open(IN, "<$fr$file")) {
-                        if (open(OU, ">$to$file")) {
-                            local ($/);
-                            $/ = undef;
-                            $buf = <IN>;
-                            print OU $buf;
-                            close(OU);
-                            $treefilecnt++;
+                    if (($nofilemask eq '') || !($file =~ /$nofilemask/i)) {
+                        # if no mask or matched mask, case insensitive
+                        #print "cp $to$file\n";
+                        # This is not available on Android: use File::Copy qw(copy); 
+                        # manually copying...
+                        if (open(IN, "<$fr$file")) {
+                            if (open(OU, ">$to$file")) {
+                                local ($/);
+                                $/ = undef;
+                                $buf = <IN>;
+                                print OU $buf;
+                                close(OU);
+                                $treefilecnt++;
+                            }
+                            close(IN);
                         }
-                        close(IN);
                     }
                 }
              }
@@ -179,12 +188,21 @@ sub l00http_filemgt_proc {
         (defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0)) &&
         (defined ($form->{'treeto'}) && 
-        ((!defined ($form->{'urlonly2'})) || ($form->{'urlonly2'} ne 'on')) &&
         (length ($form->{'treeto'}) > 0))) {
-        $treefilecnt = 0;
-        $treedircnt = 0;
-        &copytree($ctrl, $form->{'path'}, $form->{'treeto'});
-        print $sock "<p>Tree copied $treedircnt directories and $treefilecnt files<p>\n";
+        if (defined ($form->{'nodirmask'})) {
+            $nodirmask = $form->{'nodirmask'};
+        }
+        if (defined ($form->{'nofilemask'})) {
+            $nofilemask = $form->{'nofilemask'};
+        }
+        if ((!defined ($form->{'urlonly2'})) || ($form->{'urlonly2'} ne 'on')) {
+            $treefilecnt = 0;
+            $treedircnt = 0;
+            &copytree($ctrl, $form->{'path'}, $form->{'treeto'});
+            print $sock "<p>Tree copied $treedircnt directories and $treefilecnt files<p>\n";
+        } else {
+            print $sock "<p>Made URL<p>\n";
+        }
     }
     # copy tree paste target
     if (defined ($form->{'pasteto'})) {
@@ -295,13 +313,19 @@ sub l00http_filemgt_proc {
         print $sock "</td></tr>\n";
     }
     print $sock "<tr><td>\n";
+    print $sock "Exclude dirs: <input type=\"text\" size=\"16\" name=\"nodirmask\" value=\"$nodirmask\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Exclude files: <input type=\"text\" size=\"16\" name=\"nofilemask\" value=\"$nofilemask\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"urlonly2\">Make URL only\n";
     print $sock "</td></tr>\n";
-    if ((defined ($form->{'urlonly2'})) && ($form->{'urlonly2'} eq 'on')) {
-        print $sock "<tr><td>\n";
-        print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}&treeto=$form->{'treeto'}&urlonly2=on\">Copy tree URL</a>\n";
-        print $sock "</td></tr>\n";
-    }
+#   if ((defined ($form->{'urlonly2'})) && ($form->{'urlonly2'} eq 'on')) {
+#       print $sock "<tr><td>\n";
+#       print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}&treeto=$form->{'treeto'}&urlonly2=on\">Copy tree URL</a>\n";
+#       print $sock "</td></tr>\n";
+#   }
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 

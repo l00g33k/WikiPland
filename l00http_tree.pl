@@ -113,7 +113,7 @@ sub l00http_tree_proc {
     my ($buffer, $path2, $path, $file, $cnt, $cntbak, $crc32, $export, $buf);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
-    my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir);
+    my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums);
 
 
     $time0 = time;
@@ -228,6 +228,7 @@ sub l00http_tree_proc {
 	    $nofile = 0;
 	    $cntbak = 0;
 	    $export = '';
+        $allsums = '';
 	    $time0 = time;
         $nobytes = 0;
         undef %countext;
@@ -270,6 +271,7 @@ sub l00http_tree_proc {
                     }
                     print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                     $export .= sprintf("|| %8d || %08x || %s ||\n",$size, $crc32, $path.$file);
+                    $allsums .= $crc32;
                 } elsif (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
                     $crc32 = "00000000000000000000000000000000";
                     if ($isdir) {
@@ -298,6 +300,7 @@ sub l00http_tree_proc {
                     }
                     print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
                     $export .= sprintf("|| %8d || %s || %s ||\n",$size, $crc32, $path.$file);
+                    $allsums .= $crc32;
                 } else {
                     if ($isdir) {
                         $file = "$file/ &lt;dir&gt;";
@@ -330,6 +333,11 @@ sub l00http_tree_proc {
         }
         print $sock "</pre>";
 
+        if ((defined($form->{'crc32'}) && ($form->{'crc32'} eq 'on')) ||
+            (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on'))) {
+           $crc32 = &l00crc32::crc32($allsums);
+           printf $sock ("<p><pre>crc32 of all sums is 0x%08x</pre>\n", $crc32);
+        }
         print $sock "<p>There are $nobytes bytes in $nofile files $nodir directories ";
         print $sock sprintf("in %d seconds for %d bytes/sec.\n", time - $time0, $nobytes / (time - $time0 + 1));
         print $sock "<p>Showing maximum $depthmax directories deep\n";
