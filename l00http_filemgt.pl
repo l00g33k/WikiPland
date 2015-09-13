@@ -4,7 +4,6 @@ use l00backup;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
-# deletes files for now, rename, move and copy possible
 
 my %config = (proc => "l00http_filemgt_proc",
               desc => "l00http_filemgt_desc");
@@ -96,12 +95,19 @@ sub l00http_filemgt_proc {
     if ((defined ($form->{'delete'})) &&
         (defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
-        if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
-            &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+        if ($form->{'path'} =~ /^l00:\/\//) {
+            # delete original RAM file
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteClose($ctrl);
+        } else {
+            if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+                &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            }
+            # delete original disk file
+            unlink ($form->{'path'});
+            print $sock "Deleted $form->{'path'}<p>\n";
+            undef $form->{'path'};
         }
-        unlink ($form->{'path'});
-        print $sock "Deleted $form->{'path'}<p>\n";
-        undef $form->{'path'};
     }
 
     # copy paste target
@@ -117,15 +123,16 @@ sub l00http_filemgt_proc {
             # URL only, do nothing
         } else {
             local $/ = undef;
-            if (open (IN, "<$form->{'path'}")) {
-                $buffer = <IN>;
-                close (IN);
-                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                if ((!($form->{'path'} =~ /^l00:\/\//)) && 
+                    ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on'))) {
                     &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
                 }
-                open (OU, ">$form->{'path2'}");
-                print OU $buffer;
-                close (OU);
+                $buffer = &l00httpd::l00freadAll($ctrl);
+                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path2'})) {
+                    &l00httpd::l00fwriteBuf($ctrl, $buffer);
+                    &l00httpd::l00fwriteClose($ctrl);
+                }
             }
         }
     }
@@ -139,46 +146,29 @@ sub l00http_filemgt_proc {
             # URL only, do nothing
         } else {
             local $/ = undef;
-            if (open (IN, "<$form->{'path'}")) {
-                $buffer = <IN>;
-                close (IN);
-                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                if ((!($form->{'path'} =~ /^l00:\/\//)) && 
+                    ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on'))) {
                     &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
                 }
-                if (open (OU, ">$form->{'path2'}")) {
-                    print OU $buffer;
-                    close (OU);
-                    # delete original
-                    unlink ($form->{'path'});
+                $buffer = &l00httpd::l00freadAll($ctrl);
+                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path2'})) {
+                    &l00httpd::l00fwriteBuf($ctrl, $buffer);
+                    &l00httpd::l00fwriteClose($ctrl);
+
+                    if ($form->{'path'} =~ /^l00:\/\//) {
+                        # delete original RAM file
+                        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                        &l00httpd::l00fwriteClose($ctrl);
+                    } else {
+                        # delete original disk file
+                        unlink ($form->{'path'});
+                    }
                 }
             }
         }
     }
 
-    if ((defined ($form->{'rename'})) &&
-        (defined ($form->{'path'}) && 
-        (length ($form->{'path'}) > 0)) &&
-        (defined ($form->{'path2'}) && 
-        (length ($form->{'path2'}) > 0))) {
-        if (defined ($form->{'urlonly'})) {
-            # URL only, do nothing
-        } else {
-            local $/ = undef;
-            if (open (IN, "<$form->{'path'}")) {
-                $buffer = <IN>;
-                close (IN);
-                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
-                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
-                }
-                open (OU, ">$form->{'path2'}");
-                print OU $buffer;
-                close (OU);
-            }
-            unlink ($form->{'path'});
-            print $sock "Deleted $form->{'path'}<p>\n";
-            undef $form->{'path'};
-        }
-    }
 
     # copy tree
     if ((defined ($form->{'treeto'}) && 
@@ -249,10 +239,11 @@ sub l00http_filemgt_proc {
     print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "fr: <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">fr:</a> <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "to: <input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
+    print $sock "<a href=\"/launcher.htm?path=$path2\">to:</a> "; #<input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
+    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$path2</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
@@ -295,7 +286,8 @@ sub l00http_filemgt_proc {
     print $sock "<a href=\"/tree.htm?path=$form->{'path'}\">fr:</a> <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<a href=\"/tree.htm?path=$treeto\">to:</a> <input type=\"text\" size=\"16\" name=\"treeto\" value=\"$treeto\">\n";
+    print $sock "<a href=\"/tree.htm?path=$treeto\">to:</a> "; #<input type=\"text\" size=\"16\" name=\"treeto\" value=\"$treeto\">\n";
+    print $sock "<textarea name=\"treeto\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$treeto</textarea>\n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
