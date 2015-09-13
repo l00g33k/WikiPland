@@ -135,7 +135,7 @@ sub l00http_filemgt_proc {
             if ($path2 =~ /[\\\/]$/) {
                 # $path2 is a directory
                 # get name from source
-                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)/) {
+                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)$/) {
                     $path2 .= $1;
                 }
             }
@@ -166,7 +166,7 @@ sub l00http_filemgt_proc {
             if ($path2 =~ /[\\\/]$/) {
                 # $path2 is a directory
                 # get name from source
-                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)/) {
+                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)$/) {
                     $path2 .= $1;
                 }
             }
