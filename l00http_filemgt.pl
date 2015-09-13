@@ -131,14 +131,22 @@ sub l00http_filemgt_proc {
         if (defined ($form->{'urlonly'})) {
             # URL only, do nothing
         } else {
+            $path2 = $form->{'path2'};
+            if ($path2 =~ /[\\\/]$/) {
+                # $path2 is a directory
+                # get name from source
+                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)/) {
+                    $path2 .= $1;
+                }
+            }
             local $/ = undef;
             if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
                 if ((!($form->{'path'} =~ /^l00:\/\//)) && 
                     ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on'))) {
-                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
+                    &l00backup::backupfile ($ctrl, $path2, 1, 5);
                 }
                 $buffer = &l00httpd::l00freadAll($ctrl);
-                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path2'})) {
+                if (&l00httpd::l00fwriteOpen($ctrl, $path2)) {
                     &l00httpd::l00fwriteBuf($ctrl, $buffer);
                     &l00httpd::l00fwriteClose($ctrl);
                 }
@@ -154,14 +162,22 @@ sub l00http_filemgt_proc {
         if (defined ($form->{'urlonly'})) {
             # URL only, do nothing
         } else {
+            $path2 = $form->{'path2'};
+            if ($path2 =~ /[\\\/]$/) {
+                # $path2 is a directory
+                # get name from source
+                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)/) {
+                    $path2 .= $1;
+                }
+            }
             local $/ = undef;
             if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
                 if ((!($form->{'path'} =~ /^l00:\/\//)) && 
                     ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on'))) {
-                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
+                    &l00backup::backupfile ($ctrl, $path2, 1, 5);
                 }
                 $buffer = &l00httpd::l00freadAll($ctrl);
-                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path2'})) {
+                if (&l00httpd::l00fwriteOpen($ctrl, $path2)) {
                     &l00httpd::l00fwriteBuf($ctrl, $buffer);
                     &l00httpd::l00fwriteClose($ctrl);
 
