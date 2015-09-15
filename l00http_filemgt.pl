@@ -120,6 +120,9 @@ sub l00http_filemgt_proc {
     }
 
     # copy paste target
+    if (defined ($form->{'paste4'})) {
+        $form->{'path'} = &l00httpd::l00getCB($ctrl);
+    }
     if (defined ($form->{'paste2'})) {
         $form->{'path2'} = &l00httpd::l00getCB($ctrl);
     }
@@ -224,6 +227,9 @@ sub l00http_filemgt_proc {
     if (defined ($form->{'pasteto'})) {
         $treeto = &l00httpd::l00getCB($ctrl);
     }
+    if (defined ($form->{'pastefr'})) {
+        $form->{'path'} = &l00httpd::l00getCB($ctrl);
+    }
 
     # delete
     if (!defined ($form->{'path'})) {
@@ -292,7 +298,9 @@ sub l00http_filemgt_proc {
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"paste2\" value=\"Paste CB to 'to:'\">\n";
+        print $sock "Paste CB to ";
+        print $sock "<input type=\"submit\" name=\"paste4\" value=\"'fr:'\"> ";
+        print $sock "<input type=\"submit\" name=\"paste2\" value=\"'to:'\">\n";
         print $sock "</td></tr>\n";
     }
     if (defined ($form->{'copy'}) &&
@@ -325,7 +333,9 @@ sub l00http_filemgt_proc {
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"pasteto\" value=\"Paste CB to 'to:'\">\n";
+        print $sock "Paste CB to ";
+        print $sock "<input type=\"submit\" name=\"pastefr\" value=\"'fr:'\"> ";
+        print $sock "<input type=\"submit\" name=\"pasteto\" value=\"'to:'\">\n";
         print $sock "</td></tr>\n";
     }
     print $sock "<tr><td>\n";
