@@ -493,7 +493,7 @@ sub pcSyncCmdline {
         $clip = urlencode ($clip);
 
         $buf = "View <a href=\"/view.htm?path=l00://pcSyncCmdline\">l00://pcSyncCmdline</a>. \n"
-                . "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\">clipboard</a>:<br>\n"
+                . "Send the following lines to the <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\">clipboard</a>:<p>\n"
                 . $buf;
 
 

@@ -58,11 +58,14 @@ sub l00http_crypt_proc (\%) {
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"#pass\">pass</a> \n";
 
-    print $sock "<a href=\"#find\">find</a> Be patience, cryptography is slow in pure Perl on Android. $tmp<hr>\n";
+    print $sock "<a href=\"#find\">find</a> Be patience, cryptography is slow in pure Perl on Android. $tmp.\n";
 
 
     if (defined ($form->{'save'}) ||
-        defined ($form->{'fromram'})) {
+        defined ($form->{'edittocb'}) ||
+        defined ($form->{'cbtoedit'}) ||
+        defined ($form->{'fromram'}) ||
+        defined ($form->{'toram'})) {
         if ((defined ($form->{'pass1'})) && 
             (defined ($form->{'pass2'})) && 
             ($form->{'pass1'} eq $form->{'pass2'})) {
@@ -95,16 +98,20 @@ sub l00http_crypt_proc (\%) {
     $plain = '';
     if (defined ($form->{'fromram'})) {
         # retrieve from ram buffer, save, then clear ram buffer
-        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.pl")) {
+        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.htm")) {
             $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
             $form->{'save'} = 1;
             # clear ram buffer
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.htm');
             &l00httpd::l00fwriteBuf($ctrl, '');
             &l00httpd::l00fwriteClose($ctrl);
 		}
     }
-    if (defined ($form->{'save'})) {
+    if (defined ($form->{'save'}) ||
+        defined ($form->{'edittocb'}) ||
+        defined ($form->{'cbtoedit'}) ||
+        defined ($form->{'fromram'}) ||
+        defined ($form->{'toram'})) {
         if (($pass ne '') &&
             (defined ($form->{'buffer'})) &&
             ((defined ($form->{'path'})) && 
@@ -117,14 +124,8 @@ sub l00http_crypt_proc (\%) {
         # read from file
         if ((defined ($form->{'path'})) && 
             (length ($form->{'path'}) > 0)) {
-            if (open (IN, "<$form->{'path'}")) {
-                # http://www.perlmonks.org/?node_id=1952
-                my ($slash);
-                $slash = $/;
-                $/ = undef;
-                $buffer = <IN>;
-                close (IN);
-                $/ = $slash;
+            if (&l00httpd::l00freadOpen($ctrl, "$form->{'path'}")) {
+                $buffer = &l00httpd::l00freadAll($ctrl);
             }
         }
     }
@@ -165,8 +166,11 @@ sub l00http_crypt_proc (\%) {
 
     if ($pass eq "") {
         $plain = $crypt;
-        print $sock "<p><h1>Passphrase not set!</h1></p>";
+        print $sock "<hr><h1>Passphrase not set!</h1></p><hr>\n";
     } else {
+        print $sock "Jump to <a href=\"#toram\">save to RAM</a>, then ".
+            "<a href=\"/edit.htm?path=l00://crypt.htm\" target=\"newwin\">edit RAM</a><hr>\n";
+
         if ($plain eq "true") {
             $plain = $crypt;
             $crypt = l00crypt::l00encrypt ($pass, $plain, $method);
@@ -185,10 +189,12 @@ sub l00http_crypt_proc (\%) {
             print $sock "<p><h1>Passphrases do not match.  Content not saved!</h1></p>";
         } else {
             if (defined ($form->{'save'})) {
-                &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
-                if (open (OUT, ">$form->{'path'}")) {
-                    print OUT "$pre\n$cryptbound:$method:\n$crypt\n$cryptbound:$method:\n$post";
-                    close (OUT);
+                if (!($form->{'path'} =~ /^l00:\/\//)) {
+                    &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+                }
+                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path'})) {
+                    &l00httpd::l00fwriteBuf($ctrl, "$pre\n$cryptbound:$method:\n$crypt\n$cryptbound:$method:\n$post");
+                    &l00httpd::l00fwriteClose($ctrl);
                 } else {
                     print $sock "Unable to write '$form->{'path'}'<p>\n";
                 }
@@ -240,11 +246,11 @@ sub l00http_crypt_proc (\%) {
         (length($form->{'savedecrypt'}) > 0) &&
         (!($form->{'savedecrypt'} =~ /^ *$/))) {
         # save decrypted to file
-        if (open(OU, ">$form->{'savedecrypt'}")) {
-            binmode (OU);
-            print OU $plain;
-            close (OU);
-            print $sock "Decrypted content saved to: $form->{'savedecrypt'}<p>\n";
+        if (&l00httpd::l00fwriteOpen($ctrl, $form->{'savedecrypt'})) {
+            &l00httpd::l00fwriteBuf($ctrl, $plain);
+            &l00httpd::l00fwriteClose($ctrl);
+            print $sock "Decrypted content saved to: ".
+                "<a href=\"/ls.htm?path=$form->{'savedecrypt'}\">$form->{'savedecrypt'}</a><p>\n";
         }
     } else {
         $buffer = "$found$pre\n$cryptbound:$method:\n$plain2\n$cryptbound:$method:\n$post";
@@ -261,7 +267,7 @@ sub l00http_crypt_proc (\%) {
         $buffer = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{'toram'})) {
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.pl');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.htm');
         &l00httpd::l00fwriteBuf($ctrl, $buffer);
         &l00httpd::l00fwriteClose($ctrl);
     }
@@ -292,10 +298,10 @@ sub l00http_crypt_proc (\%) {
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"toram\" value=\"edit to ram\">\n";
+    print $sock "<a name=\"toram\"></a><input type=\"submit\" name=\"toram\" value=\"edit to ram\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"submit\" name=\"fromram\" value=\"save ram\">\n";
-    print $sock "<a href=\"/edit.htm?path=l00://crypt.pl\" target=\"newwin\">edit ram</a> \n";
+    print $sock "<a href=\"/edit.htm?path=l00://crypt.htm\" target=\"newwin\">edit ram</a> \n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
