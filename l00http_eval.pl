@@ -83,7 +83,14 @@ sub l00http_eval_proc {
     print $sock "<a href=\"/eval.htm?eval=%26l00httpd%3A%3Adumphashbuf+%28%22wifi%22%2C+%24ctrl-%3E%7B%27droid%27%7D-%3EwifiGetConnectionInfo%28%29%29%3B\">Example to invoke</a>:<br>\n";
     print $sock "<pre>\n";
     print $sock "&l00httpd::dumphashbuf (\"wifi\", \$ctrl->{'droid'}->wifiGetConnectionInfo());\n";
+    print $sock "</pre>\n";
 
+    print $sock "<a href=\"/eval.htm?eval=%24a%3D%27eyJDb250ZXh0Q2hvb3NlclJlcSI6eyJjb3VudHJ5IjoiTUMiLCJjdXJyZW5jeSI6IlVTRCIsImxhbmd1YWdlIjoiZW4ifX0%3D%27%3B%0D%0A%26l00base64%3A%3Ab64decode+%28%24a%29%3B%0D%0A%24b%3D%27{%22ContextChooserReq%22%3A{%22country%22%3A%22MC%22%2C%22currency%22%3A%22USD%22%2C%22language%22%3A%22en%22}}%27%3B%0D%0A%26l00base64%3A%3Ab64encode+%28%24b%29%3B%0D%0A\">Example to invoke</a>:<br>\n";
+    print $sock "<pre>\n";
+    print $sock "\$a='eyJDb250ZXh0Q2hvb3NlclJlcSI6eyJjb3VudHJ5IjoiTUMiLCJjdXJyZW5jeSI6IlVTRCIsImxhbmd1YWdlIjoiZW4ifX0=';\n";
+    print $sock "&l00base64::b64decode (\$a);\n";
+    print $sock "\$b='{\"ContextChooserReq\":{\"country\":\"MC\",\"currency\":\"USD\",\"language\":\"en\"}}';\n";
+    print $sock "&l00base64::b64encode (\$b);\n";
     print $sock "</pre>\n";
 
     if (defined ($eval) && (length ($eval) > 1)) {
