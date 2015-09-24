@@ -113,7 +113,7 @@ sub l00http_tree_proc {
     my ($buffer, $path2, $path, $file, $cnt, $cntbak, $crc32, $export, $buf);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
-    my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums);
+    my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums, $base, $partpath);
 
 
     $time0 = time;
@@ -175,14 +175,22 @@ sub l00http_tree_proc {
         # path is a file
         if (open(IN, "<$form->{'path'}")) {
             # get directory
-            $dir = $form->{'path'};
+#           $dir = $form->{'path'};
             # keep path only
-            $dir =~ s/\/[^\/]+$/\//;
+#           $dir =~ s/\/[^\/]+$/\//;
 
             #print $sock "<pre>\n";
             undef %sizeMd5sum;
             $cnt = 0;
             $cntbak = 0;
+            $dir = <IN>;
+            $dir =~ s/\n//;
+            $dir =~ s/\r//;
+            if ($dir =~ /\//) {
+                $dir .= '/';
+            } else {
+                $dir .= '\\';
+            }
             while (<IN>) {
                 s/\n//;
                 s/\r//;
@@ -207,13 +215,11 @@ sub l00http_tree_proc {
 
 	        $export = '';
             foreach $fname (sort keys %sizeMd5sum) {
-                $export .= "$sizeMd5sum{$fname} $dir$fname ||\n";
-                #print $sock "$sizeMd5sum{$fname} $dir$fname ||\n";
+                $export .= "$sizeMd5sum{$fname} ./$fname ||\n";
             }
-            #print $sock "</pre>\n";
 
             &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
-            &l00httpd::l00fwriteBuf($ctrl, "* wiki\n\n$export\n\n");
+            &l00httpd::l00fwriteBuf($ctrl, "* $dir\n\n$export\n\n");
             &l00httpd::l00fwriteClose($ctrl);
             print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw listing</a><p>\n";
         }
@@ -221,7 +227,8 @@ sub l00http_tree_proc {
         # path is a directory
         undef @list;
 	    $lvl = 0;
-        &l00http_tree_list ($sock, $form->{'path'});
+        $base = $form->{'path'};
+        &l00http_tree_list ($sock, $base);
         print $sock "<pre>";
 	    $cnt = 0;
 	    $nodir = 0;
@@ -252,6 +259,8 @@ sub l00http_tree_proc {
                 $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                     = stat($path.$file);
                 $nobytes += $size;
+                $partpath = $path.$file;
+                $partpath =~ s/^$base/.\//;
                 if (defined($form->{'crc32'}) && ($form->{'crc32'} eq 'on')) {
                     if ($isdir) {
                         $crc32 = 0;
@@ -270,7 +279,7 @@ sub l00http_tree_proc {
                         $crc32 = &l00crc32::crc32($buf);
                     }
                     print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
-                    $export .= sprintf("|| %8d || %08x || %s ||\n",$size, $crc32, $path.$file);
+                    $export .= sprintf("|| %11d || %08x || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
                 } elsif (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
                     $crc32 = "00000000000000000000000000000000";
@@ -299,7 +308,7 @@ sub l00http_tree_proc {
                         }
                     }
                     print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
-                    $export .= sprintf("|| %8d || %s || %s ||\n",$size, $crc32, $path.$file);
+                    $export .= sprintf("|| %11d || %s || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
                 } else {
                     if ($isdir) {
@@ -320,7 +329,7 @@ sub l00http_tree_proc {
                         }
                     }
                     print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
-                    $export .= sprintf("|| %8d || %s ||\n",$size, $path.$file);
+                    $export .= sprintf("|| %11d || %s ||\n", $size, $partpath);
                 }
                 # show path from base down only
 			    $path2 = $path;
@@ -362,7 +371,7 @@ sub l00http_tree_proc {
 
 
         &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
-        &l00httpd::l00fwriteBuf($ctrl, "* wiki\n\n$export\n\n");
+        &l00httpd::l00fwriteBuf($ctrl, "* $base\n\n$export\n\n");
         &l00httpd::l00fwriteClose($ctrl);
         print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw listing</a><p>\n";
     }
