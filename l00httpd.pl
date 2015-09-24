@@ -719,6 +719,11 @@ while(1) {
                 next;
             }
             print "httpsiz $httpsiz\n", if ($debug >= 4);
+            if ($httpsiz == 0) {
+                print "failed to read from socket. Abort\n", if ($debug >= 4);
+                $sock->close;
+                next;
+            }
             &dlog  ("client $client_ip ");
             $postlen = -1;
             $httphdz = -1;
@@ -1411,6 +1416,7 @@ while(1) {
                         if ($val eq '') {
                             $val = '&nbsp;';
                         }
+                        $key = "<a href=\"/eval.htm?eval=%24ctrl-%3E{%27$key%27}%0D%0A%24a%3D%27$val%27\">$key</a>";
                         print $sock "<tr><td>$key</td><td>$val</td>\n";
                     }
                     print $sock "</table>\n";
