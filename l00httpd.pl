@@ -276,7 +276,7 @@ while ($_ = shift) {
 $ctrl_port_first = $ctrl_port;
 
 
-if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^[0-5]$/)) {
+if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^\d$/)) {
     $debug = $ctrl{'debug'};
 }
 
@@ -719,7 +719,7 @@ while(1) {
                 next;
             }
             print "httpsiz $httpsiz\n", if ($debug >= 4);
-            if ($httpsiz == 0) {
+            if ($httpsiz <= 0) {
                 print "failed to read from socket. Abort\n", if ($debug >= 4);
                 $sock->close;
                 next;
