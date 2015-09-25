@@ -147,15 +147,18 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
 } elsif (defined ($ENV{'WINDIR'}) || defined ($ENV{'windir'})) {
     $ctrl{'os'} = 'win';
     $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
-} else {
+} elsif ($^O eq 'linux') {
     if ($plpath =~ /\/var\/lib\/openshift\//) {
         # on RHC
         $ctrl{'os'} = 'rhc';
-        $ctrl{'machine'} = $ENV{'HOSTNAME'};
+        $ctrl{'machine'} = $ENV{'USER'};
     } else {
         $ctrl{'os'} = 'lin';
         $ctrl{'machine'} = $ENV{'HOSTNAME'};
     }
+} else {
+    $ctrl{'os'} = '(unknown)';
+    $ctrl{'machine'} = '(unknown)';
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
