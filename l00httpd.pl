@@ -769,7 +769,12 @@ while(1) {
 
 
 
-            if ($httpbuf =~ /^POST /) {
+            if ($httpbuf =~ /^HEAD /) {
+                # HEAD: post head only
+                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title></head>\x0D\x0A</html>\n";
+                $sock->close;
+                next;
+            } elsif ($httpbuf =~ /^POST /) {
                 # POST
                 $httphdr = substr ($httpbuf, 0, $httphdz);
                 $httpbdz = $httpsiz - $httphdz;
