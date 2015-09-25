@@ -1,9 +1,3 @@
-* wiki
-c:\2\x\IntroOverview.txt
-c:\2\x\IntroSimple.txt
-c:\2\x\IntroAdvanced.txt
-c:\2\x\IntroDeveloper.txt
-c:\x\ram\l00\IntroOverview.txt
-c:\x\ram\l00\IntroSimple.txt
-c:\x\ram\l00\IntroAdvanced.txt
-c:\x\ram\l00\IntroDeveloper.txt
+20150919 174530 weight graph
+* topics:
+* wget and extract, currency graph

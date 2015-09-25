@@ -1,17 +1,8 @@
 %TOC%
-* wiki
-c:\2\x\IntroOverview.txt
-c:\2\x\IntroSimple.txt
-c:\2\x\IntroAdvanced.txt
-c:\2\x\IntroDeveloper.txt
-c:\x\ram\l00\IntroOverview.txt
-c:\x\ram\l00\IntroSimple.txt
-c:\x\ram\l00\IntroAdvanced.txt
-c:\x\ram\l00\IntroDeveloper.txt
 
 =Introduction=
 
-!WikiPland is a general purpose wiki server that was developed on the Android phone for the Android phones and the desktops. This article is focusing on simple daily uses. For an overview introduction please read the IntroOverview.
+!WikiPland is a general purpose wiki server that was developed on the Android phone for the Android devices as well as the desktops. This article is focusing on simple daily uses. For an overview introduction please read the IntroOverview.
 
 =Audience=
 

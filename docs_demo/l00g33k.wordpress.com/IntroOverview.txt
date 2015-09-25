@@ -2,26 +2,21 @@ c:\x\ram\l00\IntroDeveloper.txt
 
 =Introduction=
 
-!WikiPland is a general purpose wiki server that was developed on the Android phone for the Android phones, but it also works well on the desktops. The primary obojective of !WikiPland is to bring wiki style free text organizer capability to the phones without requiring any cloud connection nor sotrage. So what is yours is on your device only and no where else. It is designed for both simple daily use but it has features such as regular expressions search for advanced sers. If you are familiar with the Perl interpretive language, you can even extend the capability of !WikiPland.
+!WikiPland is a general purpose wiki server that was developed on the Android phone for the Android phones. (It also works very well on the desktop with Windows and Linux.) The primary purpose of !WikiPland is to bring wiki style free text organizer capability to the phones without requiring any cloud connection nor sotrage. So what is yours is on your device only and not uploaded to any where else. It is designed for both simple daily use, but it also has many powerfulfeatures such as regular expressions search for advanced users. If you are familiar with the Perl interpretive language, you can even extend the capability of !WikiPland. But none of these is rquired to exploit its many capabilities.
 
 =General Overviews=
 
-!WikiPland is written in Perl and can be deployed by either installing an Android APK or install the Perl interpreter and the !WikiPland source code. Android APK installation is recommended for the casual users since it is very straight forward. At this time Android Lollipop is not supported due to the PIM (Position Independent Executable) problem for the Perl interpreter.
+!WikiPland is written in Perl and can be deployed on any Android devices by either installing the !WikiPlandAPK app  or install the Perl interpreter and the !WikiPland source code. Android APK installation is simplest for the casual users. At this time Android Lollipop is not supported due to the PIM (Position Independent Executable) problem for the Perl interpreter.
 
-When in operation !WikiPland runs as a background process. You can keep it running in the background all the time so that it is available whenever you need to use it. I have observed little impact on the battery life. Interaction with the !WikiPland is through any web browser visiting a local web page, such as http://localhost:20337.. Because the interface is web based, you can easily connect to it from your desktop computer with a larger screen and a full size keyboard when your phone is connected to the same wifi network. You have control over what features and contents are accessible through the wifi connection for privacy restriction. See WikiPlandGettingStarted for details.
+When in operation !WikiPland runs as a background process. You can keep it running in the background at all times so that it is available whenever you want to use it. I have observed little impact on the battery life. Interaction with the !WikiPland is through any web browser by visiting a local web page, such as http://localhost:20337. Because the interface is web based through local or networked connection, you can easily connect to it from your desktop computer with a larger screen and a full size keyboard when your phone is connected to the same wifi network. You have control over what features and contents are accessible through the wifi connection for privacy restriction. See WikiPlandGettingStarted for details.
 
 =Introductions For Different Audiences=
 
-Instead of writing a long-winded introduction covering the full spectrum of !WikiPland's features that is sure have some thing boring to every readers, I have written three separate introductions that target three different classes of audience. Each of these introductions touch on features and capabilities that I consider most useful for the least amount of new conccepts to acquire.
+The !WikiPland capability spans a wide spectrum, not unlike the capability of a smart phone. As such, a full exploration of all the capabilities of the !WikiPland is sure to be lengthy and boring for all audiences. Therefore I have written three separate introductions that target three different classes of audience. Each of these introductions touches on features and capabilities that I consider most accessible for the targeted audience while having to acquire the least amount of new conccepts.
 
 * IntroSimple: The focus is on simple daily uses that requires no new concepts. You will read about some useful features that you can start using immediately.
 
-* IntroAdvanced: The focus is on the most useful capabilities that requires the understanding of  few simple concepts.
+* IntroAdvanced: The focus is on the most useful capabilities that requires the understanding of few simple concepts.
 
-* IntroDeveloper: This is for users who are Perl programmers or interested in learning Perl. Since both the Perl intepreter and the source code are hosted on the phone itself, you can modify or add to the source code and restart to see immediate effect. You can extend capability in two different ways. You can clone a sample module to create a new module to implement anything you need. You can also create ad hoc extensions to implement something for a specific need.
-
----
-
-=Move to where?=
-Android APK installation is recommended for casual users but it is less well tested compared to the source code installation. Another benefit of the source code installation is that it makes it easy to update to my latest git updates. The Android APK is only frequently updated.
+* IntroDeveloper: This is for power users who are familiar with the concepts of programming, those who are familiar with regular exporession search, or those who are Perl programmers or are interested in learning the Perl language. Since both the Perl intepreter and the source code are hosted on the phone itself, you can modify or add to the source code and restart to see immediate effect. You can extend capability in two different ways. You can clone a sample module to create a new module to implement anything you need. You can also create ad hoc extensions to implement something for a specific need.
 
