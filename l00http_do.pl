@@ -52,6 +52,13 @@ sub l00http_do_proc {
     if (defined ($form->{'arg3'})) {
         $arg3 = $form->{'arg3'};
     }
+
+    # push args
+    if (defined ($form->{'pushcb'})) {
+        $arg3 = $arg2;
+        $arg2 = $arg1;
+        $arg1 = &l00httpd::l00getCB($ctrl);
+    }
  
     $mypath = $form->{'path'};
 
@@ -147,9 +154,11 @@ print "clear doplpath = $doplpath\n"
         }
 
         print $sock "<form action=\"/do.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"pushcb\" value=\"CB\">\n";
+        print $sock "-&gt; Arg1 -&gt; Arg2 -gt; Arg3<p>\n";
         print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
         print $sock "<input type=\"submit\" name=\"set\" value=\"Set\">\n";
-        print $sock "Quck URL to: $form->{'path'}\n";
+        print $sock "Quick URL to: $form->{'path'}\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
         print $sock "</form>\n";
 

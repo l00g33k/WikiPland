@@ -49,7 +49,7 @@ my ($urlparams, $val, $wday, $yday, $year, $subname);
 my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
-$httpmax = 1024 * 1024 * 10 + 4096;
+$httpmax = 1024 * 1024 * 100 + 4096;
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
@@ -719,13 +719,18 @@ while(1) {
                 next;
             }
             print "httpsiz $httpsiz\n", if ($debug >= 4);
+            if ($httpsiz == 0) {
+                print "failed to read from socket. Abort\n", if ($debug >= 4);
+                $sock->close;
+                next;
+            }
             &dlog  ("client $client_ip ");
             $postlen = -1;
             $httphdz = -1;
             if ($httpbuf =~ /^POST +/) {
                 $tmp = index ($httpbuf, "Content-Length:");
                 if ($tmp >= 0) {
-                    if (substr ($httpbuf, $tmp + 15, 8)  =~ /(\d+)/) {
+                    if (substr ($httpbuf, $tmp + 15, 10)  =~ /(\d+)/) {
                         $postlen = $1;
                     }
                 }
@@ -746,7 +751,7 @@ while(1) {
                     }
                     $tmp = index ($httpbuf, "Content-Length:");
                     if ($tmp >= 0) {
-                        if (substr ($httpbuf, $tmp + 15, 8)  =~ /(\d+)/) {
+                        if (substr ($httpbuf, $tmp + 15, 10)  =~ /(\d+)/) {
                             $postlen = $1;
                         }
                     }
@@ -1074,8 +1079,13 @@ while(1) {
                 # process Home control data
                 if ($modcalled eq 'httpd') {
                     print "Start processing host control\n", if ($debug >= 5);
-                    if ((defined ($FORM{'debuglvl'})) && ($FORM{'debuglvl'} =~ /^[0-5]$/)) {
+                    if ((defined ($FORM{'debuglvl'})) && ($FORM{'debuglvl'} =~ /^\d+$/)) {
                         $debug = $FORM{'debuglvl'};
+                        if ($debug < 0) {
+                            $debug = 0;
+                        } elsif ($debug > 7) {
+                            $debug = 7;
+                        }
                     }
                     # indivisual check marks
                     foreach $mod (sort keys %httpmods) {
@@ -1406,6 +1416,7 @@ while(1) {
                         if ($val eq '') {
                             $val = '&nbsp;';
                         }
+                        $key = "<a href=\"/eval.htm?eval=%24ctrl-%3E{%27$key%27}%0D%0A%24a%3D%27$val%27\">$key</a>";
                         print $sock "<tr><td>$key</td><td>$val</td>\n";
                     }
                     print $sock "</table>\n";

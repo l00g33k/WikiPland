@@ -292,9 +292,35 @@ sub l00http_periobattery_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/periobattery.htm\">Refresh</a> ";
-    print $sock "<a href=\"/periobattery.htm?graphs=\">graphs</a><br>\n";
+    print $sock "<a href=\"/periobattery.htm?graphs=\">graphs</a>\n";
+    print $sock " <a href=\"#end\">end</a><br>\n";
 
-    print $sock "${battperc}% ${battvolts}V ${batttemp}C ${battmA}mA. ($battcnt) <a href=\"#end\">end</a>\n";
+    if (open (IN, "</sys/class/power_supply/battery/uevent")) {
+        # this should be made into a sub routine to be shared with the periodic task
+        my ($livevol, $livetemp, $livelevel, $livecurr);
+        while (<IN>) {
+            #l00httpd::dbp($config{'desc'}, "$_");
+            # POWER_SUPPLY_VOLTAGE_NOW=4176000
+            if (/POWER_SUPPLY_VOLTAGE_NOW=(\d+)/) {
+                $livevol = $1 / 1000000;
+            }
+            # POWER_SUPPLY_TEMP=315
+            if (/POWER_SUPPLY_TEMP=(\d+)/) {
+                $livetemp = $1;
+            }
+            # POWER_SUPPLY_CAPACITY=83
+            if (/POWER_SUPPLY_CAPACITY=(\d+)/) {
+                $livelevel = $1;
+            }
+            # POWER_SUPPLY_CURRENT_NOW=-334840
+            if (/POWER_SUPPLY_CURRENT_NOW=(-*\d+)/) {
+                $livecurr = int ($1 / 1000);
+            }
+
+        }
+        print $sock "Live: ${livelevel}% ${livevol}V ${batttemp}C ${livecurr}mA.<br>\n";
+    }
+    print $sock "Last: ${battperc}% ${battvolts}V ${batttemp}C ${battmA}mA. ($battcnt)<br>\n";
 
 
     if (defined ($form->{"graphs"})) {

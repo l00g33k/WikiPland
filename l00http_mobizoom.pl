@@ -45,7 +45,6 @@ if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
 if(!($subj =~ /^Re:/)) {
 $threads .= "<a href=\"#__para${para}__\">$para: $subj</a><br>\n";
 $wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
-$wget2 .= " FOUND THREAD \n";
 }
 }
 $_ = $line;
@@ -166,7 +165,7 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
-    my ($skip, $tmp, $wgetall, $urlorg, $title);
+    my ($skip, $tmp, $wgetall, $urlorg, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
 
     $url = '';
     if (defined ($form->{'url'})) {
@@ -313,7 +312,18 @@ sub l00http_mobizoom_proc {
             # <head> and <form> mess with my <span font-size> so drop them
             $tmp = '';
             $skip = 0;
+            $foundthreads = '<br>Jump to Slashdot threads:<br>';
+            $foundthreadphase = 0;
+            $foundthreadcnt = 1;
             foreach $_ (split("\n", $wget)) {
+                if (($foundthreadphase == 1) && (/<a name="(.+?)">/)) {
+                    $foundthreadphase = 0;
+                    $foundthreads .= "<a href=\"#$1\">$foundthreadcnt FOUND THREAD #$1</a><br>";
+                    $foundthreadcnt++;
+                }
+                if (/FOUND THREAD/) {
+                    $foundthreadphase = 1;
+                }
                 if (/<\/form.*>/) {
                     $skip = 0;
                     next;
@@ -341,7 +351,13 @@ sub l00http_mobizoom_proc {
             $wget = $tmp;
             # <span style="font-size : 144%;">
             $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/g;
+            if ($foundthreadcnt > 1) {
+                print $sock $foundthreads;
+            }
             print $sock $wget;
+            if ($foundthreadcnt > 1) {
+                print $sock $foundthreads;
+            }
         } else {
             &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
             $prolog = '';

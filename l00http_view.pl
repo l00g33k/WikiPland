@@ -281,8 +281,16 @@ sub l00http_view_proc {
         print $sock "\nAnother " . ($lineno - $skip - $maxln) . " lines skipped<br>\n";
     }
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks);
+    if ($form->{'path'} =~ /^l00:\/\//) {
+        # RAM file
+        $size = &l00httpd::l00fstat($ctrl, $form->{'path'});
+    } else {
+        # disk file
+        ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
             $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                 = stat($form->{'path'});
+    }
     print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
 
     # skip backward $maxln

@@ -64,7 +64,11 @@ sub l00http_uploadfile_proc {
             # backup
             &l00backup::backupfile ($ctrl, $path, 1, 5);
         }
-        $_ = &l00crc32::crc32($form->{'payload'});
+        if (length($form->{'payload'}) < 100000) { 
+            $_ = &l00crc32::crc32($form->{'payload'});
+        } else {
+            $_ = 0;
+        }
         open(DBG2,">$path");
         binmode(DBG2);
         print DBG2 $form->{'payload'};
@@ -93,7 +97,7 @@ sub l00http_uploadfile_proc {
     print $sock "Note: The directory part of the 'Upload to' field is used as the destination direction. ".
         "The filename is taken from the file being uploaded. If only directory is given, it must end in '/' or '\'. Pick a file in launcher and only the directory part will be kept<p>\n";
 
-    print $sock "Note: Maximum updae size is 10 MBytes<p>\n".
+    print $sock "Note: Tested uploading 45 MBytes file to Android phone<p>\n".
 
     print $sock "<a name=\"end\"></a>";
     print $sock "<a href=\"#top\">top</a>\n";

@@ -4,12 +4,13 @@ use l00backup;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
-# deletes files for now, rename, move and copy possible
 
 my %config = (proc => "l00http_filemgt_proc",
               desc => "l00http_filemgt_desc");
-my ($treeto, $treefilecnt, $treedircnt);
+my ($treeto, $treefilecnt, $treedircnt, $nodirmask, $nofilemask);
 $treeto = '';
+$nodirmask = '';
+$nofilemask = '';
 
 sub copytree {
     my ($ctrl, $fr, $to) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -37,22 +38,29 @@ sub copytree {
                     next;
                 }
                 if (-d $fr.$file) {
+                    # directory $file
                     #print "dir >$file<\n";
-                    &copytree($ctrl, "$fr$file/", "$to$file/");
+                    if (($nodirmask eq '') || !($file =~ /$nodirmask/i)) {
+                        # if no mask or matched mask, case insensitive
+                        &copytree($ctrl, "$fr$file/", "$to$file/");
+                    }
                 } else {
-                    print "cp $to$file\n";
-                    # This is not available on Android: use File::Copy qw(copy); 
-                    # manually copying...
-                    if (open(IN, "<$fr$file")) {
-                        if (open(OU, ">$to$file")) {
-                            local ($/);
-                            $/ = undef;
-                            $buf = <IN>;
-                            print OU $buf;
-                            close(OU);
-                            $treefilecnt++;
+                    if (($nofilemask eq '') || !($file =~ /$nofilemask/i)) {
+                        # if no mask or matched mask, case insensitive
+                        #print "cp $to$file\n";
+                        # This is not available on Android: use File::Copy qw(copy); 
+                        # manually copying...
+                        if (open(IN, "<$fr$file")) {
+                            if (open(OU, ">$to$file")) {
+                                local ($/);
+                                $/ = undef;
+                                $buf = <IN>;
+                                print OU $buf;
+                                close(OU);
+                                $treefilecnt++;
+                            }
+                            close(IN);
                         }
-                        close(IN);
                     }
                 }
              }
@@ -96,15 +104,25 @@ sub l00http_filemgt_proc {
     if ((defined ($form->{'delete'})) &&
         (defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
-        if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
-            &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+        if ($form->{'path'} =~ /^l00:\/\//) {
+            # delete original RAM file
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteClose($ctrl);
+        } else {
+            if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
+                &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            }
+            # delete original disk file
+            unlink ($form->{'path'});
+            print $sock "Deleted $form->{'path'}<p>\n";
+            undef $form->{'path'};
         }
-        unlink ($form->{'path'});
-        print $sock "Deleted $form->{'path'}<p>\n";
-        undef $form->{'path'};
     }
 
     # copy paste target
+    if (defined ($form->{'paste4'})) {
+        $form->{'path'} = &l00httpd::l00getCB($ctrl);
+    }
     if (defined ($form->{'paste2'})) {
         $form->{'path2'} = &l00httpd::l00getCB($ctrl);
     }
@@ -116,16 +134,25 @@ sub l00http_filemgt_proc {
         if (defined ($form->{'urlonly'})) {
             # URL only, do nothing
         } else {
-            local $/ = undef;
-            if (open (IN, "<$form->{'path'}")) {
-                $buffer = <IN>;
-                close (IN);
-                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
-                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
+            $path2 = $form->{'path2'};
+            if ($path2 =~ /[\\\/]$/) {
+                # $path2 is a directory
+                # get name from source
+                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)$/) {
+                    $path2 .= $1;
                 }
-                open (OU, ">$form->{'path2'}");
-                print OU $buffer;
-                close (OU);
+            }
+            local $/ = undef;
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                if ((!($form->{'path'} =~ /^l00:\/\//)) && 
+                    ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on'))) {
+                    &l00backup::backupfile ($ctrl, $path2, 1, 5);
+                }
+                $buffer = &l00httpd::l00freadAll($ctrl);
+                if (&l00httpd::l00fwriteOpen($ctrl, $path2)) {
+                    &l00httpd::l00fwriteBuf($ctrl, $buffer);
+                    &l00httpd::l00fwriteClose($ctrl);
+                }
             }
         }
     }
@@ -138,47 +165,38 @@ sub l00http_filemgt_proc {
         if (defined ($form->{'urlonly'})) {
             # URL only, do nothing
         } else {
-            local $/ = undef;
-            if (open (IN, "<$form->{'path'}")) {
-                $buffer = <IN>;
-                close (IN);
-                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
-                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
+            $path2 = $form->{'path2'};
+            if ($path2 =~ /[\\\/]$/) {
+                # $path2 is a directory
+                # get name from source
+                if ($form->{'path'} =~ /[\\\/]([^\\\/]+)$/) {
+                    $path2 .= $1;
                 }
-                if (open (OU, ">$form->{'path2'}")) {
-                    print OU $buffer;
-                    close (OU);
-                    # delete original
-                    unlink ($form->{'path'});
+            }
+            local $/ = undef;
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                if ((!($form->{'path'} =~ /^l00:\/\//)) && 
+                    ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on'))) {
+                    &l00backup::backupfile ($ctrl, $path2, 1, 5);
+                }
+                $buffer = &l00httpd::l00freadAll($ctrl);
+                if (&l00httpd::l00fwriteOpen($ctrl, $path2)) {
+                    &l00httpd::l00fwriteBuf($ctrl, $buffer);
+                    &l00httpd::l00fwriteClose($ctrl);
+
+                    if ($form->{'path'} =~ /^l00:\/\//) {
+                        # delete original RAM file
+                        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                        &l00httpd::l00fwriteClose($ctrl);
+                    } else {
+                        # delete original disk file
+                        unlink ($form->{'path'});
+                    }
                 }
             }
         }
     }
 
-    if ((defined ($form->{'rename'})) &&
-        (defined ($form->{'path'}) && 
-        (length ($form->{'path'}) > 0)) &&
-        (defined ($form->{'path2'}) && 
-        (length ($form->{'path2'}) > 0))) {
-        if (defined ($form->{'urlonly'})) {
-            # URL only, do nothing
-        } else {
-            local $/ = undef;
-            if (open (IN, "<$form->{'path'}")) {
-                $buffer = <IN>;
-                close (IN);
-                if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
-                    &l00backup::backupfile ($ctrl, $form->{'path2'}, 1, 5);
-                }
-                open (OU, ">$form->{'path2'}");
-                print OU $buffer;
-                close (OU);
-            }
-            unlink ($form->{'path'});
-            print $sock "Deleted $form->{'path'}<p>\n";
-            undef $form->{'path'};
-        }
-    }
 
     # copy tree
     if ((defined ($form->{'treeto'}) && 
@@ -189,16 +207,28 @@ sub l00http_filemgt_proc {
         (defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0)) &&
         (defined ($form->{'treeto'}) && 
-        ((!defined ($form->{'urlonly2'})) || ($form->{'urlonly2'} ne 'on')) &&
         (length ($form->{'treeto'}) > 0))) {
-        $treefilecnt = 0;
-        $treedircnt = 0;
-        &copytree($ctrl, $form->{'path'}, $form->{'treeto'});
-        print $sock "<p>Tree copied $treedircnt directories and $treefilecnt files<p>\n";
+        if (defined ($form->{'nodirmask'})) {
+            $nodirmask = $form->{'nodirmask'};
+        }
+        if (defined ($form->{'nofilemask'})) {
+            $nofilemask = $form->{'nofilemask'};
+        }
+        if ((!defined ($form->{'urlonly2'})) || ($form->{'urlonly2'} ne 'on')) {
+            $treefilecnt = 0;
+            $treedircnt = 0;
+            &copytree($ctrl, $form->{'path'}, $form->{'treeto'});
+            print $sock "<p>Tree copied $treedircnt directories and $treefilecnt files<p>\n";
+        } else {
+            print $sock "<p>Made URL<p>\n";
+        }
     }
     # copy tree paste target
     if (defined ($form->{'pasteto'})) {
         $treeto = &l00httpd::l00getCB($ctrl);
+    }
+    if (defined ($form->{'pastefr'})) {
+        $form->{'path'} = &l00httpd::l00getCB($ctrl);
     }
 
     # delete
@@ -249,10 +279,11 @@ sub l00http_filemgt_proc {
     print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "fr: <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">fr:</a> <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "to: <input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
+    print $sock "<a href=\"/launcher.htm?path=$path2\">to:</a> "; #<input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
+    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$path2</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
@@ -267,7 +298,9 @@ sub l00http_filemgt_proc {
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"paste2\" value=\"Paste CB to 'to:'\">\n";
+        print $sock "Paste CB to ";
+        print $sock "<input type=\"submit\" name=\"paste4\" value=\"'fr:'\"> ";
+        print $sock "<input type=\"submit\" name=\"paste2\" value=\"'to:'\">\n";
         print $sock "</td></tr>\n";
     }
     if (defined ($form->{'copy'}) &&
@@ -295,21 +328,30 @@ sub l00http_filemgt_proc {
     print $sock "<a href=\"/tree.htm?path=$form->{'path'}\">fr:</a> <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<a href=\"/tree.htm?path=$treeto\">to:</a> <input type=\"text\" size=\"16\" name=\"treeto\" value=\"$treeto\">\n";
+    print $sock "<a href=\"/tree.htm?path=$treeto\">to:</a> "; #<input type=\"text\" size=\"16\" name=\"treeto\" value=\"$treeto\">\n";
+    print $sock "<textarea name=\"treeto\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$treeto</textarea>\n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"pasteto\" value=\"Paste CB to 'to:'\">\n";
+        print $sock "Paste CB to ";
+        print $sock "<input type=\"submit\" name=\"pastefr\" value=\"'fr:'\"> ";
+        print $sock "<input type=\"submit\" name=\"pasteto\" value=\"'to:'\">\n";
         print $sock "</td></tr>\n";
     }
     print $sock "<tr><td>\n";
+    print $sock "Exclude dirs: <input type=\"text\" size=\"16\" name=\"nodirmask\" value=\"$nodirmask\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Exclude files: <input type=\"text\" size=\"16\" name=\"nofilemask\" value=\"$nofilemask\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"urlonly2\">Make URL only\n";
     print $sock "</td></tr>\n";
-    if ((defined ($form->{'urlonly2'})) && ($form->{'urlonly2'} eq 'on')) {
-        print $sock "<tr><td>\n";
-        print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}&treeto=$form->{'treeto'}&urlonly2=on\">Copy tree URL</a>\n";
-        print $sock "</td></tr>\n";
-    }
+#   if ((defined ($form->{'urlonly2'})) && ($form->{'urlonly2'} eq 'on')) {
+#       print $sock "<tr><td>\n";
+#       print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}&treeto=$form->{'treeto'}&urlonly2=on\">Copy tree URL</a>\n";
+#       print $sock "</td></tr>\n";
+#   }
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 

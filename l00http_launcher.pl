@@ -24,6 +24,7 @@ sub l00http_launcher_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $file, $name, $col, $extra, $path, $fname);
+    my ($lpname, $lfname);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -36,7 +37,12 @@ sub l00http_launcher_proc {
             $path =~ s/\//\\/g;
         }
         print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$path\">Path</a>:";
-        print $sock " <a href=\"/ls.htm?path=$path\">$path</a>\n";
+
+#       print $sock " <a href=\"/ls.htm?path=$path\">$path</a>\n";
+
+        ($lpname, $lfname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
+        print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a><p>\n";
     } else {
         $path = '';
     }
