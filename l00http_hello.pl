@@ -21,19 +21,23 @@ sub l00http_hello_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($hellomsg, $delimiter);
+    my ($hellomsg, $delimiter, $history);
+
+    #$history = "$ctrl->{'workdir'}l00_hello.txt";
+    $history = "l00://hello.txt";
 
     $hellomsg = '';
     if (defined ($form->{'clear'})) {
-        unlink ("$ctrl->{'workdir'}l00_hello.txt");
+        if (&l00httpd::l00fwriteOpen($ctrl, $history)) {
+            &l00httpd::l00fwriteClose($ctrl);
+        }
     } else {
         # if not clearing, load from file
         $delimiter = $/;
         local $/ = undef;
-        if (open (IN, "<$ctrl->{'workdir'}l00_hello.txt")) {
-            $hellomsg = <IN>;
-            close (IN);
-        }
+		if (&l00httpd::l00freadOpen($ctrl, $history)) {
+            $hellomsg = &l00httpd::l00freadAll($ctrl);
+		}
         $/ = $delimiter;
     }
 
@@ -47,9 +51,9 @@ sub l00http_hello_proc (\%) {
         # shows only last 6 IP digits
         $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
         $hellomsg = "<pre>$ctrl->{'now_string'}, $_ said:</pre>\n$form->{'message'}\n<p>$hellomsg";
-        if (open (OU, ">$ctrl->{'workdir'}l00_hello.txt")) {
-            print OU $hellomsg;
-            close (OU);
+        if (&l00httpd::l00fwriteOpen($ctrl, $history)) {
+            &l00httpd::l00fwriteBuf($ctrl, $hellomsg);
+            &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
@@ -64,7 +68,6 @@ sub l00http_hello_proc (\%) {
 
     print $sock "        <tr>\n";
     print $sock "            <td>Your message:</td>\n";
-#   print $sock "            <td><input type=\"text\" size=\"16\" name=\"message\" value=\"\"></td>\n";
     print $sock "            <td><textarea name=\"message\" cols=\"16\" rows=\"4\"></textarea></td>\n";
     print $sock "        </tr>\n";
                                                 
@@ -83,7 +86,7 @@ sub l00http_hello_proc (\%) {
     print $sock "</form>\n";
 
     if ($ctrl->{'ishost'}) {
-        print $sock "View <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_hello.txt\">$ctrl->{'workdir'}l00_hello.txt</a><p>\n";
+        print $sock "View <a href=\"/view.htm?path=$history\">$history</a><p>\n";
     }
 
     # get submitted name and print greeting
