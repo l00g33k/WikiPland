@@ -49,11 +49,10 @@ my ($urlparams, $val, $wday, $yday, $year, $subname);
 my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
-$httpmax = 1024 * 1024 * 100 + 4096;
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
-my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
 
 
 # set listening port
@@ -65,6 +64,7 @@ $debug = 1;         # 0=none, 1=minimal, 5=max
 $open = 0;
 $shutdown = 0;
 $cfgedit = '';
+$httpmax = 1024 * 1024 * 100 + 4096;
 
 undef $timeout;
 
@@ -126,6 +126,7 @@ $nopwtimeout = 0;
 
 $ctrl{'bbox'} = '';
 # overwritable from l00httpd.cfg
+$ctrl{'os'} = '(unknown)';
 $ctrl{'machine'} = '(unknown)';
 if (defined ($ENV{'ANDROID_ROOT'})) {
     $ctrl{'os'} = 'and';
@@ -151,14 +152,11 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     if ($plpath =~ /\/var\/lib\/openshift\//) {
         # on RHC
         $ctrl{'os'} = 'rhc';
-        $ctrl{'machine'} = $ENV{'USER'};
+        $ctrl{'machine'} = $ENV{'OPENSHIFT_APP_UUID'};
     } else {
         $ctrl{'os'} = 'lin';
         $ctrl{'machine'} = $ENV{'HOSTNAME'};
     }
-} else {
-    $ctrl{'os'} = '(unknown)';
-    $ctrl{'machine'} = '(unknown)';
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
@@ -773,18 +771,23 @@ while(1) {
             print "httpsiz $httpsiz >>>$httpbuf<<<\n", if ($debug >= 4);
 
 
-
+            $httpmethod = '(unknown)';
             if ($httpbuf =~ /^HEAD /) {
+                $httpmethod = 'HEAD';
                 # HEAD: post head only
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title></head>\x0D\x0A</html>\n";
                 $sock->close;
                 next;
             } elsif ($httpbuf =~ /^POST /) {
+                $httpmethod = 'POST';
                 # POST
                 $httphdr = substr ($httpbuf, 0, $httphdz);
                 $httpbdz = $httpsiz - $httphdz;
                 $httpbdy = substr ($httpbuf, $httphdz, $httpbdz);
             } else {
+                if ($httpbuf =~ /^(\w+) /) {
+                    $httpmethod = $1;
+                }
                 # GET
                 $httphdr = $httpbuf;
                 print "GET?\n", if ($debug >= 3);
@@ -830,7 +833,7 @@ while(1) {
             }
 
             print "FORM urlparams:$urlparams\n", if ($debug >= 3);
-            $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip  $urlparams\n";
+            $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
             if (($urlparams eq '/') &&      # no path
