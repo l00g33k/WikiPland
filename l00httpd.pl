@@ -1264,7 +1264,9 @@ while(1) {
                 if ($ctrl{'os'} eq 'and') {
                     print $sock "<a href=\"#wifi\">wifi</a> \n";
                 }
-                print $sock "<a href=\"#ram\">ram</a> \n";
+                if ($ishost) {
+                    print $sock "<a href=\"#ram\">ram</a> \n";
+                }
                 print $sock "<p>\n";
  
                 # build table of modules
@@ -1459,33 +1461,36 @@ while(1) {
                 }
                 print $sock "<hr><a name=\"ram\"></a>\n";
                 print $sock "<a href=\"#top\">top</a><p>\n";
-                # list ram files
-                print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-                print $sock "<tr>\n";
-                print $sock "<td>names</td>\n";
-                print $sock "<td>bytes</td>\n";
-                print $sock "<td>launcher</td>\n";
-                print $sock "</tr>\n";
-                # list ram files
-                $tmp = $ctrl{'l00file'};
 
-                foreach $_ (sort keys %$tmp) {
-                    if (($_ eq 'l00://ram') ||
-                       (defined($ctrl{'l00file'}->{$_}) &&
-                        (length($ctrl{'l00file'}->{$_}) > 0))) {
+                if ($ishost) {
+                    # list ram files
+                    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                    print $sock "<tr>\n";
+                    print $sock "<td>names</td>\n";
+                    print $sock "<td>bytes</td>\n";
+                    print $sock "<td>launcher</td>\n";
+                    print $sock "</tr>\n";
+                    # list ram files
+                    $tmp = $ctrl{'l00file'};
 
-                        print $sock "<tr>\n";
+                    foreach $_ (sort keys %$tmp) {
+                        if (($_ eq 'l00://ram') ||
+                           (defined($ctrl{'l00file'}->{$_}) &&
+                            (length($ctrl{'l00file'}->{$_}) > 0))) {
 
-                        print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
+                            print $sock "<tr>\n";
 
-                        print $sock "<td><small>" . length($ctrl{'l00file'}->{$_}) . "</small></td>\n";
+                            print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
 
-                        print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
+                            print $sock "<td><small>" . length($ctrl{'l00file'}->{$_}) . "</small></td>\n";
 
-                        print $sock "</tr>\n";
-	            	}
+                            print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
+
+                            print $sock "</tr>\n";
+	            	    }
+                    }
+                    print $sock "</table>\n";
                 }
-                print $sock "</table>\n";
                 print $sock "<p>End of page.<p>\n";
 
                 # send HTML footer and ends

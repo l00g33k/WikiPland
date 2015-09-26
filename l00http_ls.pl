@@ -876,7 +876,7 @@ print;
         $clipfile = '';
         $clipdir = '';
         # list internal pseudo files too
-        if (defined($ctrl->{'l00file'})) {
+        if (($ctrl->{'ishost'}) && (defined($ctrl->{'l00file'}))) {
             $tmp = $ctrl->{'l00file'};
             foreach $_ (sort keys %$tmp) {
                 if (($_ eq 'l00://ram') || (length($ctrl->{'l00file'}->{$_}) > 0)) {

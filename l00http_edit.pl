@@ -369,25 +369,27 @@ sub l00http_edit_proc2 {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
-    # list ram files
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-    print $sock "<tr>\n";
-    print $sock "<td>names</td>\n";
-    print $sock "<td>bytes</td>\n";
-    print $sock "<td>launcher</td>\n";
-    print $sock "</tr>\n";
-    # list ram files
-    $tmp = $ctrl->{'l00file'};
-    foreach $_ (sort keys %$tmp) {
-        if (($_ eq 'l00://ram') || (length($ctrl->{'l00file'}->{$_}) > 0)) {
-            print $sock "<tr>\n";
-            print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
-            print $sock "<td><small>" . length($ctrl->{'l00file'}->{$_}) . "</small></td>\n";
-            print $sock "<td><small><a href=\"/$ctrl->{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
-            print $sock "</tr>\n";
-		}
+    if ($ctrl->{'ishost'}) {
+        # list ram files
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+        print $sock "<tr>\n";
+        print $sock "<td>names</td>\n";
+        print $sock "<td>bytes</td>\n";
+        print $sock "<td>launcher</td>\n";
+        print $sock "</tr>\n";
+        # list ram files
+        $tmp = $ctrl->{'l00file'};
+        foreach $_ (sort keys %$tmp) {
+            if (($_ eq 'l00://ram') || (length($ctrl->{'l00file'}->{$_}) > 0)) {
+                print $sock "<tr>\n";
+                print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
+                print $sock "<td><small>" . length($ctrl->{'l00file'}->{$_}) . "</small></td>\n";
+                print $sock "<td><small><a href=\"/$ctrl->{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
+                print $sock "</tr>\n";
+		    }
+        }
+        print $sock "</table>\n";
     }
-    print $sock "</table>\n";
 
     if (defined ($form->{'path'})) {
         my ($path, $fname);
