@@ -556,9 +556,11 @@ $ttlconns = 0;
 
 &updateNow_string ();
 if (open (OUT, ">$plpath"."l00httpd.log")) {
-    print OUT "$ctrl{'now_string'} l00httpd starts\n";
+    print OUT "$ctrl{'now_string'} WikiPland started\n";
     close OUT;
 }
+
+$ctrl{'l00file'}->{'l00://server.log'} = "$ctrl{'now_string'} WikiPland started\n";
 
 
 $l00time = time;
@@ -828,6 +830,8 @@ while(1) {
             }
 
             print "FORM urlparams:$urlparams\n", if ($debug >= 3);
+            $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip  $urlparams\n";
+
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
             if (($urlparams eq '/') &&      # no path
                 ($ctrl{'os'} eq 'and') &&   # on Android
