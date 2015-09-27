@@ -108,7 +108,7 @@ sub l00http_ls_proc {
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
-    my ($clipdir, $clipfile, $docrc32, $crc32);
+    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup);
 
     $wikihtmlflags = 0;
 
@@ -667,6 +667,12 @@ print;
                                 # subst %INCLUDE<./xxx> as 
                                 #       %INCLUDE</absolute/path/xxx>
                                 s/^\.\//$pname\//;
+                                # drop last directory from $pname for:
+                                # subst %INCLUDE<../xxx> as 
+                                #       %INCLUDE</absolute/path/../xxx>
+                                $pnameup = $pname;
+                                $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                                s/^\.\.\//$pnameup\//;
 
                                 if (open (INC, "<$_")) {
                                     # %INCLUDE%: here
