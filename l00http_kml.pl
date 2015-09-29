@@ -86,14 +86,8 @@ sub l00http_kml_proc {
         (length ($form->{'path'}) > 0)) {
         if ($form->{'path'} =~ /\.kmz$/) {
             # .kmz
-            if (open (IN, "<$form->{'path'}")) {
-                local ($/);
-                my ($slash);
-                $slash = $/;
-                $/ = undef;
-                $buffer = <IN>;
-                close (IN);
-                $/ = $slash;
+			if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                $buffer = &l00httpd::l00freadAll($ctrl);
 
                 $size = length ($buffer);
                 $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
@@ -104,18 +98,14 @@ sub l00http_kml_proc {
                 $sock->close;
                 $rawkml = 1;
             }
-        } elsif (open (IN, "<$form->{'path'}")) {
-            local ($/);
+        } elsif (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             my ($slash, $phase, $lonlat, $name);
-            $slash = $/;
-            $/ = undef;
-            $buffer = <IN>;
-            close (IN);
+            $buffer = &l00httpd::l00freadAll($ctrl);
+
             # Maverick has only \r as line endings. So convert DOS \r\n to Unix \n
             # then convert Maverick's \r to Unix \n
             $buffer =~ s/\r\n/\n/g;
             $buffer =~ s/\r/\n/g;
-            $/ = $slash;
             $phase = 0;
             if ($form->{'path'} =~ /\.csv$/) {
                 # The input file may have been concatnated.
@@ -361,16 +351,15 @@ sub l00http_kml_proc {
 
         # get submitted name and print greeting
         $lineno = 1;
-        if (open (IN, "<$form->{'path'}")) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             print $sock "<pre>\n";
-            while (<IN>) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//g;
                 s/\n//g;
                 s/</&lt;/g;
                 s/>/&gt;/g;
                 print $sock sprintf ("%04d: ", $lineno++) . "$_\n";
             }
-            close (IN);
             print $sock "</pre>\n";
         }
 
