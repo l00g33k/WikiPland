@@ -43,12 +43,12 @@ eval "use Android";
 my ($addr, $checked, $client_ip, $cmd_param_pair, $conf);
 my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $ctrl_port_first, $cli_port, $debug, $file, $hour);
 my ($idpw, $idpwmustbe, $ip, $isdst, $key, $mday, $min, $host_ip);
-my ($modcalled, $mod, $mon, $name, $param, $tmp, $buf);
+my ($modcalled, $mod, $mon, $name, $param, $tmp, $dnspattern, $ipaddr, $buf);
 my ($rethash, $retval, $sec, $sock, $tickdelta, $postlen);
 my ($urlparams, $val, $wday, $yday, $year, $subname);
 my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
-my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown);
+my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown, $poormanrdnssub);
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
@@ -181,8 +181,6 @@ print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 $ctrl{'plpath'} = $plpath;      # make it available to modules
 
 
-
-$ctrl{'clipath'}  = $plpath;
 
 
 $conf = "l00httpd.cfg";
@@ -1369,6 +1367,9 @@ while(1) {
                     print $sock "<td>Filter IP</td><td>Enable IP filtering</td>\n";
                 }
                 if ($ishost) {
+                    &l00httpd::l00npoormanrdns(\%ctrl, 'l00httpd', "${plpath}poormanrdns.cfg");
+                    $poormanrdnssub = &l00httpd::l00npoormanrdnshash(\%ctrl);
+
                     $ipallowed{"127.0.0.1"} = "yes";
                     for $key (sort keys %connected) {
                         $val = $connected{$key};
@@ -1378,8 +1379,16 @@ while(1) {
                         } else {
                             $checked = "";
                         }
-                        $tmp = "<td><input type=\"checkbox\" name=\"$key\" $checked>allow</td>";
-                        print $sock "<tr>$tmp<td>$val</td><td>$key connection</td>\n";
+                        $tmp = "<input type=\"checkbox\" name=\"$key\" $checked>allow";
+                        print $sock "<tr><td>$tmp</td><td>$val</td>";
+                        # http://cqcounter.com/whois/?query=52.20.6.114
+                        # poor man's reverse dns
+                        $ipaddr = $key;
+                        foreach $dnspattern (sort keys %$poormanrdnssub) {
+                            $ipaddr =~ s/$dnspattern/$poormanrdnssub->{$dnspattern}/g;
+                        }
+                        $tmp = "<a href=\"http://cqcounter.com/whois/?query=$key\">$key</a>";
+                        print $sock "<td>$tmp connection ($ipaddr)</td>\n";
                     }
 
                     print $sock "<tr>";
