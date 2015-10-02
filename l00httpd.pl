@@ -64,7 +64,7 @@ $debug = 1;         # 0=none, 1=minimal, 5=max
 $open = 0;
 $shutdown = 0;
 $cfgedit = '';
-$httpmax = 1024 * 1024 * 100 + 4096;
+$httpmax = 1024 * 1024 * 3;
 
 undef $timeout;
 
@@ -80,6 +80,24 @@ sub dlog {
             close OUT;
         }
     }
+}
+
+sub perlvmsize {
+    my ($vmsize);
+
+    $vmsize = -1;
+
+    if (open(IN, "</proc/$$/status")) {
+        $vmsize = 0;
+        while (<IN>) {
+            if (/VmSize:.+?(\d+)/) {
+                $vmsize = int(($1 + 512) / 1024);
+                last;
+            }
+        }
+    }
+
+    $vmsize;
 }
 
 sub updateNow_string {
@@ -1128,6 +1146,12 @@ while(1) {
                         (int ($FORM{'txtw'}) > 0)) {
                         $ctrl{'txtw'} = $FORM{'txtw'};
                     }
+                    if (defined ($FORM{'httpmax'}) &&
+                        (length ($FORM{'httpmax'}) > 0) &&
+                        (int ($FORM{'httpmax'}) > 0)) {
+                        $httpmax = $FORM{'httpmax'};
+                        $httpmax *= 1024 * 1024;
+                    }
                     if (defined ($FORM{'noclinav'}) &&
                         (length ($FORM{'noclinav'}) > 0) &&
                         (int ($FORM{'noclinav'}) >= 0) && 
@@ -1247,14 +1271,18 @@ while(1) {
                 print $sock "$ctrl{'now_string'}: $client_ip connected to the WikiPland running on '$ctrl{'machine'}'. \n";
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm\">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
-                print $sock "h, connections: $ttlconns<p>\n";
+                print $sock "h, connections: $ttlconns.\n";
+                print $sock "VM ", &perlvmsize(), " MBytes<p>\n";
 
                 print "Send host control HTTP form\n", if ($debug >= 6);
                 print $sock "<a name=\"top\"></a>\n";
                 print $sock "<form action=\"/httpd\" method=\"get\">\n";
                 print $sock "<input type=\"submit\" value=\"Edit box size\">\n";
                 print $sock "W <input type=\"text\" size=\"4\" name=\"txtw\" value=\"$ctrl{'txtw'}\">\n";
-                print $sock "H <input type=\"text\" size=\"4\" name=\"txth\" value=\"$ctrl{'txth'}\">";
+                print $sock "H <input type=\"text\" size=\"4\" name=\"txth\" value=\"$ctrl{'txth'}\">\n";
+                $tmp = int($httpmax / 1024 / 1024);
+                print $sock "<input type=\"submit\" value=\"Max upload\">\n";
+                print $sock "<input type=\"text\" size=\"4\" name=\"httpmax\" value=\"$tmp\"> MBytes\n";
                 print $sock "</form>\n";
 
                 if ($ishost) {
