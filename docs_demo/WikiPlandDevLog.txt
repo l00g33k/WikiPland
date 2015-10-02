@@ -1,3 +1,6 @@
+20150927 012105 %INCLUDE allows ../
+20150926 093252 Added a cron job example that fetches and extracts some texts from a public web page
+20150926 093148 Fixed HTTP HEAD handling bug that causes crashes
 20150924 074555 fix bug where client sent sent zero bytes
 20150726 010222 cronjob basic working
 20150725 094257 Adding cron like capability

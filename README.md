@@ -25,6 +25,4 @@ In source code form on any Windows, Linux, or other computer
 As a Red Hat Openshift Application
 ----------------------------------
 
-
-
-
+* makes wiki

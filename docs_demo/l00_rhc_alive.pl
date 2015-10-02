@@ -24,7 +24,7 @@ $rst =~ s/connected to the WikiPland running //;
 print $sock $rst;
 
 &l00httpd::l00fwriteOpen($ctrl, $rhc);
-&l00httpd::l00fwriteBuf($ctrl, "$rst\n$out");
+&l00httpd::l00fwriteBuf($ctrl, "$rst  \n$out");
 &l00httpd::l00fwriteClose($ctrl);
 
 #print $sock "header:<p><pre>\n$hdr\n</pre><p>";
