@@ -1,6 +1,7 @@
 .gitgit
 .gitall
 .*.swp
+.*.persist
 *.bak
 l00httpd.log
 *.tmp
