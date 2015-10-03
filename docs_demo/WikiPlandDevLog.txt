@@ -1,3 +1,5 @@
+20151001 234442 note reports risk VM memory size
+20151001 234302 allows dynamic setting of max http buffer size to avoid allocating 100 MBytes necessarily. This determines max upload file size.
 20150927 012105 %INCLUDE allows ../
 20150926 093252 Added a cron job example that fetches and extracts some texts from a public web page
 20150926 093148 Fixed HTTP HEAD handling bug that causes crashes
