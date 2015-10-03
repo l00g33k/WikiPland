@@ -569,12 +569,34 @@ $ttlconns = 0;
 
 
 &updateNow_string ();
-if (open (OUT, ">$plpath"."l00httpd.log")) {
+if (open (OUT, ">${plpath}l00httpd.log")) {
     print OUT "$ctrl{'now_string'} WikiPland started\n";
     close OUT;
 }
 
-$ctrl{'l00file'}->{'l00://server.log'} = "$ctrl{'now_string'} WikiPland started\n";
+$ctrl{'l00file'}->{'l00://server.log'} = '';
+# restore server.log
+if (open(OU,"<${plpath}.server.log.persist")) {
+    while (<OU>) {
+        $ctrl{'l00file'}->{'l00://server.log'} .= $_;
+    }
+    close(OU);
+    unlink("${plpath}.server.log.persist");
+}
+$ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} WikiPland started\n";
+
+# restore client log
+if (open(OU,"<${plpath}.client.log.persist")) {
+    while (<OU>) {
+        s/\n//;
+        s/\r//;
+        if (/^(.+)=>(\d+)$/) {
+            $connected{$1} = $2;
+        }
+    }
+    close(OU);
+    unlink("${plpath}.client.log.persist");
+}
 
 
 $l00time = time;
@@ -1037,21 +1059,38 @@ while(1) {
                 print "Restart/reloading modules\n", if ($debug >= 2);
                 &loadmods;
             }
-            if ($shutdown == 1) {
-                print "You told me to shutdown\n";
-                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
-                print $sock "Click <a href=\"/\">here</a> to initiate shutdown.  Note: If this is an APK installation, you must uninstall to update l00httpd.\n";
-                print $sock $ctrl{'htmlfoot'};
-                print "shutting down by shutdown module\n";
-                exit (1);
-            } elsif ($modcalled eq "shutdown") {
-                $shutdown = 1;
-                print "You told me to shutdown\n";
-                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
-                print $sock "Click <a href=\"/\">here</a> to initiate shutdown<p>\n";
-                print $sock "Click <a href=\"/restart.htm\">here</a> to restart<p>\n";
-                print $sock $ctrl{'htmlfoot'};
-                next;
+            if ($modcalled eq "shutdown") {
+                $shutdown++;
+                if ($shutdown >= 2) {
+                    print "You told me to shutdown\n";
+                    print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
+                    print $sock "Start new instance and click <a href=\"/\">here</a> to connect.  Note: If this is an APK installation, you must delete data in App Manager to update l00httpd.\n";
+                    print $sock $ctrl{'htmlfoot'};
+                    print "shutting down by shutdown module\n";
+                    $sock->close;
+                    # save client log
+                    open(OU,">${plpath}.client.log.persist");
+                    for $key (sort keys %connected) {
+                        $val = $connected{$key};
+                        print OU "$key=>$connected{$key}\n";
+                    }
+                    close(OU);
+                    # save server.log
+                    open(OU,">${plpath}.server.log.persist");
+                    print OU $ctrl{'l00file'}->{'l00://server.log'};
+                    close(OU);
+                    exit (1);
+                } else {
+                    $shutdown = 1;
+                    print "You told me to shutdown\n";
+                    print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
+                    print $sock "Click <a href=\"/shutdown.htm\">here</a> to initiate shutdown<p>\n";
+                    print $sock "Click <a href=\"/restart.htm\">here</a> to restart<p>\n";
+                    print $sock "Click <a href=\"/\">here</a> to cancel<p>\n";
+                    print $sock $ctrl{'htmlfoot'};
+                    $sock->close;
+                    next;
+                }
             } elsif ($modcalled =~ /^redirect/) {
                 if (defined ($ctrl{$modcalled})) {
                     $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=$ctrl{$modcalled}\">\r\n";
