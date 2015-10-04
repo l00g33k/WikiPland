@@ -225,17 +225,17 @@ sub l00http_md5sizediff_proc {
     print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\"> Use || to combine inputs\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "fr: <textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path'}</textarea>\n";
+    print $sock "Left:<br><textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path'}</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "to: <textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path2'}</textarea>\n";
+    print $sock "Right:<br><textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path2'}</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
         print $sock "Paste CB to ";
-        print $sock "<input type=\"submit\" name=\"paste4\" value=\"'fr:'\"> ";
-        print $sock "<input type=\"submit\" name=\"paste2\" value=\"'to:'\">\n";
+        print $sock "<input type=\"submit\" name=\"paste4\" value=\"'Left:'\"> ";
+        print $sock "<input type=\"submit\" name=\"paste2\" value=\"'Right:'\">\n";
         print $sock "</td></tr>\n";
     }
     print $sock "</table><br>\n";
