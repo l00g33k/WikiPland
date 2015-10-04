@@ -278,6 +278,56 @@ sub l00http_ls_proc {
                         $_ .= "\n";
                         $lnno++;
 
+                        if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
+								if (defined($1)) {
+                                    $buf .= $1;
+								}
+                                $_ = $2;
+								if (defined($3)) {
+								    $tmp = $3;
+								} else {
+								    $tmp = '';
+								}
+                                # include file
+                                #s/^%INCLUDE%://;
+                                #s/\r//;
+                                #s/\n//;
+
+                                # is this superceded by path=./ substitution in ls.pl?
+                                # subst %INCLUDE<./xxx> as 
+                                #       %INCLUDE</absolute/path/xxx>
+                                s/^\.\//$pname\//;
+                                # drop last directory from $pname for:
+                                # subst %INCLUDE<../xxx> as 
+                                #       %INCLUDE</absolute/path/../xxx>
+                                $pnameup = $pname;
+                                $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                                s/^\.\.\//$pnameup\//;
+
+print "INCLUDE $_\n";
+                                if (&l00httpd::l00freadOpen($ctrl, $_)) {
+                                    # %INCLUDE%: here
+                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
+print "INCLUDE $_";
+                                        if (/^##/) {
+                                            # skip to next ^#
+                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                                if (/^#/) {
+                                                    last;
+                                                }
+                                            }
+                                        }
+                                        if (/^#/) {
+                                            # skip ^#
+                                            next;
+                                        }
+                                        $buf .= $_;
+                                    }
+                                }
+                                $buf .= $tmp;
+                            next;
+                        }
+
                         # highlighting
                         if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
                             s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
@@ -648,7 +698,7 @@ print;
                                 }
                             }
 
-                            if (/(.*)%INCLUDE<(.+)>%(.*)/) {
+                            if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
 								if (defined($1)) {
                                     $buf .= $1;
 								}
@@ -674,12 +724,12 @@ print;
                                 $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
                                 s/^\.\.\//$pnameup\//;
 
-                                if (open (INC, "<$_")) {
+                                if (&l00httpd::l00freadOpen($ctrl, $_)) {
                                     # %INCLUDE%: here
-                                    while (<INC>) {
+                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
                                         if (/^##/) {
                                             # skip to next ^#
-                                            while (<INC>) {
+                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
                                                 if (/^#/) {
                                                     last;
                                                 }
@@ -691,7 +741,6 @@ print;
                                         }
                                         $buf .= $_;
                                     }
-                                    close (INC);
                                 }
                                 $tmp = "%l00httpd:lnno:$lnno%$tmp";
                                 $buf .= $tmp;
