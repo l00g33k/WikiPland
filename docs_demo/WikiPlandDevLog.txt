@@ -1,3 +1,4 @@
+20151002 224727 Added server.log and client IP lists save and restore upon shutdown and next launch
 20151001 234442 note reports risk VM memory size
 20151001 234302 allows dynamic setting of max http buffer size to avoid allocating 100 MBytes necessarily. This determines max upload file size.
 20150927 012105 %INCLUDE allows ../

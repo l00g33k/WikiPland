@@ -116,8 +116,12 @@ sub l00http_notify_proc (\%) {
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
-    print $sock "<p><input type=\"submit\" name=\"repost\" value=\"Re-post\">\n";
-    print $sock "</form>\n";
+    
+    print $sock "<p><a href=\"/recedit.htm?record1=%5ETTL%3A&path=$ctrl->{'workdir'}l00_notify.txt\">Recedit</a>\n";
+
+    print $sock "<input type=\"submit\" name=\"repost\" value=\"Re-post\">\n";
+    print $sock "</form><p>\n";
+
 
     if (defined ($form->{'submit'})) {
         if ($ctrl->{'os'} eq 'and') {
