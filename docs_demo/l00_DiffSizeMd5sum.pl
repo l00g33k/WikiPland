@@ -1,6 +1,6 @@
 if (!defined($ctrl->{'FORM'}->{'arg1'})) {
     print $sock "This do script compares two sets of size/md5sum files to identify duplicated/renamed/modified files<p>\n";
-    print $sock "Enter 'Arg1'.<p>\n";
+    print $sock "Set 'fullpath1.md5size::fullpath2.md5size in 'Arg1'.<p>\n";
 } else {
     print $sock "<pre>\n";
     print $sock "Arg1: $ctrl->{'FORM'}->{'arg1'}\n";
