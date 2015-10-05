@@ -7,11 +7,9 @@ use l00backup;
 
 my %config = (proc => "l00http_md5sizediff_proc",
               desc => "l00http_md5sizediff_desc");
-my ($treeto, $treefilecnt, $treedircnt, $nodirmask, $nofilemask);
-$treeto = '';
-$nodirmask = '';
-$nofilemask = '';
-
+my ($thispath, $thatpath);
+$thispath = '';
+$thatpath = '';
 
 sub l00http_md5sizediff_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -27,49 +25,67 @@ sub l00http_md5sizediff_proc {
     my ($jumper, %bymd5sum, %byname, $side, $sname, $files, $file, $cnt);
     my ($dummy, $size, $md5sum, $pfname, $pname, $fname);
     my (%cnt, $oname, %out, $idx, $md5sum1st);
+    my (@lmd5sum, @rmd5sum, $common);
+
+    if (defined ($form->{'compare'})) {
+        # compare defined, i.e. clicked. Get from form
+        if (defined ($form->{'path'})) {
+            $thispath = $form->{'path'};
+        }
+        if (defined ($form->{'path2'})) {
+            $thatpath = $form->{'path2'};
+        }
+    } else {
+        # compare not defined, i.e. not click, push 
+        $thatpath = $thispath;
+        if (defined ($form->{'path'})) {
+            $thispath = $form->{'path'};
+        }
+    }
+
+
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
-    if ((defined ($form->{'path'}) && 
-        (length ($form->{'path'}) > 0))) {
-        $form->{'path'} =~ s/\r//g;
-        $form->{'path'} =~ s/\n//g;
-        $_ = $form->{'path'};
+    if ((defined ($thispath) && 
+        (length ($thispath) > 0))) {
+        $thispath =~ s/\r//g;
+        $thispath =~ s/\n//g;
+        $_ = $thispath;
         # keep path only
         s/\/[^\/]+$/\//;
         print $sock " Path: <a href=\"/ls.htm?path=$_\">$_</a>";
-        $_ = $form->{'path'};
+        $_ = $thispath;
         # keep name only
         s/^.+\/([^\/]+)$/$1/;
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$_</a>\n";
+        print $sock "<a href=\"/ls.htm?path=$thispath\">$_</a>\n";
     }
     print $sock "<p>\n";
 
 
     # copy paste target
     if (defined ($form->{'paste4'})) {
-        $form->{'path'} = &l00httpd::l00getCB($ctrl);
+        $thispath = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{'paste2'})) {
-        $form->{'path2'} = &l00httpd::l00getCB($ctrl);
+        $thatpath = &l00httpd::l00getCB($ctrl);
     }
 
     # compare
     if ((defined ($form->{'compare'})) &&
-        (defined ($form->{'path'}) && 
-        (length ($form->{'path'}) > 0)) &&
-        (defined ($form->{'path2'}) && 
-        (length ($form->{'path2'}) > 0))) {
+        (defined ($thispath) && 
+        (length ($thispath) > 0)) &&
+        (defined ($thatpath) && 
+        (length ($thatpath) > 0))) {
 
         $jumper = "    ".
              "<a href=\"#top\">top</a> ".
-             "<a href=\"#dup_LEFT_\">(dupe L</a> ".
-             "<a href=\"#dup_RIGHT\">R)</a> ".
-             "<a href=\"#left_only\">(only L</a> ".
-             "<a href=\"#right_only\">R)</a> ".
-             "<a href=\"#chg_LEFT_\">(changed L</a> ".
-             "<a href=\"#chg_RIGHT\">R)</a> ".
+             "<a href=\"#dup_THIS\">(dupe this</a> ".
+             "<a href=\"#dup_THAT\">that)</a> ".
+             "<a href=\"#this_only\">(only this</a> ".
+             "<a href=\"#that_only\">that)</a> ".
+             "<a href=\"#changed\">changed</a> ".
              "<a href=\"#end\">end</a> ".
              "\n";
 
@@ -79,17 +95,17 @@ sub l00http_md5sizediff_proc {
         print $sock "<pre>\n";
         print $sock "$jumper\n";
 
-        # read in left and right files
+        # read in this and that files
         # ----------------------------------------------------------------
         undef %bymd5sum;
         undef %byname;
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Read input files:\n\n";
         print $sock "Read input files:\n\n";
-        foreach $side (($form->{'path'}, $form->{'path2'})) {
-            if ($side eq $form->{'path'}) {
-                $sname = 'LEFT_';
+        foreach $side (($thispath, $thatpath)) {
+            if ($side eq $thispath) {
+                $sname = 'THIS';
             } else {
-                $sname = 'RIGHT';
+                $sname = 'THAT';
             }
             $files = 0;
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname side: $side\n";
@@ -109,6 +125,7 @@ sub l00http_md5sizediff_proc {
                             $md5sum =~ s/ *$//;
                             $pfname =~ s/ *$//;
                             ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
+                            $fname = lc($fname);
                             $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
                             $byname{$sname}{$fname}{$md5sum} = $pfname;
                             $cnt++;
@@ -123,9 +140,9 @@ sub l00http_md5sizediff_proc {
 
         # files duplicated within each side
         # ----------------------------------------------------------------
-        $cnt{'LEFT_'} = 0;
-        $cnt{'RIGHT'} = 0;
-        foreach $sname (('LEFT_', 'RIGHT')) {
+        $cnt{'THIS'} = 0;
+        $cnt{'THAT'} = 0;
+        foreach $sname (('THIS', 'THAT')) {
             # for each side
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"dup_$sname\"></a>";
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
@@ -133,16 +150,16 @@ sub l00http_md5sizediff_proc {
             print $sock "<a name=\"dup_$sname\"></a>";
             print $sock "----------------------------------------------------------\n";
             print $sock "$jumper";
-            if ($sname eq 'LEFT_') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $form->{'path'}\n\n";
-                print $sock "    $sname duplicated md5sum: $form->{'path'}\n\n";
+            if ($sname eq 'THIS') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $thispath\n\n";
+                print $sock "    $sname duplicated md5sum: $thispath\n\n";
             } else {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $form->{'path2'}\n\n";
-                print $sock "    $sname duplicated md5sum: $form->{'path2'}\n\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $thatpath\n\n";
+                print $sock "    $sname duplicated md5sum: $thatpath\n\n";
             }
 
             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = '';
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "  $sname:\n";
+            #$ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "  $sname:\n";
             #print $sock "  $sname:\n";
             foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
                 # for each md5sum
@@ -151,46 +168,53 @@ sub l00http_md5sizediff_proc {
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
                     # is there more than one file name recorded?
                     if ($#_ > 0) {
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
+                        $_ = $#_ + 1;
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                            sprintf ("   %03d: $_ files $md5sum:\n        ", $cnt{$sname}).
+                            join("\n        ", @_)."\n";
                         #print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
                         $cnt{$sname}++;
                     }
                 }
             }
+            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname self duplicated: $cnt{$sname} files\n\n";
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.self_dup.htm>%\n";
-            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname self duplicated: $cnt{$sname} files\n";
             print $sock "$sname self duplicated: $cnt{$sname} files\n";
         }
 
 
         # Files unique to each side
         # ----------------------------------------------------------------
-        foreach $sname (('LEFT_', 'RIGHT')) {
+        foreach $sname (('THIS', 'THAT')) {
             # for each side
-            if ($sname eq 'LEFT_') {
-                $oname = 'RIGHT';
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"left_only\"></a>";
+            if ($sname eq 'THIS') {
+                $oname = 'THAT';
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"this_only\"></a>";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Left only md5sum: $form->{'path'}\n\n";
-                print $sock "<a name=\"left_only\"></a>";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    This only md5sum: $thispath\n\n";
+                print $sock "<a name=\"this_only\"></a>";
                 print $sock "----------------------------------------------------------\n";
                 print $sock "$jumper";
-                print $sock "    Left only by md5sum: $form->{'path'}\n\n";
+                print $sock "    This only by md5sum: $thispath\n\n";
             } else {
-                $oname = 'LEFT_';
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"right_only\"></a>";
+                $oname = 'THIS';
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"that_only\"></a>";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Right only md5sum: $form->{'path2'}\n\n";
-                print $sock "<a name=\"right_only\"></a>";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    That only md5sum: $thatpath\n\n";
+                print $sock "<a name=\"that_only\"></a>";
                 print $sock "----------------------------------------------------------\n";
                 print $sock "$jumper";
-                print $sock "    Right only by md5sum: $form->{'path2'}\n\n";
+                print $sock "    That only by md5sum: $thatpath\n\n";
             }
             undef %out;
+            $common = 0;
             foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
                 # for each md5sum here
+                if ($md5sum ne '00000000000000000000000000000000') {
+                    $common++;
+                }
                 if (($md5sum ne '00000000000000000000000000000000') && !defined($bymd5sum{$oname}{$md5sum})) {
                     # not a directory and not there
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
@@ -204,110 +228,90 @@ sub l00http_md5sizediff_proc {
                 #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
                 $cnt++;
             }
+            #print $sock "\n";
+            if ($sname eq 'THIS') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "This only: $cnt files (out of $common md5sum)\n\n";
+                print $sock "This only: $cnt files (out of $common same md5sum)\n";
+            } else {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "That only: $cnt files (out of $common md5sum)\n\n";
+                print $sock "That only: $cnt files (out of $common same md5sum)\n";
+            }
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.only.htm>%\n";
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "\n";
-            #print $sock "\n";
-            if ($sname eq 'LEFT_') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Left only: $cnt files\n";
-                print $sock "Left only: $cnt files\n";
-            } else {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Right only: $cnt files\n";
-                print $sock "Right only: $cnt files\n";
-            }
         }
 
-        # files changed from each side
+        # files with different md5sum on both side
         # ----------------------------------------------------------------
-        foreach $sname (('LEFT_', 'RIGHT')) {
-            # for each side
-            if ($sname eq 'LEFT_') {
-                $oname = 'RIGHT';
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"chg_LEFT_\"></a>";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Same name different md5sum: $form->{'path'}\n\n";
-                print $sock "<a name=\"chg_LEFT_\"></a>";
-                print $sock "----------------------------------------------------------\n";
-                print $sock "$jumper";
-                print $sock "    Same name different md5sum: $form->{'path'}\n\n";
-            } else {
-                $oname = 'LEFT_';
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"chg_RIGHT\"></a>";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Same name different md5sum: $form->{'path2'}\n\n";
-                print $sock "<a name=\"chg_RIGHT\"></a>";
-                print $sock "----------------------------------------------------------\n";
-                print $sock "$jumper";
-                print $sock "    Same name different md5sum: $form->{'path2'}\n\n";
-            }
-            undef %out;
-            $cnt = 0;
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.changed.htm"} = '';
-            foreach $fname (sort keys %{$byname{$sname}}) {
-                # for each file name
-                $idx = 0;
-                # our database
+        $sname = 'THIS';
+        $oname = 'THAT';
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"changed\"></a>";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Same name different md5sum: $thispath\n\n";
+        print $sock "<a name=\"changed\"></a>";
+        print $sock "----------------------------------------------------------\n";
+        print $sock "$jumper";
+        print $sock "    Same name different md5sum: $thispath\n\n";
+
+        undef %out;
+        $cnt = 0;
+        $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} = '';
+        $common = 0;
+        foreach $fname (sort keys %{$byname{$sname}}) {
+            # for each file name in this
+            if (defined(%{$byname{$oname}{$fname}})) {
+                $common++;
+                # that also exist in that
+                # our databases
                 # $byname{$sname}{$fname}{$md5sum} = $pfname;
                 # $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
-                foreach $md5sum (keys %{$byname{$sname}{$fname}}) {
-                    # 
-                    if ($idx == 0) {
-                        $md5sum1st = $md5sum;
-                    } else {
-                        if ($idx == 1) {
-                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.changed.htm"} .= 
-                                  sprintf ("   %03d: $sname: $byname{$sname}{$fname}{$md5sum1st} $md5sum1st\n", $cnt);
-                            #printf $sock ("   %03d: $sname: $byname{$sname}{$fname}{$md5sum1st} $md5sum1st\n", $cnt);
-                            $cnt++;
-                        }
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.changed.htm"} .= 
-                              sprintf ("   %03d: $sname: $byname{$sname}{$fname}{$md5sum} $md5sum\n", $cnt);
-                        #printf $sock ("   %03d: $sname: $byname{$sname}{$fname}{$md5sum} $md5sum\n", $cnt);
-                        $cnt++;
+                # list a md5sum in this
+                @lmd5sum = keys %{$byname{$sname}{$fname}};
+                # list a md5sum in that
+                @rmd5sum = keys %{$byname{$oname}{$fname}};
+                if (($#lmd5sum > 0) ||             # more than one md5sum in this, or
+                    ($#rmd5sum > 0) ||             # more than one md5sum in that, or
+                    ($lmd5sum[0] ne $rmd5sum[0])) {# they are not equal
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} .= "    Changed: $fname\n";
+                    for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
+                        ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} .= "        THIS $idx: $lmd5sum[$idx] $pfname\n";
                     }
-                    $idx++;
-                }
-                $idx = 0;
-                foreach $md5sum (keys %{$byname{$oname}{$fname}}) {
-                    if ($idx == 0) {
-                        if ($md5sum1st ne $md5sum) {
-                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.changed.htm"} .= 
-                                  sprintf ("   %03d: $oname: $byname{$oname}{$fname}{$md5sum} $md5sum\n", $cnt);
-                            #printf $sock ("   %03d: $oname: $byname{$oname}{$fname}{$md5sum} $md5sum\n", $cnt);
-                            $cnt++;
-                        }
-                    } else {
-                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.changed.htm"} .= 
-                              sprintf ("   %03d: $oname: $byname{$oname}{$fname}{$md5sum} $md5sum\n", $cnt);
-                        #printf $sock ("   %03d: $oname: $byname{$oname}{$fname}{$md5sum} $md5sum\n", $cnt);
-                        $cnt++;
+                    for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
+                        ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} .= "        THAT $idx: $rmd5sum[$idx] $pfname\n";
                     }
-                    $idx++;
+                    $cnt++;
                 }
             }
-            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.changed.htm>%\n";
-            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Same name different md5sum $sname: $cnt files\n";
-            print $sock "Same name different md5sum $sname: $cnt files\n";
         }
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Same name different md5sum: $cnt files (out of $common same name)\n\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.changed.htm>%\n";
+        print $sock "Same name different md5sum: $cnt files (out of $common same name)\n";
 
 
         # ----------------------------------------------------------------
 
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"end\"></a>";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "</pre>\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Links to results in RAM<br>\n";
         print $sock "<a name=\"end\"></a>";
-        print $sock "$jumper\n";
+        print $sock "----------------------------------------------------------\n";
+        print $sock "$jumper";
+        print $sock "----------------------------------------------------------\n";
         print $sock "</pre>\n";
+        print $sock "Links to results in RAM<br>\n";
 
         print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.LEFT_.self_dup.htm\">l00://md5sizediff.LEFT_.self_dup.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.RIGHT.self_dup.htm\">l00://md5sizediff.RIGHT.self_dup.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.LEFT_.only.htm\">l00://md5sizediff.LEFT_.only.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.RIGHT.only.htm\">l00://md5sizediff.RIGHT.only.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.LEFT_.changed.htm\">l00://md5sizediff.LEFT_.changed.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.RIGHT.changed.htm\">l00://md5sizediff.RIGHT.changed.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup.htm\">l00://md5sizediff.THIS.self_dup.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.changed.htm\">l00://md5sizediff.THIS.changed.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.changed.htm\">l00://md5sizediff.THAT.changed.htm</a><br>";
     }
 
     print $sock "<form action=\"/md5sizediff.htm\" method=\"get\">\n";
@@ -316,17 +320,17 @@ sub l00http_md5sizediff_proc {
     print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\"> Use || to combine inputs\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "Left:<br><textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path'}</textarea>\n";
+    print $sock "This:<br><textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "Right:<br><textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path2'}</textarea>\n";
+    print $sock "That:<br><textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thatpath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
         print $sock "Paste CB to ";
-        print $sock "<input type=\"submit\" name=\"paste4\" value=\"'Left:'\"> ";
-        print $sock "<input type=\"submit\" name=\"paste2\" value=\"'Right:'\">\n";
+        print $sock "<input type=\"submit\" name=\"paste4\" value=\"'This:'\"> ";
+        print $sock "<input type=\"submit\" name=\"paste2\" value=\"'That:'\">\n";
         print $sock "</td></tr>\n";
     }
     print $sock "</table><br>\n";

@@ -304,11 +304,9 @@ sub l00http_ls_proc {
                                 $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
                                 s/^\.\.\//$pnameup\//;
 
-print "INCLUDE $_\n";
                                 if (&l00httpd::l00freadOpen($ctrl, $_)) {
                                     # %INCLUDE%: here
                                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
-print "INCLUDE $_";
                                         if (/^##/) {
                                             # skip to next ^#
                                             while ($_ = &l00httpd::l00freadLine($ctrl)) {

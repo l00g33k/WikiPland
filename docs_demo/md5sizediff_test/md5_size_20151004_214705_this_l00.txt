@@ -1,0 +1,12 @@
+* D:/2/safe/gits/github/WikiPland/docs_demo/md5sizediff_test/this/
+
+||          70 || f55413d1f56758f3f3488c28c79d695c || ./diff1.txt ||
+||          70 || e9edde25d3e80f23300f635edba38a58 || ./dirmove1/diff2.txt ||
+||          69 || 95ec937d515ebdc5026adafd35cfd0de || ./dirmove1/same1.txt ||
+||          69 || 46c4fc17900f865bd8845963f5342d4f || ./dirmove1/same2.txt ||
+||          52 || 65d8331fb55c2a79e531ccab533d9dd9 || ./dirmove1/thisonly2.txt ||
+||           0 || 00000000000000000000000000000000 || ./dirmove1 ||
+||          69 || 95ec937d515ebdc5026adafd35cfd0de || ./same1.txt ||
+||          52 || e88b220ee78048cafff8103563f45db8 || ./thisonly1.txt ||
+
+
