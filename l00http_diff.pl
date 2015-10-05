@@ -916,33 +916,35 @@ sub l00http_diff_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\">\n";
-    print $sock "</td><td>\n";
+    #print $sock "</td><td>\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pastenew\" value=\"CB>New:\">";
-    print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"35\" name=\"path\" value=\"$newfile\">\n";
+    #print $sock "</td><td>\n";
+    #print $sock "<input type=\"text\" size=\"35\" name=\"path\" value=\"$newfile\">\n";
+    print $sock "<br><textarea name=\"pathnew\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$newfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteold\" value=\"CB>Old:\">";
-    print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"35\" name=\"pathold\" value=\"$oldfile\">\n";
+    #print $sock "</td><td>\n";
+    #print $sock "<input type=\"text\" size=\"35\" name=\"pathold\" value=\"$oldfile\">\n";
+    print $sock "<br><textarea name=\"pathold\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$oldfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
 #   print $sock "&nbsp;";
     print $sock "<input type=\"checkbox\" name=\"debug\">debug";
-    print $sock "</td><td>\n";
+    #print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide same lines\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
     print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">";
-    print $sock "</td><td>\n";
+    #print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
