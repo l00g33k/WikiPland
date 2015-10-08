@@ -219,7 +219,9 @@ sub l00http_reminder_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock "<a name=\"top\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a> \n";
+    print $sock "<a href=\"#manage\">Manage</a> \n";
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_reminder.txt\">$ctrl->{'workdir'}l00_reminder.txt</a><p> \n";
 
@@ -314,6 +316,26 @@ sub l00http_reminder_proc {
 
     print $sock "</table>\n";
     print $sock "</form></p>\n";
+
+
+    print $sock "<a name=\"manage\"></a>";
+    print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">Recedit</a> - \n";
+    print $sock "<a href=\"/reminder.htm?reload=on\">Reload</a> - \n";
+    print $sock "<a href=\"#top\">top</a></li>\n";
+    print $sock "<li>Pause: <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=20\">20'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=45\">45'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=60\">1h'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=90\">1.5h'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=120\">2h'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=150\">2.5h'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=180\">3h'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=300\">5h'</a></li>\n";
+    print $sock "<p>";
                                                 
     print $sock "Interval: $interval Msg: $formmsg<br>\n";
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($starttime);
