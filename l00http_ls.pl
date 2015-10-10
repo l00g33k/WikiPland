@@ -101,6 +101,76 @@ sub llsfn  {
     $rst;
 }
 
+sub l00http_ls_conttype {
+    my ($path) = @_;
+    my ($conttype, $urlraw);
+
+    $urlraw = 0;
+
+    if (($path =~ /\.zip$/i) ||
+        ($path =~ /\.kmz$/i)) {
+        $urlraw = 1;
+        $conttype = "Content-Type: application/x-zip\r\n";
+#HTTP/1.1 200 OK
+#Server: nginx/0.7.65
+#Date: Sat, 08 May 2010 00:45:04 GMT
+#Content-Type: application/x-zip
+#Connection: keep-alive
+#Cache-Control: must-revalidate
+#Expires:
+#$conttype .= "Content-Disposition: inline; size=\"$size\"\r\n";
+$conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
+#X-Whom: s5-x
+#Content-Length: 23215
+#Etag: "947077edb066e7c363df5cc2a40311e5"
+#Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
+#P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
+
+    } elsif ($path =~ /\.kml$/i) {
+        $conttype = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+    } elsif ($path =~ /\.apk$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: application/vnd.android.package-archive\r\n";
+    } elsif (($path =~ /\.jpeg$/i) ||
+             ($path =~ /\.jpg$/i)) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/jpeg\r\n";
+    } elsif ($path =~ /\.wma$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: audio/x-ms-wma\r\n";
+    } elsif ($path =~ /\.3gp$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: audio/3gp\r\n";
+    } elsif ($path =~ /\.pdf$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: application/pdf\r\n";
+    } elsif ($path =~ /\.mp3$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: audio/mpeg\r\n";
+    } elsif ($path =~ /\.mp4$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: video/mp4\r\n";
+    } elsif ($path =~ /\.gif$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/gif\r\n";
+    } elsif ($path =~ /\.svg$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/svg+xml\r\n";
+    } elsif ($path =~ /\.png$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/png\r\n";
+    } elsif (($path =~ /\.html$/i) ||
+             ($path =~ /\.htm$/i) ||
+             ($path =~ /\.bak$/i) ||
+             ($path =~ /\.txt$/i)) {
+        $conttype = "Content-Type: text/html\r\n";
+    } else {
+        $conttype = "Content-Type: application/octet-octet-stream\r\n";
+    }
+
+    ($conttype, $urlraw);
+}
+
 sub l00http_ls_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};
@@ -108,7 +178,7 @@ sub l00http_ls_proc {
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
-    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup);
+    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw);
 
     $wikihtmlflags = 0;
 
@@ -226,138 +296,177 @@ sub l00http_ls_proc {
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
                     $editable = 1;
 
-                    $httphdr = "Content-Type: text/html\r\n";
-                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                    if (!defined ($form->{'bare'})) {
-                        if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
-                            print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
-                            # not ending in / or \, not a dir
-                            # clip.pl with \ on Windows
-                            $tmp = $path;
-                            if ($ctrl->{'os'} eq 'win') {
-                                $tmp =~ s/\//\\/g;
-                            }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
-                        } else {
-                            print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
-                            # clip.pl with \ on Windows
-                            $tmp = $path;
-                            if ($ctrl->{'os'} eq 'win') {
-                                $tmp =~ s/\//\\/g;
-                            }
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
-                        }
-                        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-                        print $sock "<a href=\"#end\">end</a>\n";
-                        print $sock "<a href=\"#__toc__\">TOC</a>\n";
-                        if (defined ($form->{'bkvish'})) {
-                            print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
-                        } else {
-                            print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
-                        }
-                        print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                        print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
-                        print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
-                        if (defined ($form->{'bkvish'})) {
-                            print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
-                            print $sock "<hr>\n";
-                        }
-                    } else {
-                        ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
-                        print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+#                    $httphdr = "Content-Type: text/html\r\n";
+                    ($httphdr, $urlraw) = &l00http_ls_conttype($form->{'path'});
+
+                    if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
+                        $urlraw = 1;
                     }
-#l00:
-                    # rendering as wiki text
-                    $buf = "";
-                    $showltgt = 0;
-                    $showlnno = 0;
-                    undef %showdir;
-                    $lnno = 0;
-                    $searchtag = 1;
-                    foreach $_ (split ("\n", $filedata)) {
-                        $_ .= "\n";
-                        $lnno++;
+                    if ($httphdr eq "Content-Type: application/octet-octet-stream\r\n") {
+                        # treat unknown as text for RAM file
+                        $urlraw = 0;
+                        $httphdr = "Content-Type: text/html\r\n";
+                    }
 
-                        if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
-								if (defined($1)) {
-                                    $buf .= $1;
-								}
-                                $_ = $2;
-								if (defined($3)) {
-								    $tmp = $3;
-								} else {
-								    $tmp = '';
-								}
-                                # include file
-                                #s/^%INCLUDE%://;
-                                #s/\r//;
-                                #s/\n//;
+                    if ($urlraw == 1) {
+                        $size = length($filedata);
 
-                                # is this superceded by path=./ substitution in ls.pl?
-                                # subst %INCLUDE<./xxx> as 
-                                #       %INCLUDE</absolute/path/xxx>
-                                s/^\.\//$pname\//;
-                                # drop last directory from $pname for:
-                                # subst %INCLUDE<../xxx> as 
-                                #       %INCLUDE</absolute/path/../xxx>
-                                $pnameup = $pname;
-                                $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
-                                s/^\.\.\//$pnameup\//;
+                        $httphdr .= "Content-Length: $size\r\n";
+                        $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                        print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
 
-                                if (&l00httpd::l00freadOpen($ctrl, $_)) {
-                                    # %INCLUDE%: here
-                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                        if (/^##/) {
-                                            # skip to next ^#
-                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                                if (/^#/) {
-                                                    last;
+                        $ttlbytes = 0;
+                        # send file in block of 0x10000 bytes
+                        do {
+#                            $len = read (FILE, $buf, 0x10000);
+                            $len = length($filedata) - $ttlbytes;
+                            if ($len > 0x10000) {
+                                $len = 0x10000;
+                            }
+                            $buf = substr($filedata, $ttlbytes, $len);
+                            if ($len > 0) {
+                                $ttlbytes += $len;
+                            }
+                            syswrite ($sock, $buf, $len);
+                            select (undef, undef, undef, 0.001);    # 1 ms delay. Without it Android looses data
+                        } until ($len < 0x10000);
+                        print "sent $ttlbytes\n", if ($ctrl->{'debug'} >= 2);
+                        $sock->close;
+                        return;
+
+                    } else {
+                        print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                        if (!defined ($form->{'bare'})) {
+                            if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
+                                print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                                # not ending in / or \, not a dir
+                                # clip.pl with \ on Windows
+                                $tmp = $path;
+                                if ($ctrl->{'os'} eq 'win') {
+                                    $tmp =~ s/\//\\/g;
+                                }
+                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                            } else {
+                                print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
+                                # clip.pl with \ on Windows
+                                $tmp = $path;
+                                if ($ctrl->{'os'} eq 'win') {
+                                    $tmp =~ s/\//\\/g;
+                                }
+                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
+                            }
+                            print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+                            print $sock "<a href=\"#end\">end</a>\n";
+                            print $sock "<a href=\"#__toc__\">TOC</a>\n";
+                            if (defined ($form->{'bkvish'})) {
+                                print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
+                            } else {
+                                print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
+                            }
+                            print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
+                            print $sock "<a href=\"/edit.htm?path=$path\">Ed</a> \n";
+                            print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
+                            if (defined ($form->{'bkvish'})) {
+                                print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
+                                print $sock "<hr>\n";
+                            }
+                        } else {
+                            ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                            print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                        }
+    #l00:
+                        # rendering as wiki text
+                        $buf = "";
+                        $showltgt = 0;
+                        $showlnno = 0;
+                        undef %showdir;
+                        $lnno = 0;
+                        $searchtag = 1;
+                        foreach $_ (split ("\n", $filedata)) {
+                            $_ .= "\n";
+                            $lnno++;
+
+                            if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
+								    if (defined($1)) {
+                                        $buf .= $1;
+								    }
+                                    $_ = $2;
+								    if (defined($3)) {
+								        $tmp = $3;
+								    } else {
+								        $tmp = '';
+								    }
+                                    # include file
+                                    #s/^%INCLUDE%://;
+                                    #s/\r//;
+                                    #s/\n//;
+
+                                    # is this superceded by path=./ substitution in ls.pl?
+                                    # subst %INCLUDE<./xxx> as 
+                                    #       %INCLUDE</absolute/path/xxx>
+                                    s/^\.\//$pname\//;
+                                    # drop last directory from $pname for:
+                                    # subst %INCLUDE<../xxx> as 
+                                    #       %INCLUDE</absolute/path/../xxx>
+                                    $pnameup = $pname;
+                                    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                                    s/^\.\.\//$pnameup\//;
+
+                                    if (&l00httpd::l00freadOpen($ctrl, $_)) {
+                                        # %INCLUDE%: here
+                                        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                            if (/^##/) {
+                                                # skip to next ^#
+                                                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                                    if (/^#/) {
+                                                        last;
+                                                    }
                                                 }
                                             }
+                                            if (/^#/) {
+                                                # skip ^#
+                                                next;
+                                            }
+                                            $buf .= $_;
                                         }
-                                        if (/^#/) {
-                                            # skip ^#
-                                            next;
-                                        }
-                                        $buf .= $_;
                                     }
-                                }
-                                $buf .= $tmp;
-                            next;
-                        }
-
-                        # highlighting
-                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
-                        }
-
-						# path=$ substitution
-                        s/path=\$/path=$path/g;
-
-                        # convert leading spaces to no break spaces
-                        # but not leading */_{ which are font formatting (//})
-                        if (!/^ *$/) {
-                            # and not blank lines
-                            s/^( +)([^*\/_\{])/'&nbsp;' x length($1).$2/e;
-                            # This } matches the search pattern just above so editor matching works
-                        }
-
-                        $_ = "%l00httpd:lnno:$lnno%$_";
-                        $buf .= $_;
-			        }
-                
-                    $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
-                    if (defined ($form->{'hiliteln'})) {
-                        foreach $_ (split ("\n", $buf)) {
-                            if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
-                                s/>(.+)</><font style="color:black;background-color:lime">$1<\/font></g;
-                                print $sock "$_\n";
-                            } else {
-                                print $sock "$_\n";
+                                    $buf .= $tmp;
+                                next;
                             }
+
+                            # highlighting
+                            if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
+                                s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                            }
+
+						    # path=$ substitution
+                            s/path=\$/path=$path/g;
+
+                            # convert leading spaces to no break spaces
+                            # but not leading */_{ which are font formatting (//})
+                            if (!/^ *$/) {
+                                # and not blank lines
+                                s/^( +)([^*\/_\{])/'&nbsp;' x length($1).$2/e;
+                                # This } matches the search pattern just above so editor matching works
+                            }
+
+                            $_ = "%l00httpd:lnno:$lnno%$_";
+                            $buf .= $_;
+			            }
+                
+                        $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                        if (defined ($form->{'hiliteln'})) {
+                            foreach $_ (split ("\n", $buf)) {
+                                if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
+                                    s/>(.+)</><font style="color:black;background-color:lime">$1<\/font></g;
+                                    print $sock "$_\n";
+                                } else {
+                                    print $sock "$_\n";
+                                }
+                            }
+                        } else {
+                            print $sock $buf;
                         }
-                    } else {
-                        print $sock $buf;
                     }
 #l00:
                 }
@@ -375,7 +484,7 @@ sub l00http_ls_proc {
             if (($ctrl->{'os'} eq 'and') && defined ($form->{'exteditor'})) {
                 $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
             }
-            my $urlraw = 0;
+            $urlraw = 0;
             if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
                 $urlraw = 1;
             }
@@ -407,56 +516,56 @@ sub l00http_ls_proc {
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
                  = stat($path);
 
-                $httphdr = "";;
-                if (($path =~ /\.zip$/i) ||
-                    ($path =~ /\.kmz$/i)) {
-                    $httphdr = "Content-Type: application/x-zip\r\n";
-#HTTP/1.1 200 OK
-#Server: nginx/0.7.65
-#Date: Sat, 08 May 2010 00:45:04 GMT
-#Content-Type: application/x-zip
-#Connection: keep-alive
-#Cache-Control: must-revalidate
-#Expires:
-#$httphdr .= "Content-Disposition: inline; size=\"$size\"\r\n";
-$httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
-#X-Whom: s5-x
-#Content-Length: 23215
-#Etag: "947077edb066e7c363df5cc2a40311e5"
-#Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
-#P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
- 
-                } elsif ($path =~ /\.kml$/i) {
-                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-                } elsif ($path =~ /\.apk$/i) {
-                    $httphdr = "Content-Type: application/vnd.android.package-archive\r\n";
-                } elsif (($path =~ /\.jpeg$/i) ||
-                         ($path =~ /\.jpg$/i)) {
-                    $httphdr = "Content-Type: image/jpeg\r\n";
-                } elsif ($path =~ /\.wma$/i) {
-                    $httphdr = "Content-Type: audio/x-ms-wma\r\n";
-                } elsif ($path =~ /\.3gp$/i) {
-                    $httphdr = "Content-Type: audio/3gp\r\n";
-                } elsif ($path =~ /\.pdf$/i) {
-                    $httphdr = "Content-Type: application/pdf\r\n";
-                } elsif ($path =~ /\.mp3$/i) {
-                    $httphdr = "Content-Type: audio/mpeg\r\n";
-                } elsif ($path =~ /\.mp4$/i) {
-                    $httphdr = "Content-Type: video/mp4\r\n";
-                } elsif ($path =~ /\.gif$/i) {
-                    $httphdr = "Content-Type: image/gif\r\n";
-                } elsif ($path =~ /\.svg$/i) {
-                    $httphdr = "Content-Type: image/svg+xml\r\n";
-                } elsif ($path =~ /\.png$/i) {
-                    $httphdr = "Content-Type: image/png\r\n";
-                } elsif (($path =~ /\.html$/i) ||
-                         ($path =~ /\.htm$/i) ||
-                         ($path =~ /\.bak$/i) ||
-                         ($path =~ /\.txt$/i)) {
-                    $httphdr = "Content-Type: text/html\r\n";
-                } else {
-                    $httphdr = "Content-Type: application/octet-octet-stream\r\n";
-                }
+                $httphdr = &l00http_ls_conttype($path);
+#                if (($path =~ /\.zip$/i) ||
+#                    ($path =~ /\.kmz$/i)) {
+#                    $httphdr = "Content-Type: application/x-zip\r\n";
+##HTTP/1.1 200 OK
+##Server: nginx/0.7.65
+##Date: Sat, 08 May 2010 00:45:04 GMT
+##Content-Type: application/x-zip
+##Connection: keep-alive
+##Cache-Control: must-revalidate
+##Expires:
+##$httphdr .= "Content-Disposition: inline; size=\"$size\"\r\n";
+#$httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
+##X-Whom: s5-x
+##Content-Length: 23215
+##Etag: "947077edb066e7c363df5cc2a40311e5"
+##Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
+##P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
+# 
+#                } elsif ($path =~ /\.kml$/i) {
+#                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+#                } elsif ($path =~ /\.apk$/i) {
+#                    $httphdr = "Content-Type: application/vnd.android.package-archive\r\n";
+#                } elsif (($path =~ /\.jpeg$/i) ||
+#                         ($path =~ /\.jpg$/i)) {
+#                    $httphdr = "Content-Type: image/jpeg\r\n";
+#                } elsif ($path =~ /\.wma$/i) {
+#                    $httphdr = "Content-Type: audio/x-ms-wma\r\n";
+#                } elsif ($path =~ /\.3gp$/i) {
+#                    $httphdr = "Content-Type: audio/3gp\r\n";
+#                } elsif ($path =~ /\.pdf$/i) {
+#                    $httphdr = "Content-Type: application/pdf\r\n";
+#                } elsif ($path =~ /\.mp3$/i) {
+#                    $httphdr = "Content-Type: audio/mpeg\r\n";
+#                } elsif ($path =~ /\.mp4$/i) {
+#                    $httphdr = "Content-Type: video/mp4\r\n";
+#                } elsif ($path =~ /\.gif$/i) {
+#                    $httphdr = "Content-Type: image/gif\r\n";
+#                } elsif ($path =~ /\.svg$/i) {
+#                    $httphdr = "Content-Type: image/svg+xml\r\n";
+#                } elsif ($path =~ /\.png$/i) {
+#                    $httphdr = "Content-Type: image/png\r\n";
+#                } elsif (($path =~ /\.html$/i) ||
+#                         ($path =~ /\.htm$/i) ||
+#                         ($path =~ /\.bak$/i) ||
+#                         ($path =~ /\.txt$/i)) {
+#                    $httphdr = "Content-Type: text/html\r\n";
+#                } else {
+#                    $httphdr = "Content-Type: application/octet-octet-stream\r\n";
+#                }
                 $httphdr .= "Content-Length: $size\r\n";
                 $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
                 print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
