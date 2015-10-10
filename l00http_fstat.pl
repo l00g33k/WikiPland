@@ -36,19 +36,17 @@ sub l00http_fstat_proc {
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">Path</a>:\n";
     print $sock "Launcher <a href=\"/launcher.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
 
-    if ((defined ($form->{'path'})) && (-f $form->{'path'})) {
+    if (defined ($form->{'path'})) {
         my ($buf, $crc32, $crc);
-        local $/ = undef;
-        if(open(IN, "<$form->{'path'}")) {
-            binmode (IN);
-            $buf = <IN>;
-            close(IN);
+		if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+			$buf = &l00httpd::l00freadAll($ctrl);
         } else {
             $buf = '';
         }
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
             $size, $atime, $mtime, $ctime, $blksize, $blocks)
             = stat($form->{'path'});
+        $size = length($buf);
         print $sock "<p>File statistics:<p>\n";
         print $sock "<pre>\n";
         print $sock "$form->{'path'}\n";
@@ -61,12 +59,11 @@ sub l00http_fstat_proc {
         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
             = localtime($atime);
         print $sock sprintf ("Access      : %4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+        print $sock          "Size        : $size bytes\n";
         print $sock "CRC32 is computed using pure Perl and will be very slow...\n";
         $crc32 = &l00crc32::crc32($buf);
-        $crc = 0;
 #       $crc = &cksum($buf);
         print $sock sprintf ("CRC32       : 0x%08x\n", $crc32);
-        print $sock          "Size        : $size bytes\n";
         print $sock "<pre>\n";
     }
 }

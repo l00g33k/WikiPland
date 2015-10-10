@@ -151,13 +151,15 @@ sub l00http_filecrypt_proc (\%) {
         # we have a target
         $encr1decy2 = 0;
         if (($path, $fname, $fext) = ($form->{'path'} =~ /^(.+)\/([^\/]+)\.([^.]+)$/)) {
-            if (open (IN, "<$form->{'path'}")) {
-                # target exist
-                binmode (IN);
-                # http://www.perlmonks.org/?node_id=1952
-                local $/ = undef;
-                $buffer = <IN>;
-                close (IN);
+#           if (open (IN, "<$form->{'path'}")) {
+#               # target exist
+#               binmode (IN);
+#               # http://www.perlmonks.org/?node_id=1952
+#               local $/ = undef;
+#               $buffer = <IN>;
+#               close (IN);
+			if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+				$buffer = &l00httpd::l00freadAll($ctrl);
                 # try to validate and retrieve comment
                 ($plain, $binlen, $filecmt, $filemeta) = l00crypt::l00decryptbin ('', $buffer, 0, 0);
                 if ($plain eq 'Invalid file') {
@@ -189,13 +191,15 @@ sub l00http_filecrypt_proc (\%) {
                 }
             } else {
                 # target not exist as provided; try to remove phantom extension
-                if (open (IN, "<$path/$fname")) {
-                    # target exist
-                    binmode (IN);
-                    # http://www.perlmonks.org/?node_id=1952
-                    local $/ = undef;
-                    $buffer = <IN>;
-                    close (IN);
+#               if (open (IN, "<$path/$fname")) {
+#                   # target exist
+#                   binmode (IN);
+#                   # http://www.perlmonks.org/?node_id=1952
+#                   local $/ = undef;
+#                   $buffer = <IN>;
+#                   close (IN);
+				if (&l00httpd::l00freadOpen($ctrl, "$path/$fname")) {
+					$buffer = &l00httpd::l00freadAll($ctrl);
                     # try to validate and retrieve comment
                     ($plain, $binlen, $filecmt, $filemeta) = l00crypt::l00decryptbin ('', $buffer, 0, 0);
                     if ($plain eq 'Invalid file') {
@@ -216,11 +220,14 @@ sub l00http_filecrypt_proc (\%) {
         if ($encr1decy2 == 1) {
             $crypt = l00crypt::l00encryptbin ($pass, $buffer, $comment, $fext, 0, 0);
             $hout .= "Encrypted  ". length ($crypt). " bytes<p>\n";
-            if (open (OUT, ">$targetfname")) {
-                binmode (OUT);
-                print OUT $crypt;
-                close (OUT);
-                #unlink ($form->{'path'});
+#           if (open (OUT, ">$targetfname")) {
+#               binmode (OUT);
+#               print OUT $crypt;
+#               close (OUT);
+#               #unlink ($form->{'path'});
+			if (&l00httpd::l00fwriteOpen($ctrl, "$targetfname")) {
+				&l00httpd::l00fwriteBuf($ctrl, $crypt);
+				&l00httpd::l00fwriteClose($ctrl);
             }
             $hout .= "<a href=\"/filecrypt.htm/$fname.$fext?path=$targetfname.$fext\">To decrypt $targetfname</a>\n";
         } elsif ($encr1decy2 == 2) {
