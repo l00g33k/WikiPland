@@ -99,7 +99,7 @@ sub l00http_cal_proc {
     }
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a href=\"/recedit.htm?record1=^\\d%2B\\%2F\\d%2B\\%2F\\d%2B\\%2B%2A\\d%2A,\\d%2B,&path=$fullpathname\">Recedit</a> - \n";
 	print $sock "Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
     print $sock "<a name=\"top\"></a>\n";

@@ -94,7 +94,8 @@ sub l00http_notify_proc (\%) {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>notify</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} ";
-    print $sock "<a href=\"/notify.htm\">Notify</a> \n";
+    print $sock "<a href=\"/recedit.htm?record1=%5ETTL%3A&path=$ctrl->{'workdir'}l00_notify.txt\">Recedit</a> - \n";
+    print $sock "<a href=\"/notify.htm\">Notify</a> - \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_notify.txt\">$ctrl->{'workdir'}l00_notify.txt</a>:<p>";
 
     print $sock "<form action=\"/notify.htm\" method=\"get\">\n";
