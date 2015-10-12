@@ -1034,7 +1034,7 @@ while(1) {
             if ($modcalled eq "shutdown") {
                 $shutdown++;
                 if ($shutdown >= 2) {
-                    print "You told me to shutdown\n";
+                    print "You confirm me to shutdown\n";
                     print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                     # call shutdown functions
                     $ctrl{'sock'} = $sock;
@@ -1089,7 +1089,6 @@ while(1) {
                   ($modsinfo{"$modcalled:ena:checked"} eq "checked"))) &&
                 (defined $httpmods{$modcalled})) {         # and module defined
                 print "Start handling $modcalled\n", if ($debug >= 5);
-                $shutdown = 0;
 
                 # 3.1) if found, invoke module
 
