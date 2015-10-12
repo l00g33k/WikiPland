@@ -149,6 +149,11 @@ sub l00http_filemgt_proc {
                     &l00backup::backupfile ($ctrl, $path2, 1, 5);
                 }
                 $buffer = &l00httpd::l00freadAll($ctrl);
+                # %TIMESTAMP% replacement: make timestamp
+                $_ = $ctrl->{'now_string'};
+                s/ /_/g;
+                # %TIMESTAMP% replacement: make replacement
+                $path2 =~ s/%TIMESTAMP%/$_/;
                 if (&l00httpd::l00fwriteOpen($ctrl, $path2)) {
                     &l00httpd::l00fwriteBuf($ctrl, $buffer);
                     &l00httpd::l00fwriteClose($ctrl);
@@ -310,9 +315,12 @@ sub l00http_filemgt_proc {
         (defined ($form->{'path2'}) && 
         (length ($form->{'path2'}) > 0))) {
         print $sock "<tr><td>\n";
-        print $sock "<a href=\"/filemgt.htm?copy=Copy&path=$form->{'path'}&path2=$form->{'path2'}&urlonly=on\">Copy URL</a>\n";
+        print $sock "<a href=\"/filemgt.htm?copy=Copy&path=$form->{'path'}&path2=$form->{'path2'}&urlonly=on\">Copy target URL of this link</a>\n";
         print $sock "</td></tr>\n";
     }
+    print $sock "<tr><td>\n";
+    print $sock "%TIMESTAMP% is replaced by timestamp in copy to: filename\n";
+    print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 

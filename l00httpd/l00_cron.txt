@@ -1,0 +1,26 @@
+# * * * * * cmd
+# m h d m w cmd
+
+# on all machine
+machine=~/./
+@boot http://localhost:20337/toast.htm?helloname=atboot+says+hello&submit=Submit&ip=127.0.0.1
+@shutdown http://localhost:20337/toast.htm?helloname=atshutdown+says+good+bye&submit=Submit&ip=127.0.0.1
+
+# on machine fang
+machine=~/FANG/
+@shutdown http://localhost:20337/filemgt.htm?copy=Copy&nobak=on&path=l00://server.log&path2=d:\x\ram\wikipland_server_%TIMESTAMP%.log
+
+# bash example
+#* * * * * ls -l
+
+# windows example
+#* * * * * echo %DATE% %TIME%
+#* * * * * msg %USERNAME% /TIME:1 Shell says hello
+#* * * * * http://localhost:20337/shell.htm?buffer=msg+%25USERNAME%25+%2FTIME%3A1+WikiPland+says+hello&exec=Exec
+
+# syntax
+#1 * * * * hourly
+#1 12 * * * daily noon
+#* 8 * * * minutely at hour 8
+#3 9 * * 1 monday 9;3
+#1 20 1 * * monthly 1st day 20:01

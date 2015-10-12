@@ -1,26 +1,3 @@
-#::now::
-#adb pull /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl D:\x\ram\l00\l00http_cron.pl
-#adb pull /sdcard/l00httpd/l00_cron.txt D:\x\ram\l00\l00_cron.txt
-#difm D:\x\ram\l00\l00http_cron.pl D:\2\safe\gits\WikiPlandShadow\l00httpd\l00http_cron.pl
-#difm D:\x\ram\l00\l00_cron.txt D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd\l00_cron.txt
-
-#adb pull /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl D:\2\safe\gits\WikiPlandShadow\l00httpd\l00http_cron.pl
-#adb pull /sdcard/l00httpd/l00_cron.txt D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd\l00_cron.txt
-#adb push D:\2\safe\gits\WikiPlandShadow\l00httpd\l00http_cron.pl /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl
-#adb push D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd\l00_cron.txt /sdcard/l00httpd/l00_cron.txt
-
-#adb push D:\2\safe\gits\WikiPlandShadow\l00httpd\l00httpd.pl /sdcard/sl4a/scripts/l00httpd/l00httpd.pl
-
-#rsync -v -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:/sdcard/sl4a/scripts/l00httpd/l00http_cron.pl /cygdrive/D/2/safe/gits/WikiPlandShadow/l00httpd/l00http_cron.pl
-#rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' /cygdrive/D/2/safe/gits/WikiPlandShadow/l00httpd/l00http_cron.pl 127.0.0.1:/sdcard/sl4a/scripts/l00httpd/l00http_cron.pl
-#rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' /cygdrive/D/2/safe/gits/WikiPlandShadow/l00httpd/l00httpd/l00_cron.txt 127.0.0.1:/sdcard/l00httpd/l00_cron.txt
-
-#md5sum l00http_cron.pl
-#md5sum /sdcard/sl4a/scripts/l00httpd/l00http_cron.pl
-
-#rsync -v -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:/sdcard/sl4a/scripts/l00httpd/l00http_cron.pl /cygdrive/D/x/ram/l00/l00http_cron.pl
-#rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' /cygdrive/D/x/ram/l00/l00http_cron.pl 127.0.0.1:/sdcard/sl4a/scripts/l00httpd/l00http_cron.pl
-
 use strict;
 use warnings;
 use IO::Socket;
@@ -35,16 +12,18 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot);
+my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot, $atshutdown);
 my %config = (proc => "l00http_cron_proc",
               desc => "l00http_cron_desc",
-              perio => "l00http_cron_perio");
+              perio => "l00http_cron_perio",
+              shutdown => "l00http_cron_shutdown");
 $interval = 0;
 $starttime = 0x7fffffff;
 $percnt = 0;
 $filetime = 0;
 $toggle = 'Pause';
 $atboot = 1;
+$atshutdown = 0;
 
 sub l00http_cron_j2now_string {
     my ($secs) = @_;
@@ -254,6 +233,19 @@ sub l00http_cron_when_next {
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
+            } elsif (($atshutdown) && (($cmd) = (/^\@shutdown +(.+)$/))) {
+                l00httpd::dbp($config{'desc'}, "CRON: (\@shutdown $cmd)\n"), if ($ctrl->{'debug'} >= 5);
+                $secs = time + 0;
+                &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
+
+                ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
+                    &l00http_cron_j2now_string ($secs);
+
+                &l00httpd::l00fwriteBuf($ctrl, "TIME:$secs: $nstring dayofweek $wday\n");
+                &l00httpd::l00fwriteBuf($ctrl, "CMD:$cmd\n\n");
+                if ($starttime0 > $secs) {
+                    $starttime0 = $secs;
+                }
             } elsif (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
                 l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 5);
@@ -403,28 +395,34 @@ sub l00http_cron_perio {
                                         }
                                     }
                                     # invoke module
-#                                   $ctrl->{'callmod'} ($modcalled, \%FORM);
-                                    if (defined ($ctrl->{'modsinfo'}->{"$modcalled:fn:proc"})) {
+                                    if (defined ($ctrl->{'modsinfo'}->{"$modcalled:fn:proc"})) {
+
                                         $subname = $ctrl->{'modsinfo'}->{"$modcalled:fn:proc"};
                                         print "CRON: callmod $subname\n", if ($ctrl->{'debug'} >= 4);
-                                        $ctrl->{'FORM'} = \%FORM;
+                                        $ctrl->{'FORM'} = \%FORM;
+
                                         $ctrl->{'home'} = '';
                                         $ctrl->{'httphead'} = '';
                                         $ctrl->{'htmlhead'} = '';
                                         $ctrl->{'htmlttl'} = '';
                                         $ctrl->{'htmlhead2'} = '';
-                                       $ctrl->{'client_ip'} = 0;
+                                        $ctrl->{'client_ip'} = 0;
                                         if ($ctrl->{'os'} eq 'win') {
                                             open ($socknul, ">nul");
                                         } else {
                                             open ($socknul, ">/dev/null");
                                         }
-                                        $ctrl->{'sock'} = $socknul;
-                                        $ctrl->{'msglog'} = "";
-                                        __PACKAGE__->$subname($ctrl);
+                                        $ctrl->{'sock'} = $socknul;
+
+                                        $ctrl->{'msglog'} = "";
+
+                                        __PACKAGE__->$subname($ctrl);
+
                                         close ($socknul);
-                                        &dlog  ($ctrl->{'msglog'}."\n");
-                                    }
+                                        &dlog  ($ctrl->{'msglog'}."\n");
+
+                                    }
+
                                 }
 
                             } elsif ($cmd =~ m!^http://!) {
@@ -467,6 +465,29 @@ sub l00http_cron_perio {
     }
 
     $retval;
+}
+
+sub l00http_cron_shutdown {
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
+
+    # scan in atshutdown tasks
+    $atshutdown = 1;
+    $starttime = &l00http_cron_when_next ($ctrl);
+
+    if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
+        print $sock "'cron' module \@shutdown tasks:<p>\n<pre>\n";
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            print $sock "$_";
+        }
+        print $sock "</pre>\n";
+    }
+
+    # call perio to service atshutdown tasks
+    $toggle = 'Pause';
+    &l00http_cron_perio($main, $ctrl);
+
+    0;
 }
 
 

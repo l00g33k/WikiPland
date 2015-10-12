@@ -416,6 +416,7 @@ sub loadmods {
                 $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
                 $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
                 $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
+                $modsinfo{"$mod:fn:shutdown"} = $rethash->{'shutdown'};
                 $subname = $modsinfo{"$mod:fn:desc"};
                 $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
                 $tmp = 'unknown:';
@@ -432,38 +433,6 @@ sub loadmods {
     print "\nReady\n";
 }
 $ctrl{'modsinfo'} = \%modsinfo;
-
-
-
-
-#sub callmod {
-#    my ($modcalled, $FORM) = @_;
-#
-#    #print "printed in callmod modcalled $modcalled\n";
-#    #for $_ (keys %$FORM) {
-#    #    print "printed in callmod >$_< >$FORM->{$_}\n";
-#    #}
-#
-#    if (defined ($modsinfo{"$modcalled:fn:proc"})) {
-#        $subname = $modsinfo{"$modcalled:fn:proc"};
-#        print "CRON: callmod $subname\n", if ($debug >= 5);
-#        $ctrl{'FORM'} = $FORM;
-#        $ctrl{'sock'} = 0;
-#        if ($ctrl{'os'} eq 'win') {
-#            open ($socknul, ">nul");
-#        } else {
-#            open ($socknul, ">/dev/null");
-#        }
-#        $ctrl{'sock'} = $socknul;
-#        $ctrl{'msglog'} = "";
-#        $retval = __PACKAGE__->$subname(\%ctrl);
-#        close ($ctrl{'sock'});
-#        &dlog  ($ctrl{'msglog'}."\n");
-#    }
-#
-#}
-#$ctrl{'callmod'} = \&callmod;
-
 
 
 
@@ -575,28 +544,31 @@ if (open (OUT, ">${plpath}l00httpd.log")) {
 }
 
 $ctrl{'l00file'}->{'l00://server.log'} = '';
-# restore server.log
-if (open(OU,"<${plpath}.server.log.persist")) {
-    while (<OU>) {
-        $ctrl{'l00file'}->{'l00://server.log'} .= $_;
-    }
-    close(OU);
-    unlink("${plpath}.server.log.persist");
-}
+# disable restoration...
+## restore server.log
+#if (open(OU,"<${plpath}.server.log.persist")) {
+#    while (<OU>) {
+#        $ctrl{'l00file'}->{'l00://server.log'} .= $_;
+#    }
+#    close(OU);
+#    unlink("${plpath}.server.log.persist");
+#}
+
 $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} WikiPland started\n";
 
-# restore client log
-if (open(OU,"<${plpath}.client.log.persist")) {
-    while (<OU>) {
-        s/\n//;
-        s/\r//;
-        if (/^(.+)=>(\d+)$/) {
-            $connected{$1} = $2;
-        }
-    }
-    close(OU);
-    unlink("${plpath}.client.log.persist");
-}
+# disable restoration...
+## restore client log
+#if (open(OU,"<${plpath}.client.log.persist")) {
+#    while (<OU>) {
+#        s/\n//;
+#        s/\r//;
+#        if (/^(.+)=>(\d+)$/) {
+#            $connected{$1} = $2;
+#        }
+#    }
+#    close(OU);
+#    unlink("${plpath}.client.log.persist");
+#}
 
 
 $l00time = time;
@@ -1064,21 +1036,32 @@ while(1) {
                 if ($shutdown >= 2) {
                     print "You told me to shutdown\n";
                     print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
+                    # call shutdown functions
+                    $ctrl{'sock'} = $sock;
+                    foreach $mod (sort keys %httpmods) {
+                        if (defined ($modsinfo{"$mod:fn:shutdown"})) {
+                            $subname = $modsinfo{"$mod:fn:shutdown"};
+                            $retval = __PACKAGE__->$subname(\%ctrl);
+                            print $sock "Called '$mod' module shutdown function<br>\n";
+                        }
+                    }
+
                     print $sock "Start new instance and click <a href=\"/\">here</a> to connect.  Note: If this is an APK installation, you must delete data in App Manager to update l00httpd.\n";
                     print $sock $ctrl{'htmlfoot'};
                     print "shutting down by shutdown module\n";
                     $sock->close;
-                    # save client log
-                    open(OU,">${plpath}.client.log.persist");
-                    for $key (sort keys %connected) {
-                        $val = $connected{$key};
-                        print OU "$key=>$connected{$key}\n";
-                    }
-                    close(OU);
-                    # save server.log
-                    open(OU,">${plpath}.server.log.persist");
-                    print OU $ctrl{'l00file'}->{'l00://server.log'};
-                    close(OU);
+                    # disable restoration...
+                    ## save client log
+                    #open(OU,">${plpath}.client.log.persist");
+                    #for $key (sort keys %connected) {
+                    #    $val = $connected{$key};
+                    #    print OU "$key=>$connected{$key}\n";
+                    #}
+                    #close(OU);
+                    ## save server.log
+                    #open(OU,">${plpath}.server.log.persist");
+                    #print OU $ctrl{'l00file'}->{'l00://server.log'};
+                    #close(OU);
                     exit (1);
                 } else {
                     $shutdown = 1;
