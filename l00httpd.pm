@@ -391,7 +391,7 @@ sub l00npoormanrdns {
 
     $ret = '';
 
-    &dbp($myname.'l00httpd.pm', "reading '$fullpath'\n");
+    &dbp($myname.'l00httpd.pm', "reading '$fullpath'\n"), if ($ctrl->{'debug'} >= 5);
     if (open(IN, "<$fullpath")) {
         undef %poorwhois;
         while (<IN>) {
@@ -402,19 +402,19 @@ sub l00npoormanrdns {
             s/\n//;
             if (($patt, $name) = /(.*)=>(.*)/) {
                 $ret .= "$patt is $name\n";
-                &dbp($myname.'l00httpd.pm', "$patt is $name\n");
+                &dbp($myname.'l00httpd.pm', "$patt is $name\n"), if ($ctrl->{'debug'} >= 5);
                 #46.51.248-254.*=>AMAZON_AWS
                 if (($leading, $st, $en, $trailing) = ($patt =~ /(.+?)\.(\d+)-(\d+)\.(.*)/)) {
-                    &dbp($myname.'l00httpd.pm', "range: $patt ($st, $en) is $name\n");
+                    &dbp($myname.'l00httpd.pm', "range: $patt ($st, $en) is $name\n"), if ($ctrl->{'debug'} >= 5);
                     for ($st..$en) {
                         $patt = "$leading.$_.$trailing";
-                        &dbp($myname.'l00httpd.pm', "expanded: $patt is $name\n");
+                        &dbp($myname.'l00httpd.pm', "expanded: $patt is $name\n"), if ($ctrl->{'debug'} >= 5);
                         $patt =~ s/\./\\./g;
                         $patt =~ s/\*/\\d+/g;
                         $poorwhois{$patt} = $name;
                     }
                 } else {
-                    &dbp($myname.'l00httpd.pm', "full octet: $patt is $name\n");
+                    &dbp($myname.'l00httpd.pm', "full octet: $patt is $name\n"), if ($ctrl->{'debug'} >= 5);
                     $patt =~ s/\./\\./g;
                     $patt =~ s/\*/\\d+/g;
                     $poorwhois{$patt} = $name;
