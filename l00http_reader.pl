@@ -9,12 +9,13 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_reader_proc",
               desc => "l00http_reader_desc");
-my ($hostpath, $zoom, $maxarts, $readln, $lastpath);
+my ($hostpath, $zoom, $maxarts, $readln, $lastpath, $maxlines);
 $hostpath = "c:\\x\\";
 $zoom = 150;
 $maxarts = 20;
 $readln = 1;
 $lastpath = '';
+$maxlines = 200;
 
 sub l00http_reader_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -49,6 +50,12 @@ sub l00http_reader_proc (\%) {
     }
     if (defined ($form->{'mobizoomzoom'})) {
         $zoom = $form->{'zoom'};
+    }
+    if (defined ($form->{'setmaxlines'}) && defined ($form->{'maxlines'})) {
+        # parse max number of lines to display
+        if ($form->{'maxlines'} =~ /(\d+)/) {
+            $maxlines = $1;
+        }
     }
 
     $curr = '';
@@ -149,10 +156,15 @@ sub l00http_reader_proc (\%) {
     print $sock "<p>$curr";
 
 
-    print $sock "<p>Listing of <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>:\n";
+    print $sock "<p>Listing of <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>:\n";
 
+    print $sock "<form action=\"/reader.htm\" method=\"get\">\n";
+    print $sock "<input type=\"submit\" name=\"setmaxlines\" value=\"Max Lines\">\n";
+    print $sock "<input type=\"text\" size=\"3\" name=\"maxlines\" value=\"$maxlines\">\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</form>\n";
 
-    print $sock " <form action=\"/reader.htm\" method=\"get\">\n";
+    print $sock "<form action=\"/reader.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"download\" value=\"Download All\">\n";
     print $sock "max #:<input type=\"text\" size=\"3\" name=\"maxarts\" value=\"$maxarts\">\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\">\n";
@@ -194,80 +206,83 @@ sub l00http_reader_proc (\%) {
                 }
                 if (/^(\d{8,8} \d{6,6}) /) {
                     $noart++;
-					$cachename = $1;
-					$cachename =~ s/ /_/;
-					$cachepath = "$form->{'path'}.cached/";
-					if (!-d $cachepath) {
-                        # mkdir if not exist
-                        mkdir ($cachepath);
-					}
-                    $cachename = "$cachepath$cachename.txt";
-                    if (defined ($form->{'download'}) && 
-                        !(-e $cachename) &&
-                        $docaching &&
-                        ($lnno >= $readln) && # start from read
-                        ($cnt < $maxarts)) {   # download at most 50 articles at once
-                        # downloading and not yet cached. cache now
-						$tmp = $_;
-                        $path = $form->{'path'};
-                        $form->{'path'} = $cachename;
+                    if ($noart <= $maxlines) {
+                        # process up to $maxlines only
+					    $cachename = $1;
+					    $cachename =~ s/ /_/;
+					    $cachepath = "$form->{'path'}.cached/";
+					    if (!-d $cachepath) {
+                            # mkdir if not exist
+                            mkdir ($cachepath);
+					    }
+                        $cachename = "$cachepath$cachename.txt";
+                        if (defined ($form->{'download'}) && 
+                            !(-e $cachename) &&
+                            $docaching &&
+                            ($lnno >= $readln) && # start from read
+                            ($cnt < $maxarts)) {   # download at most 50 articles at once
+                            # downloading and not yet cached. cache now
+						    $tmp = $_;
+                            $path = $form->{'path'};
+                            $form->{'path'} = $cachename;
 
-                        if (/(https*:\/\/[^ \n\r\t]+)/) {
-                            $_ = $1;
-                        }
-                        if (!($_ =~ /https*:\/\//)) {
-                            # Opera Mini does not include http://
-                            $_ = "http://$_";
-                        }
-                        if ($_ =~ /google\.com\/url\?.*&q=(http.+)[^&]/) {
-                            $_ = $1;
-                        }
-                        $form->{'url'} = $_;
-                        $form->{'fetch'} = 1;
-                        &l00http_mobizoom_proc($main, $ctrl);
-                        $form->{'path'} = $path;
+                            if (/(https*:\/\/[^ \n\r\t]+)/) {
+                                $_ = $1;
+                            }
+                            if (!($_ =~ /https*:\/\//)) {
+                                # Opera Mini does not include http://
+                                $_ = "http://$_";
+                            }
+                            if ($_ =~ /google\.com\/url\?.*&q=(http.+)[^&]/) {
+                                $_ = $1;
+                            }
+                            $form->{'url'} = $_;
+                            $form->{'fetch'} = 1;
+                            &l00http_mobizoom_proc($main, $ctrl);
+                            $form->{'path'} = $path;
 
-                        # special slashdot.org handling: download linked pages
-                        # slashdot.org post often contains links. Let's cache those too.
-                        if (&l00httpd::l00freadOpen($ctrl, $cachename)) {
-                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                if (/href='\/mobizoom\.htm\?.+slashdot\.org/) {
-                                    undef %duplicate;
-                                    $morepage = $cachename;
-                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                        if (/Posted[\t ]+by/) {
-                                            # skip first line, may have link to poster
-                                            &l00httpd::l00freadLine($ctrl);
-                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                                if (/You may like to read/) {
-                                                    # end of slashdot post/comment begins
-                                                    last;
-                                                }
-                                                if (/Related Links/) {
-                                                    # alternate end of slashdot post/comment begins
-                                                    last;
-                                                }
-                                                # look for URL to download, e.g.
-                                                # <a href='/mobizoom.htm?zoom=144&url=http%3A%2F%2Fwww.monkey.org%2F~timothy%2F%26ei%3D-AikUrXeEISykgLev4DICw'>
-                                                if (/<a href='\/mobizoom\.htm\?.+?(http.+?)'>/) {
-                                                    $url = $1;
-                                                    $url =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
-                                                    # chop off anything after &
-                                                    $url =~ s/&.*$//;
-                                                    # not link to previous
-                                                    if (!($url =~ /sdsrc=prev/)) {
-                                                        if (!defined($duplicate{$url})) {
-                                                            # remember it
-                                                            $duplicate{$url} = 1;
-                                                            print "off-line cache: $url ($lnno/$lnno2)\n";
-                                                            # fetch it
-                                                            $path = $form->{'path'};
-                                                            $morepage =~ s/\.txt$/_.txt/;   # grow _.txt :)
-                                                            $form->{'path'} = $morepage;
-                                                            $form->{'url'} = $url;
-                                                            $form->{'fetch'} = 1;
-                                                            &l00http_mobizoom_proc($main, $ctrl);
-                                                            $form->{'path'} = $path;
+                            # special slashdot.org handling: download linked pages
+                            # slashdot.org post often contains links. Let's cache those too.
+                            if (&l00httpd::l00freadOpen($ctrl, $cachename)) {
+                                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                    if (/href='\/mobizoom\.htm\?.+slashdot\.org/) {
+                                        undef %duplicate;
+                                        $morepage = $cachename;
+                                        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                            if (/Posted[\t ]+by/) {
+                                                # skip first line, may have link to poster
+                                                &l00httpd::l00freadLine($ctrl);
+                                                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                                    if (/You may like to read/) {
+                                                        # end of slashdot post/comment begins
+                                                        last;
+                                                    }
+                                                    if (/Related Links/) {
+                                                        # alternate end of slashdot post/comment begins
+                                                        last;
+                                                    }
+                                                    # look for URL to download, e.g.
+                                                    # <a href='/mobizoom.htm?zoom=144&url=http%3A%2F%2Fwww.monkey.org%2F~timothy%2F%26ei%3D-AikUrXeEISykgLev4DICw'>
+                                                    if (/<a href='\/mobizoom\.htm\?.+?(http.+?)'>/) {
+                                                        $url = $1;
+                                                        $url =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
+                                                        # chop off anything after &
+                                                        $url =~ s/&.*$//;
+                                                        # not link to previous
+                                                        if (!($url =~ /sdsrc=prev/)) {
+                                                            if (!defined($duplicate{$url})) {
+                                                                # remember it
+                                                                $duplicate{$url} = 1;
+                                                                print "off-line cache: $url ($lnno/$lnno2)\n";
+                                                                # fetch it
+                                                                $path = $form->{'path'};
+                                                                $morepage =~ s/\.txt$/_.txt/;   # grow _.txt :)
+                                                                $form->{'path'} = $morepage;
+                                                                $form->{'url'} = $url;
+                                                                $form->{'fetch'} = 1;
+                                                                &l00http_mobizoom_proc($main, $ctrl);
+                                                                $form->{'path'} = $path;
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -276,20 +291,22 @@ sub l00http_reader_proc (\%) {
                                     }
                                 }
                             }
-                        }
 
-						$_ = $tmp;
-						$cnt++;
-                    }
-					if (-e $cachename) {
-                        my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
-                        $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-                            = stat($cachename);
-                        $cachelink = sprintf("<a href=\"/view.htm?path=$cachename\">(%6d)</a> ", $size);;
-                        $nodownload++;
-					} else {
+						    $_ = $tmp;
+						    $cnt++;
+                        }
+					    if (-e $cachename) {
+                            my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+                            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                                = stat($cachename);
+                            $cachelink = sprintf("<a href=\"/view.htm?path=$cachename\">(%6d)</a> ", $size);;
+                            $nodownload++;
+					    } else {
+					        $cachelink = '';
+					    }
+                    } else {
 					    $cachelink = '';
-					}
+                    }
 				} else {
 				    $cachelink = '';
 				}
@@ -309,16 +326,7 @@ sub l00http_reader_proc (\%) {
         print $sock "<hr>\n";
         print $sock "<a name=\"end\"></a><a href=\"#top\">Jump to top</a>. Full file:\n";
         $_ = $noart - $nodownload;
-        print $sock "There are $noart articles, $nodownload cached, $_ uncached\n";
-        print $sock "<hr>\n";
-        if (open(IN, "<$form->{'path'}")) {
-            $lnno = 1;
-            while (<IN>) {
-                print $sock sprintf("%04d: ", $lnno) . $_;
-                $lnno++;
-            }
-            close(IN);
-        }
+        print $sock "There are $noart articles, $nodownload cached, $_ uncached (but only $maxlines lines are processed)\n";
     }
     print $sock "</pre>\n";
 
