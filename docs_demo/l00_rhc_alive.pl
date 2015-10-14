@@ -1,7 +1,7 @@
 $rhc = 'l00://rhc.htm';
 print $sock "Polling history: <a href=\"/view.htm?path=$rhc\">$rhc</a><p>\n";
 #--------------------------
-$url = 'http://wikipland-l00g33k.rhcloud.com/httpd.htm';
+$url = "http://wikipland-l00g33k.rhcloud.com/httpd.htm&extra=$ctrl->{'machine'}";
 
 ($hdr, $bdy) = &l00wget::wget ($url);
 
