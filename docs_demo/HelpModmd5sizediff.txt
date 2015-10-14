@@ -1,0 +1,36 @@
+%TOC%
+=How to compare two directory trees=
+
+==Prolog==
+* There are many file management utilities that will compare two 
+directory trees and report what's the same, what's changed, what's 
+missing, and what's extra. However, not much is available for 
+comparing two directory trees that are not available at the same time.
+This module attempts to provide a solution.
+** For the specific case of Android devices one could accomplish the 
+end objective of the comparison by sync'ing through a cloud server. 
+However, one may choose not to rely on a public server. At the other 
+end of the spectrum ones directory tree could contain tens of or hundreds 
+of thousand of files. When the differences is large, GUI fails quite 
+miserably. A text base output allows one to create script files to do 
+whatever one desires, such as deleting duplicated files meeting a 
+specific criteria.
+
+==Overviews==
+* In order to be flexible, the complete procedure is built up from 
+several steps:
+** Create md5sum and size of the 'THIS' directory tree.
+** Create md5sum and size of the 'THAT' directory tree.
+** Compare them.
+
+==Procedure==
+* Open the directory view of the [[/ls.htm?path=./md5sizediff_test/|test case directory]].
+You should see something like this:
+    ../                 &lt;dir&gt;
+    that/               &lt;dir&gt;
+    this/               &lt;dir&gt;
+===Create md5sum and size of the 'THIS' directory tree===
+* Touch '&lt;dir&gt;' to the right of the 'this/' directory
+* 
+===Create md5sum and size of the 'THAT' directory tree===
+===Compare them===

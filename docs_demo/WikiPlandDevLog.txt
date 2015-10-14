@@ -1,3 +1,4 @@
+20151012 001126 added @shutdown cron job creator and a demo to save server log with time stamp file name
 20151004 225740 Created module md5sizediff to make off-line comparison of two unconnected directory trees by file names and md5sum
 20151002 224727 Added server.log and client IP lists save and restore upon shutdown and next launch
 20151001 234442 note reports risk VM memory size
