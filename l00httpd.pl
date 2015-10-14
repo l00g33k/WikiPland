@@ -203,7 +203,12 @@ $ctrl{'plpath'} = $plpath;      # make it available to modules
 
 $conf = "l00httpd.cfg";
 $tmp = $plpath; # first time, find in l00httpd script directory
-for ($cnt = 0; $cnt < 3; $cnt++) {
+# Looking fir l00httpd.cfg in 3 places
+# 1: ${plpath}l00httpd.cfg
+# 2: $ctrl{'workdir'}l00httpd.cfg
+# 3: $ctrl{'workdir'}local_l00httpd.cfg
+# 4: $ctrl{'altcfg'}l00httpd.cfg
+for ($cnt = 0; $cnt < 4; $cnt++) {
     if (open (IN, "<$tmp$conf")) {
         if ($cfgedit eq '') {
             $cfgedit = "Edit l00httpd.cfg at:<br>\n";
@@ -258,6 +263,8 @@ for ($cnt = 0; $cnt < 3; $cnt++) {
     }
     if ($cnt == 0) {
         $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+    } elsif ($cnt == 1) {
+        $tmp = "$ctrl{'workdir'}local_"; # second time, find in workdir directory
 	} else {
         if (defined($ctrl{'altcfg'})) {
             $tmp = $ctrl{'altcfg'};
@@ -1102,7 +1109,7 @@ while(1) {
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> <a href=\"/ls.htm/HelpMod$modcalled.htm?path=$plpath"."docs_demo/HelpMod$modcalled.txt\">?</a>";
 
-                if ($ishost) {
+                if ($ishost && !defined($ctrl{'nobanners'})) {
                     # a generic scheme to support system wide banner
                     # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
                     # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
