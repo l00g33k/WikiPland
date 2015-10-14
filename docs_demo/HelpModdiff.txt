@@ -1,0 +1,15 @@
+%TOC%
+=How to diff two files=
+* This module implements the algorithm described in the 
+paper 'A technique for isolating differences between files' 
+by Paul Heckel:  http://documents.scribd.com/docs/10ro9oowpo1h81pgh1as.pdf
+* You can type the full path to the new file into the 'CB>New' 
+textarea and the full path to the old file into the 'CB>Old' textarea, 
+and touch 'Compare'.
+** On Android device it is hard to type, so you can navigate to 
+the directory and choose the launcher for the file and select to 
+launch 'diff'. Choose the old file first, then choose the new file, which 
+will push the previous selection to be old file.
+* 'Width' sets how wide to display.
+* 'Swap' swaps old and new filenames.
+* Take a look at the [[/diff.htm?pathnew=./Paul_Heckel_file_O.txt&pathold=./Paul_Heckel_file_N.txt&swap=Swap&maxline=4000&compare=Compare|test case]].
