@@ -272,7 +272,7 @@ sub l00http_md5sizediff_proc {
                 if (($#lmd5sum > 0) ||             # more than one md5sum in this, or
                     ($#rmd5sum > 0) ||             # more than one md5sum in that, or
                     ($lmd5sum[0] ne $rmd5sum[0])) {# they are not equal
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "    diff: $fname\n";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname\n", $cnt);
                     for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                         ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
                         $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $lmd5sum[$idx] $pfname\n";
