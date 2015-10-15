@@ -408,7 +408,7 @@ $form->{'filter'} = 'not implemented';
     print $sock "</form><br>\n";
 
     my ($logname);
-    $logname = "md5_size_$ctrl->{'now_string'}.txt";
+    $logname = "md5_size_$ctrl->{'now_string'}.md5size";
     $logname =~ s/ /_/g;
     print $sock "# md5sum computation can be accelerated by using bash commands as follow:<br>\n";
     print $sock "du -h<br>\n";

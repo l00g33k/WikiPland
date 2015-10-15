@@ -306,9 +306,9 @@ sub l00http_reminder_proc {
     print $sock "</table>\n";
     print $sock "</form><p>\n";
 
+    print $sock "<a name=\"manage\"></a>";
     print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
     print $sock "        <tr>\n";
     print $sock "            <td><input type=\"submit\" name=\"pause\" value=\"Pause\"></td>\n";
     print $sock "            <td><input type=\"text\" size=\"4\" name=\"min\" value=\"$pausewant\">min.</td>\n";
@@ -318,7 +318,6 @@ sub l00http_reminder_proc {
     print $sock "</form></p>\n";
 
 
-    print $sock "<a name=\"manage\"></a>";
     print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">Recedit</a> - \n";
     print $sock "<a href=\"/reminder.htm?reload=on\">Reload</a> - \n";
     print $sock "<a href=\"#top\">top</a></li>\n";
