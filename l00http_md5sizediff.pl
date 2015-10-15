@@ -247,15 +247,15 @@ sub l00http_md5sizediff_proc {
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"changed\"></a>";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Same name different md5sum: $thispath\n\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    Same name different md5sum\n\n";
         print $sock "<a name=\"changed\"></a>";
         print $sock "----------------------------------------------------------\n";
         print $sock "$jumper";
-        print $sock "    Same name different md5sum: $thispath\n\n";
+        print $sock "    Same name different md5sum\n\n";
 
         undef %out;
         $cnt = 0;
-        $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} = '';
+        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
         $common = 0;
         foreach $fname (sort keys %{$byname{$sname}}) {
             # for each file name in this
@@ -272,21 +272,21 @@ sub l00http_md5sizediff_proc {
                 if (($#lmd5sum > 0) ||             # more than one md5sum in this, or
                     ($#rmd5sum > 0) ||             # more than one md5sum in that, or
                     ($lmd5sum[0] ne $rmd5sum[0])) {# they are not equal
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} .= "    Changed: $fname\n";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "    diff: $fname\n";
                     for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                         ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} .= "        THIS $idx: $lmd5sum[$idx] $pfname\n";
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $lmd5sum[$idx] $pfname\n";
                     }
                     for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
                         ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.changed.htm"} .= "        THAT $idx: $rmd5sum[$idx] $pfname\n";
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $rmd5sum[$idx] $pfname\n";
                     }
                     $cnt++;
                 }
             }
         }
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Same name different md5sum: $cnt files (out of $common same name)\n\n";
-        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.changed.htm>%\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.diff.htm>%\n";
         print $sock "Same name different md5sum: $cnt files (out of $common same name)\n";
 
 
@@ -310,8 +310,7 @@ sub l00http_md5sizediff_proc {
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a><br>";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a><br>";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.changed.htm\">l00://md5sizediff.THIS.changed.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.changed.htm\">l00://md5sizediff.THAT.changed.htm</a><br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a><br>";
     }
 
     print $sock "<form action=\"/md5sizediff.htm\" method=\"get\">\n";
