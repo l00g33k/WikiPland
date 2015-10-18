@@ -22,7 +22,7 @@ sub l00http_md5sizediff_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($jumper, %bymd5sum, %byname, $side, $sname, $files, $file, $cnt);
+    my ($jumper, %bymd5sum, %byname, %sizebymd5sum, $side, $sname, $files, $file, $cnt);
     my ($dummy, $size, $md5sum, $pfname, $pname, $fname);
     my (%cnt, $oname, %out, $idx, $md5sum1st);
     my (@lmd5sum, @rmd5sum, $common);
@@ -128,6 +128,7 @@ sub l00http_md5sizediff_proc {
                             $fname = lc($fname);
                             $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
                             $byname{$sname}{$fname}{$md5sum} = $pfname;
+                            $sizebymd5sum{$md5sum} = $size;
                             $cnt++;
                         }
                     }
@@ -170,7 +171,7 @@ sub l00http_md5sizediff_proc {
                     if ($#_ > 0) {
                         $_ = $#_ + 1;
                         $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                            sprintf ("   %03d: $_ files $md5sum:\n        ", $cnt{$sname}).
+                            sprintf ("   %03d: xxx $_ files $sizebymd5sum{$md5sum} $md5sum:\n        ", $cnt{$sname}).
                             join("\n        ", @_)."\n";
                         #print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
                         $cnt{$sname}++;
@@ -224,7 +225,7 @@ sub l00http_md5sizediff_proc {
             $cnt = 0;
             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
             foreach $pfname (sort keys %out) {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
                 #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
                 $cnt++;
             }
@@ -275,11 +276,11 @@ sub l00http_md5sizediff_proc {
                     $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname\n", $cnt);
                     for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                         ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $lmd5sum[$idx] $pfname\n";
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
                     }
                     for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
                         ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $rmd5sum[$idx] $pfname\n";
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
                     }
                     $cnt++;
                 }
