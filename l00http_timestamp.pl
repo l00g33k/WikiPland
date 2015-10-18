@@ -12,7 +12,7 @@ sub l00http_timestamp_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "timestamp: copy to clipboard";
+    "A: timestamp: copy to clipboard";
 }
 
 sub l00http_timestamp_proc {
