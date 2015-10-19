@@ -306,12 +306,12 @@ sub l00http_md5sizediff_proc {
         print $sock "</pre>\n";
         print $sock "Links to results in RAM<br>\n";
 
-        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup.htm\">l00://md5sizediff.THIS.self_dup.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a><br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a><br>";
+        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"}), " bytes<br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup.htm\">l00://md5sizediff.THIS.self_dup.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.self_dup.htm"}), " bytes<br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.self_dup.htm"}), " bytes<br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.only.htm"}), " bytes<br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.only.htm"}), " bytes<br>";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"}), " bytes<br>";
     }
 
     print $sock "<form action=\"/md5sizediff.htm\" method=\"get\">\n";
