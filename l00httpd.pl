@@ -1337,6 +1337,9 @@ while(1) {
                 print $sock "<a href=\"#end\">end</a> \n";
                 if ($ctrl{'os'} eq 'and') {
                     print $sock "<a href=\"#wifi\">wifi</a> \n";
+                    if ($ishost) {
+                        print $sock "<a href=\"/view.htm?path=/sys/class/power_supply/battery/uevent\">Batt</a> \n";
+                    }
                 }
                 if ($ishost) {
                     print $sock "<a href=\"#ram\">ram</a> \n";
