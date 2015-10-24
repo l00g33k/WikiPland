@@ -6,11 +6,20 @@ use IO::Socket;
 $hostnet = '192.168.0';
 $port = 9;
 
+
 # create the payload
 # magic packet header
 $buf = pack ("C6", 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
-# magic packet payload: MAC 16 times
-$buf .= pack ("C6", 0x00, 0x21, 0x9b, 0x03, 0x18, 0xc9) x 16;
+if (defined($ctrl->{'FORM'}->{'arg1'})) {
+    $ctrl->{'FORM'}->{'arg1'} =~ s/-/:/g;
+    @_ = split(":", $ctrl->{'FORM'}->{'arg1'});
+    print $sock "Arg1 defined : ", join(":", @_);
+    $buf .= pack ("C6", @_) x 16;
+} else {
+    # magic packet payload: MAC 16 times
+    print $sock "Arg1 not defined, using example MAC";
+    $buf .= pack ("C6", 0x00, 0x21, 0x9b, 0x03, 0x18, 0xc9) x 16;
+}
 
 # report the size of the actual payload
 print $sock "<P>My IP $ctrl->{'myip'}<br>\n";
