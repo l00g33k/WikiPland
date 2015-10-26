@@ -3,7 +3,6 @@ use IO::Socket;
 # wakeonlan example
 
 # operating parameters
-$hostnet = '192.168.0';
 $port = 9;
 
 
@@ -13,7 +12,11 @@ $buf = pack ("C6", 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
 if (defined($ctrl->{'FORM'}->{'arg1'})) {
     $ctrl->{'FORM'}->{'arg1'} =~ s/-/:/g;
     @_ = split(":", $ctrl->{'FORM'}->{'arg1'});
-    print $sock "Arg1 defined : ", join(":", @_);
+    print $sock "Arg1 defined : ";
+    for ($_ = 0; $_ <= $#_; $_++) {
+        $_[$_] = hex($_[$_]);
+        print $sock sprintf("%02X ", $_[$_]);
+    }
     $buf .= pack ("C6", @_) x 16;
 } else {
     # magic packet payload: MAC 16 times
@@ -22,27 +25,35 @@ if (defined($ctrl->{'FORM'}->{'arg1'})) {
 }
 
 # report the size of the actual payload
+$hostnet = $ctrl->{'myip'};
+$hostnet =~ s/\.\d+$//;
+
 print $sock "<P>My IP $ctrl->{'myip'}<br>\n";
+print $sock "<P>Sub net $hostnet<p>\n";
 
-$ret = $ctrl->{'droid'}->checkWifiState();
-if ($ret->{'result'}) {
-    print $sock "wifi is on<p>\n";
-    $turnwifioff = 0;
-    $ip = 1;
+if ($ctrl->{'os'} eq 'and') {
+    $ret = $ctrl->{'droid'}->checkWifiState();
+    if ($ret->{'result'}) {
+        print $sock "wifi is on<p>\n";
+        $turnwifioff = 0;
+        $ip = 1;
 } else {
-    print $sock "wifi is off<p>\n";
-    $turnwifioff = 1;
-    print $sock "Turning on wifi<p>";
-    $ret = $ctrl->{'droid'}->toggleWifiState(true);
+        print $sock "wifi is off<p>\n";
+        $turnwifioff = 1;
+        print $sock "Turning on wifi<p>";
+        $ret = $ctrl->{'droid'}->toggleWifiState(true);
 
-    for (0..10) {
-        sleep (1);
-        $ip = $ctrl->{'droid'}->wifiGetConnectionInfo()->{'result'}->{'ip_address'};
-        print $sock "$_: Waiting for wifi IP: $ip<br>\n";
-        if ($ip) {
-           last;
+        for (0..10) {
+            sleep (1);
+            $ip = $ctrl->{'droid'}->wifiGetConnectionInfo()->{'result'}->{'ip_address'};
+            print $sock "$_: Waiting for wifi IP: $ip<br>\n";
+            if ($ip) {
+               last;
+            }
         }
     }
+} else {
+    $ip = 1;
 }
 
 if ($ip) {
@@ -69,4 +80,4 @@ if ($turnwifioff) {
     $ret = $ctrl->{'droid'}->toggleWifiState(false);
 }
 
-print $sock "DONE";
+print $sock "<p>DONE";
