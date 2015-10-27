@@ -15,7 +15,7 @@ $zoom = 150;
 $maxarts = 20;
 $readln = 1;
 $lastpath = '';
-$maxlines = 200;
+$maxlines = 100;
 
 sub l00http_reader_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -320,6 +320,10 @@ sub l00http_reader_proc (\%) {
                     }
                 }
                 $lnno++;
+                if ($noart > $maxlines) {
+                    print $sock "\nListed maximum number of $maxlines articles. There may be more articles not listed.\n\n";
+                    last;
+                }
             }
             close(IN);
         }
