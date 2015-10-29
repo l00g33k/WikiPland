@@ -36,6 +36,7 @@ my (%list, %tbl, @outs);
 my $cellwd = 5;
 my $cellht = 4;
 my $lenwk = 10;
+my $prewk =  0;
 my $border = 0;        # text border on both sides of cell
 
 
@@ -113,6 +114,9 @@ sub l00http_cal_proc {
     }
     if (defined ($form->{'lenwk'}) && $form->{'lenwk'} > 3) {
         $lenwk = $form->{'lenwk'};
+    }
+    if (defined ($form->{'prewk'}) && $form->{'prewk'} > 3) {
+        $prewk = $form->{'prewk'};
     }
 
 
@@ -224,6 +228,7 @@ sub l00http_cal_proc {
         }
     }
     if ($lenwk > 0) {
+        $firstweek -= $prewk;
         $finalweek = $firstweek + $lenwk;
     }
 
@@ -341,11 +346,13 @@ sub l00http_cal_proc {
     }
 
     # print ASCII table
-#   print $sock "<pre>\n";
-#   foreach $ln (@outs) {
-#       print $sock "$ln\n";
-#   }
-#   print $sock "</pre>\n";
+    if (defined ($form->{'printascii'}) && ($form->{'printascii'} eq 'on')) {
+        print $sock "<pre>\n";
+        foreach $ln (@outs) {
+            print $sock "$ln\n";
+        }
+        print $sock "</pre>\n";
+    }
 
     # 3) Display form controls
     print $sock "<p><a href=\"#top\">Jump to top</a><be>\n";
@@ -354,13 +361,8 @@ sub l00http_cal_proc {
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td>ASCII cell width:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"3\" name=\"cellwd\" value=\"$cellwd\"></td>\n";
-    print $sock "        </tr>\n";
-                                                
-    print $sock "        <tr>\n";
-    print $sock "            <td>ASCII cell height:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"3\" name=\"cellht\" value=\"$cellht\"></td>\n";
+    print $sock "            <td>Weeks preceeding:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"3\" name=\"prewk\" value=\"$prewk\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
@@ -374,11 +376,25 @@ sub l00http_cal_proc {
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-#   print $sock "        <td>&nbsp;</td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"today\">Mark NOW</td>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"printascii\">Print ASCII</td>\n";
+    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>ASCII cell width:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"3\" name=\"cellwd\" value=\"$cellwd\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>ASCII cell height:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"3\" name=\"cellht\" value=\"$cellht\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
     print $sock "</table>\n";
     print $sock "</form>\n";
 
