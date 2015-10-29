@@ -106,17 +106,17 @@ sub l00http_cal_proc {
     print $sock "<a name=\"top\"></a>\n";
 
     # remember parameters if new ones are provided
-    if (defined ($form->{'cellwd'}) && $form->{'cellwd'} > 3) {
-        $cellwd = $form->{'cellwd'};
+    if (defined ($form->{'cellwd'}) && ($form->{'cellwd'} =~ /(\d+)/)) {
+        $cellwd = $1;
     }
-    if (defined ($form->{'cellht'}) && $form->{'cellht'} > 3) {
-        $cellht = $form->{'cellht'};
+    if (defined ($form->{'cellht'}) && ($form->{'cellht'} =~ /(\d+)/)) {
+        $cellht = $1;
     }
-    if (defined ($form->{'lenwk'}) && $form->{'lenwk'} > 3) {
-        $lenwk = $form->{'lenwk'};
+    if (defined ($form->{'lenwk'}) && ($form->{'lenwk'} =~ /(\d+)/)) {
+        $lenwk = $1;
     }
-    if (defined ($form->{'prewk'}) && $form->{'prewk'} > 3) {
-        $prewk = $form->{'prewk'};
+    if (defined ($form->{'prewk'}) && ($form->{'prewk'} =~ /(\d+)/)) {
+        $prewk = $1;
     }
 
 
