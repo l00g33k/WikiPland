@@ -229,7 +229,7 @@ sub l00http_cal_proc {
     }
     if ($lenwk > 0) {
         $firstweek -= $prewk;
-        $finalweek = $firstweek + $lenwk;
+        $finalweek = $firstweek + $lenwk + $prewk;
     }
 
 
