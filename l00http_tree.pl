@@ -412,13 +412,15 @@ $form->{'filter'} = 'not implemented';
     print $sock "</form><br>\n";
 
     my ($logname);
-    $logname = "m5_$ctrl->{'now_string'}.md5sz.txt";
+    $logname = "m5_$ctrl->{'now_string'}\${DESC}.md5sz.txt";
     $logname =~ s/ /_/g;
     print $sock "# md5sum computation can be accelerated by using bash commands as follow:<br>\n";
     print $sock "du -h<br>\n";
-    print $sock "pwd > $logname<br>\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> $logname<br>\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> $logname<br>\n";
+    print $sock "OUTDIR=./<br>\n";
+    print $sock "DESC=_<br>\n";
+    print $sock "pwd > \${OUTDIR}$logname<br>\n";
+    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname<br>\n";
+    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname<br>\n";
     print $sock "# and send $logname to <a href=\"/tree.htm\">tree.htm</a> for processing<br>\n";
     print $sock "#speed is approximately 12-26 secs/GB<p>\n";
 

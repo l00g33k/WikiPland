@@ -278,6 +278,10 @@ sub l00http_edit_proc2 {
                 # when a block has been selected, selecting the last line clears block
                 &l00httpd::l00setCB($ctrl, $buffer);
             }
+            if (defined ($form->{'appbookmark'})) {
+                # append %BOOKMARK% and %END%
+                $buffer .= "%BOOKMARK%\n* \n\n%END%\n";
+            }
         }
     }
     if (defined ($form->{'clear'})) {
@@ -336,6 +340,13 @@ sub l00http_edit_proc2 {
     print $sock "<input type=\"submit\" name=\"txttoedit\" value=\"Append ||\">\n";
     print $sock "<input type=\"submit\" name=\"cut\" value=\"Cut\">\n";
     print $sock "</td></tr>\n";
+
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"appbookmark\" value=\"Add BKMK\">\n";
+    print $sock "</td><td>\n";
+    print $sock "&nbsp;\n";
+    print $sock "</td></tr>\n";
+
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"tempsize\" value=\"Edit box size\"><br>\n";
     print $sock "wd <input type=\"text\" size=\"4\" name=\"editwd\" value=\"$editwd\">\n";
