@@ -13,7 +13,7 @@ my ($hostpath, $lastpath);
 my ($findtext, $block, $wraptext, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
-$block = '';
+$block = '.';
 $wraptext = '';
 $skip = 0;
 $maxln = 1000;
@@ -168,6 +168,9 @@ sub l00http_view_proc {
                 }
                 if (defined ($form->{'block'})) {
                     $block = $form->{'block'};
+                    if (length($block) <= 0) {
+                        $block = '.';
+                    }
                 }
                 if (defined ($form->{'wraptext'})) {
                     $wraptext = 'checked';

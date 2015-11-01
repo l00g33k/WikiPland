@@ -160,8 +160,6 @@ sub l00http_md5sizediff_proc {
             }
 
             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = '';
-            #$ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "  $sname:\n";
-            #print $sock "  $sname:\n";
             foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
                 # for each md5sum
                 if ($md5sum ne '00000000000000000000000000000000') {
@@ -171,7 +169,7 @@ sub l00http_md5sizediff_proc {
                     if ($#_ > 0) {
                         $_ = $#_ + 1;
                         $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                            sprintf ("   %03d: xxx $_ files $sizebymd5sum{$md5sum} $md5sum:\n        ", $cnt{$sname}).
+                            sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- @_[0]\n        ", $cnt{$sname}).
                             join("\n        ", @_)."\n";
                         #print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
                         $cnt{$sname}++;
@@ -273,9 +271,12 @@ sub l00http_md5sizediff_proc {
                 if (($#lmd5sum > 0) ||             # more than one md5sum in this, or
                     ($#rmd5sum > 0) ||             # more than one md5sum in that, or
                     ($lmd5sum[0] ne $rmd5sum[0])) {# they are not equal
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname\n", $cnt);
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
                     for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                         ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
+                        if ($idx == 0) {
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "$pfname\n";
+                        }
                         $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
                     }
                     for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
