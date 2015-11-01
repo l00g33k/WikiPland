@@ -203,7 +203,7 @@ sub l00http_tree_proc {
                     $size = $1;
                     $fname = $2;
                     $sizeMd5sum{$fname} = sprintf("|| %8d ||", $size);
-                } elsif (/^([0-9a-fA-F]+) \.\/(.+)/) {
+                } elsif (/^([0-9a-fA-F]+) +\.\/(.+)/) {
                     $cntbak++;
                     $md5sum = $1;
                     $fname = $2;
@@ -215,7 +215,11 @@ sub l00http_tree_proc {
 
 	        $export = '';
             foreach $fname (sort keys %sizeMd5sum) {
-                $export .= "$sizeMd5sum{$fname} ./$fname ||\n";
+                if (length($sizeMd5sum{$fname}) >= 32) {
+                    $export .= "$sizeMd5sum{$fname} ./$fname ||\n";
+                } else {
+                    print $sock "missing md5sum: $fname<br>\n";
+                }
             }
 
             if (defined($ctrl->{'l00file'}->{'l00://tree.htm'})) {
