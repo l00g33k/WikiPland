@@ -260,7 +260,7 @@ sub l00http_md5sizediff_proc {
         $common = 0;
         foreach $fname (sort keys %{$byname{$sname}}) {
             # for each file name in this
-            if (defined(${$byname{$oname}{$fname}})) {
+            if (defined(${$byname{$oname}}{$fname})) {
                 $common++;
                 # that also exist in that
                 # our databases
