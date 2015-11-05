@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00backup;
+use l00wikihtml;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -118,9 +119,9 @@ sub l00http_timelog_proc {
             s/\n//g;
             if (/^\d{8,8} \d{6,6} (.+)/) {
                 if ($reminder eq '') {
-                    $reminder = "$1";
+                    $reminder = "* $1";
                 } else {
-                    $reminder .= "\n$1";
+                    $reminder .= "\n* $1";
                 }
             }
             if (/^#\d{8,8} \d{6,6} (.+)/) {
@@ -135,7 +136,14 @@ sub l00http_timelog_proc {
         $filecontent .= "</pre>\n";
     }
     if ($reminder ne '') {
-        print $sock "<pre><font style=\"color:black;background-color:yellow\">$reminder</font></pre>\n";
+        $reminder = &l00wikihtml::wikihtml ($ctrl, '', $reminder, 0);
+        print $sock "<pre><font style=\"color:black;background-color:yellow\">";
+        foreach $_ (split("\n", $reminder)) {
+            if (!/a href="#__toc__/) {
+                print $sock "$_\n";
+            }
+        }
+        print $sock "</font></pre>\n";
     }
 
     print $sock "<form action=\"/timelog.htm\" method=\"post\">\n";
