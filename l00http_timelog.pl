@@ -135,7 +135,7 @@ sub l00http_timelog_proc {
         $filecontent .= "</pre>\n";
     }
     if ($reminder ne '') {
-        print $sock "<pre>$reminder</pre>\n";
+        print $sock "<pre><font style=\"color:black;background-color:yellow\">$reminder</font></pre>\n";
     }
 
     print $sock "<form action=\"/timelog.htm\" method=\"post\">\n";
