@@ -140,7 +140,12 @@ sub l00http_timelog_proc {
         print $sock "<pre><font style=\"color:black;background-color:yellow\">";
         foreach $_ (split("\n", $reminder)) {
             if (!/a href="#__toc__/) {
-                print $sock "$_\n";
+                s/<a name="___top___"><\/a>//;
+                s/<\/*ul>//g;
+                s/<\/*li>//g;
+                if (!/^ *$/) {
+                    print $sock "$_\n";
+                }
             }
         }
         print $sock "</font></pre>\n";

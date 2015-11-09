@@ -386,7 +386,8 @@ sub l00http_reminder_perio {
             $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> <a href=\"/reminder.htm#manage\">:::</a> <font style=\"color:yellow;background-color:red\">$msgtoast</font></center>";
 
             if (($ctrl->{'os'} eq 'and') &&
-                (!($msgtoast =~ /^ *$/))) {
+                (!($msgtoast =~ /^ *$/)) &&
+                ($ctrl->{'bannermute'} <= time)) {
                 $ctrl->{'droid'}->makeToast("$percnt: $msgtoast");
             }
             $percnt++;

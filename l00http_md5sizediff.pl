@@ -169,7 +169,7 @@ sub l00http_md5sizediff_proc {
                     if ($#_ > 0) {
                         $_ = $#_ + 1;
                         $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                            sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- @_[0]\n        ", $cnt{$sname}).
+                            sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n        ", $cnt{$sname}).
                             join("\n        ", @_)."\n";
                         #print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
                         $cnt{$sname}++;

@@ -722,6 +722,7 @@ if(1){
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
                          " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">vw</a>" .
                          sprintf("</h%d>",length($el[2])) .
+                         "<a name=\"${tag}_\"></a>".
                          $el[3];
                 }
                 if ($lnnoinfo ne '') {

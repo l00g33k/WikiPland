@@ -49,7 +49,7 @@ my ($urlparams, $val, $wday, $yday, $year, $subname);
 my ($httpbuf, $httphdr, $httpbdy, $httpmax, $l00time, $rin, $rout, $eout);
 my ($httpbuz, $httphdz, $httpbdz, $httpsiz, $clicnt, $nopwtimeout);
 my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown, $poormanrdnssub);
-my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary, $bannermute);
+my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
@@ -65,7 +65,7 @@ $open = 0;
 $shutdown = 0;
 $cfgedit = '';
 $httpmax = 1024 * 1024 * 3;
-$bannermute = 0;
+$ctrl{'bannermute'} = 0;
 
 undef $timeout;
 
@@ -1112,7 +1112,7 @@ while(1) {
 
                 if ($ishost && 
                     !defined($ctrl{'nobanners'}) &&
-                    ($bannermute <= time)) {
+                    ($ctrl{'bannermute'} <= time)) {
                     # a generic scheme to support system wide banner
                     # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
                     # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
@@ -1166,7 +1166,7 @@ while(1) {
                     if (defined ($FORM{'bannermute'}) &&
                         (length ($FORM{'bannermute'}) > 0) &&
                         (int ($FORM{'bannermute'}) >= 0)) {
-                        $bannermute = time + $FORM{'bannermute'} * 60;
+                        $ctrl{'bannermute'} = time + $FORM{'bannermute'} * 60;
                     }
                     # setting new timeout
                     if (defined ($FORM{'timeout'}) &&
@@ -1315,21 +1315,24 @@ while(1) {
 
                 print "Send host control HTTP form\n", if ($debug >= 6);
                 print $sock "<a name=\"top\"></a>\n";
-                print $sock "<form action=\"/httpd\" method=\"get\">\n";
-                print $sock "<input type=\"submit\" value=\"Edit box size\">\n";
-                print $sock "W <input type=\"text\" size=\"4\" name=\"txtw\" value=\"$ctrl{'txtw'}\">\n";
-                print $sock "H <input type=\"text\" size=\"4\" name=\"txth\" value=\"$ctrl{'txth'}\">\n";
-                $tmp = int($httpmax / 1024 / 1024);
-                print $sock "<input type=\"submit\" value=\"Max upload\">\n";
-                print $sock "<input type=\"text\" size=\"4\" name=\"httpmax\" value=\"$tmp\"> MBytes\n";
-                print $sock "</form>\n";
-
                 if ($ishost) {
-                    # on server, also display client controls
-                    print $sock "<form action=\"/httpd\" method=\"get\">\n";
-                    # on server: display submit button
-                    print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
+                    print $sock "Banner mute: ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=0\">off</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=5\">5'</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=10\">10'</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=15\">15'</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=20\">20'</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=30\">30'</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=45\">45'</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=60\">1h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=90\">1.5h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=120\">2h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=150\">2.5h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=180\">3h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=240\">4h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a><p>";
                 }
+
                 print $sock "<a href=\"/httpd.htm\">#</a>\n";
                 print $sock "<a href=\"/ls.htm/HelpModl00httpd.htm?path=${plpath}docs_demo/HelpModl00httpd.txt\">?</a>\n";
                 print $sock "$ctrl{'HOME'}\n";
@@ -1345,6 +1348,22 @@ while(1) {
                     print $sock "<a href=\"#ram\">ram</a> \n";
                 }
                 print $sock "<p>\n";
+
+                if ($ishost) {
+                    print $sock "<form action=\"/httpd\" method=\"get\">\n";
+                    print $sock "<input type=\"submit\" value=\"Edit box size\">\n";
+                    print $sock "W <input type=\"text\" size=\"4\" name=\"txtw\" value=\"$ctrl{'txtw'}\">\n";
+                    print $sock "H <input type=\"text\" size=\"4\" name=\"txth\" value=\"$ctrl{'txth'}\">\n";
+                    $tmp = int($httpmax / 1024 / 1024);
+                    print $sock "<input type=\"submit\" value=\"Max upload\">\n";
+                    print $sock "<input type=\"text\" size=\"4\" name=\"httpmax\" value=\"$tmp\"> MBytes\n";
+                    print $sock "</form>\n";
+
+                    # on server, also display client controls
+                    print $sock "<form action=\"/httpd\" method=\"get\">\n";
+                    # on server: display submit button
+                    print $sock "<input type=\"submit\" name=\"Submit\" value=\"Submit\">\n";
+                }
  
                 # build table of modules
                 print "build table of modules\n", if ($debug >= 6);
@@ -1501,21 +1520,6 @@ while(1) {
                         print $sock "$cfgedit\n";
                     }
 
-                    print $sock "<p>Banner mute: ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=0\">off</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=5\">5'</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=10\">10'</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=15\">15'</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=20\">20'</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=30\">30'</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=45\">45'</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=60\">1h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=90\">1.5h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=120\">2h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=150\">2.5h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=180\">3h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=240\">4h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a><p>";
 
 
                     # dump all ctrl data
