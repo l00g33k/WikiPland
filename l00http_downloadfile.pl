@@ -32,7 +32,7 @@ sub l00http_downloadfile_proc {
     print $sock "<a href=\"#end\">Jump to end</a><p>\n";
 
     if (defined($form->{'path'})) {
-        print $sock "Save target as: <a href=\"/ls.htm?path=$form->{'path'}&raw=on\">$form->{'path'}</a><p>\n";
+        print $sock "Save target as: <a href=\"/ls.htm/$form->{'path'}?path=$form->{'path'}&raw=on\">$form->{'path'}</a><p>\n";
     } else {
         print $sock "To download a file, choose the file through launcher and then click downloadfile<p>\n";;
     }

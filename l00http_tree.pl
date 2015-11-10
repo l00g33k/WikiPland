@@ -228,7 +228,8 @@ sub l00http_tree_proc {
             &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
             &l00httpd::l00fwriteBuf($ctrl, "* $dir\n\n$export\n\n");
             &l00httpd::l00fwriteClose($ctrl);
-            print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a><p>\n";
+            print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a>. \n";
+            print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm\">filemgt tree.htm</a><p>\n";
             print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
         }
     } else {
@@ -384,12 +385,13 @@ sub l00http_tree_proc {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
         &l00httpd::l00fwriteBuf($ctrl, "* $base\n\n$export\n\n");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a><p>\n";
+        print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a>. \n";
+        print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm\">filemgt tree.htm</a><p>\n";
         print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
     }
 
 
-    print $sock "<form action=\"/tree.htm\" method=\"post\"><hr>\n";
+    print $sock "<form action=\"/tree.htm\" method=\"get\"><hr>\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
@@ -412,17 +414,20 @@ $form->{'filter'} = 'not implemented';
     print $sock "</form><br>\n";
 
     my ($logname);
-    $logname = "m5_$ctrl->{'now_string'}\${DESC}.md5sz.txt";
+    $logname = "m5_$ctrl->{'now_string'}\${DESC}.m5sz";
     $logname =~ s/ /_/g;
-    print $sock "# md5sum computation can be accelerated by using bash commands as follow:<br>\n";
-    print $sock "du -h<br>\n";
-    print $sock "OUTDIR=./<br>\n";
-    print $sock "DESC=_<br>\n";
-    print $sock "pwd > \${OUTDIR}$logname<br>\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname<br>\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname<br>\n";
-    print $sock "# and send $logname to <a href=\"/tree.htm\">tree.htm</a> for processing<br>\n";
+    print $sock "<pre>\n";
+    print $sock "# md5sum computation can be accelerated by using bash commands as follow:\n";
+    print $sock "cd <a href=\"/clip.htm?update=Copy+to+CB&clip=$form->{'path'}.txt\">$form->{'path'}</a>\n";
+    print $sock "du -h\n";
+    print $sock "OUTDIR=./\n";
+    print $sock "DESC=_\n";
+    print $sock "pwd > \${OUTDIR}$logname\n";
+    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname\n";
+    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname\n";
+    print $sock "# and send $logname to <a href=\"/ls.htm?path=$form->{'path'}\">tree.htm</a> for processing\n";
     print $sock "#speed is approximately 12-26 secs/GB<p>\n";
+    print $sock "</pre>\n";
 
 
     print $sock "<a name=\"__end__\"></a>\n";
