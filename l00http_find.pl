@@ -101,115 +101,117 @@ sub l00http_find_search {
                                     if (open (IN, "<$fullname")) {
                                         my $hit = 0;
                                         my ($content2, $bang);
-                                        if ($content =~ /^!!/) {
-                                            $content2 = substr ($content, 2, length ($content) - 2);
-                                            $bang = 1;
-                                        } else {
-                                            $content2 = $content;
-                                            $bang = 0;
-                                        }
-                                        $lineno = 0;
-                                        while (<IN>) {
-                                            $lineno++;
-                                            if (@allparen = /$content2/i) {
-                                                $hitcnt++;
-                                                $hit++;
-                                                if ($bang) {
-                                                    next;
-                                                }
-                                                # ! processing??
-                                                if ($paren) {
-                                                    $_ = $1;
-                                                }
-                                                # print all occurances
+                                        if (1) {
+                                            if ($content =~ /^!!/) {
+                                                $content2 = substr ($content, 2, length ($content) - 2);
+                                                $bang = 1;
+                                            } else {
+                                                $content2 = $content;
+                                                $bang = 0;
+                                            }
+                                            $lineno = 0;
+                                            while (<IN>) {
+                                                $lineno++;
+                                                if (@allparen = /$content2/i) {
+                                                    $hitcnt++;
+                                                    $hit++;
+                                                    if ($bang) {
+                                                        next;
+                                                    }
+                                                    # ! processing??
+                                                    if ($paren) {
+                                                        $_ = $1;
+                                                    }
+                                                    # print all occurances
                                             
-                                                s/</&lt;/g;  # no HTML tags
-                                                s/>/&gt;/g;
-                                                if ($paren) {
-                                                    $output .= join (' ', @allparen) . "$lineend\n";
-                                                    #print $sock join (' ', @allparen) . "$lineend\n";
-                                                } else  {
-                                                    $lineno0 = $lineno - 3;
-                                                    if ($lineno0 < 1) {
-                                                        $lineno0 = 1;
-                                                    }
-                                                    if ($srcdoc eq '') {
-                                                        $output .= 
-                                                            "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                            "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
-                                                        #$output .= "($lineno): $_$lineend";
-                                                        $output .= "(<a href=\"/view.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$lineno</a>): $_$lineend";
-                                                        #print $sock 
-                                                        #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                        #   "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
-                                                        #print $sock "($lineno): $_$lineend";
-                                                    } else {
-                                                        $lnout = $_;
-                                                        if ($context > 0) {
-                                                            if (open (FRAG, "<$fullname")) {
-                                                                $lnctx = 1;
-                                                                while (<FRAG>) {
-                                                                    if (($lnctx > ($lineno - $context)) &&
-                                                                        ($lnctx <  $lineno)) {
-                                                                        $output .= " " x (length ($fullname) + 8) . $_;
-                                                                        #print $sock " " x (length ($fullname) + 8) . $_;
-                                                                    }
-                                                                    $lnctx++;
-                                                                }
-                                                                close (FRAG);
-                                                            }
+                                                    s/</&lt;/g;  # no HTML tags
+                                                    s/>/&gt;/g;
+                                                    if ($paren) {
+                                                        $output .= join (' ', @allparen) . "$lineend\n";
+                                                        #print $sock join (' ', @allparen) . "$lineend\n";
+                                                    } else  {
+                                                        $lineno0 = $lineno - 3;
+                                                        if ($lineno0 < 1) {
+                                                            $lineno0 = 1;
                                                         }
-                                                        $output .= 
-                                                            "<a target=\"source\" href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                            "<a target=\"source\" href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
-                                                        $tmp = "&tgtline=$lineno";
-                                                        $output .= "(<a href=\"/srcdoc.htm?path=$fullname&lineno=on$srcdoc$tmp#line$lineno\">$lineno</a>): $lnout$lineend";
-                                                        #print $sock 
-                                                        #   "<a target=\"source\" href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                        #   "<a target=\"source\" href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
-                                                        $tmp = "&tgtline=$lineno";
-                                                        #print $sock "(<a href=\"/srcdoc.htm?path=$fullname&lineno=on$srcdoc$tmp#line$lineno\">$lineno</a>): $lnout$lineend";
-                                                        if ($context > 0) {
-                                                            if (open (FRAG, "<$fullname")) {
-                                                                $lnctx = 1;
-                                                                while (<FRAG>) {
-                                                                    if (($lnctx >  $lineno) &&
-                                                                        ($lnctx < ($lineno + $context))) {
-                                                                        $output .= " " x (length ($fullname) + 8) . $_;
-                                                                        #print $sock " " x (length ($fullname) + 8) . $_;
+                                                        if ($srcdoc eq '') {
+                                                            $output .= 
+                                                                "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                                                "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
+                                                            #$output .= "($lineno): $_$lineend";
+                                                            $output .= "(<a href=\"/view.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$lineno</a>): $_$lineend";
+                                                            #print $sock 
+                                                            #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                                            #   "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
+                                                            #print $sock "($lineno): $_$lineend";
+                                                        } else {
+                                                            $lnout = $_;
+                                                            if ($context > 0) {
+                                                                if (open (FRAG, "<$fullname")) {
+                                                                    $lnctx = 1;
+                                                                    while (<FRAG>) {
+                                                                        if (($lnctx > ($lineno - $context)) &&
+                                                                            ($lnctx <  $lineno)) {
+                                                                            $output .= " " x (length ($fullname) + 8) . $_;
+                                                                            #print $sock " " x (length ($fullname) + 8) . $_;
+                                                                        }
+                                                                        $lnctx++;
                                                                     }
-                                                                    $lnctx++;
+                                                                    close (FRAG);
                                                                 }
-                                                                $output .= "<hr>\n";
-                                                                #print $sock "<hr>\n";
-                                                                close (FRAG);
+                                                            }
+                                                            $output .= 
+                                                                "<a target=\"source\" href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                                                "<a target=\"source\" href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
+                                                            $tmp = "&tgtline=$lineno";
+                                                            $output .= "(<a href=\"/srcdoc.htm?path=$fullname&lineno=on$srcdoc$tmp#line$lineno\">$lineno</a>): $lnout$lineend";
+                                                            #print $sock 
+                                                            #   "<a target=\"source\" href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                                            #   "<a target=\"source\" href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
+                                                            $tmp = "&tgtline=$lineno";
+                                                            #print $sock "(<a href=\"/srcdoc.htm?path=$fullname&lineno=on$srcdoc$tmp#line$lineno\">$lineno</a>): $lnout$lineend";
+                                                            if ($context > 0) {
+                                                                if (open (FRAG, "<$fullname")) {
+                                                                    $lnctx = 1;
+                                                                    while (<FRAG>) {
+                                                                        if (($lnctx >  $lineno) &&
+                                                                            ($lnctx < ($lineno + $context))) {
+                                                                            $output .= " " x (length ($fullname) + 8) . $_;
+                                                                            #print $sock " " x (length ($fullname) + 8) . $_;
+                                                                        }
+                                                                        $lnctx++;
+                                                                    }
+                                                                    $output .= "<hr>\n";
+                                                                    #print $sock "<hr>\n";
+                                                                    close (FRAG);
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
+                                                if ($lineno >= $maxlines) {
+                                                    # up to max
+                                                    last;
+                                                }
                                             }
-                                            if ($lineno >= $maxlines) {
-                                                # up to max
-                                                last;
+                                            if ($bang) {
+                                                if (!$hit) {
+                                                    # find files not containing
+                                                    $filecnt++;
+                                                    $output .= 
+                                                        "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                                        "<a href=\"/$sendto.htm?path=$fullname\">$file</a>$lineend\n";
+                                                    #print $sock 
+                                                    #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                                    #   "<a href=\"/$sendto.htm?path=$fullname\">$file</a>$lineend";
+                                                }
+                                            } else {
+                                                if ($hit) {
+                                                    $filecnt++;
+                                                }
                                             }
-                                        }
-                                        if ($bang) {
-                                            if (!$hit) {
-                                                # find files not containing
-                                                $filecnt++;
-                                                $output .= 
-                                                    "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                    "<a href=\"/$sendto.htm?path=$fullname\">$file</a>$lineend\n";
-                                                #print $sock 
-                                                #   "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                #   "<a href=\"/$sendto.htm?path=$fullname\">$file</a>$lineend";
-                                            }
-                                        } else {
-                                            if ($hit) {
-                                                $filecnt++;
-                                            }
-                                        }
-                                        close (IN);
+                                            close (IN);
+                                        }    
                                     } else {
                                         # unexpected?
                                         $output .= "Can't open: $fullname$lineend";
