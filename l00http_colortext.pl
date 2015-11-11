@@ -12,14 +12,13 @@ my %config = (proc => "l00http_colortext_proc",
 my ($rules);
 $rules = 'l00://colortext_rules.txt';
 
-my ($fore, $back, $stCnt, $stRegex, $enCnt, $enRegex, $remark);
+my ($fore, $back, $stRegex, $enCnt, $enRegex, $remark);
 $fore = 1;
 $back = 2;
-$stCnt = 3;
-$stRegex = 4;
-$enCnt = 5;
-$enRegex = 6;
-$remark = 7;
+$stRegex = 3;
+$enCnt = 4;
+$enRegex = 5;
+$remark = 6;
 
 sub l00http_colortext_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -52,11 +51,11 @@ sub l00http_colortext_proc {
 
     if (defined ($form->{'sample'})) {
         if (&l00httpd::l00fwriteOpen($ctrl, 'l00://colortext_rules.txt')) {
-            $_ =    "|| Foreground || Background || Count || Start Regex                  || Count || End Regex || Remark ||\n".
-                    "|| yellow     || magenta    || 1     || [l]00http_colortext_desc     || 1     || }         || start of function to end of function       ||\n".
-                    "|| black      || cyan       || 1     || [l]00http_colortext_proc     || 1     || .         || one line only       ||\n".
-                    "|| black      || gray       || 1     || print[ ]\\\$sock             || 1     || .         || note triple \\ to escape \$       ||\n".
-                    "|| black      || silver     || 1     || \\\$foundRuleN = \\\$ruleidx || 3     || .         || three line block       ||\n".
+            $_ =    "|| Foreground || Background || Start Regex                  || End Count || End Regex || Remark ||\n".
+                    "|| yellow     || magenta    || [l]00http_colortext_desc     || 1         || }         || start of function to end of function       ||\n".
+                    "|| black      || cyan       || [l]00http_colortext_proc     || 1         || .         || one line only       ||\n".
+                    "|| black      || gray       || print[ ]\\\$sock             || 1         || .         || note triple \\ to escape \$       ||\n".
+                    "|| black      || silver     || \\\$foundRuleN = \\\$ruleidx || 3         || .         || three line block       ||\n".
                     "* Sample rules. Leading and trailing whitespaces are trimmed from regex.\n".
                     "* [[/colortext.htm?path=$ctrl->{'plpath'}l00http_colortext.pl=l00%3A%2F%2Fcolortext_rules.txt&color=on|Take a test drive]]\n";
             &l00httpd::l00fwriteBuf($ctrl, $_);
@@ -80,7 +79,7 @@ sub l00http_colortext_proc {
                 if ((/^ *\|\|.*\|\| *$/) && !(/Foreground \|\| Background/)) {
                     # Looks like rule entry
                     @rules = split('\|\|', $_);
-                    if ($#rules == 8) {
+                    if ($#rules == ($remark + 1)) {
                         # as expected
                         # remote leading and trialing spaces from Regex
                         for ($ii = 1; $ii <= 6; $ii++) {
@@ -159,12 +158,13 @@ sub l00http_colortext_proc {
     }
 
     # print parsed rule table
-    $rulestable = "|| Foreground || Background || Count || Start Regex || Count || End Regex || Remark ||\n";
+    $rulestable = "|| Foreground || Background || Start Regex || End Count || End Regex || Remark ||\n";
     for ($ruleidx = 0; $ruleidx < $norules; $ruleidx++) {
         $rulestable .=  "|| $allrules[$ruleidx][$fore] || $allrules[$ruleidx][$back] ".
-                        "|| $allrules[$ruleidx][$stCnt] || $allrules[$ruleidx][$stRegex] ".
-                        "|| $allrules[$ruleidx][$enCnt] || $allrules[$ruleidx][$enRegex] ".
-                        "|| $allrules[$ruleidx][$remark] ||\n";
+                        "|| $allrules[$ruleidx][$stRegex] || $allrules[$ruleidx][$enCnt] ".
+                        "|| $allrules[$ruleidx][$enRegex] ".
+                        "|| <font style=\"color:$allrules[$ruleidx][$fore];background-color:$allrules[$ruleidx][$back]\">".
+                        "$allrules[$ruleidx][$remark] ||\n";
     }
     $rulestable .= "* List of rules\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $rulestable, 0);
