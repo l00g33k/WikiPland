@@ -9,7 +9,17 @@ use l00backup;
 #l00httpd::dbp($config{'desc'}, "2 contextln $contextln\n");
 my %config = (proc => "l00http_colortext_proc",
               desc => "l00http_colortext_desc");
+my ($rules);
+$rules = 'l00://colortext_rules.txt';
 
+my ($fore, $back, $stCnt, $stRegex, $enCnt, $enRegex, $remark);
+$fore = 1;
+$back = 2;
+$stCnt = 3;
+$stRegex = 4;
+$enCnt = 5;
+$enRegex = 6;
+$remark = 7;
 
 sub l00http_colortext_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -22,7 +32,8 @@ sub l00http_colortext_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buf, $pname, $fname);
+    my ($buf, $pname, $fname, @alllines, $lineno, $buffer, $line, @rules, $ii);
+    my (@allrules, $norules, $ruleidx, $rulestable, $foundRuleN, $foundCnt, $forecolor, $backcolor);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -39,28 +50,124 @@ sub l00http_colortext_proc {
     }
     print $sock "<br>\n";
 
-
-
-    if (defined ($form->{'path'})) {
-        print $sock "<form action=\"/adb.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"backup\" value=\"Make backup\">\n";
-        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-        print $sock "</form>\n";
-
-        if ($form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
-            if (defined ($form->{'backup'})) {
-                # make backup
-                &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
-            }
-            $_ = "$form->{'path'}";
-            s / /%20/g;
-            print $sock "<br><a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">Copy path</a><p>\n";
-
-            $buf = &l00httpd::pcSyncCmdline($ctrl, $form->{'path'});
-            print $sock $buf;
+    if (defined ($form->{'sample'})) {
+        if (&l00httpd::l00fwriteOpen($ctrl, 'l00://colortext_rules.txt')) {
+            $_ =    "|| Foreground || Background || Count || Start Regex                  || Count || End Regex || Remark ||\n".
+                    "|| yellow     || magenta    || 1     || [l]00http_colortext_desc     || 1     || }         || start of function to end of function       ||\n".
+                    "|| black      || cyan       || 1     || [l]00http_colortext_proc     || 1     || .         || one line only       ||\n".
+                    "|| black      || gray       || 1     || print[ ]\\\$sock             || 1     || .         || note triple \\ to escape \$       ||\n".
+                    "|| black      || silver     || 1     || \\\$foundRuleN = \\\$ruleidx || 3     || .         || three line block       ||\n".
+                    "* Sample rules. Leading and trailing whitespaces are trimmed from regex.\n".
+                    "* [[/colortext.htm?path=$ctrl->{'plpath'}l00http_colortext.pl=l00%3A%2F%2Fcolortext_rules.txt&color=on|Take a test drive]]\n";
+            &l00httpd::l00fwriteBuf($ctrl, $_);
+            &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
+    print $sock "<form action=\"/colortext.htm\" method=\"get\">\n";
+    print $sock "Target: <input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "Rules: <input type=\"text\" size=\"10\" name=\"rules\" value=\"$rules\">\n";
+    print $sock "<input type=\"submit\" name=\"color\" value=\"Color Text\"> \n";
+    print $sock "<input type=\"checkbox\" name=\"sample\">\n";
+    print $sock "Create <a href=\"/ls.htm?path=l00://colortext_rules.txt\">l00://colortext_rules.txt</a>\n";
+    print $sock "</form>\n";
+
+
+    if (defined ($form->{'rules'})) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'rules'})) {
+            $norules = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if ((/^ *\|\|.*\|\| *$/) && !(/Foreground \|\| Background/)) {
+                    # Looks like rule entry
+                    @rules = split('\|\|', $_);
+                    if ($#rules == 8) {
+                        # as expected
+                        # remote leading and trialing spaces from Regex
+                        for ($ii = 1; $ii <= 6; $ii++) {
+                            $rules[$ii] =~ s/^ +//;
+                            $rules[$ii] =~ s/ +$//;
+                        }
+                        # http://perldoc.perl.org/perldsc.html#ARRAYS-OF-ARRAYS
+                        $allrules[$norules] = [ @rules ];
+                        $norules++;
+                    }
+                }
+            }
+        }
+    }
+
+    if (defined ($form->{'path'})) {
+        print $sock "<p><pre>\n";
+        $lineno = 1;
+        $buffer = '';
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+        }
+        $buffer =~ s/\r//g;
+        @alllines = split ("\n", $buffer);
+        $foundRuleN = -1;
+        $foundCnt = 0;
+        $forecolor = 'black';
+        $backcolor = 'white';
+        foreach $line (@alllines) {
+            $line =~ s/\r//g;
+            $line =~ s/\n//g;
+
+            # apply coloring rules
+            if ($foundRuleN >= 0) {
+                # a rule was found, search for end condition
+                if ($line =~ /$allrules[$ruleidx][$enRegex]/) {
+                    # match
+                    $foundCnt++;
+                    if ($foundCnt >= $allrules[$ruleidx][$enCnt]) {
+                        # met hit count, clear coloring
+                        $foundRuleN = -1;
+                        $forecolor = 'black';
+                        $backcolor = 'white';
+                    }
+                }
+            } else {
+                # reset colors
+                $forecolor = 'black';
+                $backcolor = 'white';
+                # search for a rule for start condition
+                for ($ruleidx = 0; $ruleidx < $norules; $ruleidx++) {
+                    if ($line =~ /$allrules[$ruleidx][$stRegex]/) {
+                        # match
+                        $foundRuleN = $ruleidx;
+                        $foundCnt = 0;
+                        $forecolor = $allrules[$foundRuleN][$fore];
+                        $backcolor = $allrules[$foundRuleN][$back];
+                        last;
+                    }
+                }
+            }
+
+            $line =~ s/</&lt;/g;
+            $line =~ s/>/&gt;/g;
+
+            # color line
+            $line = "<font style=\"color:$forecolor;background-color:$backcolor\">$line</font>";
+
+            printf $sock ("%04d: %s\n", $lineno, $line);
+            $lineno++;
+        }
+
+        print $sock "</pre>\n";
+        print $sock "<hr><a name=\"end\"></a>";
+        print $sock "<a href=\"#top\">top</a>\n";
+    }
+
+    # print parsed rule table
+    $rulestable = "|| Foreground || Background || Count || Start Regex || Count || End Regex || Remark ||\n";
+    for ($ruleidx = 0; $ruleidx < $norules; $ruleidx++) {
+        $rulestable .=  "|| $allrules[$ruleidx][$fore] || $allrules[$ruleidx][$back] ".
+                        "|| $allrules[$ruleidx][$stCnt] || $allrules[$ruleidx][$stRegex] ".
+                        "|| $allrules[$ruleidx][$enCnt] || $allrules[$ruleidx][$enRegex] ".
+                        "|| $allrules[$ruleidx][$remark] ||\n";
+    }
+    $rulestable .= "* List of rules\n";
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $rulestable, 0);
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
