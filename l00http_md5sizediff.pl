@@ -7,9 +7,47 @@ use l00backup;
 
 my %config = (proc => "l00http_md5sizediff_proc",
               desc => "l00http_md5sizediff_desc");
-my ($thispath, $thatpath);
+my ($thispath, $thatpath, $mode, $unixhdr, $unixftr);
 $thispath = '';
 $thatpath = '';
+$mode = 'text';
+
+$unixhdr = <<unixcmdhdr;
+#!/bin/sh
+#set -x
+
+# This is a recursive script. The initial invocation is without 
+# arguments. It falls to the else clause which invokes itself 
+# with partial path to the duplicated target files.
+# The default implementation keeps the first file as the reference
+# and verifies that the second and onwards are identical to 
+# the first and then delete them.
+
+SCRIPT=m5script
+
+if [ \$# != 0 ]; then
+    # Sample invocation: \$0 dir1/file1 dir2/file2 dir3/file3
+
+    FILE2KEEP=\$1
+    # while there are two or more arguments
+    while [ \$# -gt 1 ]; do
+        FILE2RM=\$2
+        diff "\$FILE2KEEP" "\$FILE2RM"
+        if [ \$? == 0 ]; then
+            echo same "\$FILE2KEEP" "\$FILE2RM"
+        else
+            echo diff "\$FILE2KEEP" "\$FILE2RM"
+        fi
+        # pop deleted file
+        shift
+    done
+
+else
+unixcmdhdr
+
+$unixftr = <<unixcmdftr;
+fi
+unixcmdftr
 
 sub l00http_md5sizediff_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -27,6 +65,15 @@ sub l00http_md5sizediff_proc {
     my (%cnt, $oname, %out, $idx, $md5sum1st);
     my (@lmd5sum, @rmd5sum, $common);
 
+    if (defined ($form->{'mode'})) {
+        if ($form->{'mode'} eq 'dos') {
+            $mode = 'dos';
+        } elsif ($form->{'mode'} eq 'unix') {
+            $mode = 'unix';
+        } else {
+            $mode = 'text';
+        }
+    }
     if (defined ($form->{'compare'})) {
         # compare defined, i.e. clicked. Get from form
         if (defined ($form->{'path'})) {
@@ -160,7 +207,13 @@ sub l00http_md5sizediff_proc {
                 print $sock "    $sname duplicated md5sum: $thatpath\n\n";
             }
 
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = '';
+            if ($mode eq 'unix') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = $unixhdr;
+            } elsif ($mode eq 'dos') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "\@echo off\n";
+            } else {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = '';
+            }
             foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
                 # for each md5sum
                 if ($md5sum ne '00000000000000000000000000000000') {
@@ -169,13 +222,28 @@ sub l00http_md5sizediff_proc {
                     # is there more than one file name recorded?
                     if ($#_ > 0) {
                         $_ = $#_ + 1;
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                            sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n        ", $cnt{$sname}).
-                            join("\n        ", @_)."\n";
+                        if ($mode eq 'unix') {
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                sprintf ("    #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n    \$SCRIPT  ", $cnt{$sname}).
+                                join("   ", @_)."\n";
+                        } elsif ($mode eq 'dos') {
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n        ", $cnt{$sname}).
+                                join("\n        ", @_)."\n";
+                        } else {
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n        ", $cnt{$sname}).
+                                join("\n        ", @_)."\n";
+                        }
                         #print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
                         $cnt{$sname}++;
                     }
                 }
+            }
+            if ($mode eq 'unix') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= $unixftr;
+            } elsif ($mode eq 'dos') {
+            } else {
             }
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname self duplicated: $cnt{$sname} files\n\n";
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.self_dup.htm>%\n";
@@ -222,11 +290,27 @@ sub l00http_md5sizediff_proc {
                 }
             }
             $cnt = 0;
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
+            if ($mode eq 'unix') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = "#!/bin/sh\n#set -x\nSCRIPT=m5script\n";
+            } elsif ($mode eq 'dos') {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
+            } else {
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
+            }
             foreach $pfname (sort keys %out) {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
-                #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
-                $cnt++;
+                if ($mode eq 'unix') {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                    #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                    $cnt++;
+                } elsif ($mode eq 'dos') {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                    #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                    $cnt++;
+                } else {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                    #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                    $cnt++;
+                }
             }
             #print $sock "\n";
             if ($sname eq 'THIS') {
@@ -255,7 +339,13 @@ sub l00http_md5sizediff_proc {
 
         undef %out;
         $cnt = 0;
-        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
+        if ($mode eq 'unix') {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = "#!/bin/sh\n#set -x\nSCRIPT=m5script\n";
+        } elsif ($mode eq 'dos') {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
+        } else {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
+        }
         $common = 0;
         foreach $fname (sort keys %{$byname{$sname}}) {
             # for each file name in this
@@ -272,17 +362,45 @@ sub l00http_md5sizediff_proc {
                 if (($#lmd5sum > 0) ||             # more than one md5sum in this, or
                     ($#rmd5sum > 0) ||             # more than one md5sum in that, or
                     ($lmd5sum[0] ne $rmd5sum[0])) {# they are not equal
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
-                    for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
-                        ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
-                        if ($idx == 0) {
-                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "$pfname\n";
+                    if ($mode eq 'unix') {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
+                        for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
+                            ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
+                            if ($idx == 0) {
+                                $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "$pfname\n";
+                            }
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
                         }
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
-                    }
-                    for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
-                        ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
+                        for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
+                            ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
+                        }
+                    } elsif ($mode eq 'dos') {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
+                        for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
+                            ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
+                            if ($idx == 0) {
+                                $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "$pfname\n";
+                            }
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
+                        }
+                        for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
+                            ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
+                        }
+                    } else {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
+                        for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
+                            ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
+                            if ($idx == 0) {
+                                $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "$pfname\n";
+                            }
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
+                        }
+                        for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
+                            ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
+                        }
                     }
                     $cnt++;
                 }
@@ -307,18 +425,42 @@ sub l00http_md5sizediff_proc {
 
         undef %out;
         $cnt = 0;
-        $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
+        if ($mode eq 'unix') {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = "#!/bin/sh\n#set -x\nSCRIPT=m5script\n";
+        } elsif ($mode eq 'dos') {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
+        } else {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
+        }
         $common = 0;
         foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
             if (($md5sum ne '00000000000000000000000000000000') && defined($bymd5sum{$oname}{$md5sum})) {
                 # not a directory and is there
-                @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
-                $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
-                "        $_[0]\n";
-                @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
-                $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                "        $_[0]\n";
+                if ($mode eq 'unix') {
+                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                    sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                    "        $_[0]\n";
+                    @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                    "        $_[0]\n";
+                } elsif ($mode eq 'dos') {
+                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                    sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                    "        $_[0]\n";
+                    @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                    "        $_[0]\n";
+                } else {
+                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                    sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                    "        $_[0]\n";
+                    @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                    "        $_[0]\n";
+                }
                 $cnt++;
             }
         }
@@ -340,15 +482,34 @@ sub l00http_md5sizediff_proc {
         print $sock "$jumper";
         print $sock "----------------------------------------------------------\n";
         print $sock "</pre>\n";
-        print $sock "Links to results in RAM<br>\n";
 
-        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"}), " bytes<br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup.htm\">l00://md5sizediff.THIS.self_dup.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.self_dup.htm"}), " bytes<br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.self_dup.htm"}), " bytes<br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.only.htm"}), " bytes<br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.only.htm"}), " bytes<br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"}), " bytes<br>";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.same.htm\">l00://md5sizediff.same.htm</a> - ", length($ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"}), " bytes<br>";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+        print $sock "<tr><td>\n";
+
+        print $sock "RAM file</td><td align=\"right\">bytes\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup.htm\">l00://md5sizediff.THIS.self_dup.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.self_dup.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.self_dup.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.only.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.only.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.same.htm\">l00://md5sizediff.same.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"});
+        print $sock "</td></tr>\n";
+        print $sock "</table>\n";
     }
 
     print $sock "<form action=\"/md5sizediff.htm\" method=\"get\">\n";
@@ -356,6 +517,16 @@ sub l00http_md5sizediff_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\"> Use || to combine inputs\n";
     print $sock "</td></tr>\n";
+
+    print $sock "<tr><td>\n";
+    if ($mode eq 'text') { $_ = "checked"; } else { $_ = "unchecked"; }
+    print $sock "<input type=\"radio\" name=\"mode\" value=\"text\" $_>Text ";
+    if ($mode eq 'dos' ) { $_ = "checked"; } else { $_ = "unchecked"; }
+    print $sock "<input type=\"radio\" name=\"mode\" value=\"dos\"  $_>DOS ";
+    if ($mode eq 'unix') { $_ = "checked"; } else { $_ = "unchecked"; }
+    print $sock "<input type=\"radio\" name=\"mode\" value=\"unix\"  $_>Unix ";
+    print $sock "</td></tr>\n";
+
     print $sock "<tr><td>\n";
     print $sock "This:<br><textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
     print $sock "</td></tr>\n";
