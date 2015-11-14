@@ -137,7 +137,7 @@ sub l00http_timelog_proc {
     }
     if ($reminder ne '') {
         $reminder = &l00wikihtml::wikihtml ($ctrl, '', $reminder, 0);
-        print $sock "<pre><font style=\"color:black;background-color:yellow\">";
+        print $sock "<pre><font style=\"color:yellow;background-color:magenta\">";
         foreach $_ (split("\n", $reminder)) {
             if (!/a href="#__toc__/) {
                 s/<a name="___top___"><\/a>//;
