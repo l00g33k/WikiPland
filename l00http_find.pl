@@ -52,7 +52,6 @@ sub l00http_find_desc {
 
 sub l00http_find_search {
     my ($mypath, $ctrl) = @_;
-#   my ($ctrl, $mypath) = @_;
     my $hitcnt = 0;
     my $filecnt = 0;
     my $totalbytes = 0;
@@ -61,6 +60,7 @@ sub l00http_find_search {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $output, $output2,
 	 $size, $atime, $mtime, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
+    my ($contents);
 
     if ($content =~ /\(/) {
         $paren = 1;
@@ -97,11 +97,13 @@ sub l00http_find_search {
                         } else {
                             if ($fullname =~ /$fmatch/i) {
                                 if (length ($content) > 0) {
-                                    # find in files
-                                    if (open (IN, "<$fullname")) {
-                                        my $hit = 0;
-                                        my ($content2, $bang);
-                                        if (1) {
+                                    $contents = $content;
+                                    foreach $content (split ('\|\|\|', $contents)) {
+#                                   if (1) {
+                                        # find in files
+                                        if (open (IN, "<$fullname")) {
+                                            my $hit = 0;
+                                            my ($content2, $bang);
                                             if ($content =~ /^!!/) {
                                                 $content2 = substr ($content, 2, length ($content) - 2);
                                                 $bang = 1;
@@ -193,7 +195,8 @@ sub l00http_find_search {
                                                     # up to max
                                                     last;
                                                 }
-                                            }
+                                            } # end serch loop
+                                            close (IN);
                                             if ($bang) {
                                                 if (!$hit) {
                                                     # find files not containing
@@ -210,13 +213,12 @@ sub l00http_find_search {
                                                     $filecnt++;
                                                 }
                                             }
-                                            close (IN);
-                                        }    
-                                    } else {
-                                        # unexpected?
-                                        $output .= "Can't open: $fullname$lineend";
-                                        #print $sock "Can't open: $fullname$lineend";
-                                    }
+                                        } else {
+                                            # unexpected?
+                                            $output .= "Can't open: $fullname$lineend";
+                                            #print $sock "Can't open: $fullname$lineend";
+                                        }
+                                    } # multiple search pattern loop
                                 } else {
                                     # find files
                                     $filecnt++;
