@@ -30,7 +30,6 @@ $unixhdr2 = <<unixcmdhdr2;
 
 # Save this file as 'm5script.sh' or change this variable:
 SCRIPT=./m5script.sh
-BASEEDIR=
 
 if [ \$# != 0 ]; then
     # Sample invocation: \$0 dir1/file1 dir2/file2 dir3/file3
@@ -38,17 +37,21 @@ if [ \$# != 0 ]; then
     if [ \$# -eq 1 ]; then
         ONLYFILE=\$1
         # just one file, must be this only or that only
-        echo only ls -l "\$ONLYFILE"
+        echo ONLY "\$ONLYFILE"
+        echo will cp "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
     else
         FILE2KEEP=\$1
         # while there are two or more arguments
         while [ \$# -gt 1 ]; do
             FILE2RM=\$2
-            diff "\$BASEEDIR\$FILE2KEEP" "\$BASEEDIR\$FILE2RM"
+            diff "\$BASEDIR\$FILE2KEEP" "\$BASEDIR\$FILE2RM"
             if [ \$? == 0 ]; then
-                echo same "\$BASEEDIR\$FILE2KEEP" "\$BASEEDIR\$FILE2RM"
+                echo SAME "\$BASEDIR\$FILE2KEEP" "\$BASEDIR\$FILE2RM"
+                # uncomment one of these
+                echo will rm "\$BASEDIR\$FILE2KEEP"
+                echo will rm "\$BASEDIR\$FILE2RM"
             else
-                echo diff "\$BASEEDIR\$FILE2KEEP" "\$BASEEDIR\$FILE2RM"
+                echo DIFF "\$BASEDIR\$FILE2KEEP" "\$BASEDIR\$FILE2RM"
             fi
             # pop deleted file
             shift
@@ -75,8 +78,8 @@ sub l00http_md5sizediff_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($jumper, %bymd5sum, %byname, %sizebymd5sum, $side, $sname, $files, $file, $cnt);
     my ($dummy, $size, $md5sum, $pfname, $pname, $fname);
-    my (%cnt, $oname, %out, $idx, $md5sum1st);
-    my (@lmd5sum, @rmd5sum, $common);
+    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii);
+    my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir);
 
     if (defined ($form->{'mode'})) {
         if ($form->{'mode'} eq 'dos') {
@@ -169,6 +172,7 @@ sub l00http_md5sizediff_proc {
                 $sname = 'THAT';
             }
             $files = 0;
+            $orgdir{$sname} = '';
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname side: $side\n";
             print $sock "$sname side: $side\n";
             # split combined input files for each side
@@ -177,6 +181,8 @@ sub l00http_md5sizediff_proc {
                 if (&l00httpd::l00freadOpen($ctrl, $file)) {
                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
                         s/ <dir>//g;
+                        s/\r//;
+                        s/\n//;
                         if (/^\|\|/) {
                             ($dummy, $size, $md5sum, $pfname) = split('\|\|', $_);
                             $size   =~ s/^ *//;
@@ -191,6 +197,11 @@ sub l00http_md5sizediff_proc {
                             $byname{$sname}{$fname}{$md5sum} = $pfname;
                             $sizebymd5sum{$md5sum} = $size;
                             $cnt++;
+                        } elsif (/^\* (.+)/) {
+                            if ($orgdir{$sname} ne '') {
+                                $orgdir{$sname} .= '||';
+                            }
+                            $orgdir{$sname} .= $1;
                         }
                     }
                 }
@@ -213,15 +224,20 @@ sub l00http_md5sizediff_proc {
             print $sock "----------------------------------------------------------\n";
             print $sock "$jumper";
             if ($sname eq 'THIS') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $thispath\n\n";
-                print $sock "    $sname duplicated md5sum: $thispath\n\n";
+                $orgpath = $thispath;
             } else {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $thatpath\n\n";
-                print $sock "    $sname duplicated md5sum: $thatpath\n\n";
+                $orgpath = $thatpath;
             }
+            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    $sname duplicated md5sum: $orgpath\n\n";
+            print $sock "    $sname duplicated md5sum: $orgpath\n\n";
 
             if ($mode eq 'unix') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "${unixhdr}# '$sname.self_dup'\n$unixhdr2";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = 
+                    "$unixhdr".
+                    "# '$sname.self_dup' from $orgpath\n".
+                    "# org dir: $orgdir{$sname}\n\n".
+                    "BASEDIR=$orgdir{$sname}\n".
+                    "$unixhdr2";
             } elsif ($mode eq 'dos') {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "\@echo off\n";
             } else {
@@ -236,6 +252,9 @@ sub l00http_md5sizediff_proc {
                     if ($#_ > 0) {
                         $_ = $#_ + 1;
                         if ($mode eq 'unix') {
+                            for ($ii = 0; $ii <= $#_; $ii++) {
+                                $_[$ii] =~ s/^\.[\\\/]//;
+                            }
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 sprintf ("    #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n    source \$SCRIPT  \"", $cnt{$sname}).
                                 join("\"   \"", @_)."\"\n";
@@ -304,7 +323,13 @@ sub l00http_md5sizediff_proc {
             }
             $cnt = 0;
             if ($mode eq 'unix') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = "${unixhdr}# '$sname.only'\n$unixhdr2";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = 
+                    "$unixhdr".
+                    "# '$sname.only' from $orgpath\n".
+                    "# org dir: $orgdir{$sname}\n\n".
+                    "BASEDIR=$orgdir{$sname}\n".
+                    "BASEDIR=$orgdir{$sname}\n".
+                    "$unixhdr2";
             } elsif ($mode eq 'dos') {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
             } else {
@@ -312,7 +337,11 @@ sub l00http_md5sizediff_proc {
             }
             foreach $pfname (sort keys %out) {
                 if ($mode eq 'unix') {
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
+                        sprintf ("    #   %03d: ${sname}.only: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                    $pfname =~ s/^\.[\\\/]//;
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
+                        "    source \$SCRIPT  \"$pfname\"\n";
                     #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
                     $cnt++;
                 } elsif ($mode eq 'dos') {
@@ -353,7 +382,12 @@ sub l00http_md5sizediff_proc {
         undef %out;
         $cnt = 0;
         if ($mode eq 'unix') {
-            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = "${unixhdr}# 'diff'\n$unixhdr2";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = 
+                "$unixhdr".
+                "# 'diff'\n".
+                "# org dir: $orgdir{$sname} $orgdir{$oname}\n\n".
+                "BASEDIR=$orgdir{$sname}\n".
+                "$unixhdr2";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
         } else {
@@ -439,7 +473,13 @@ sub l00http_md5sizediff_proc {
         undef %out;
         $cnt = 0;
         if ($mode eq 'unix') {
-            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = "${unixhdr}# 'same'\n$unixhdr2";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = 
+                "$unixhdr".
+                "# 'same'\n".
+                "# org dir: $orgdir{$sname} $orgdir{$oname}\n\n".
+                "BASEDIR=$orgdir{$sname}\n".
+                "COPYDIR=/dest/copy/\n".
+                "$unixhdr2";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
         } else {
