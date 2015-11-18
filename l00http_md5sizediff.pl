@@ -30,6 +30,7 @@ $unixhdr2 = <<unixcmdhdr2;
 
 # Save this file as 'm5script.sh' or change this variable:
 SCRIPT=./m5script.sh
+BASEEDIR=
 
 if [ \$# != 0 ]; then
     # Sample invocation: \$0 dir1/file1 dir2/file2 dir3/file3
@@ -43,11 +44,11 @@ if [ \$# != 0 ]; then
         # while there are two or more arguments
         while [ \$# -gt 1 ]; do
             FILE2RM=\$2
-            diff "\$FILE2KEEP" "\$FILE2RM"
+            diff "\$BASEEDIR\$FILE2KEEP" "\$BASEEDIR\$FILE2RM"
             if [ \$? == 0 ]; then
-                echo same "\$FILE2KEEP" "\$FILE2RM"
+                echo same "\$BASEEDIR\$FILE2KEEP" "\$BASEEDIR\$FILE2RM"
             else
-                echo diff "\$FILE2KEEP" "\$FILE2RM"
+                echo diff "\$BASEEDIR\$FILE2KEEP" "\$BASEEDIR\$FILE2RM"
             fi
             # pop deleted file
             shift
