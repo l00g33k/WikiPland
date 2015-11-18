@@ -7,7 +7,7 @@ use l00backup;
 
 my %config = (proc => "l00http_md5sizediff_proc",
               desc => "l00http_md5sizediff_desc");
-my ($thispath, $thatpath, $mode, $unixhdr, $unixftr);
+my ($thispath, $thatpath, $mode, $unixhdr, $unixhdr2, $unixftr);
 $thispath = '';
 $thatpath = '';
 $mode = 'text';
@@ -16,6 +16,11 @@ $unixhdr = <<unixcmdhdr;
 #!/bin/sh
 #set -x
 
+# This file is:
+unixcmdhdr
+
+$unixhdr2 = <<unixcmdhdr2;
+
 # This is a recursive script. The initial invocation is without 
 # arguments. It falls to the else clause which invokes itself 
 # with partial path to the duplicated target files.
@@ -23,27 +28,34 @@ $unixhdr = <<unixcmdhdr;
 # and verifies that the second and onwards are identical to 
 # the first and then delete them.
 
-SCRIPT=m5script
+# Save this file as 'm5script.sh' or change this variable:
+SCRIPT=./m5script.sh
 
 if [ \$# != 0 ]; then
     # Sample invocation: \$0 dir1/file1 dir2/file2 dir3/file3
 
-    FILE2KEEP=\$1
-    # while there are two or more arguments
-    while [ \$# -gt 1 ]; do
-        FILE2RM=\$2
-        diff "\$FILE2KEEP" "\$FILE2RM"
-        if [ \$? == 0 ]; then
-            echo same "\$FILE2KEEP" "\$FILE2RM"
-        else
-            echo diff "\$FILE2KEEP" "\$FILE2RM"
-        fi
-        # pop deleted file
-        shift
-    done
+    if [ \$# -eq 1 ]; then
+        ONLYFILE=\$1
+        # just one file, must be this only or that only
+        echo only ls -l "\$ONLYFILE"
+    else
+        FILE2KEEP=\$1
+        # while there are two or more arguments
+        while [ \$# -gt 1 ]; do
+            FILE2RM=\$2
+            diff "\$FILE2KEEP" "\$FILE2RM"
+            if [ \$? == 0 ]; then
+                echo same "\$FILE2KEEP" "\$FILE2RM"
+            else
+                echo diff "\$FILE2KEEP" "\$FILE2RM"
+            fi
+            # pop deleted file
+            shift
+        done
+    fi
 
 else
-unixcmdhdr
+unixcmdhdr2
 
 $unixftr = <<unixcmdftr;
 fi
@@ -208,7 +220,7 @@ sub l00http_md5sizediff_proc {
             }
 
             if ($mode eq 'unix') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = $unixhdr;
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "${unixhdr}# '$sname.self_dup'\n$unixhdr2";
             } elsif ($mode eq 'dos') {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "\@echo off\n";
             } else {
@@ -224,8 +236,8 @@ sub l00http_md5sizediff_proc {
                         $_ = $#_ + 1;
                         if ($mode eq 'unix') {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                                sprintf ("    #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n    \$SCRIPT  ", $cnt{$sname}).
-                                join("   ", @_)."\n";
+                                sprintf ("    #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n    source \$SCRIPT  \"", $cnt{$sname}).
+                                join("\"   \"", @_)."\"\n";
                         } elsif ($mode eq 'dos') {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 sprintf ("   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n        ", $cnt{$sname}).
@@ -291,7 +303,7 @@ sub l00http_md5sizediff_proc {
             }
             $cnt = 0;
             if ($mode eq 'unix') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = "#!/bin/sh\n#set -x\nSCRIPT=m5script\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = "${unixhdr}# '$sname.only'\n$unixhdr2";
             } elsif ($mode eq 'dos') {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
             } else {
@@ -340,7 +352,7 @@ sub l00http_md5sizediff_proc {
         undef %out;
         $cnt = 0;
         if ($mode eq 'unix') {
-            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = "#!/bin/sh\n#set -x\nSCRIPT=m5script\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = "${unixhdr}# 'diff'\n$unixhdr2";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
         } else {
@@ -426,7 +438,7 @@ sub l00http_md5sizediff_proc {
         undef %out;
         $cnt = 0;
         if ($mode eq 'unix') {
-            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = "#!/bin/sh\n#set -x\nSCRIPT=m5script\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = "${unixhdr}# 'same'\n$unixhdr2";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
         } else {
