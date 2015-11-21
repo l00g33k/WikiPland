@@ -31,14 +31,20 @@ $unixhdr2 = <<unixcmdhdr2;
 # Save this file as 'm5script.sh' or change this variable:
 SCRIPT=./m5script.sh
 
+COPYDIR=/copy/to/
+
 if [ \$# != 0 ]; then
     # Sample invocation: \$0 dir1/file1 dir2/file2 dir3/file3
 
     if [ \$# -eq 1 ]; then
         ONLYFILE=\$1
         # just one file, must be this only or that only
-        echo ONLY "\$ONLYFILE"
-        echo will cp "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
+        # or same in both
+        echo ONLY/SAME "\$ONLYFILE"
+        if [ -f "\$BASEDIR\$ONLYFILE" ]; then
+            echo will cp "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
+            echo will rm "\$BASEDIR\$ONLYFILE"
+        fi
     else
         FILE2KEEP=\$1
         # while there are two or more arguments
@@ -478,7 +484,6 @@ sub l00http_md5sizediff_proc {
                 "# 'same'\n".
                 "# org dir: $orgdir{$sname} $orgdir{$oname}\n\n".
                 "BASEDIR=$orgdir{$sname}\n".
-                "COPYDIR=/dest/copy/\n".
                 "$unixhdr2";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
@@ -491,12 +496,14 @@ sub l00http_md5sizediff_proc {
                 # not a directory and is there
                 if ($mode eq 'unix') {
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
-                    "        $_[0]\n";
+                    sprintf ("    #   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                    "    source \$SCRIPT  \"$_[0]\"\n";
                     @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    "        $_[0]\n";
+                    "    source \$SCRIPT  \"$_[0]\"\n";
                 } elsif ($mode eq 'dos') {
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
@@ -516,6 +523,11 @@ sub l00http_md5sizediff_proc {
                 }
                 $cnt++;
             }
+        }
+        if ($mode eq 'unix') {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= $unixftr;
+        } elsif ($mode eq 'dos') {
+        } else {
         }
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Same md5sum: $cnt files\n\n";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.same.htm>%\n";

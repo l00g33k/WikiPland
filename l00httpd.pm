@@ -281,6 +281,7 @@ sub l00freadOpen {
     } else {
 	    if (open(IN, "<$fname")) {
 		    # disk file exist
+            binmode(IN);
             local $/ = undef;
             $readBuf = <IN>;
 			close (IN);
@@ -371,6 +372,7 @@ sub l00fwriteClose {
             unlink ($writeName);
         } else {
 	        if (open(OU, ">$writeName")) {
+                binmode(OU);
                 print OU $writeBuf;
 			    close (OU);
 		    } else {
