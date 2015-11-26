@@ -74,7 +74,7 @@ sub l00http_svg_proc {
                 # print "sec $dummy\n";
                 # 1577865600 is 2020/1/1 00:00:00, must be a date
                 ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($x);
-                $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
+                $date = sprintf ("%02d%02d%02d:%02d%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi, $se);
                 print $sock "Values: ($date, $y) [#$off]<br>\n";
             } else {
                 print $sock "Values: ($x, $y) [#$off]<br>\n";

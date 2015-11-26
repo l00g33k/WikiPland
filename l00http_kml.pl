@@ -297,7 +297,7 @@ sub l00http_kml_proc {
                     #-118.0347581348814,33.80816583075773,Place1
                     if (/^#/) {
                         next;
-                    } elsif (($lat, $lon, $name) = /^([^,]+),([^,]+)[, ]+(.+)$/) {
+                    } elsif (($lat, $lon, $name) = /^([^,]+?),([^,]+?)[, ]+(.+)$/) {
                         $kmlbuf .= 
 		                "\t\t<Placemark>\n".
 			            "\t\t\t<name>$name</name>\n".
