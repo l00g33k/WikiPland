@@ -175,8 +175,8 @@ sub l00http_periobattery_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lnno, $keep, $noln);
-    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg);
-    my ($yr, $mo, $da, $hr, $mi, $se, $now);
+    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep);
+    my ($yr, $mo, $da, $hr, $mi, $se, $now, $lastnow);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
     my (@svgmAAvgBuf, $mAsum);
  
@@ -262,7 +262,7 @@ sub l00http_periobattery_proc {
         $battlog = $tmp;
     }
     if (defined ($form->{"clear"})) {
-        $interval = 0;
+        #$interval = 0;
         $battcnt = 0;
         $battlog = '';
         $battpolls = 0;
@@ -329,9 +329,11 @@ sub l00http_periobattery_proc {
         $svgtemp = '';
         $svgmA = '';
         $svgmAAvg = '';
+        $svgsleep = '';
         undef @svgmAAvgBuf;
         $lnno = 0;
         $noln = $battlog =~ s/\n/\n/g;
+        $lastnow = 0;
         foreach $_ (split("\n", $battlog)) {
             if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
                 = /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+) at \d+ \((.+? UTC)\)/) {
@@ -365,10 +367,18 @@ sub l00http_periobattery_proc {
                         }
                         $mAsum /= ($#svgmAAvgBuf + 1);
                         $svgmAAvg .= "$now,$mAsum ";
+                        if ($lastnow == 0) {
+                            $tmp = 0;
+                        } else {
+                            $tmp = $now - $lastnow;
+                        }
+                        $svgsleep .= "$now,$tmp ";
+                        $lastnow = $now;
                     }
                 }
             }
         }
+                        $svgsleep .= "$now,$vol ";
         if ($svgvolt ne '') {
             &l00svg::plotsvg ('battvolt', $svgvolt, $graphwd, $graphht);
             $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
@@ -386,6 +396,11 @@ sub l00http_periobattery_proc {
         if ($svgmAAvg ne '') {
             &l00svg::plotsvg ('battmAavg', $svgmAAvg, $graphwd, $graphht);
             print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg.htm?graph=battmAavg&view=\"><img src=\"/svg.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
+        }
+        if ($svgsleep ne '') {
+            &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
+            $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
+            print $sock "<p>Interval:<br><a href=\"/svg.htm?graph=battsleep&view=\"><img src=\"/svg.htm?graph=battsleep\" alt=\"Interval between batt readings\"></a>\n";
         }
         if ($svgtemp ne '') {
             &l00svg::plotsvg ('batttemp', $svgtemp, $graphwd, $graphht);
@@ -441,6 +456,8 @@ sub l00http_periobattery_proc {
 
     print $sock "</table>\n";
     print $sock "</form>\n";
+
+    print $sock "<p><a href=\"#top\">Jump to top</a><p>\n";
 
     if (length ($savedpath) > 5) {
         #print $sock "Report generator: <a href=\"/rptbattery.htm?path=$savedpath\">$savedpath</a><br>\n";
@@ -530,6 +547,7 @@ sub l00http_periobattery_proc {
 
     print $sock "<p>Lines: $noln. Polls: $battpolls\n";
     print $sock "<a name=\"end\"></a>\n";
+    print $sock "<p><a href=\"#top\">Jump to top</a><p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
