@@ -347,7 +347,6 @@ sub l00http_periobattery_proc {
                     $now = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                     $lnno++;
                     if ((($skip >= 0) && ($lnno >= $skip) && ($lnno <= $skip + $len))  ||
-					    # $skip >= 0: skip $skip and plot $len
                         (($skip <  0) && ($lnno > ($noln - $len)))) {
 						# $skip < 0: plot last $len
 					    # within skip and len (poor man's zoom in)
@@ -501,8 +500,8 @@ sub l00http_periobattery_proc {
     print $sock "</pre>\n";
     print $sock "<p><a href=\"#top\">Jump to top</a><p>\n";
 
-    print $sock "<form action=\"/periobattery.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+    print $sock "<p><form action=\"/periobattery.htm\" method=\"get\">\n";
+    print $sock "<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"restore\" value=\"Restore\"></td>\n";
