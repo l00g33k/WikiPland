@@ -164,15 +164,20 @@ sub l00http_rptbattery_proc {
             print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
             print $sock "</form>\n";
 
+            if ($svgperc ne '') {
+                &l00svg::plotsvg ('battpercentage', $svgperc, $graphwd, $graphht);
+                print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
+                print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
+            }
+            if ($svgsleep ne '') {
+                &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
+                $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
+                print $sock "<p>Interval:<br><a href=\"/svg.htm?graph=battsleep&view=\"><img src=\"/svg.htm?graph=battsleep\" alt=\"Interval between batt readings\"></a>\n";
+            }
             if ($svgvolt ne '') {
                 &l00svg::plotsvg ('battvolt', $svgvolt, $graphwd, $graphht);
                 $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
-                print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
                 print $sock "<p>Volts:<br><a href=\"/svg.htm?graph=battvolt&view=\"><img src=\"/svg.htm?graph=battvolt\" alt=\"voltage over time\"></a>\n";
-            }
-            if ($svgperc ne '') {
-                &l00svg::plotsvg ('battpercentage', $svgperc, $graphwd, $graphht);
-                print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
             }
             if ($svgmA ne '') {
                 &l00svg::plotsvg ('battmA', $svgmA, $graphwd, $graphht);
@@ -181,11 +186,6 @@ sub l00http_rptbattery_proc {
             if ($svgmAAvg ne '') {
                 &l00svg::plotsvg ('battmAavg', $svgmAAvg, $graphwd, $graphht);
                 print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg.htm?graph=battmAavg&view=\"><img src=\"/svg.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
-            }
-            if ($svgsleep ne '') {
-                &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
-                $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
-                print $sock "<p>Interval:<br><a href=\"/svg.htm?graph=battsleep&view=\"><img src=\"/svg.htm?graph=battsleep\" alt=\"Interval between batt readings\"></a>\n";
             }
             if ($svgtemp ne '') {
                 &l00svg::plotsvg ('batttemp', $svgtemp, $graphwd, $graphht);
