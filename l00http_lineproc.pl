@@ -5,9 +5,10 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $debugcheck);
+my ($arg, $debugcheck, $script);
 $arg = '';
 $debugcheck = '';
+$script = 'l00://lineproc.pl';
 
 my %config = (proc => "l00http_lineproc_proc",
               desc => "l00http_lineproc_desc");
@@ -44,6 +45,15 @@ sub l00http_lineproc_proc (\%) {
         $debugcheck = '';
     }
 
+    if (defined ($form->{'script'})) {
+        $script = $form->{'script'};
+    } else {
+        $script = 'l00://lineproc.pl';
+    }
+    if (defined ($form->{'pastescript'})) {
+        $script = &l00httpd::l00getCB($ctrl);
+    }
+
     $pname = '';
     $fname = '';
     if (defined ($form->{'path'})) {
@@ -66,30 +76,38 @@ sub l00http_lineproc_proc (\%) {
 
     print $sock "<form action=\"/lineproc.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"run\" value=\"Run\"></td>\n";
-    print $sock "        <td><input type=\"text\" size=\"6\" name=\"path\" value=\"$pname$fname\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"run\" value=\"Run\">\n";
+    print $sock "            <input type=\"checkbox\" name=\"debug\" $debugcheck>debug</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>Arg</td>\n";
-    print $sock "        <td><input type=\"text\" size=\"6\" name=\"arg\" value=\"$arg\"></td>\n";
+    print $sock "        <td>target:<br>\n";
+    print $sock "            <textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$pname$fname</textarea></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>&nbsp;</td>\n";
-    print $sock "        <td><input type=\"checkbox\" name=\"debug\" $debugcheck>debug</td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"pastescript\" value=\"script\">:<br>\n";
+    print $sock "            <textarea name=\"script\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$script</textarea></td>\n";
     print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td>Arg:\n";
+    print $sock "            <input type=\"text\" size=\"10\" name=\"arg\" value=\"$arg\"></td>\n";
+    print $sock "    </tr>\n";
+
     print $sock "</table>\n";
     print $sock "</form>\n";
 
     print $sock "View: <a href=\"/view.htm?path=$pname$fname\">$pname$fname</a><br>\n";
-    print $sock "View: <a href=\"/view.htm?path=l00://lineproc.pl\">l00://lineproc.pl</a><br>\n";
+    print $sock "View: <a href=\"/view.htm?path=$script\">$script</a><br>\n";
+    print $sock "Copy: lineproc.pl to <a href=\"/filemgt.htm?path=/sdcard/lineproc.pl&path2=l00://lineproc.pl\">l00://lineproc.pl</a><p>\n";
     print $sock "View: <a href=\"/view.htm?path=l00://lineprocout.txt\">l00://lineprocout.txt</a><br>\n";
     print $sock "Copy: <a href=\"/filemgt.htm?path=l00://lineprocout.txt&path2=$pname$fname\">l00://lineprocout.txt to $pname$fname</a><p>\n";
 
     if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
-        if (&l00httpd::l00freadOpen($ctrl, 'l00://lineproc.pl')) {
+        if (&l00httpd::l00freadOpen($ctrl, $script)) {
             $buf = &l00httpd::l00freadAll($ctrl);
         } else {
             # create sample script
@@ -100,7 +118,7 @@ sub lineproc {
 }
 1;
 samplelineproc
-            &l00httpd::l00fwriteOpen($ctrl, "l00://lineproc.pl");
+            &l00httpd::l00fwriteOpen($ctrl, $script);
             &l00httpd::l00fwriteBuf($ctrl, $buf);
             &l00httpd::l00fwriteClose($ctrl);
         }
