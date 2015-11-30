@@ -5,10 +5,11 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $debugcheck, $script);
+my ($arg, $debugcheck, $script, $newname);
 $arg = '';
 $debugcheck = '';
 $script = 'l00://lineproc.pl';
+$newname = 'l00://lineprocout.txt';
 
 my %config = (proc => "l00http_lineproc_proc",
               desc => "l00http_lineproc_desc");
@@ -53,6 +54,14 @@ sub l00http_lineproc_proc (\%) {
     if (defined ($form->{'pastescript'})) {
         $script = &l00httpd::l00getCB($ctrl);
     }
+    if (defined ($form->{'newname'})) {
+        $newname = $form->{'newname'};
+    } else {
+        $newname = 'l00://lineprocout.txt';
+    }
+    if (defined ($form->{'pastenewname'})) {
+        $newname = &l00httpd::l00getCB($ctrl);
+    }
 
     $pname = '';
     $fname = '';
@@ -93,6 +102,11 @@ sub l00http_lineproc_proc (\%) {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"pastenewname\" value=\"output\">:<br>\n";
+    print $sock "            <textarea name=\"newname\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$newname</textarea></td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
     print $sock "        <td>Arg:\n";
     print $sock "            <input type=\"text\" size=\"10\" name=\"arg\" value=\"$arg\"></td>\n";
     print $sock "    </tr>\n";
@@ -103,8 +117,8 @@ sub l00http_lineproc_proc (\%) {
     print $sock "View: <a href=\"/view.htm?path=$pname$fname\">$pname$fname</a><br>\n";
     print $sock "View: <a href=\"/view.htm?path=$script\">$script</a><br>\n";
     print $sock "Copy: lineproc.pl to <a href=\"/filemgt.htm?path=/sdcard/lineproc.pl&path2=l00://lineproc.pl\">l00://lineproc.pl</a><p>\n";
-    print $sock "View: <a href=\"/view.htm?path=l00://lineprocout.txt\">l00://lineprocout.txt</a><br>\n";
-    print $sock "Copy: <a href=\"/filemgt.htm?path=l00://lineprocout.txt&path2=$pname$fname\">l00://lineprocout.txt to $pname$fname</a><p>\n";
+    print $sock "View: <a href=\"/view.htm?path=$newname\">$newname</a><br>\n";
+    print $sock "Copy: <a href=\"/filemgt.htm?path=$newname&path2=$pname$fname\">$newname to $pname$fname</a><p>\n";
 
     if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
         if (&l00httpd::l00freadOpen($ctrl, $script)) {
@@ -179,7 +193,7 @@ samplelineproc
                 $newfile .= &lineproc ($sock, $ctrl, $arg, $dolncnt, $this, $next, undef);
 
                 # write new file only if changed
-                &l00httpd::l00fwriteOpen($ctrl, 'l00://lineprocout.txt');
+                &l00httpd::l00fwriteOpen($ctrl, $newname);
                 &l00httpd::l00fwriteBuf($ctrl, $newfile);
                 &l00httpd::l00fwriteClose($ctrl);
             }
