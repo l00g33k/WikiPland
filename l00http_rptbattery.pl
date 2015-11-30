@@ -81,7 +81,8 @@ sub l00http_rptbattery_proc {
 
 
     # get submitted name and print greeting
-    if (open (IN, "<$form->{'path'}")) {
+#   if (open (IN, "<$form->{'path'}")) {
+    if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $svgperc = '';
         $svgvolt = '';
         $svgtemp = '';
@@ -93,7 +94,8 @@ sub l00http_rptbattery_proc {
         $output = "<pre>\n";
         $table = '';
         $lastnow = 0;
-        while (<IN>) {
+#       while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
             s/\r//;
             s/\n//;
             $output .= "$_\n";
