@@ -116,7 +116,7 @@ sub l00http_lineproc_proc (\%) {
 
     print $sock "View: <a href=\"/view.htm?path=$pname$fname\">$pname$fname</a><br>\n";
     print $sock "View: <a href=\"/view.htm?path=$script\">$script</a><br>\n";
-    print $sock "Copy: lineproc.pl to <a href=\"/filemgt.htm?path=/sdcard/lineproc.pl&path2=l00://lineproc.pl\">l00://lineproc.pl</a><p>\n";
+    print $sock "Copy: <a href=\"/filemgt.htm?path=$script&path2=/sdcard/lineproc.pl\">$script</a><p>\n";
     print $sock "View: <a href=\"/view.htm?path=$newname\">$newname</a><br>\n";
     print $sock "Copy: <a href=\"/filemgt.htm?path=$newname&path2=$pname$fname\">$newname to $pname$fname</a><p>\n";
 
@@ -161,8 +161,8 @@ samplelineproc
                 undef $next;
                 if ($debugcheck ne '') {
                     print $sock "Debug output:<br>\n";
-                    print $sock "<pre>\n";
                 }
+                print $sock "<pre>\n";
                 while ($_ = &l00httpd::l00freadLine($ctrl)) {
                     s/\r//;
                     if ($debugcheck ne '') {
@@ -187,9 +187,7 @@ samplelineproc
                     }
                     $dolncnt++;
                 }
-                if ($debugcheck ne '') {
-                    print $sock "</pre>\n";
-                }
+                print $sock "</pre>\n";
                 $newfile .= &lineproc ($sock, $ctrl, $arg, $dolncnt, $this, $next, undef);
 
                 # write new file only if changed
