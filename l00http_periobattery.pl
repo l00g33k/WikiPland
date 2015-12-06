@@ -553,12 +553,14 @@ sub l00http_periobattery_proc {
 
 sub l00http_periobattery_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($tempe, $bstat, $noln, $gotvol);
+    my ($tempe, $bstat, $noln, $gotvol, $retval);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
+
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $lastcalled = time;
+        $retval = $interval;
 
         $tempe = '';
         if ($ctrl->{'os'} eq 'and') {
@@ -669,9 +671,14 @@ sub l00http_periobattery_perio {
         }
         $perltime = time;
         $battpolls++;
+    } elsif ($interval > 0) {
+        # remaining time to firing
+        $retval = ($lastcalled + $interval) - time;
+    } else {
+        $retval = 0x7fffffff;
     }
 
-    $interval;
+    $retval;
 }
 
 

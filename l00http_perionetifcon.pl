@@ -506,11 +506,13 @@ sub l00http_perionetifcon_proc {
 sub l00http_perionetifcon_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($buf, $tempe, $proto, $RxQ, $TxQ, $local, $remote, $sta, $key);
-    my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total, $ifoutput);
+    my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total, $ifoutput, $retval);
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $lastcalled = time;
+        $retval = $interval;
+
 
         if ($ctrl->{'os'} eq 'and') {
             # netstat
@@ -692,9 +694,14 @@ sub l00http_perionetifcon_perio {
         }
         $perltime = time;
         $netifcnt++;
+    } elsif ($interval > 0) {
+        # remaining time to firing
+        $retval = ($lastcalled + $interval) - time;
+    } else {
+        $retval = 0x7fffffff;
     }
 
-    $interval;
+    $retval;
 }
 
 
