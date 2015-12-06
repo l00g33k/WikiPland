@@ -23,7 +23,7 @@ $battvolts = 0;
 $batttemp = 0;
 $battmA = 0;
 $table = '';
-$tablehdr = "||#||level||vol||C||curr||chg src||chg en||over vchg||batt state||time stamp||\n";
+$tablehdr = "||#||level||vol||C||curr||chg src||chg en||over vchg||batt state||screen||time stamp||\n";
 $firstdmesg = '';
 $lastdmesg = '';
 $maxreclen = 60 * 24 * 7;
@@ -175,10 +175,10 @@ sub l00http_periobattery_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lnno, $keep, $noln);
-    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep);
+    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep, $svgscr);
     my ($yr, $mo, $da, $hr, $mi, $se, $now, $lastnow);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
-    my (@svgmAAvgBuf, $mAsum);
+    my (@svgmAAvgBuf, $mAsum, $scrbrgt, $backlight);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -330,13 +330,14 @@ sub l00http_periobattery_proc {
         $svgmA = '';
         $svgmAAvg = '';
         $svgsleep = '';
+        $svgscr = '';
         undef @svgmAAvgBuf;
         $lnno = 0;
         $noln = $battlog =~ s/\n/\n/g;
         $lastnow = 0;
         foreach $_ (split("\n", $battlog)) {
-            if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
-                = /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+) at \d+ \((.+? UTC)\)/) {
+            if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $scrbrgt, $timestamp) 
+                = /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+), scr_brgt=(\d+) at \d+ \((.+? UTC)\)/) {
                 $vol /= 1000;
                 $temp /= 10;
                 if (($yr, $mo, $da, $hr, $mi, $se) = $timestamp =~ /^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)\./) {
@@ -372,6 +373,7 @@ sub l00http_periobattery_proc {
                             $tmp = $now - $lastnow;
                         }
                         $svgsleep .= "$now,$tmp ";
+                        $svgscr .= "$now,$scrbrgt ";
                         $lastnow = $now;
                     }
                 }
@@ -399,6 +401,10 @@ sub l00http_periobattery_proc {
         if ($svgmAAvg ne '') {
             &l00svg::plotsvg ('battmAavg', $svgmAAvg, $graphwd, $graphht);
             print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg.htm?graph=battmAavg&view=\"><img src=\"/svg.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
+        }
+        if ($svgscr ne '') {
+            &l00svg::plotsvg ('battScr', $svgscr, $graphwd, $graphht);
+            print $sock "<p>screen :<br><a href=\"/svg.htm?graph=battScr&view=\"><img src=\"/svg.htm?graph=battScr\" alt=\"screen brightness over time\"></a>\n";
         }
         if ($svgtemp ne '') {
             &l00svg::plotsvg ('batttemp', $svgtemp, $graphwd, $graphht);
@@ -553,7 +559,7 @@ sub l00http_periobattery_proc {
 
 sub l00http_periobattery_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($tempe, $bstat, $noln, $gotvol, $retval);
+    my ($tempe, $bstat, $noln, $gotvol, $retval, $scrbrgt, $backlight);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
 
 
@@ -573,6 +579,8 @@ sub l00http_periobattery_perio {
             #print $sock "batteryGetStatus $tmp\n";
             #&l00httpd::dumphash ("tmp", $tmp);
 
+            # fail safe screen brightness
+            $scrbrgt = 0;
             if ($ctrl->{'machine'} eq 'Morrison') {
                 # On Slide, dmesg contains battery status:
                 #<6>[ 7765.397493] [BATT] ID=2, level=89, vol=4209, temp=326, curr=-214, dis_curr=0, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at 7765326083644 (2013-12-11 12:08:08.239292486 UTC)
@@ -589,6 +597,20 @@ sub l00http_periobattery_perio {
                 }
             } else {
                 # Does this work for all others?
+                # query screen brightness
+                if (opendir (DIR, "/sys/class/backlight")) {
+                    foreach $backlight (readdir (DIR)) {
+                        if (open (IN, "</sys/class/backlight/$backlight/actual_brightness")) {
+                            while (<IN>) {
+                                if (/(\d+)/) {
+                                    $scrbrgt = $1;
+                                }
+                            }
+                            close (IN);
+                        }
+                    }
+                    closedir (DIR);
+                }
                 if (open (IN, "</sys/class/power_supply/battery/uevent")) {
                     # 2013-12-16 14:08:37.807146248 UTC
                     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -620,11 +642,13 @@ sub l00http_periobattery_perio {
                     }
                     #<6>[ 7765.397493] [BATT] ID=2, level=89, vol=4209, temp=326, curr=-214, dis_curr=0, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at 7765326083644 (2013-12-11 12:08:08.239292486 UTC)
                     $_ = time;
-                    $bstat = "<0>[ 0.0] [BATT] ID=0, level=$level, vol=$vol, temp=$temp, curr=$curr, dis_curr=$dis_curr, chg_src=1, chg_en=1, over_vchg=0, batt_state=1 at $_ ($timestamp)";
+                    $bstat = "<0>[ 0.0] [BATT] ID=0, level=$level, vol=$vol, temp=$temp, curr=$curr, dis_curr=$dis_curr, chg_src=1, chg_en=1, over_vchg=0, batt_state=1, scr_brgt=$scrbrgt at $_ ($timestamp)";
 
                     $gotvol = 1;
                     #l00httpd::dbp($config{'desc'}, "(\$level, \$vol, \$temp, \$curr, \$dis_curr, \$chg_src, \$chg_en, \$over_vchg, \$batt_state, \$timestamp)\n");
                     #l00httpd::dbp($config{'desc'}, "($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp)\n");
+
+                    close (IN);
                 }
             }
             if (($gotvol) && ($lasttimestamp ne $timestamp)) {
@@ -648,7 +672,7 @@ sub l00http_periobattery_perio {
                 $chg_en =~ s/0/0\/off/;
                 $chg_en =~ s/1/1\/usb/;
                 $chg_en =~ s/2/2\/wall/;
-                $table = "||$battcnt||$level||$vol||$temp||$battmA||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
+                $table = "||$battcnt||$level||$vol||$temp||$battmA||$chg_src||$chg_en||$over_vchg||$batt_state||$scrbrgt||$timestamp||\n" . $table;
                 # trim if too long
                 $noln = $table =~ s/\n/\n/g;
                 while ($noln > $maxreclen) {

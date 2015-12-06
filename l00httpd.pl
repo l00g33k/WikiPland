@@ -1330,7 +1330,8 @@ while(1) {
                     print $sock "<a href=\"/httpd.htm?bannermute=150\">2.5h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=180\">3h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=240\">4h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a><p>";
+                    print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=43200\">1m</a><p>";
                 }
 
                 print $sock "<a href=\"/httpd.htm\">#</a>\n";

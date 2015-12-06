@@ -32,7 +32,7 @@ sub l00http_rptbattery_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $fname, $tmp, $output, $table, $buf);
     my ($lnno, $svgperc, $svgvolt, $svgtemp, $svgmA, $battcnt);
-    my ($svgmAAvg, $svgsleep);
+    my ($svgmAAvg, $svgsleep, $svgscr, $scrbrgt);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
     my ($yr, $mo, $da, $hr, $mi, $se, $now, $fpath, $lastnow);
     my (@svgmAAvgBuf, $mAsum);
@@ -81,7 +81,6 @@ sub l00http_rptbattery_proc {
 
 
     # get submitted name and print greeting
-#   if (open (IN, "<$form->{'path'}")) {
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $svgperc = '';
         $svgvolt = '';
@@ -89,19 +88,19 @@ sub l00http_rptbattery_proc {
         $svgmA = '';
         $svgmAAvg = '';
         $svgsleep = '';
+        $svgscr = '';
         undef @svgmAAvgBuf;
         $lnno = 0;
         $output = "<pre>\n";
         $table = '';
         $lastnow = 0;
-#       while (<IN>) {
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             s/\r//;
             s/\n//;
             $output .= "$_\n";
 
-            if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp) 
-                = /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+) at \d+ \((.+? UTC)\)/) {
+            if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $scrbrgt, $timestamp) 
+                = /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+), scr_brgt=(\d+) at \d+ \((.+? UTC)\)/) {
                 $vol /= 1000;
                 $temp /= 10;
                 if (($yr, $mo, $da, $hr, $mi, $se) = $timestamp =~ /^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)\./) {
@@ -135,6 +134,7 @@ sub l00http_rptbattery_proc {
                             $tmp = $now - $lastnow;
                         }
                         $svgsleep .= "$now,$tmp ";
+                        $svgscr .= "$now,$scrbrgt ";
                         $lastnow = $now;
 
                         $chg_src =~ s/0/0 (off)/;
@@ -143,14 +143,13 @@ sub l00http_rptbattery_proc {
                         $chg_en =~ s/0/0 (off)/;
                         $chg_en =~ s/1/1 (usb)/;
                         $chg_en =~ s/2/2 (wall)/;
-                        $table = "||$lnno||$level||$vol||$temp||$curr||$dis_curr||$chg_src||$chg_en||$over_vchg||$batt_state||$timestamp||\n" . $table;
+                        $table = "||$lnno||$level||$vol||$temp||$curr||$dis_curr||$chg_src||$chg_en||$over_vchg||$batt_state||$scrbrgt||$timestamp||\n" . $table;
                     }
                 }
             }
         }
         $output .= "</pre>\n";
-        $table = "||#||level||vol||temp||curr||dis curr||chg src||chg en||over vchg||batt state||time stamp||\n" . $table;
-        close (IN);
+        $table = "||#||level||vol||temp||curr||dis curr||chg src||chg en||over vchg||batt state||$scrbrgt||time stamp||\n" . $table;
 
         if ($lnno > 1) {
             print $sock "<form action=\"/rptbattery.htm\" method=\"get\">\n";
@@ -188,6 +187,10 @@ sub l00http_rptbattery_proc {
             if ($svgmAAvg ne '') {
                 &l00svg::plotsvg ('battmAavg', $svgmAAvg, $graphwd, $graphht);
                 print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg.htm?graph=battmAavg&view=\"><img src=\"/svg.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
+            }
+            if ($svgscr ne '') {
+                &l00svg::plotsvg ('battScr', $svgscr, $graphwd, $graphht);
+                print $sock "<p>screen :<br><a href=\"/svg.htm?graph=battScr&view=\"><img src=\"/svg.htm?graph=battScr\" alt=\"screen brightness over time\"></a>\n";
             }
             if ($svgtemp ne '') {
                 &l00svg::plotsvg ('batttemp', $svgtemp, $graphwd, $graphht);
