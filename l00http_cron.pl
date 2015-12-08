@@ -278,6 +278,9 @@ sub l00http_cron_desc {
 
     $starttime = &l00http_cron_when_next ($ctrl);
 
+    $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "* cron.htm log file:\n\n";
+
+
     "cron: A cron task dispatcher. Add task in <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_cron.txt\">l00_cron.txt</a>";
 }
 
@@ -375,6 +378,8 @@ sub l00http_cron_perio {
                                 # http://localhost:20337/shell.htm?buffer=msg+%25USERNAME%25+%2FTIME%3A1+WikiPland+says+ello&exec=Exec
                                 undef %FORM;
                                 if ($urlpath =~ /^\/(\w+)\.(pl|htm)[^?]*\?*(.*)$/) {
+                                    $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "wget self: $_\n";
+
                                     # of form: http://localhost:20337/ls.htm?path=/sdcard
                                     $modcalled = $1;
                                     $urlparams = $3;
@@ -426,6 +431,8 @@ sub l00http_cron_perio {
                                 }
 
                             } elsif ($cmd =~ m!^http://!) {
+                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "wget http: $_\n";
+
                                 # 2) a normal HTTP. use l00http_wget.pl
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
                                 # http://wikipland-l00g33k.rhcloud.com/httpd.htm
@@ -439,6 +446,8 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$bdy");
                                 &l00httpd::l00fwriteClose($ctrl);
                             } else {
+                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "shell command: $_\n";
+
                                 # 3) assume to be a shell command. user be warned
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; shell >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
                                 # msg %USERNAME% /TIME:1 Shell says hello
