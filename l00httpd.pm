@@ -407,7 +407,7 @@ sub l00npoormanrdns {
                 &dbp($myname.'l00httpd.pm', "$patt is $name\n"), if ($ctrl->{'debug'} >= 5);
                 #46.51.248-254.*=>AMAZON_AWS
                 if (($leading, $st, $en, $trailing) = ($patt =~ /(.+?)\.(\d+)-(\d+)\.(.*)/)) {
-                    &dbp($myname.'l00httpd.pm', "range: $patt ($st, $en) is $name\n"), if ($ctrl->{'debug'} >= 5);
+                    &dbp($myname.'.l00httpd.pm', "range: $patt ($st, $en) is $name\n"), if ($ctrl->{'debug'} >= 5);
                     for ($st..$en) {
                         $patt = "$leading.$_.$trailing";
                         &dbp($myname.'l00httpd.pm', "expanded: $patt is $name\n"), if ($ctrl->{'debug'} >= 5);

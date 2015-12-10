@@ -715,6 +715,8 @@ while(1) {
             }
             $idpw = "";
             $urlparams = "";
+
+            # default module to invoke
             if (($ishost) ||           # client enabled or is server
                 ((defined ($modsinfo{"ls:ena:checked"})) &&
                  ($modsinfo{"ls:ena:checked"} eq "checked"))) {
@@ -858,7 +860,13 @@ while(1) {
             $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
-            if (($urlparams eq '/') &&      # no path
+            if (($urlparams eq '/') &&              # no path
+                ($curr_socket != $ctrl_lstn_sock)   # not on control port
+                ) {
+                # default to hello module
+                $modcalled = "hello";
+                $urlparams = "";
+            } elsif (($urlparams eq '/') &&      # no path
                 ($ctrl{'os'} eq 'and') &&   # on Android
                 !(-d '/sdcard/l00httpd')    # not localized
                 ) {
@@ -1330,7 +1338,8 @@ while(1) {
                     print $sock "<a href=\"/httpd.htm?bannermute=150\">2.5h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=180\">3h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=240\">4h</a> - ";
-                    print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a><p>";
+                    print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a> - ";
+                    print $sock "<a href=\"/httpd.htm?bannermute=43200\">1mo</a><p>";
                 }
 
                 print $sock "<a href=\"/httpd.htm\">#</a>\n";
