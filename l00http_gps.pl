@@ -385,11 +385,14 @@ sub l00http_gps_proc {
 
 sub l00http_gps_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($out, $brightness);
+    my ($out, $brightness, $retval);
+
+    $retval = 0x7fffffff;
 
     $lastpoll = time;
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
+        $retval = $interval;
 
         if (((time - $lastpoll) <= $interval) ||
             ($lastcalled == 0)) {
@@ -480,10 +483,13 @@ $_ =
         }
         $lastcalled = time;
         $percnt++;
+    } elsif ($interval > 0) {
+        # remaining time to firing
+        $retval = ($lastcalled + $interval) - time;
     }
 
 
-    $interval;
+    $retval;
 }
 
 

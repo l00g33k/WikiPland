@@ -562,6 +562,7 @@ sub l00http_periobattery_perio {
     my ($tempe, $bstat, $noln, $gotvol, $retval, $scrbrgt, $backlight);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
 
+    $retval = 0x7fffffff;
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
@@ -698,8 +699,6 @@ sub l00http_periobattery_perio {
     } elsif ($interval > 0) {
         # remaining time to firing
         $retval = ($lastcalled + $interval) - time;
-    } else {
-        $retval = 0x7fffffff;
     }
 
     $retval;
