@@ -265,6 +265,7 @@ sub l00http_cron_when_next {
             }
         }
     }
+    &l00httpd::l00fwriteBuf($ctrl, "# End of cronjob\n");
     &l00httpd::l00fwriteClose($ctrl);
 
     $starttime0;
@@ -337,7 +338,7 @@ sub l00http_cron_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($retval, $eventtime, $cmd, $lnno, $cronspec, $l00name, $hdr, $bdy);
     my ($tmp, $urlpath, %FORM, $modcalled, $urlparams, @cmd_param_pairs);
-    my ($cmd_param_pair, $name, $param, $subname, $socknul);
+    my ($cmd_param_pair, $name, $param, $subname, $socknul, $crontab);
 
 
 
@@ -351,9 +352,12 @@ sub l00http_cron_perio {
 
             # do task
             if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
-                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+#               while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                $crontab = &l00httpd::l00freadAll($ctrl);
+                foreach $_ (split("\n", $crontab)) {
                     s/\n//;
                     s/\r//;
+                    l00httpd::dbp($config{'desc'}, "crontab.htm: >$_<\n"), if ($ctrl->{'debug'} >= 4);
 
                     if (($lnno, $cronspec) = /# ORG\((\d+)\):([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+) /) {
                         # make l00 filename
@@ -371,6 +375,7 @@ sub l00http_cron_perio {
                         $cmd = $1;
                         if (time >= $eventtime) {
                             # 3 kinds of commands are supported
+                            $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "$ctrl->{'now_string'} ";
                             if (($tmp, $urlpath) = $cmd =~ m!^http://(localhost|127\.0\.0\.1):$ctrl->{'ctrl_port_first'}(.+)!) {
                                 # 1) wget self. Since we aren't multi-thread, we have to simulate by 
                                 # creating the %FORM and call the module directly
@@ -378,7 +383,7 @@ sub l00http_cron_perio {
                                 # http://localhost:20337/shell.htm?buffer=msg+%25USERNAME%25+%2FTIME%3A1+WikiPland+says+ello&exec=Exec
                                 undef %FORM;
                                 if ($urlpath =~ /^\/(\w+)\.(pl|htm)[^?]*\?*(.*)$/) {
-                                    $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "wget self: $_\n";
+                                    $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget self: $_";
 
                                     # of form: http://localhost:20337/ls.htm?path=/sdcard
                                     $modcalled = $1;
@@ -431,7 +436,7 @@ sub l00http_cron_perio {
                                 }
 
                             } elsif ($cmd =~ m!^http://!) {
-                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "wget http: $_\n";
+                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget http: $_";
 
                                 # 2) a normal HTTP. use l00http_wget.pl
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
@@ -446,7 +451,7 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$bdy");
                                 &l00httpd::l00fwriteClose($ctrl);
                             } else {
-                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "shell command: $_\n";
+                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "shell command: $_";
 
                                 # 3) assume to be a shell command. user be warned
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; shell >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
@@ -457,6 +462,7 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$_");
                                 &l00httpd::l00fwriteClose($ctrl);
                             }
+                            $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "\n";
                         }
                     }
                 }
