@@ -22,7 +22,12 @@ my $marklon = 0;
 my $marklat = 0;
 my $scale = 100;
 my $pcx5mk = 'a';
-my $skipxgpstrk = 0;
+
+# track filter
+my $starttrack = 1;
+my $startpoint = 1;
+my $stoptrack = 9999;
+my $stoppoint = 99999;
 
 my $maptlx = 0;
 my $maptly = 0;
@@ -90,6 +95,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     my ($pixx, $pixy, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
     my ($mapwd, $mapht, $lond, $lonm, $lonc, $latd, $latm, $latc);
     my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state);
+    my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -145,8 +151,22 @@ sub l00http_gpsmapsvg_proc (\%) {
     if (defined ($form->{'scale'})) {
         $scale = $form->{'scale'};
     }
-    if (defined ($form->{'skipxgpstrk'})) {
-        $skipxgpstrk = $form->{'skipxgpstrk'};
+    # start and stop track/points
+    if (defined ($form->{'starttrack'}) &&
+        ($form->{'starttrack'} =~ /(\d+)/)) {
+        $starttrack = $form->{'starttrack'};
+    }
+    if (defined ($form->{'startpoint'}) &&
+        ($form->{'startpoint'} =~ /(\d+)/)) {
+        $startpoint = $form->{'startpoint'};
+    }
+    if (defined ($form->{'stoptrack'}) &&
+        ($form->{'stoptrack'} =~ /(\d+)/)) {
+        $stoptrack = $form->{'stoptrack'};
+    }
+    if (defined ($form->{'stoppoint'}) &&
+        ($form->{'stoppoint'} =~ /(\d+)/)) {
+        $stoppoint = $form->{'stoppoint'};
     }
     if (defined ($form->{'dispwaypts'})) {
         if (defined ($form->{'waypts'})) {
@@ -243,6 +263,10 @@ sub l00http_gpsmapsvg_proc (\%) {
         if (open (WAY, "<$waypts")) {
             $pcx5mk = 'a';
             $nogpstrks = 0;
+            $tracknpts = '';
+            $nowyptthistrack = 0;
+            $rawstartstop = '';
+            $firstptsintrack = 0;
             while (<WAY>) {
                 s/\n//g;
                 s/\r//g;
@@ -252,6 +276,11 @@ sub l00http_gpsmapsvg_proc (\%) {
                 if (/^H +LATITUDE +LONGITUDE /) {
                     $pcx5mk++;
                     $nogpstrks++;
+                    if ($tracknpts ne '') {
+                        $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
+                    }
+                    $tracknpts .= sprintf("Track %3d: ", $nogpstrks);;
+                    $nowyptthistrack = 0;
                 }
                 if (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
                     # 0=nothing, 1=in track, 2=track ends
@@ -261,6 +290,11 @@ sub l00http_gpsmapsvg_proc (\%) {
                     }
                     if ($state != 1) {
                         $state = 1;
+                    }
+                    # count track points in track
+                    $nowyptthistrack++;
+                    if ($nowyptthistrack == 1) {
+                        $firstptsintrack = $_;
                     }
 
                     #print "$1 $2 $3 $4 $5 $6  ";
@@ -277,7 +311,37 @@ sub l00http_gpsmapsvg_proc (\%) {
                     #print "$1 $4 $plat $plon ";
                     #print "$pcx5mk $pixx $pixy $notclip\n";
                     if ($notclip) {
-                        if (($skipxgpstrk == 0) || ($nogpstrks > $skipxgpstrk)) {
+                        $displaypt = 0; # default to not displaying
+                        if ($nogpstrks == $starttrack) {
+                            # starting track
+                            if ($nowyptthistrack >= $startpoint) {
+                                if ($nowyptthistrack == ($startpoint + 1)) {
+                                    $rawstartstop = sprintf("Start track %3d point %4d: %s\n", $nogpstrks, $nowyptthistrack, $_);
+                                }
+                                # yes
+                                $displaypt = 1;
+                            }
+                        } elsif ($nogpstrks > $starttrack) {
+                            # beyond starting track
+                            $displaypt = 1;
+                        }
+                        # check ending
+                        if ($nogpstrks == $stoptrack) {
+                            # ending track
+                            if ($nowyptthistrack >= $stoppoint) {
+                                if ($nowyptthistrack == $stoppoint) {
+                                    $rawstartstop .= sprintf("Stop  track %3d point %4d: %s\n", $nogpstrks, $nowyptthistrack, $_);
+                                }
+                                # yes
+                                $displaypt = 0;
+                            }
+                        } elsif ($nogpstrks > $stoptrack) {
+                            # beyond ending track
+                            $displaypt = 0;
+                        }
+
+
+                        if ($displaypt) {
                             $pixy = $mapht - $pixy;     # y axis inverted
                             $svg .= "$pixx,$pixy ";
                         }
@@ -299,6 +363,10 @@ sub l00http_gpsmapsvg_proc (\%) {
                 }
             }
             close (WAY);
+
+            if ($tracknpts ne '') {
+                $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
+            }
 
             &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path);
             $svgout = '';
@@ -423,9 +491,22 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"waycolor\" value=\"$waycolor\"></td>\n";
     print $sock "        </tr>\n";
                                                 
+    # start and stop gps track/point
     print $sock "        <tr>\n";
-    print $sock "            <td>Skip # GPS tracks:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"skipxgpstrk\" value=\"$skipxgpstrk\"></td>\n";
+    print $sock "            <td>Start track #:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"starttrack\" value=\"$starttrack\"></td>\n";
+    print $sock "        </tr>\n";
+    print $sock "        <tr>\n";
+    print $sock "            <td>and skip # point:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"startpoint\" value=\"$startpoint\"></td>\n";
+    print $sock "        </tr>\n";
+    print $sock "        <tr>\n";
+    print $sock "            <td>Stop track #:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"stoptrack\" value=\"$stoptrack\"></td>\n";
+    print $sock "        </tr>\n";
+    print $sock "        <tr>\n";
+    print $sock "            <td>and stop # point:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"stoppoint\" value=\"$stoppoint\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
@@ -437,7 +518,9 @@ sub l00http_gpsmapsvg_proc (\%) {
 
     if ($waypts ne '') {
         print $sock "There are $nogpstrks GPS tracks<br>\n";
-        print $sock "Edit waypoint/track file: <a href=\"/edit.htm?path=$waypts\">$waypts</a><p>\n";
+        print $sock "<pre>\n$rawstartstop</pre>\n";
+        print $sock "<pre>\n$tracknpts</pre>\n";
+        print $sock "View waypoint/track file: <a href=\"/view.htm?path=$waypts\">$waypts</a><p>\n";
     }
 
     if (open (IN, "<$map")) {
