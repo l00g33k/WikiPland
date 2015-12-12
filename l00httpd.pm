@@ -343,6 +343,37 @@ sub l00fwriteOpen {
     1;
 }
 
+#&l00httpd::l00fwriteOpenAppend($ctrl, $fname);
+sub l00fwriteOpenAppend {
+    my ($ctrl, $fname) = @_;
+
+    $writeName = $fname;
+    $writeBuf = '';
+	
+    if ($fname =~ /^l00:\/\/./) {
+        # ram file
+        if (defined($ctrl->{'l00file'}->{$fname})) {
+		    # ram file exist
+            $writeBuf = $ctrl->{'l00file'}->{$fname};
+		} else {
+		    # ram file doesn't exist
+            $writeBuf = undef;
+		}
+    } else {
+	    if (open(IN, "<$fname")) {
+		    # disk file exist
+            binmode(IN);
+            local $/ = undef;
+            $writeBuf = <IN>;
+			close (IN);
+		} else {
+		    # disk file doesn't exist
+            $writeBuf = undef;
+		}
+    }
+    1;
+}
+
 #&l00httpd::l00fwriteBuf($ctrl, $buf);
 sub l00fwriteBuf {
     my ($ctrl, $buf) = @_;

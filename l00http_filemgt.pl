@@ -126,7 +126,7 @@ sub l00http_filemgt_proc {
     if (defined ($form->{'paste2'})) {
         $form->{'path2'} = &l00httpd::l00getCB($ctrl);
     }
-    if ((defined ($form->{'copy'})) &&
+    if ((defined ($form->{'copy'}) || defined ($form->{'append'})) &&
         (defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0)) &&
         (defined ($form->{'path2'}) && 
@@ -154,7 +154,12 @@ sub l00http_filemgt_proc {
                 s/ /_/g;
                 # %TIMESTAMP% replacement: make replacement
                 $path2 =~ s/%TIMESTAMP%/$_/;
-                if (&l00httpd::l00fwriteOpen($ctrl, $path2)) {
+                if (defined ($form->{'copy'})) {
+                    $_ = &l00httpd::l00fwriteOpen($ctrl, $path2);
+                } else {
+                    $_ = &l00httpd::l00fwriteOpenAppend($ctrl, $path2);
+                }
+                if ($_) {
                     &l00httpd::l00fwriteBuf($ctrl, $buffer);
                     &l00httpd::l00fwriteClose($ctrl);
                 }
@@ -282,6 +287,7 @@ sub l00http_filemgt_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"copy\" value=\"Copy\">\n";
     print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
+    print $sock "<input type=\"submit\" name=\"append\" value=\"Append\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">fr:</a> <input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
