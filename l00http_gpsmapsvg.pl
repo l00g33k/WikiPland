@@ -176,6 +176,10 @@ sub l00http_gpsmapsvg_proc (\%) {
             $waycolor = $form->{'waycolor'};
         }
     }
+#   print $sock "        <td><input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\"></td>\n";
+    if (defined ($form->{'cb2wfile'})) {
+        $waypts = &l00httpd::l00getCB($ctrl);
+    }
     if (defined ($form->{'set'})) {
         if (defined ($form->{'lon'})) {
             $lon = $form->{'lon'};
@@ -470,8 +474,8 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Read GPS\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"> <input type=\"submit\" name=\"movec\" value=\"Ctr\"> <input type=\"submit\" name=\"mark\" value=\"Mark\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"movec\" value=\"Ctr\"> <input type=\"submit\" name=\"mark\" value=\"Mark\"> <input type=\"submit\" name=\"submit\" value=\"Read GPS\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -482,7 +486,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
-    print $sock "            <td>Waypoint files:</td>\n";
+    print $sock "            <td>Waypoint file:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"waypts\" value=\"$waypts\"></td>\n";
     print $sock "        </tr>\n";
 
@@ -511,7 +515,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"dispwaypts\" value=\"Display waypoints\"></td>\n";
-    print $sock "        <td>Load from file</td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\"></td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
