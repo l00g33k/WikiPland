@@ -25,9 +25,11 @@ my $pcx5mk = 'a';
 
 # track filter
 my $starttrack = 1;
-my $startpoint = 1;
+my $startpoint = 0;
 my $stoptrack = 9999;
 my $stoppoint = 99999;
+my $marktrack = 1;
+my $markpoint = 1;
 
 my $maptlx = 0;
 my $maptly = 0;
@@ -343,6 +345,12 @@ sub l00http_gpsmapsvg_proc (\%) {
                             # beyond ending track
                             $displaypt = 0;
                         }
+l00httpd::dbp($config{'desc'}, "(($nogpstrks == $marktrack) && ($nowyptthistrack == $markpoint))\n");
+                        if (($nogpstrks == $marktrack) &&
+                            ($nowyptthistrack == $markpoint)) {
+                            $marklon = $plon;
+                            $marklat = $plat;
+                        }
 
 
                         if ($displaypt) {
@@ -517,6 +525,26 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"dispwaypts\" value=\"Display waypoints\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\"></td>\n";
     print $sock "    </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>Mark track #:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"marktrack\" value=\"$marktrack\"></td>\n";
+    print $sock "        </tr>\n";
+    print $sock "        <tr>\n";
+    print $sock "            <td>at # point:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"markpoint\" value=\"$markpoint\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"markpoint\" value=\"Mark Track Pt\"></td>\n";
+    print $sock "        <td>\n";
+    print $sock "        <input type=\"submit\" name=\"markleftleft\" value=\"<<\">\n";
+    print $sock "        <input type=\"submit\" name=\"markleft\" value=\"<\">\n";
+    print $sock "        <input type=\"submit\" name=\"markright\" value=\">\">\n";
+    print $sock "        <input type=\"submit\" name=\"markrightright\" value=\">>\">\n";
+    print $sock "        </td>\n";
+    print $sock "    </tr>\n";
+
     print $sock "</table>\n";
     print $sock "</form>\n";
 
