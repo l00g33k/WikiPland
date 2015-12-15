@@ -156,19 +156,19 @@ sub l00http_gpsmapsvg_proc (\%) {
     # start and stop track/points
     if (defined ($form->{'starttrack'}) &&
         ($form->{'starttrack'} =~ /(\d+)/)) {
-        $starttrack = $form->{'starttrack'};
+        $starttrack = $1;
     }
     if (defined ($form->{'startpoint'}) &&
         ($form->{'startpoint'} =~ /(\d+)/)) {
-        $startpoint = $form->{'startpoint'};
+        $startpoint = $1;
     }
     if (defined ($form->{'stoptrack'}) &&
         ($form->{'stoptrack'} =~ /(\d+)/)) {
-        $stoptrack = $form->{'stoptrack'};
+        $stoptrack = $1;
     }
     if (defined ($form->{'stoppoint'}) &&
         ($form->{'stoppoint'} =~ /(\d+)/)) {
-        $stoppoint = $form->{'stoppoint'};
+        $stoppoint = $1;
     }
     if (defined ($form->{'dispwaypts'})) {
         if (defined ($form->{'waypts'})) {
@@ -178,6 +178,16 @@ sub l00http_gpsmapsvg_proc (\%) {
             $waycolor = $form->{'waycolor'};
         }
     }
+    # mark point
+    if (defined ($form->{'marktrack'}) &&
+        ($form->{'marktrack'} =~ /(\d+)/)) {
+        $marktrack = $1;
+    }
+    if (defined ($form->{'markpoint'}) &&
+        ($form->{'markpoint'} =~ /(\d+)/)) {
+        $markpoint = $1;
+    }
+
 #   print $sock "        <td><input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\"></td>\n";
     if (defined ($form->{'cb2wfile'})) {
         $waypts = &l00httpd::l00getCB($ctrl);
@@ -345,11 +355,16 @@ sub l00http_gpsmapsvg_proc (\%) {
                             # beyond ending track
                             $displaypt = 0;
                         }
-l00httpd::dbp($config{'desc'}, "(($nogpstrks == $marktrack) && ($nowyptthistrack == $markpoint))\n");
+if ($notclip) {
+    print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+    print $sock "<font color=\"magenta\">O</font></div>\n";
+}
                         if (($nogpstrks == $marktrack) &&
                             ($nowyptthistrack == $markpoint)) {
-                            $marklon = $plon;
-                            $marklat = $plat;
+                            $lon = $plon;
+                            $lat = $plat;
+l00httpd::dbp($config{'desc'}, "(($nogpstrks == $marktrack) && ($nowyptthistrack == $markpoint))\n");
+l00httpd::dbp($config{'desc'}, "Marking (lat,long): $lat,$lon\n");
                         }
 
 
@@ -536,7 +551,7 @@ l00httpd::dbp($config{'desc'}, "(($nogpstrks == $marktrack) && ($nowyptthistrack
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"markpoint\" value=\"Mark Track Pt\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"markpointdo\" value=\"Mark Track Pt\"></td>\n";
     print $sock "        <td>\n";
     print $sock "        <input type=\"submit\" name=\"markleftleft\" value=\"<<\">\n";
     print $sock "        <input type=\"submit\" name=\"markleft\" value=\"<\">\n";
