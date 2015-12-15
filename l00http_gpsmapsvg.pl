@@ -53,10 +53,10 @@ sub ll2xysvg {
     my ($pixx, $pixy, $notclip);
     $notclip = 1;
 
-#print ",,,($lonhtm > $mapbrlon) { $lonhtm = $mapbrlon; \n";
-#print ",,,($lonhtm < $maptllon) { $lonhtm = $maptllon; \n";
-#print ",,,($lathtm > $maptllat) { $lathtm = $maptllat; \n";
-#print ",,,($lathtm < $mapbrlat) { $lathtm = $mapbrlat; \n";
+    #print ",,,($lonhtm > $mapbrlon) { $lonhtm = $mapbrlon; \n";
+    #print ",,,($lonhtm < $maptllon) { $lonhtm = $maptllon; \n";
+    #print ",,,($lathtm > $maptllat) { $lathtm = $maptllat; \n";
+    #print ",,,($lathtm < $mapbrlat) { $lathtm = $mapbrlat; \n";
 
 
     if ($lonhtm > $mapbrlon) { $lonhtm = $mapbrlon; $notclip = 0; print "point over the right\n";}
@@ -76,8 +76,8 @@ sub xy2llsvg {
 
     $lonhtm = $maptllon + ($pixx - $maptlx) / ($mapbrx - $maptlx) * ($mapbrlon - $maptllon) * 100 / $scale;
     $lathtm = $maptllat - ($pixy - $maptly) / ($mapbry - $maptly) * ($maptllat - $mapbrlat) * 100 / $scale;
-#print ",,, $lonhtm = $maptllon + ($pixx - $maptlx) / ($mapbrx - $maptlx) * ($mapbrlon - $maptllon) * 100 / $scale; \n";
-#print ",,, $lathtm = $maptllat - ($pixy - $maptly) / ($mapbry - $maptly) * ($maptllat - $mapbrlat) * 100 / $scale; \n";
+    #print ",,, $lonhtm = $maptllon + ($pixx - $maptlx) / ($mapbrx - $maptlx) * ($mapbrlon - $maptllon) * 100 / $scale; \n";
+    #print ",,, $lathtm = $maptllat - ($pixy - $maptly) / ($mapbry - $maptly) * ($maptllat - $mapbrlat) * 100 / $scale; \n";
 
     ($lonhtm, $lathtm);
 }
@@ -94,8 +94,8 @@ sub l00http_gpsmapsvg_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($pixx, $pixy, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
-    my ($mapwd, $mapht, $lond, $lonm, $lonc, $latd, $latm, $latc);
+    my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
+    my ($mapwd, $mapht, $lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
     my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
 
@@ -188,7 +188,6 @@ sub l00http_gpsmapsvg_proc (\%) {
         $markpoint = $1;
     }
 
-#   print $sock "        <td><input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\"></td>\n";
     if (defined ($form->{'cb2wfile'})) {
         $waypts = &l00httpd::l00getCB($ctrl);
     }
@@ -265,10 +264,8 @@ sub l00http_gpsmapsvg_proc (\%) {
             $lat = ($maptllat + $mapbrlat) / 2;
         }
 
-#        print $sock "<img width=\"$mapwd\" height=\"$mapht\" src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
-
         ($pixx, $pixy, $notclip) = &ll2xysvg ($lon, $lat);
-#print ",,,left:$pixx"."px; top:$pixy"."px $notclip\n";
+        #print ",,,left:$pixx"."px; top:$pixy"."px $notclip\n";
         if ($notclip) {
             print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
             print $sock "<font color=\"$color\">$marker</font></div>\n";
@@ -283,6 +280,8 @@ sub l00http_gpsmapsvg_proc (\%) {
             $nowyptthistrack = 0;
             $rawstartstop = '';
             $firstptsintrack = 0;
+            $pixx0 = -1;
+            $trackmarkcnt = 0;
             while (<WAY>) {
                 s/\n//g;
                 s/\r//g;
@@ -355,16 +354,29 @@ sub l00http_gpsmapsvg_proc (\%) {
                             # beyond ending track
                             $displaypt = 0;
                         }
-if ($notclip) {
-    print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-    print $sock "<font color=\"magenta\">O</font></div>\n";
-}
-                        if (($nogpstrks == $marktrack) &&
-                            ($nowyptthistrack == $markpoint)) {
-                            $lon = $plon;
-                            $lat = $plat;
-l00httpd::dbp($config{'desc'}, "(($nogpstrks == $marktrack) && ($nowyptthistrack == $markpoint))\n");
-l00httpd::dbp($config{'desc'}, "Marking (lat,long): $lat,$lon\n");
+                        if (defined ($form->{'markpointdo'})) {
+                            if (($nogpstrks == $marktrack) &&
+                                ($nowyptthistrack == $markpoint)) {
+                                $lon = $plon;
+                                $lat = $plat;
+                            }
+                            if (($nogpstrks == $marktrack) &&
+                                ($nowyptthistrack >= $markpoint) &&
+                                $notclip) {
+                                # have we moved enough?
+                                if (($pixx0 < 0) ||
+                                    (sqrt(($pixx0 - $pixx) ** 2 + ($pixy0 - $pixy) ** 2) > 20)) {
+                                    # first time or moved more than 20 pixels
+                                    print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+                                    $trackmark = chr($trackmarkcnt + 0x30);
+                                    $trackmarkcnt++;
+                                    print $sock "<font color=\"magenta\">$trackmark</font></div>\n";
+                                    $rawstartstop .= sprintf("   %s: track %3d point %4d: %s\n", $trackmark, $nogpstrks, $nowyptthistrack, $_);
+                                    # last position
+                                    $pixx0 = $pixx;
+                                    $pixy0 = $pixy;
+                                }
+                            }
                         }
 
 
