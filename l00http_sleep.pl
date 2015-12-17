@@ -65,6 +65,12 @@ sub l00http_sleep_proc {
                 ($form->{'offwakelock'} eq 'on')) {
                 $ctrl->{'droid'}->wakeLockRelease();
             }
+            if (defined ($form->{'iamsleeping'}) && 
+                ($form->{'iamsleeping'} eq 'on')) {
+                $ctrl->{'iamsleeping'} = 'yes';
+            } else {
+                $ctrl->{'iamsleeping'} = 'no';
+            }
         }
     }
 
@@ -93,10 +99,11 @@ sub l00http_sleep_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save to file\">\n";
     print $sock "</td><td>\n";
-    print $sock "Do once and copy and edit URL\n";
+    print $sock "<input type=\"checkbox\" name=\"iamsleeping\">I am sleeping\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
+    print $sock "Do once and copy and edit URL<p>\n";
 
     # get submitted name and print greeting
     $lineno = 1;

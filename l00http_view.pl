@@ -250,7 +250,7 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
-                        print $sock sprintf ("\" target=\"newclip\">%04d</a>: ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
+                        print $sock sprintf ("\" target=\"newclip\">%04d</a> : ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
                         if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
                             if (/$form->{'hilitetext'}/) {
@@ -265,12 +265,12 @@ sub l00http_view_proc {
                             } else {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
-                                print $sock sprintf ("\" target=\"newclip\">%04d</a><a href=\"view.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 3) . "$_\n";
+                                print $sock sprintf ("\" target=\"newclip\">%04d</a> <a href=\"view.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                             }
                         } else {
                             print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                             print $sock $clip;
-                            print $sock sprintf ("\" target=\"newclip\">%04d</a><a href=\"view.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 3) . "$_\n";
+                            print $sock sprintf ("\" target=\"newclip\">%04d</a> <a href=\"view.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                         }
                     }
                 }

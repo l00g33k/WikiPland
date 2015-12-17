@@ -96,7 +96,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
     my ($mapwd, $mapht, $lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
-    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state);
+    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state, $lnno);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
 
     if (defined ($form->{'path'})) {
@@ -282,7 +282,9 @@ sub l00http_gpsmapsvg_proc (\%) {
             $firstptsintrack = 0;
             $pixx0 = -1;
             $trackmarkcnt = 0;
+            $lnno = 0;
             while (<WAY>) {
+                $lnno++;
                 s/\n//g;
                 s/\r//g;
                 #H LATITUDE LONGITUDE D 
@@ -371,7 +373,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                     $trackmark = chr($trackmarkcnt + 0x30);
                                     $trackmarkcnt++;
                                     print $sock "<font color=\"magenta\">$trackmark</font></div>\n";
-                                    $rawstartstop .= sprintf("   %s: track %3d point %4d: %s\n", $trackmark, $nogpstrks, $nowyptthistrack, $_);
+                                    $rawstartstop .= sprintf("   %s: <a href=\"/view.htm?path=$waypts&hiliteln=$lnno&lineno=on#line%d\">track</a> %3d point %4d: %s\n", $trackmark, $lnno - 5, $nogpstrks, $nowyptthistrack, $_);
                                     # last position
                                     $pixx0 = $pixx;
                                     $pixy0 = $pixy;
