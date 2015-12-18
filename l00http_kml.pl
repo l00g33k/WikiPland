@@ -9,9 +9,10 @@ use l00backup;
 my %config = (proc => "l00http_kml_proc",
               desc => "l00http_kml_desc");
 
-my ($kmlheader, $kmlfooter, $trackheight);
+my ($kmlheader, $kmlfooter, $trackheight, $trackmark);
 
 $trackheight = 30;
+$trackmark = 0;
 
 $kmlheader = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".
@@ -47,6 +48,36 @@ $kmlheader =
     "			<hotSpot x=\"0.5\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>\n".
     "		</IconStyle>\n".
     "	</Style>\n".
+    "	<Style id=\"sn_circle\">".
+    "		<IconStyle>".
+    "			<scale>1.2</scale>".
+    "			<Icon>".
+    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>".
+    "			</Icon>".
+    "		</IconStyle>".
+    "		<ListStyle>".
+    "		</ListStyle>".
+    "	</Style>".
+    "	<Style id=\"sh_circle\">".
+    "		<IconStyle>".
+    "			<scale>1.2</scale>".
+    "			<Icon>".
+    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png</href>".
+    "			</Icon>".
+    "		</IconStyle>".
+    "		<ListStyle>".
+    "		</ListStyle>".
+    "	</Style>".
+    "	<StyleMap id=\"msn_circle\">".
+    "		<Pair>".
+    "			<key>normal</key>".
+    "			<styleUrl>#sn_circle</styleUrl>".
+    "		</Pair>".
+    "		<Pair>".
+    "			<key>highlight</key>".
+    "			<styleUrl>#sh_circle</styleUrl>".
+    "		</Pair>".
+    "	</StyleMap>".
     "	<Folder>\n".
     "		<name>Temporary Places</name>\n".
     "		<open>1</open>\n";
@@ -65,20 +96,32 @@ sub l00http_kml_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
-    my ($lat, $lon, $name, $trkname);
+    my ($lat, $lon, $name, $trkname, $trkmarks, $lnno, $pointno);
 
     $rawkml = 0;
 
-    if (defined ($form->{'kml_trackheight'}) && 
-        ($form->{'kml_trackheight'} =~ /(\d+)/)) {
-        $trackheight = $1;
+    if (defined($form->{'cb2file'})) {
+        $form->{'path'} = &l00httpd::l00getCB($ctrl);
     }
 
     # create HTTP and HTML headers
     $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
-    $httphdr .= "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
+    $httphdr .= "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    $httphdr .= "<a href=\"/kml.htm\">Refresh</a><br>\n";
     if (defined ($form->{'path'})) {
-        $httphdr .= "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        $httphdr .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+    }
+
+
+    if (defined($form->{'set'})) {
+        if (defined ($form->{'kml_trackheight'}) && 
+            ($form->{'kml_trackheight'} =~ /(\d+)/)) {
+            $trackheight = $1;
+        }
+        if (defined ($form->{'trackmark'}) && 
+            ($form->{'trackmark'} =~ /(\d+)/)) {
+            $trackmark = $1;
+        }
     }
 
 
@@ -231,13 +274,19 @@ sub l00http_kml_proc {
                 $trackno = 1;
                 # gps track, convert to .kml
                 $kmlbuf = $kmlheader;
+                $trkmarks = '';
 
+                $lnno = 0;
+                $pointno = -1;
                 foreach $_ (split ("\n", $buffer)) {
+                    $lnno++;
+                    $pointno++;
                     #H  LATITUDE    LONGITUDE    DATE      TIME     ALT    ;track
             	    if ((($phase eq 'find_header') ||
                          ($phase eq 'find_more_point')) && 
                         (/^H  LATITUDE    LONGITUDE/)) {
                         $phase = 'found_header';
+                        $pointno = 0;
                     #T  N3110.27551 E12123.28069 10-Apr-11 05:57:36    7 ; gps 20110410 135759
                     } elsif (($phase eq 'found_header') && 
                         (/^T +[NS]/)) {
@@ -273,11 +322,29 @@ sub l00http_kml_proc {
                                 $lon_ = -$lon_;
                             }
 		                    $tracks = $tracks . "\t\t\t$lon_,$lat_,$trackheight\n";
+                            if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
+                                $trkmarks .=
+                                "\t\t\t<Placemark>\n".
+                                "\t\t\t\t<name>$lnno</name>\n".
+                                "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                                "\t\t\t\t<Point>\n".
+                                "\t\t\t\t\t<coordinates>$lon_,$lat_,0</coordinates>\n".
+                                "\t\t\t\t</Point>\n".
+                                "\t\t\t</Placemark>\n";
+                            }
                         }
                     }
                 }
 	            $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
                 $kmlbuf .= $tracks;
+                if ($trackmark > 0) {
+                    $kmlbuf .=  "		<Folder>\n".
+                                "			<name>Timemark</name>\n".
+                                "			<open>1</open>\n".
+                                $trkmarks.
+                                "		</Folder>\n";
+                                "   </Folder>\n";
+                }
                 $kmlbuf .= $kmlfooter;
 
                 $size = length ($kmlbuf);
@@ -336,18 +403,38 @@ sub l00http_kml_proc {
         print $sock "</td></tr>\n";
 
         print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\">\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"submit\" name=\"cb2file\" value=\"CB to Filename\">\n";
+        print $sock "</td></tr>\n";
+        print $sock "</table>\n";
+        print $sock "</form>\n";
+
+
+        print $sock "<form action=\"/kml.htm\" method=\"get\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+
+        print $sock "<tr><td>\n";
         print $sock "Track height (m):\n";
         print $sock "</td><td>\n";
         print $sock "<input type=\"text\" name=\"kml_trackheight\" value=\"$trackheight\">\n";
         print $sock "</td></tr>\n";
 
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\">\n";
+        print $sock "Mark every Nth:\n";
         print $sock "</td><td>\n";
-        print $sock "Google Earth .kml processor\n";
+        print $sock "<input type=\"text\" name=\"trackmark\" value=\"$trackmark\">\n";
+        print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"set\" value=\"Set\">\n";
+        print $sock "</td><td>\n";
+        print $sock "Nth == 0 : off\n";
         print $sock "</td></tr>\n";
         print $sock "</table>\n";
         print $sock "</form>\n";
+
+        print $sock "Google Earth .kml processor<p>\n";
 
         # get submitted name and print greeting
         $lineno = 1;
