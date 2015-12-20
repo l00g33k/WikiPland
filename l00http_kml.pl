@@ -48,36 +48,36 @@ $kmlheader =
     "			<hotSpot x=\"0.5\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>\n".
     "		</IconStyle>\n".
     "	</Style>\n".
-    "	<Style id=\"sn_circle\">".
-    "		<IconStyle>".
-    "			<scale>1.2</scale>".
-    "			<Icon>".
-    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>".
-    "			</Icon>".
-    "		</IconStyle>".
-    "		<ListStyle>".
-    "		</ListStyle>".
-    "	</Style>".
-    "	<Style id=\"sh_circle\">".
-    "		<IconStyle>".
-    "			<scale>1.2</scale>".
-    "			<Icon>".
-    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png</href>".
-    "			</Icon>".
-    "		</IconStyle>".
-    "		<ListStyle>".
-    "		</ListStyle>".
-    "	</Style>".
-    "	<StyleMap id=\"msn_circle\">".
-    "		<Pair>".
-    "			<key>normal</key>".
-    "			<styleUrl>#sn_circle</styleUrl>".
-    "		</Pair>".
-    "		<Pair>".
-    "			<key>highlight</key>".
-    "			<styleUrl>#sh_circle</styleUrl>".
-    "		</Pair>".
-    "	</StyleMap>".
+    "	<Style id=\"sn_circle\">\n".
+    "		<IconStyle>\n".
+    "			<scale>1.2</scale>\n".
+    "			<Icon>\n".
+    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>\n".
+    "			</Icon>\n".
+    "		</IconStyle>\n".
+    "		<ListStyle>\n".
+    "		</ListStyle>\n".
+    "	</Style>\n".
+    "	<Style id=\"sh_circle\">\n".
+    "		<IconStyle>\n".
+    "			<scale>1.2</scale>\n".
+    "			<Icon>\n".
+    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png</href>\n".
+    "			</Icon>\n".
+    "		</IconStyle>\n".
+    "		<ListStyle>\n".
+    "		</ListStyle>\n".
+    "	</Style>\n".
+    "	<StyleMap id=\"msn_circle\">\n".
+    "		<Pair>\n".
+    "			<key>normal</key>\n".
+    "			<styleUrl>#sn_circle</styleUrl>\n".
+    "		</Pair>\n".
+    "		<Pair>\n".
+    "			<key>highlight</key>\n".
+    "			<styleUrl>#sh_circle</styleUrl>\n".
+    "		</Pair>\n".
+    "	</StyleMap>\n".
     "	<Folder>\n".
     "		<name>Temporary Places</name>\n".
     "		<open>1</open>\n";
@@ -97,6 +97,7 @@ sub l00http_kml_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $trkname, $trkmarks, $lnno, $pointno);
+    my ($gpxtime);
 
     $rawkml = 0;
 
@@ -240,6 +241,87 @@ sub l00http_kml_proc {
                 print $sock $kmlbuf;
                 $sock->close;
                 $rawkml = 1;
+            } elsif ($form->{'path'} =~ /\.gpx$/) {
+                my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
+                my ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $dtstamp);
+                $tracks = '';
+                $phase = 'find_track';
+                $debug = 1;
+                $trackno = 1;
+                # gps track, convert to .kml
+                $kmlbuf = $kmlheader;
+                $trkmarks = '';
+
+                $lnno = 0;
+                $pointno = -1;
+                foreach $_ (split ("\n", $buffer)) {
+                    $lnno++;
+                    $pointno++;
+                    #<trkseg>
+            	    if (($phase eq 'find_track') && 
+                        (/<trkseg>/)) {
+                        $phase = 'found_new_header';
+                        $pointno = 0;
+                    }
+                    # <trkpt lat="25.106161" lon="121.529244">
+                    if (/<trkpt lat="(.+?)" lon="(.+?)">/) {
+                        $lat = $1;
+                        $lon = $2;
+                    }
+                    # <time>2015-11-30T23:30:28Z</time>
+                    if (/<time>(.+)<\/time>/) {
+                        $gpxtime = $1;
+                    }
+                    # </trkpt>
+                    if (/<\/trkpt>/) {
+                        if ($phase eq 'found_new_header') {
+                            $phase = 'find_track';
+		                    if ($tracks ne '') {
+			                    # not first time
+			                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+		                    }
+		                    $tracks = $tracks . 
+			                    "\t\t<Placemark><name>Track $gpxtime</name>\n" .
+			                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+			                    "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+			                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+			                    "\t\t\t<coordinates>\n";
+                            $trackno++;
+                        }
+		                $tracks = $tracks . "\t\t\t$lon,$lat,$trackheight\n";
+                        if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
+                            $trkmarks .=
+                            "\t\t\t<Placemark>\n".
+                            "\t\t\t\t<name>$lnno</name>\n".
+                            "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                            "\t\t\t\t<Point>\n".
+                            "\t\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
+                            "\t\t\t\t</Point>\n".
+                            "\t\t\t</Placemark>\n";
+                        }
+                    }
+                }
+	            $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                $kmlbuf .= $tracks;
+                if ($trackmark > 0) {
+                    $kmlbuf .=  "		<Folder>\n".
+                                "			<name>Timemark</name>\n".
+                                "			<open>1</open>\n".
+                                $trkmarks.
+                                "		</Folder>\n".
+                                "   </Folder>\n";
+                }
+                $kmlbuf .= $kmlfooter;
+                #l00httpd::dbp($config{'desc'}, "kmlbuf: \n$kmlbuf\n");
+
+                $size = length ($kmlbuf);
+                $httphdr = "Content-Type: application/gpx+xml\r\n";
+                $httphdr .= "Content-Length: $size\r\n";
+                $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                print $sock $kmlbuf;
+                $sock->close;
+                $rawkml = 1;
             } elsif ($buffer =~ /^<\?xml/) {
                 # reading real .kml file
                 print $sock "$httphdr<br>\n";
@@ -342,7 +424,7 @@ sub l00http_kml_proc {
                                 "			<name>Timemark</name>\n".
                                 "			<open>1</open>\n".
                                 $trkmarks.
-                                "		</Folder>\n";
+                                "		</Folder>\n".
                                 "   </Folder>\n";
                 }
                 $kmlbuf .= $kmlfooter;
