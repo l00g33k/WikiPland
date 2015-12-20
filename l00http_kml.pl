@@ -9,16 +9,17 @@ use l00backup;
 my %config = (proc => "l00http_kml_proc",
               desc => "l00http_kml_desc");
 
-my ($kmlheader, $kmlfooter, $trackheight, $trackmark);
+my ($kmlheader1, $kmlheader2, $kmlfooter, $trackheight, $trackmark);
 
 $trackheight = 30;
 $trackmark = 0;
 
-$kmlheader = 
+$kmlheader1 = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".
     "<kml xmlns=\"http://www.opengis.net/kml/2.2\" xmlns:gx=\"http://www.google.com/kml/ext/2.2\" xmlns:kml=\"http://www.opengis.net/kml/2.2\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n".
     "<Document>\n".
-    "	<name>kml.kml</name>\n".
+    "	<name>";
+$kmlheader2 = "</name>\n".
     "	<open>1</open>\n".
     "	<StyleMap id=\"msn_hospitals\">\n".
     "		<Pair>\n".
@@ -97,7 +98,7 @@ sub l00http_kml_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $trkname, $trkmarks, $lnno, $pointno);
-    my ($gpxtime);
+    my ($gpxtime, $fname);
 
     $rawkml = 0;
 
@@ -109,8 +110,12 @@ sub l00http_kml_proc {
     $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
     $httphdr .= "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     $httphdr .= "<a href=\"/kml.htm\">Refresh</a><br>\n";
+    $fname = '(unknown)';
     if (defined ($form->{'path'})) {
         $httphdr .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        if ($form->{'path'} =~ /([^\/\\]+)$/) {
+            $fname = $1;
+        }
     }
 
 
@@ -165,10 +170,15 @@ sub l00http_kml_proc {
                 $debug = 1;
                 $trackno = 1;
                 # gps track, convert to .kml
-                $kmlbuf = $kmlheader;
+                $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                $trkmarks = '';
 
                 $lastseg = -1;
+                $lnno = 0;
+                $pointno = -1;
                 foreach $_ (split ("\n", $buffer)) {
+                    $lnno++;
+                    $pointno++;
                     s/"//g;
                     @fields = split(",", $_);
                     # try to find timestamp as valid indicator
@@ -187,6 +197,7 @@ sub l00http_kml_proc {
                         ($fields[1] =~ /Activity type/)) {
                         $phase = 'found_header';
                         $lastseg = -1;
+                        $pointno = 0;
                     } elsif (($phase eq 'found_header') && ($stamp ne '')) {
                         #"Segment","Point","Latitude (deg)","Longitude (deg)","Altitude (m)","Bearing (deg)","Accuracy (m)","Speed (m/s)","Time","Power (W)","Cadence (rpm)","Heart rate (bpm)"
                         #"1","1","51.481289","-0.607417","42.0","","38","0","2015-08-14T10:26:48.952Z","","",""
@@ -205,6 +216,7 @@ sub l00http_kml_proc {
 			                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
 			                "\t\t\t<coordinates>\n";
                         $trackno++;
+                        $pointno = 0;
                     }
                     if (($phase eq 'find_more_point') && ($stamp ne '')) {
                         if ($lastseg != $fields[0]) {
@@ -223,14 +235,32 @@ sub l00http_kml_proc {
 			                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
 			                    "\t\t\t<coordinates>\n";
                             $trackno++;
+                            $pointno = 0;
                         }
 
                         #"1","1","51.481289","-0.607417","42.0","","38","0","2015-08-14T10:26:48.952Z","","",""
 		                $tracks = $tracks . "\t\t\t$fields[3],$fields[2],$trackheight\n";
+                        if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
+                            $trkmarks .=
+                            "\t\t\t<Placemark>\n".
+                            "\t\t\t\t<name>$lnno</name>\n".
+                            "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                            "\t\t\t\t<Point>\n".
+                            "\t\t\t\t\t<coordinates>$fields[3],$fields[2],0</coordinates>\n".
+                            "\t\t\t\t</Point>\n".
+                            "\t\t\t</Placemark>\n";
+                        }
                     }
                 }
 	            $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
                 $kmlbuf .= $tracks;
+                if ($trackmark > 0) {
+                    $kmlbuf .=  "		<Folder>\n".
+                                "			<name>Timemark</name>\n".
+                                "			<open>1</open>\n".
+                                $trkmarks.
+                                "		</Folder>\n";
+                }
                 $kmlbuf .= $kmlfooter;
 
                 $size = length ($kmlbuf);
@@ -249,7 +279,7 @@ sub l00http_kml_proc {
                 $debug = 1;
                 $trackno = 1;
                 # gps track, convert to .kml
-                $kmlbuf = $kmlheader;
+                $kmlbuf = "$kmlheader1$fname$kmlheader2";
                 $trkmarks = '';
 
                 $lnno = 0;
@@ -308,8 +338,7 @@ sub l00http_kml_proc {
                                 "			<name>Timemark</name>\n".
                                 "			<open>1</open>\n".
                                 $trkmarks.
-                                "		</Folder>\n".
-                                "   </Folder>\n";
+                                "		</Folder>\n";
                 }
                 $kmlbuf .= $kmlfooter;
                 #l00httpd::dbp($config{'desc'}, "kmlbuf: \n$kmlbuf\n");
@@ -355,7 +384,7 @@ sub l00http_kml_proc {
                 $debug = 1;
                 $trackno = 1;
                 # gps track, convert to .kml
-                $kmlbuf = $kmlheader;
+                $kmlbuf = "$kmlheader1$fname$kmlheader2";
                 $trkmarks = '';
 
                 $lnno = 0;
@@ -424,8 +453,7 @@ sub l00http_kml_proc {
                                 "			<name>Timemark</name>\n".
                                 "			<open>1</open>\n".
                                 $trkmarks.
-                                "		</Folder>\n".
-                                "   </Folder>\n";
+                                "		</Folder>\n";
                 }
                 $kmlbuf .= $kmlfooter;
 
@@ -439,7 +467,7 @@ sub l00http_kml_proc {
                 $rawkml = 1;
             } else {
                 # reading long,lat,name file
-                $kmlbuf = $kmlheader;
+                $kmlbuf = "$kmlheader1$fname$kmlheader2";
                 foreach $_ (split ("\n", $buffer)) {
                     s/\r//g;
                     s/\n//g;
