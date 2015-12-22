@@ -41,7 +41,9 @@ my $maptllat = 1;
 my $mapbrlon = 1;
 my $mapbrlat = -1;
 
-my ($fname);
+my ($fname, $mapwd, $mapht, $fitmapphase);
+
+$fitmapphase = 0;
 
 my %config = (proc => "l00http_gpsmapsvg_proc",
               desc => "l00http_gpsmapsvg_desc");
@@ -95,9 +97,11 @@ sub l00http_gpsmapsvg_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
-    my ($mapwd, $mapht, $lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
+    my ($lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
     my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state, $lnno);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
+    my ($fitmapmaxlon, $fitmapminlon, $fitmapmaxlat, $fitmapminlat);
+    my ($plon, $plat);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -177,6 +181,10 @@ sub l00http_gpsmapsvg_proc (\%) {
         if (defined ($form->{'waycolor'})) {
             $waycolor = $form->{'waycolor'};
         }
+        $fitmapphase = 0;
+        if (defined ($form->{'fittrack'}) && ($form->{'fittrack'} eq 'on')) {
+            $fitmapphase = 1;
+        }
     }
     # mark point
     if (defined ($form->{'marktrack'}) &&
@@ -229,8 +237,7 @@ sub l00http_gpsmapsvg_proc (\%) {
         $lat = $coor->{'latitude'};
     }
 
-    if (open (IN, "<$map")) {
-
+    if (($fitmapphase == 0) && (open (IN, "<$map"))) {
         $_ = <IN>; s/\n//; s/\r//; ($maptlx) = / *([^ ]+) */;
         $_ = <IN>; s/\n//; s/\r//; ($maptly) = / *([^ ]+) */;
         $_ = <IN>; s/\n//; s/\r//; ($maptllon) = / *([^ ]+) */;
@@ -315,7 +322,6 @@ sub l00http_gpsmapsvg_proc (\%) {
                     }
 
                     #print "$1 $2 $3 $4 $5 $6  ";
-                    my ($plon, $plat);
                     $plon = $5 + $6 / 60;
                     $plat = $2 + $3 / 60;
                     if ($4 eq 'W') {
@@ -324,9 +330,22 @@ sub l00http_gpsmapsvg_proc (\%) {
                     if ($1 eq 'S') {
                         $plat = -$plat;
                     }
+                    if ($fitmapphase > 0) {
+                        if ($fitmapphase == 1) {
+                            $fitmapmaxlon = $plon;
+                            $fitmapminlon = $plon;
+                            $fitmapmaxlat = $plat;
+                            $fitmapminlat = $plat;
+                            $fitmapphase = 2;
+                        } else {
+                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
+                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
+                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
+                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
+                        }
+                    }
                     ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
-                    #print "$1 $4 $plat $plon ";
-                    #print "$pcx5mk $pixx $pixy $notclip\n";
+                    l00httpd::dbp($config{'desc'}, "(pixx $pixx, pixy $pixy, notclip $notclip) = &ll2xysvg (plon $plon, plat$plat)\n");
                     if ($notclip) {
                         $displaypt = 0; # default to not displaying
                         if ($nogpstrks == $starttrack) {
@@ -393,10 +412,24 @@ sub l00http_gpsmapsvg_proc (\%) {
                         $state = 2;
                     }
                 }
-                if (/^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
+                if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
                     ##long,lat,name
                     #121.386309,31.171295,Huana
-                    ($pixx, $pixy, $notclip) = &ll2xysvg ($1, $2);
+                    if ($fitmapphase > 0) {
+                        if ($fitmapphase == 1) {
+                            $fitmapmaxlon = $plon;
+                            $fitmapminlon = $plon;
+                            $fitmapmaxlat = $plat;
+                            $fitmapminlat = $plat;
+                            $fitmapphase = 2;
+                        } else {
+                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
+                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
+                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
+                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
+                        }
+                    }
+                    ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
                     if ($notclip) {
                         print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
                         print $sock "<font color=\"$waycolor\">$3</font></div>\n";
@@ -404,6 +437,19 @@ sub l00http_gpsmapsvg_proc (\%) {
                 }
             }
             close (WAY);
+            if ($fitmapphase == 2) {
+                $maptllon = $fitmapminlon;
+                $maptllat = $fitmapmaxlat;
+                $mapbrlon = $fitmapmaxlon;
+                $mapbrlat = $fitmapminlat;
+
+                $maptllon -= ($fitmapmaxlon - $fitmapminlon) / 10;
+                $maptllat += ($fitmapmaxlat - $fitmapminlat) / 10;
+                $mapbrlon += ($fitmapmaxlon - $fitmapminlon) / 10;
+                $mapbrlat -= ($fitmapmaxlat - $fitmapminlat) / 10;
+
+                $fitmapphase = -1;
+            }
 
             if ($tracknpts ne '') {
                 $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
@@ -555,6 +601,16 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\"></td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "    <tr>\n";
+    print $sock "        <td>&nbsp;</td>\n";
+    if ($fitmapphase == 0) {
+        $_ = '';
+    } else {
+        $_ = 'checked';
+    }
+    print $sock "        <td><input type=\"checkbox\" name=\"fittrack\" $_>Force map to fix track</td>\n";
+    print $sock "    </tr>\n";
+
     print $sock "        <tr>\n";
     print $sock "            <td>Mark track #:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"marktrack\" value=\"$marktrack\"></td>\n";
@@ -586,20 +642,29 @@ sub l00http_gpsmapsvg_proc (\%) {
 
     if (open (IN, "<$map")) {
         print $sock "Map file: $map<pre>\n";
-        print $sock "maptlx $maptlx";
-        print $sock "maptly $maptly";
-        print $sock "maptllon $maptllon";
-        print $sock "maptllat $maptllat";
-        print $sock "mapbrx $mapbrx";
-        print $sock "mapbry $mapbry";
-        print $sock "mapbrlon $mapbrlon";
-        print $sock "mapbrlat $mapbrlat";
+        print $sock "maptlx $maptlx\n";
+        print $sock "maptly $maptly\n";
+        print $sock "maptllon $maptllon\n";
+        print $sock "maptllat $maptllat\n";
+        print $sock "mapbrx $mapbrx\n";
+        print $sock "mapbry $mapbry\n";
+        print $sock "mapbrlon $mapbrlon\n";
+        print $sock "mapbrlat $mapbrlat\n";
 
         print $sock "(dumping $map)\n";
 
         while (<IN>) {
             print $sock "$_";
         }
+
+        if ($fitmapphase != 0) {
+            print $sock "\nOverwritten by fitmapphase $fitmapphase\n";
+            print $sock "maptllon $maptllon = fitmapminlon $fitmapminlon;\n";
+            print $sock "maptllat $maptllat = fitmapmaxlat $fitmapmaxlat;\n";
+            print $sock "mapbrlon $mapbrlon = fitmapmaxlon $fitmapmaxlon;\n";
+            print $sock "mapbrlat $mapbrlat = fitmapminlat $fitmapminlat;\n";
+        }
+
         print $sock "</pre>\n";
         close (IN);
     }

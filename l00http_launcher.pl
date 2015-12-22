@@ -41,8 +41,10 @@ sub l00http_launcher_proc {
 #       print $sock " <a href=\"/ls.htm?path=$path\">$path</a>\n";
 
         ($lpname, $lfname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
-        print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a><p>\n";
+        print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
+
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a><p>\n";
+
     } else {
         $path = '';
     }
@@ -88,7 +90,7 @@ sub l00http_launcher_proc {
         }
         $fname = $path;
         $fname =~ s/.+(\/.+)/$1/;
-        print $sock "<a href=\"/$name.htm$fname$extra?path=$path\">$name</a>\n";
+        print $sock "<a href=\"/$name.htm/$fname$extra?path=$path\">$name</a>\n";
         $col++;
         # change number of column here and below
         if ($col >= 3) {
