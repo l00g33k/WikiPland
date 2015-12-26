@@ -237,16 +237,26 @@ sub l00http_gpsmapsvg_proc (\%) {
         $lat = $coor->{'latitude'};
     }
 
-    if (($fitmapphase == 0) && (open (IN, "<$map"))) {
-        $_ = <IN>; s/\n//; s/\r//; ($maptlx) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($maptly) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($maptllon) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($maptllat) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($mapbrx) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($mapbry) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($mapbrlon) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//; ($mapbrlat) = / *([^ ]+) */;
-        $_ = <IN>; s/\n//; s/\r//;
+#   if (($fitmapphase == 0) && (open (IN, "<$map"))) {
+#       $_ = <IN>; s/\n//; s/\r//; ($maptlx) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($maptly) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($maptllon) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($maptllat) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($mapbrx) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($mapbry) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($mapbrlon) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//; ($mapbrlat) = / *([^ ]+) */;
+#       $_ = <IN>; s/\n//; s/\r//;
+    if (($fitmapphase == 0) && (&l00httpd::l00freadOpen($ctrl, $map))) {
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($maptlx) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($maptly) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($maptllon) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($maptllat) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbrx) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbry) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbrlon) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbrlat) = / *([^ ]+) */;
+        $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//;
         if (/^IMG_WD_HT/) {
             ($mapwd, $mapht) = /^IMG_WD_HT=(\d+),(\d+)/;
             $mapwd = int ($mapwd * $scale / 100);
@@ -255,7 +265,7 @@ sub l00http_gpsmapsvg_proc (\%) {
             $mapwd = int (($mapbrx + 1) * $scale / 100);
             $mapht = int (($mapbry + 1) * $scale / 100);
 		}
-        close (IN);
+#       close (IN);
         l00httpd::dbp($config{'desc'}, "mapwd $mapwd mapht $mapht\n");
     }
 
@@ -520,7 +530,7 @@ sub l00http_gpsmapsvg_proc (\%) {
 
     print $sock "<p>$ctrl->{'home'} \n";
     print $sock "$ctrl->{'HOME'} \n";
-    print $sock "<a href=\"/ls.htm?path=$map\">$map</a>\n";
+    print $sock "<a href=\"/view.htm?path=$map\">$map</a>\n";
     print $sock "<a name=\"ctrl\"></a><p>\n";
 
     print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
@@ -640,7 +650,8 @@ sub l00http_gpsmapsvg_proc (\%) {
         print $sock "View waypoint/track file: <a href=\"/view.htm?path=$waypts\">$waypts</a><p>\n";
     }
 
-    if (open (IN, "<$map")) {
+#   if (open (IN, "<$map")) {
+    if (&l00httpd::l00freadOpen($ctrl, $map)) {
         print $sock "Map file: $map<pre>\n";
         print $sock "maptlx $maptlx\n";
         print $sock "maptly $maptly\n";
@@ -653,7 +664,8 @@ sub l00http_gpsmapsvg_proc (\%) {
 
         print $sock "(dumping $map)\n";
 
-        while (<IN>) {
+#       while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
             print $sock "$_";
         }
 
@@ -666,7 +678,7 @@ sub l00http_gpsmapsvg_proc (\%) {
         }
 
         print $sock "</pre>\n";
-        close (IN);
+#       close (IN);
     }
 
     # send HTML footer and ends
