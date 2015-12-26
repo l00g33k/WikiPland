@@ -1071,6 +1071,7 @@ print;
                         $fullpath = "";
                     }
                 }
+                $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%0x", ord $1 /eg;
 
                 # clip path listing
                 $tmp = $fullpath;
@@ -1097,19 +1098,21 @@ print;
                  = stat($path.$file);
                 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                  = localtime($mtime);
-                
+
+                $fullpath = $path . $file;
+                $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%0x", ord $1 /eg;
+
                 $buf = "<tr>\n";
                 if ($file =~ /\.txt$/i) {
                     # tx=$file.htm so it ends in .htm for Palm TX
-                    #$buf .= "<td><small><a href=\"/ls.htm/$file?path=$path$file&tx=$file.htm\">$file</a>"
-                    $buf .= "<td><small><a href=\"/ls.htm/$file?path=$path$file\">$file</a>"
+                    $buf .= "<td><small><a href=\"/ls.htm/$file?path=$fullpath\">$file</a>"
                         ."</small></td>\n";
                 } else {
-                    $buf .= "<td><small><a href=\"/ls.htm/$file?path=$path$file\">$file</a>"
+                    $buf .= "<td><small><a href=\"/ls.htm/$file?path=$fullpath\">$file</a>"
                         ."</small></td>\n";
                 }
                 $buf .= "<td align=right><small>"
-                    ."<a href=\"/$ctrl->{'lssize'}.htm?path=$path$file\">$size</a>"
+                    ."<a href=\"/$ctrl->{'lssize'}.htm?path=$fullpath\">$size</a>"
                     ."</small></td>\n";
                 # compute crc32
                 if ($docrc32) {

@@ -24,7 +24,7 @@ sub l00http_launcher_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $file, $name, $col, $extra, $path, $fname);
-    my ($lpname, $lfname);
+    my ($lpname, $lfname, $pathuri);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -76,6 +76,10 @@ sub l00http_launcher_proc {
 
 
     $col = 0;
+    $fname = $path;
+    $fname =~ s/.+(\/.+)/$1/;
+    $pathuri = $path;
+    $pathuri =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%0x", ord $1 /eg;
     foreach $name (@targets) {
         if ($col == 0) {
             print $sock "<tr><td>\n";
@@ -83,14 +87,11 @@ sub l00http_launcher_proc {
         $extra = '';
         if ($name eq 'kml') {
            $extra = '.kml';
-#        } elsif ($path =~ /\.txt$/) {
         } else {
            # add .htm as some browser won't open .txt as HTML
            $extra = '.htm';
         }
-        $fname = $path;
-        $fname =~ s/.+(\/.+)/$1/;
-        print $sock "<a href=\"/$name.htm/$fname$extra?path=$path\">$name</a>\n";
+        print $sock "<a href=\"/$name.htm/$fname$extra?path=$pathuri\">$name</a>\n";
         $col++;
         # change number of column here and below
         if ($col >= 3) {
