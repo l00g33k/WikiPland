@@ -929,7 +929,6 @@ sub l00http_diff_proc {
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-#   print $sock "&nbsp;";
     print $sock "<input type=\"checkbox\" name=\"debug\">debug";
     #print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide same lines\n";

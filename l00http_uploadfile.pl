@@ -51,12 +51,6 @@ sub l00http_uploadfile_proc {
     print $sock "<a href=\"/uploadfile.htm\">uploadfile.htm</a><p>\n";
 
     if (defined($form->{'payload'})) {
-        ##&l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-        #&l00httpd::l00fwriteOpen($ctrl, 'c:\x\z.txt');
-        #&l00httpd::l00fwriteBuf($ctrl, $form->{'payload'});
-        #if (&l00httpd::l00fwriteClose($ctrl)) {
-        #    print $sock "Unable to write '$form->{'path'}'<p>\n";
-        #}
         $fname = $form->{'filename'};
         $fname =~ s/^.+[\/\\]([^\/\\]+)$/$1/;
         $path .= $fname;
@@ -69,10 +63,13 @@ sub l00http_uploadfile_proc {
         } else {
             $_ = 0;
         }
-        open(DBG2,">$path");
-        binmode(DBG2);
-        print DBG2 $form->{'payload'};
-        close(DBG2);
+#        open(DBG2,">$path");
+#        binmode(DBG2);
+#        print DBG2 $form->{'payload'};
+#        close(DBG2);
+        &l00httpd::l00fwriteOpen($ctrl, $path);
+        &l00httpd::l00fwriteBuf($ctrl, $form->{'payload'});
+        &l00httpd::l00fwriteClose($ctrl);
         print $sock "<p>Saved '$fname' to '$path'<br>\n";
         print $sock sprintf("Size = %d bytes<br>CRC32 = 0x%08x<br>\n", length($form->{'payload'}), $_);
         print $sock "<a href =\"/ls.htm?path=$path\">$fname</a>\n";
