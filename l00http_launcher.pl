@@ -79,7 +79,7 @@ sub l00http_launcher_proc {
     $fname = $path;
     $fname =~ s/.+(\/.+)/$1/;
     $pathuri = $path;
-    $pathuri =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%0x", ord $1 /eg;
+    $pathuri =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
     foreach $name (@targets) {
         if ($col == 0) {
             print $sock "<tr><td>\n";

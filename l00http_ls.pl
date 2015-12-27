@@ -1071,7 +1071,7 @@ print;
                         $fullpath = "";
                     }
                 }
-                $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%0x", ord $1 /eg;
+                $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
 
                 # clip path listing
                 $tmp = $fullpath;
@@ -1100,7 +1100,7 @@ print;
                  = localtime($mtime);
 
                 $fullpath = $path . $file;
-                $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%0x", ord $1 /eg;
+                $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
 
                 $buf = "<tr>\n";
                 if ($file =~ /\.txt$/i) {
