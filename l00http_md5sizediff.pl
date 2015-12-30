@@ -142,11 +142,15 @@ sub l00http_md5sizediff_proc {
     }
 
     # compare
+    if (!defined ($thatpath)) {
+        $thatpath = '';
+    }
     if ((defined ($form->{'compare'})) &&
         (defined ($thispath) && 
-        (length ($thispath) > 0)) &&
-        (defined ($thatpath) && 
-        (length ($thatpath) > 0))) {
+        (length ($thispath) > 0))) {
+		#&&
+        #(defined ($thatpath) && 
+        #(length ($thatpath) > 0))) {
 
         $jumper = "    ".
              "<a href=\"#top\">top</a> ".
@@ -184,7 +188,8 @@ sub l00http_md5sizediff_proc {
             # split combined input files for each side
             foreach $file (split('\|\|', $side)) {
                 $cnt = 0;
-                if (&l00httpd::l00freadOpen($ctrl, $file)) {
+                if ((length($file) > 0) && 
+                    &l00httpd::l00freadOpen($ctrl, $file)) {
                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
                         s/ <dir>//g;
                         s/\r//;
@@ -587,9 +592,9 @@ sub l00http_md5sizediff_proc {
     if ($mode eq 'text') { $_ = "checked"; } else { $_ = "unchecked"; }
     print $sock "<input type=\"radio\" name=\"mode\" value=\"text\" $_>Text ";
     if ($mode eq 'dos' ) { $_ = "checked"; } else { $_ = "unchecked"; }
-    print $sock "<input type=\"radio\" name=\"mode\" value=\"dos\"  $_>DOS ";
+    print $sock "<input type=\"radio\" name=\"mode\" value=\"dos\"  $_>.bat ";
     if ($mode eq 'unix') { $_ = "checked"; } else { $_ = "unchecked"; }
-    print $sock "<input type=\"radio\" name=\"mode\" value=\"unix\"  $_>Unix ";
+    print $sock "<input type=\"radio\" name=\"mode\" value=\"unix\"  $_>.sh ";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
