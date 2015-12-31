@@ -193,6 +193,9 @@ sub l00http_diff_output {
             }
 
             push (@diffout, " $oout &lt;\n");
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") left  only: oii $oii nii $nii\n");
+            }
             $oii++;
             $deleted++;
             next;
@@ -212,6 +215,9 @@ sub l00http_diff_output {
             }
 
             push (@diffout, " $ospc &gt;$nout\n");
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") right only: oii $oii nii $nii\n");
+            }
             $nii++;
             $added++;
             next;
@@ -228,12 +234,18 @@ sub l00http_diff_output {
                     $anchor++;
                 }
                 push (@diffout, " $oout =$nout\n");
+                if ($debug >= 5) {
+                    l00httpd::dbp('l00diff.pm', "(".__LINE__.") same 1   : oii $oii nii $nii\n");
+                }
             } else {
                 # print a note about hidden lines
                 $hiding2++;
                 if ($hiding2 != $hiding) {
                     $hiding2 = $hiding;
                     push (@diffout, sprintf ("%-${width}s%-${width}s--- same omitted ---\n", '-'x$width, '-'x$width));
+                    if ($debug >= 5) {
+                        l00httpd::dbp('l00diff.pm', "(".__LINE__.") same 2   : oii $oii nii $nii\n");
+                    }
                 }
             }
             $lastact = '=';
@@ -258,9 +270,12 @@ sub l00http_diff_output {
             if ($firstact eq '') {
                 $firstact = $lastact;
             }
-            $_ = sprintf ("(%d)", $NA[$nii] + 1);
+            $_ = sprintf ("moved (%d)", $NA[$nii] + 1);
             substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
             push (@diffout, " $ospc [$nout\n");
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") move new : oii $oii nii $nii\n");
+            }
             $nii++;
             $moved++;
             next;
@@ -278,7 +293,10 @@ sub l00http_diff_output {
             if ($firstact eq '') {
                 $firstact = $lastact;
             }
-            push (@diffout, sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1));
+            push (@diffout, sprintf (" %s ] (%d) moved\n", $oout, $OA[$oii] + 1));
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") move old : oii $oii nii $nii\n");
+            }
             $oii++;
             next;
         }
@@ -306,7 +324,8 @@ sub l00http_diff_output {
     $lastact = $firstact;
     #$outlinks = "backward debug " . $outlinks;
 
-    while (($oii >= 0) && ($nii >= 0)) {
+#   while (($oii >= 0) || ($nii >= 0)) 
+    while (($oii >= 0) && ($nii >= 0)) { # is this right?
         $hiding++;
         # prepare outputs
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii, $width, $oldfile, $newfile);
@@ -341,6 +360,9 @@ sub l00http_diff_output {
             }
 
             unshift (@diffout, " $oout &lt;\n");
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") del left : oii $oii nii $nii\n");
+            }
             $oii--;
             $deleted++;
             next;
@@ -376,6 +398,9 @@ sub l00http_diff_output {
             }
 
             unshift (@diffout, " $ospc &gt;$nout\n");
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") add right: oii $oii nii $nii\n");
+            }
             $nii--;
             $added++;
             next;
@@ -413,12 +438,18 @@ sub l00http_diff_output {
                 }
 
                 unshift (@diffout, " $oout =$nout\n");
+                if ($debug >= 5) {
+                    l00httpd::dbp('l00diff.pm', "(".__LINE__.") same 1   : oii $oii nii $nii\n");
+                }
             } else {
                 # print a note about hidden lines
                 $hiding2++;
                 if ($hiding2 != $hiding) {
                     $hiding2 = $hiding;
                     push (@diffout, sprintf ("%-${width}s%-${width}s--- same omitted ---\n", '-'x$width, '-'x$width));
+                    if ($debug >= 5) {
+                        l00httpd::dbp('l00diff.pm', "(".__LINE__.") same 2   : oii $oii nii $nii\n");
+                    }
                 }
             }
             $lastact = '=';
@@ -461,6 +492,9 @@ sub l00http_diff_output {
             $_ = sprintf ("(%d)", $NA[$nii] + 1);
             substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
             unshift (@diffout, " $ospc [$nout\n");
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") move rght: oii $oii nii $nii\n");
+            }
             $nii--;
             $moved++;
             next;
@@ -496,6 +530,9 @@ sub l00http_diff_output {
             }
 
             unshift (@diffout, sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1));
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") move left: oii $oii nii $nii\n");
+            }
             $oii--;
             next;
         }
@@ -704,7 +741,7 @@ sub l00http_diff_compare {
                 $OA[$jj + 1] = $ln + 1;
                 $NA[$ln + 1] = $jj + 1;
                 if ($debug >= 5) {
-                    $debugbuf = printf ("NA %d OA %d >%s<\n", $jj + 1, $ln + 1, $NEW[$ln + 1]);
+                    $debugbuf = sprintf ("NA %d OA %d >%s<\n", $jj + 1, $ln + 1, $NEW[$ln + 1]);
                     l00httpd::dbp('l00diff.pm', $debugbuf);
                 }
             }
@@ -716,7 +753,7 @@ sub l00http_diff_compare {
     if ($debug >= 1) {
         l00httpd::dbp('l00diff.pm', "Pass 5: Match non unique lines by context going backword\n");
     }
-    for ($ln = $#NEW; $ln > 0; $ln--) { # skip first line which has no previous
+    for ($ln = $#NEW - 1; $ln > 0; $ln--) {
         # $ln is new line number
         # $jj is matching old line number
         $jj = $NA[$ln];
@@ -730,7 +767,7 @@ sub l00http_diff_compare {
                 $OA[$jj - 1] = $ln - 1;
                 $NA[$ln - 1] = $jj - 1;
                 if ($debug >= 5) {
-                    $debugbuf = printf ("NA %d OA %s >%s<\n", $jj - 1, $ln - 1, $NEW[$ln - 1]);
+                    $debugbuf = sprintf ("NA %d OA %s >%s<\n", $jj - 1, $ln - 1, $NEW[$ln - 1]);
                     l00httpd::dbp('l00diff.pm', $debugbuf);
                 }
             }

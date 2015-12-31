@@ -140,7 +140,7 @@ sub l00http_diff_proc {
 
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
-    print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">";
+    print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\"> ";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
