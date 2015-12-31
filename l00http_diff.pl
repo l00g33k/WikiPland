@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use l00backup;
 use l00httpd;
+use l00diff;
 
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
@@ -17,7 +18,6 @@ my ($debug);
 
 $treeto = '';
 $width = 20;
-#$form->{'path'}
 $oldfile = '';
 $newfile = '';
 $hide = '';
@@ -321,7 +321,7 @@ sub l00http_diff_output {
     $lastact = $firstact;
     #$outlinks = "backward debug " . $outlinks;
 
-    while (($oii >= 0) || ($nii >= 0)) {
+    while (($oii >= 0) && ($nii >= 0)) {
         $hiding++;
         # prepare outputs
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii);
@@ -539,12 +539,8 @@ sub l00http_diff_output {
         }
     }
     $outlinks . $out;
-    #."\n</pre>Links to modified blocks, (old line#), [new line#]: " . $outlinks . "<pre>\n";
 }
 
-#perl d:\x\diff.pl d:\x\old.txt d:\x\new.txt > d:\x\x10.txt
-#perl d:\x\diff.pl d:\x\new.txt d:\x\old.txt > d:\x\x10.txt
-#perl d:\x\diff.pl d:\x\old2.txt d:\x\new2.txt > d:\x\x10.txt
 sub l00http_diff_compare {
     my ($ctrl, $sock) = @_;
     my ($ln, $jj, $oii, $nii, $out, $nfor, $nptr);
@@ -558,7 +554,7 @@ sub l00http_diff_compare {
     # http://documents.scribd.com/docs/10ro9oowpo1h81pgh1as.pdf
 
     if (&l00httpd::l00freadOpen($ctrl, "$oldfile")) {
-        print $sock "&lt; Old file: $oldfile\n";
+        print $sock "&lt; Old file: <a href=\"/view.htm?path=$oldfile\">$oldfile</a>\n";
         undef @OLD;
         $cnt = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -573,7 +569,7 @@ sub l00http_diff_compare {
     }
 
     if (&l00httpd::l00freadOpen($ctrl, "$newfile")) {
-        print $sock "&gt; New file: $newfile\n";
+        print $sock "&gt; New file: <a href=\"/view.htm?path=$newfile\">$newfile</a>\n";
         undef @NEW;
         $cnt = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -893,7 +889,7 @@ sub l00http_diff_proc {
         # this takes precedence over 'path'
         $newfile = &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'path'})) {
-        # could be 'compare' or from ls.htm
+        # could be 'compare' or from launcher.htm
         if (defined ($form->{'pathold'})) {
             # 'compare' clicked, old file from oldfile field
             $oldfile = $form->{'pathold'};
@@ -905,39 +901,41 @@ sub l00http_diff_proc {
         $newfile = $form->{'path'};
     }
 
+    if (defined ($form->{'compare'})) {
+        # 'compare' clicked
+        if ((defined ($form->{'pathold'})) && (length($form->{'pathold'}) > 2)) {
+            $oldfile = $form->{'pathold'};
+        }
+        if ((defined ($form->{'pathnew'})) && (length($form->{'pathnew'}) > 2)) {
+            $newfile = $form->{'pathnew'};
+        }
+    }
 
     print $sock "<form action=\"/diff.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\">\n";
-    #print $sock "</td><td>\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pastenew\" value=\"CB>New:\">";
-    #print $sock "</td><td>\n";
-    #print $sock "<input type=\"text\" size=\"35\" name=\"path\" value=\"$newfile\">\n";
     print $sock "<br><textarea name=\"pathnew\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$newfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteold\" value=\"CB>Old:\">";
-    #print $sock "</td><td>\n";
-    #print $sock "<input type=\"text\" size=\"35\" name=\"pathold\" value=\"$oldfile\">\n";
     print $sock "<br><textarea name=\"pathold\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$oldfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"debug\">debug";
-    #print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide same lines\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
     print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">";
-    #print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
