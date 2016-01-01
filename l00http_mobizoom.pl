@@ -17,7 +17,7 @@ $para = 1;
 
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
-    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $line, $subj);
+    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $line, $subj, $clip);
 
 
     $wget = '';
@@ -35,7 +35,10 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
         $wget2 = '';
         foreach $_ (split("\n", $wget)) {
-            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a>:<a href="#__para$para\__">$para<\/a><\/small> /;
+            $clip = $_;
+            $clip =~ s/<.+?>//g;
+            $clip = &l00httpd::urlencode ($clip);
+            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip"> : <\/a>&nbsp;<a href="#__para$para\__">$para<\/a><\/small> /;
             s/span><span/span> <span/g;
             $wget2 .= "$_\n";
 #l00httpd::dbpclr();
