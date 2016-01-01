@@ -38,7 +38,7 @@ sub l00http_mobizoom_wget {
             $clip = $_;
             $clip =~ s/<.+?>//g;
             $clip = &l00httpd::urlencode ($clip);
-            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip"> : <\/a>&nbsp;<a href="#__para$para\__">$para<\/a><\/small> /;
+            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#__para$para\__">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
             s/span><span/span> <span/g;
             $wget2 .= "$_\n";
 #l00httpd::dbpclr();
