@@ -792,7 +792,7 @@ sub l00http_diff_compare {
         }
     }
 
-    # Pass 6: sample
+    # Pass 6: debug output
     if ($debug >= 1) {
         l00httpd::dbp('l00diff.pm', "Pass 6: Output results\n");
         $oii = 0;
@@ -822,37 +822,6 @@ sub l00http_diff_compare {
         }
 
         l00httpd::dbp('l00diff.pm', "--------------------------\n");
-
-        $oii = 0;
-        $nii = 0;
-        $nfor = 0;
-        $nptr = 0;
-        while (($oii <= $#OLD) || ($nii <= $#NEW)) {
-            # deleted
-            if (($oii <= $#OLD) && ($OA[$oii] < 0)) {
-                $oii++;
-                next;
-            }
-            # added
-            if (($nii <= $#NEW) && ($NA[$nii] < 0)) {
-                $nii++;
-                next;
-            }
-            # not deleted nor added, i.e. same or moved
-            if (($oii <= $#OLD) && ($nii <= $#NEW)) {
-                if ($OA[$oii] >= $nii) {
-                    # 
-                }
-                $oii++;
-                $nii++;
-                next;
-            }
-            # OLD and NEW points to different lines
-            # count OLD pointing forward
-
-            $oii++;
-            $nii++;
-        }
     }
 
     $htmlout .= &l00http_diff_output ($width, $oldfile, $newfile, 
