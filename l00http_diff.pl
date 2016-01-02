@@ -34,6 +34,7 @@ sub l00http_diff_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
+    my ($htmlout, $OA, $NA);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -148,9 +149,14 @@ sub l00http_diff_proc {
 
 
     if (defined ($form->{'compare'})) {
-        $_ = &l00diff::l00http_diff_compare ($ctrl, $sock, 
+        ($htmlout, $OA, $NA) = &l00diff::l00http_diff_compare ($ctrl, $sock, 
             $width, $oldfile, $newfile, $hide, $maxline, $debug);
-        print $sock $_;
+        print $sock $htmlout;
+#print $sock "<pre>\nOA ";
+#print $sock join(",", @$OA);
+#print $sock "\nNA ";
+#print $sock join(",", @$NA);
+#print $sock "</pre>\n";
     }
 
 

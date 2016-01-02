@@ -56,6 +56,30 @@ sub l00http_diff_make_outline {
 }
 
 
+# sample results:
+#  1: OA( 11) A                     1: NA( -1) MUCH                
+#  2: OA( 12) MASS                  2: NA( -1) WRITING             
+#  3: OA( 13) OF                    3: NA(  5) FALLS               
+#  4: OA( -1) LATIN                 4: NA(  6) UPON                
+#  5: OA( 15) WORDS                 5: NA(  7) THE                 
+#  6: OA(  2) FALLS                 6: NA(  8) RELEVANT            
+#  7: OA(  3) UPON                  7: NA(  9) FACTS               
+#  8: OA(  4) THE                   8: NA( -1) IS                  
+#  9: OA(  5) RELEVANT              9: NA( 10) LIKE                
+# 10: OA(  6) FACTS                10: NA( 12) SNOW                
+# 11: OA(  8) LIKE                 11: NA( 13) ,                   
+# 12: OA( -1) SOFT                 12: NA(  0) A                   
+# 13: OA(  9) SNOW                 13: NA(  1) MASS                
+# 14: OA( 10) ,                    14: NA(  2) OF                  
+# 15: OA( 18) COVERING             15: NA( -1) LONG                
+# 16: OA( 19) UP                   16: NA(  4) WORDS               
+# 17: OA( 20) THE                  17: NA( -1) AND                 
+# 18: OA( 21) DETAILS              18: NA( -1) PHRASES             
+# 19: OA( -1) .                    19: NA( 14) COVERING            
+#                                  20: NA( 15) UP                  
+#                                  21: NA( 16) THE                 
+#                                  22: NA( 17) DETAILS             
+
 sub l00http_diff_output {
     my ($width, $oldfile, $newfile, $hide, $maxline, $debug) = @_;
     my ($ln, $jj, $oii, $nii, $nfor, $nptr, $hiding, $hiding2);
@@ -68,9 +92,12 @@ sub l00http_diff_output {
     $firstnew = -1;
     for ($nii = 0; $nii <= $#NEW; $nii++) {
         if ($NA[$nii] < 0) {
-            # an added line, skip it
+            # $NA[$nii] is the matching line in the old file
+            # if it is -1, then this line in the new file is newly added
+            # skip it
             next;
         }
+        # remember first line in NEW that also appear in OLD
         $firstnew = $nii;
         last;
     }
@@ -82,7 +109,7 @@ sub l00http_diff_output {
     $debugbuf = '';
     for ($oii = 0; $oii <= $#OLD; $oii++) {
         if ($OA[$oii] < 0) {
-            # a deleted line, skip it
+            # this line in OLD has been deleted, skip it
             next;
         }
         # not a deleted line so there is a match in NEW
@@ -324,8 +351,7 @@ sub l00http_diff_output {
     $lastact = $firstact;
     #$outlinks = "backward debug " . $outlinks;
 
-#   while (($oii >= 0) || ($nii >= 0)) 
-    while (($oii >= 0) && ($nii >= 0)) { # is this right?
+    while (($oii >= 0) || ($nii >= 0)) {
         $hiding++;
         # prepare outputs
         ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii, $width, $oldfile, $newfile);
@@ -460,7 +486,7 @@ sub l00http_diff_output {
             next;
         }
         # print moved block in NEW
-        if ($NA[$nii] < $oii) {
+        if (($nii >= 0) && ($NA[$nii] > $oii)) {
             if ($lastact ne '[') {
                 # make link to changes
                 if ($lastact eq '>') {
@@ -489,7 +515,7 @@ sub l00http_diff_output {
                 $lastact = '[';
             }
 
-            $_ = sprintf ("(%d)", $NA[$nii] + 1);
+            $_ = sprintf ("moved (%d)", $NA[$nii] + 1);
             substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
             unshift (@diffout, " $ospc [$nout\n");
             if ($debug >= 5) {
@@ -500,7 +526,7 @@ sub l00http_diff_output {
             next;
         }
         # print moved block in OLD
-        if ($OA[$oii] > $nii) {
+        if (($oii >= 0) && ($OA[$oii] > $nii)) {
             if ($lastact ne ']') {
                 # make link to changes
                 if ($lastact eq '>') {
@@ -529,20 +555,12 @@ sub l00http_diff_output {
                 $lastact = ']';
             }
 
-            unshift (@diffout, sprintf (" %s ] (%d)\n", $oout, $OA[$oii] + 1));
+            unshift (@diffout, sprintf (" %s ] (%d) moved\n", $oout, $OA[$oii] + 1));
             if ($debug >= 5) {
                 l00httpd::dbp('l00diff.pm', "(".__LINE__.") move left: oii $oii nii $nii\n");
             }
             $oii--;
             next;
-        }
-
-        # fail safe
-        if ($oii < 0) {
-            $oii--;
-        }
-        if ($nii > 0) {
-            $nii--;
         }
     }
 
@@ -774,7 +792,7 @@ sub l00http_diff_compare {
         }
     }
 
-    # Pass 6
+    # Pass 6: sample
     if ($debug >= 1) {
         l00httpd::dbp('l00diff.pm', "Pass 6: Output results\n");
         $oii = 0;
@@ -782,18 +800,18 @@ sub l00http_diff_compare {
         $out = '';
         while (($oii <= $#OLD) || ($nii <= $#NEW)) {
             if ($oii <= $#OLD) {
-                $_ = sprintf ("%3d: OA(%3d) %-${width}s", $oii + 1, substr($OA[$oii],0,$width), substr($OLD[$oii],0,$width));
+                $_ = sprintf ("%3d: OA(%3d) %-${width}s", $oii, substr($OA[$oii],0,$width), substr($OLD[$oii],0,$width));
                 $oii++;
             } else {
-                $_ = sprintf ("%3d: OA(%3d) %${width}s", $oii + 1, 0, ' ');
+                $_ = sprintf ("%3d: OA(%3d) %${width}s", $oii, 0, ' ');
                 s/./ /g;
             }
             $out .= $_;
             if ($nii <= $#NEW) {
-                $_ = sprintf ("%3d: NA(%3d) %-${width}s", $nii + 1, substr($NA[$nii],0,$width), substr($NEW[$nii],0,$width));
+                $_ = sprintf ("%3d: NA(%3d) %-${width}s", $nii, substr($NA[$nii],0,$width), substr($NEW[$nii],0,$width));
                 $nii++;
             } else {
-                $_ = sprintf ("%3d: NA(%3d) %${width}s", $nii + 1, 0, ' ');
+                $_ = sprintf ("%3d: NA(%3d) %${width}s", $nii, 0, ' ');
                 s/./ /g;
             }
             $out .= $_;
@@ -842,7 +860,7 @@ sub l00http_diff_compare {
 
     $htmlout .= "</pre>\n";
 
-    $htmlout;
+    ($htmlout, \@OA, \@NA);
 }
 
 1;
