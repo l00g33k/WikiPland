@@ -162,7 +162,8 @@ sub l00http_view_proc {
 
             if (defined ($form->{'find'})) {
                 ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
-                $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
+                $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>. ";
+                $found .= "View <a href=\"/view.htm?path=l00://find.htm\">l00://find.htm</a>\n";
                 if (defined ($form->{'findtext'})) {
                     $findtext = $form->{'findtext'};
                 }
@@ -212,6 +213,10 @@ sub l00http_view_proc {
                 $found = "Found $foundcnt matches. $found";
                 print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, 0);
                 print $sock "<p>\n";
+                # save in RAM file too
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://find.htm');
+                &l00httpd::l00fwriteBuf($ctrl, $found);
+                &l00httpd::l00fwriteClose($ctrl);
             }
 
             print $sock "<pre>\n";
