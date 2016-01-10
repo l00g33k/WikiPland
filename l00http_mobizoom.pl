@@ -38,7 +38,7 @@ sub l00http_mobizoom_wget {
             $clip = $_;
             $clip =~ s/<.+?>//g;
             $clip = &l00httpd::urlencode ($clip);
-            s/<br\/><br\/>/<br\/><br\/><a name="__para$para\__"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#__para$para\__">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+            s/<br\/><br\/>/<br\/><br\/><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
             s/span><span/span> <span/g;
             $wget2 .= "$_\n";
 #l00httpd::dbpclr();
@@ -46,7 +46,7 @@ $line = $_;
 if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
 &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
 if(!($subj =~ /^Re:/)) {
-$threads .= "<a href=\"#__para${para}__\">$para: $subj</a><br>\n";
+$threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
 $wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
 }
 }
@@ -405,7 +405,7 @@ sub l00http_mobizoom_proc {
 
     print $sock "<p>Goto paragraph:\n";
     for (1..$para){
-        print $sock "<a href=\"#__para$_\__\">$_</a> ";
+        print $sock "<a href=\"#p$_\">$_</a> ";
     }
     print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
