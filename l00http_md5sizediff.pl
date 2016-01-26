@@ -296,85 +296,88 @@ sub l00http_md5sizediff_proc {
 
         # Files unique to each side
         # ----------------------------------------------------------------
-        foreach $sname (('THIS', 'THAT')) {
-            # for each side
-            if ($sname eq 'THIS') {
-                $oname = 'THAT';
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"this_only\"></a>";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    This only md5sum: $thispath\n\n";
-                print $sock "<a name=\"this_only\"></a>";
-                print $sock "----------------------------------------------------------\n";
-                print $sock "$jumper";
-                print $sock "    This only by md5sum: $thispath\n\n";
-            } else {
-                $oname = 'THIS';
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"that_only\"></a>";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    That only md5sum: $thatpath\n\n";
-                print $sock "<a name=\"that_only\"></a>";
-                print $sock "----------------------------------------------------------\n";
-                print $sock "$jumper";
-                print $sock "    That only by md5sum: $thatpath\n\n";
-            }
-            undef %out;
-            $common = 0;
-            foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
-                # for each md5sum here
-                if ($md5sum ne '00000000000000000000000000000000') {
-                    $common++;
-                }
-                if (($md5sum ne '00000000000000000000000000000000') && !defined($bymd5sum{$oname}{$md5sum})) {
-                    # not a directory and not there
-                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
-                    $out{$_[0]} = $md5sum;
-                }
-            }
-            $cnt = 0;
-            if ($mode eq 'unix') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = 
-                    "$unixhdr".
-                    "# '$sname.only' from $orgpath\n".
-                    "# org dir: $orgdir{$sname}\n\n".
-                    "BASEDIR=$orgdir{$sname}\n".
-                    "BASEDIR=$orgdir{$sname}\n".
-                    "$unixhdr2";
-            } elsif ($mode eq 'dos') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
-            } else {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
-            }
-            foreach $pfname (sort keys %out) {
-                if ($mode eq 'unix') {
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
-                        sprintf ("    #   %03d: ${sname}.only: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
-                    $pfname =~ s/^\.[\\\/]//;
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
-                        "    source \$SCRIPT  \"$pfname\"\n";
-                    #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
-                    $cnt++;
-                } elsif ($mode eq 'dos') {
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
-                    #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
-                    $cnt++;
+        if ($thatpath ne '') {
+            # generate this only and that only if only both files are provided
+            foreach $sname (('THIS', 'THAT')) {
+                # for each side
+                if ($sname eq 'THIS') {
+                    $oname = 'THAT';
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"this_only\"></a>";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    This only md5sum: $thispath\n\n";
+                    print $sock "<a name=\"this_only\"></a>";
+                    print $sock "----------------------------------------------------------\n";
+                    print $sock "$jumper";
+                    print $sock "    This only by md5sum: $thispath\n\n";
                 } else {
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
-                    #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
-                    $cnt++;
+                    $oname = 'THIS';
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"that_only\"></a>";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "----------------------------------------------------------\n";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$jumper";
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "    That only md5sum: $thatpath\n\n";
+                    print $sock "<a name=\"that_only\"></a>";
+                    print $sock "----------------------------------------------------------\n";
+                    print $sock "$jumper";
+                    print $sock "    That only by md5sum: $thatpath\n\n";
                 }
+                undef %out;
+                $common = 0;
+                foreach $md5sum (sort keys %{$bymd5sum{$sname}}) {
+                    # for each md5sum here
+                    if ($md5sum ne '00000000000000000000000000000000') {
+                        $common++;
+                    }
+                    if (($md5sum ne '00000000000000000000000000000000') && !defined($bymd5sum{$oname}{$md5sum})) {
+                        # not a directory and not there
+                        @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                        $out{$_[0]} = $md5sum;
+                    }
+                }
+                $cnt = 0;
+                if ($mode eq 'unix') {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = 
+                        "$unixhdr".
+                        "# '$sname.only' from $orgpath\n".
+                        "# org dir: $orgdir{$sname}\n\n".
+                        "BASEDIR=$orgdir{$sname}\n".
+                        "BASEDIR=$orgdir{$sname}\n".
+                        "$unixhdr2";
+                } elsif ($mode eq 'dos') {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
+                } else {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} = '';
+                }
+                foreach $pfname (sort keys %out) {
+                    if ($mode eq 'unix') {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
+                            sprintf ("    #   %03d: ${sname}.only: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                        $pfname =~ s/^\.[\\\/]//;
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
+                            "    source \$SCRIPT  \"$pfname\"\n";
+                        #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                        $cnt++;
+                    } elsif ($mode eq 'dos') {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                        #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                        $cnt++;
+                    } else {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                        #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
+                        $cnt++;
+                    }
+                }
+                #print $sock "\n";
+                if ($sname eq 'THIS') {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "This only: $cnt files (out of $common md5sum)\n\n";
+                    print $sock "This only: $cnt files (out of $common same md5sum)\n";
+                } else {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "That only: $cnt files (out of $common md5sum)\n\n";
+                    print $sock "That only: $cnt files (out of $common same md5sum)\n";
+                }
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.only.htm>%\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "\n";
             }
-            #print $sock "\n";
-            if ($sname eq 'THIS') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "This only: $cnt files (out of $common md5sum)\n\n";
-                print $sock "This only: $cnt files (out of $common same md5sum)\n";
-            } else {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "That only: $cnt files (out of $common md5sum)\n\n";
-                print $sock "That only: $cnt files (out of $common same md5sum)\n";
-            }
-            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.only.htm>%\n";
-            $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "\n";
         }
 
         # files with different md5sum on both side
