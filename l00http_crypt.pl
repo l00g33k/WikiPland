@@ -57,6 +57,7 @@ sub l00http_crypt_proc (\%) {
     }
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"#pass\">pass</a> \n";
+    print $sock "<a href=\"#__toc__\">TOC</a>\n";
 
     print $sock "<a href=\"#find\">find</a> Be patience, cryptography is slow in pure Perl on Android. $tmp.\n";
 
