@@ -51,7 +51,7 @@ sub l00http_cal_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($rpt, $now, $buf, $tmp, $table, $pname, $lnno);
+    my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
 
     # get current date/time
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -66,7 +66,8 @@ sub l00http_cal_proc {
         $fullpathname = $ctrl->{'workdir'} . "l00_cal.txt";
     }
     print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
-    ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
+#    ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
+    ($pname, $fname) = $fullpathname =~ /^(.+\/)([^\/]+)$/;
 
     # handling moving lnno to moveto
     if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {
@@ -74,7 +75,9 @@ sub l00http_cal_proc {
         # redirect back to calendar
         $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=/cal.htm?path=$fullpathname\">\r\n";
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $tmp . $ctrl->{'htmlhead2'};
-        print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+        print $sock "$ctrl->{'home'} - $ctrl->{'HOME'} - Input: ";
+        #            <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+        print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a>\n";
 
         if (open (IN, "<$fullpathname")) {
             $buf = '';
@@ -298,6 +301,26 @@ sub l00http_cal_proc {
         print $sock "</tr>\n";
     }
     print $sock "</table>\n";
+
+
+    $table = '';
+    $table .= "||Mon||Tues||Wed||Thu||Fri||Sat||Sun||\n";
+    for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
+        for ($day = 0; $day < 7; $day++) {
+            $idx = sprintf ("%02d%d", $wk - $firstweek, $day);
+            $tmp = $tbl{$idx};
+            $tmp =~ s/\[\[(.+?)\|(.+?)\]\]/<a href=\"$1\">$2<\/a>/g;
+            $tmp =~ s/\[\[(.+?)\|(.+?)\]\]/<a href=\"$1\">$2<\/a>/g;
+            $tmp =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
+            # For http(s) not preceeded by =" becomes whatever [[http...]]
+            $tmp =~ s|([^="][^">])(https*://[^ ]+)|$1 <a href=\"$2\">$2<\/a> |g;
+##            print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
+            $table .= "||$tmp";
+        }
+        $table .= "||\n";
+    }
+    print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $table, 0, $fname);
+
 
     undef @outs;
     $outsz = 0;
