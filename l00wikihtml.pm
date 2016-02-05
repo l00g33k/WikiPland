@@ -808,44 +808,6 @@ if(1){
         }
 
 
-        # table
-        if (/^\|\|/) {
-            if ($intbl != 1) {
-                $intbl = 1;
-                if ($bulvl > 0) {
-                    # generate closing bullets
-                    for (; $bulvl > 0; $bulvl--) {
-                        $oubuf .= "</ul>";
-                    }
-                    $oubuf .= "\n";
-                }
-                $oubuf .= "    <table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
-            }
-            if ($lnnoinfo ne '') {
-                # we have saved tags, now put back as line1 anchors
-                if($lnnoinfo =~ /,/) {
-                    foreach $tmp (split(',', $lnnoinfo)) {
-                        $oubuf .=  "<a name=\"line$tmp\"></a>";
-                    }
-                } else {
-                    $oubuf .=  "<a name=\"line$lnnoinfo\"></a>";
-                }
-            }
-            $oubuf .= "<tr>\n";
-            # Perl/SL4A doesn't handle split ("\|\|", $_);????
-            s/\|\|/``/g;
-            @cols = split ("``", $_);
-            for ($ii = 1; $ii <= $#cols; $ii++) {
-                if ($cols[$ii] =~ /^ *$/) {
-                    $oubuf .= "<td>&nbsp;</td>\n";
-                } else {
-                    $oubuf .= "<td>$cols[$ii]</td>\n";
-                }
-            }
-            $oubuf .= "</tr>\n";
-            # skip bullet processing
-            next;
-        }
 
         # find <hr> and clear bullet level
         #if (/<hr>/) {
@@ -895,6 +857,45 @@ if(1){
               s/^\{\{([^ \}][^\}]+[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
               s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
         s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
+
+        # table
+        if (/^\|\|/) {
+            if ($intbl != 1) {
+                $intbl = 1;
+                if ($bulvl > 0) {
+                    # generate closing bullets
+                    for (; $bulvl > 0; $bulvl--) {
+                        $oubuf .= "</ul>";
+                    }
+                    $oubuf .= "\n";
+                }
+                $oubuf .= "    <table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
+            }
+            if ($lnnoinfo ne '') {
+                # we have saved tags, now put back as line1 anchors
+                if($lnnoinfo =~ /,/) {
+                    foreach $tmp (split(',', $lnnoinfo)) {
+                        $oubuf .=  "<a name=\"line$tmp\"></a>";
+                    }
+                } else {
+                    $oubuf .=  "<a name=\"line$lnnoinfo\"></a>";
+                }
+            }
+            $oubuf .= "<tr>\n";
+            # Perl/SL4A doesn't handle split ("\|\|", $_);????
+            s/\|\|/``/g;
+            @cols = split ("``", $_);
+            for ($ii = 1; $ii <= $#cols; $ii++) {
+                if ($cols[$ii] =~ /^ *$/) {
+                    $oubuf .= "<td>&nbsp;</td>\n";
+                } else {
+                    $oubuf .= "<td>$cols[$ii]</td>\n";
+                }
+            }
+            $oubuf .= "</tr>\n";
+            # skip bullet processing
+            next;
+        }
 
         # convert geo: to http links
         s|(geo:[0-9,\.\-\+]+)\?q=(\S+)|<a href=\"$1?q=$2\">$2</a>|g;
