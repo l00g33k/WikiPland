@@ -29,7 +29,7 @@ my ($gsyear, $hdr, $idx, $ii, $jj, $jj1, $jj2, $julian, $k, $ldate);
 my ($len, $ln, $outsz, $thisweek, $todo, $wk, $wkce);
 my ($wkln, $wkno, $wkos, $xx, $yy, %db);
 my ($results);
-my (%list, %tbl, @outs);
+my (%list, %tbl, @outs, $filter);
 
 
 # defaults
@@ -38,6 +38,8 @@ my $cellht = 4;
 my $lenwk = 10;
 my $prewk =  0;
 my $border = 0;        # text border on both sides of cell
+
+$filter = '.';
 
 
 
@@ -121,6 +123,9 @@ sub l00http_cal_proc {
     if (defined ($form->{'prewk'}) && ($form->{'prewk'} =~ /(\d+)/)) {
         $prewk = $1;
     }
+    if (defined ($form->{'filter'})) {
+        $filter = $form->{'filter'};
+    }
 
 
     # 1) Read a description file
@@ -137,6 +142,10 @@ sub l00http_cal_proc {
             }
             if (!/^\d/) {
 	        # must start with numeric
+                next;
+            }
+            if (!/$filter/i) {
+                # not matching filter
                 next;
             }
             ($date, $len, $todo) = split (',', $_);
@@ -374,6 +383,11 @@ sub l00http_cal_proc {
     print $sock "        <tr>\n";
     print $sock "            <td>Full input file path and name:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"12\" name=\"path\" value=\"$fullpathname\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>Filter:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"12\" name=\"filter\" value=\"$filter\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
