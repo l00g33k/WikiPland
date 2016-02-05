@@ -282,29 +282,7 @@ sub l00http_cal_proc {
         $tbl{"$idx"} .= "<br><small>$todo</small>";
     }
 
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-    print $sock "<tr>\n";
-    print $sock "<td>Mon</td><td>Tues</td><td>Wed</td><td>Thu</td><td>Fri</td><td>Sat</td><td>Sun</td>\n";
-    print $sock "</tr>\n";
-    for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
-        print $sock "<tr>\n";
-        for ($day = 0; $day < 7; $day++) {
-            $idx = sprintf ("%02d%d", $wk - $firstweek, $day);
-            $tmp = $tbl{$idx};
-            $tmp =~ s/\[\[(.+?)\|(.+?)\]\]/<a href=\"$1\">$2<\/a>/g;
-            $tmp =~ s/\[\[(.+?)\|(.+?)\]\]/<a href=\"$1\">$2<\/a>/g;
-            $tmp =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
-            # For http(s) not preceeded by =" becomes whatever [[http...]]
-            $tmp =~ s|([^="][^">])(https*://[^ ]+)|$1 <a href=\"$2\">$2<\/a> |g;
-            print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
-        }
-        print $sock "</tr>\n";
-    }
-    print $sock "</table>\n";
-
-
-    $table = '';
-    $table .= "||Mon||Tues||Wed||Thu||Fri||Sat||Sun||\n";
+    $table = "||Mon||Tues||Wed||Thu||Fri||Sat||Sun||\n";
     for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
         for ($day = 0; $day < 7; $day++) {
             $idx = sprintf ("%02d%d", $wk - $firstweek, $day);
@@ -314,7 +292,7 @@ sub l00http_cal_proc {
             $tmp =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
             # For http(s) not preceeded by =" becomes whatever [[http...]]
             $tmp =~ s|([^="][^">])(https*://[^ ]+)|$1 <a href=\"$2\">$2<\/a> |g;
-##            print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
+            # print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
             $table .= "||$tmp";
         }
         $table .= "||\n";
