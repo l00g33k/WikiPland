@@ -137,7 +137,7 @@ sub l00http_cal_proc {
     if (open (IN, "<$fullpathname")) {
         $lnno = 0;
         while (<IN>) {
-            chop;
+            chomp;
             $lnno++;
             if (/^#/) {
 	        # # in column 1 is remark
@@ -272,7 +272,7 @@ sub l00http_cal_proc {
             $jj2 = sprintf ("%2d", $gsmday);
             $buf = "$gsyear%2F$gsmon%2F$gsmday";
             if (defined ($form->{'movelnno'})) {
-                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?path=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>\n";
+                $jj = "<font style=\"color:black;background-color:lime\"><a href=\"/cal.htm?path=$fullpathname&lnno=$form->{'movelnno'}&moveto=$buf\">mv$jj1</a></font>";
             } else {
                 $jj = "<a href=\"/cal.htm?path=$fullpathname&movefrom=$buf\">$jj1</a>";
             }
@@ -289,6 +289,8 @@ sub l00http_cal_proc {
     foreach $wk (sort keys %list) {
         ($wkno, $dayofwk) = split ('`', $wk);
         $todo = $list {$wk};
+#        $todo =~ s/\n//g;
+#        $todo =~ s/\r//g;
         $wkos = $wkno - $firstweek;
         $idx = sprintf ("%02d%d", $wkos, $dayofwk);
         $tbl{"$idx"} .= "<br><small>$todo</small>";
@@ -306,8 +308,10 @@ sub l00http_cal_proc {
             $tmp =~ s|([^="][^">])(https*://[^ ]+)|$1 <a href=\"$2\">$2<\/a> |g;
             # print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
             $table .= "||$tmp";
+            l00httpd::dbp($config{'desc'}, "||$tmp"), if ($ctrl->{'debug'} >= 5);
         }
         $table .= "||\n";
+        l00httpd::dbp($config{'desc'}, "||\n"), if ($ctrl->{'debug'} >= 5);
     }
     $table .= "<p>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $table, 0, $fname);
