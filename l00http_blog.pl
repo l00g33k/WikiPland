@@ -21,6 +21,9 @@ sub blog_make_hdr {
     if ($style eq 'log') {
         # log
         $buffer = $ctrl->{'now_string'} . ' ';
+    } elsif ($style eq 'star') {
+        # star
+        $buffer = '* ' . $ctrl->{'now_string'} . ' ';
     } elsif ($style eq 'blog') {
         # blog
         $buffer = "==$ctrl->{'now_string'} ==\n* ";
@@ -42,6 +45,9 @@ sub blog_get_msg {
     if ($style eq 'log') {
         # log
         $buffer = substr ($buffer, 16, 9999);
+    } elsif ($style eq 'star') {
+        # star
+        $buffer = substr ($buffer, 18, 9999);
     } elsif ($style eq 'blog') {
         # blog
         $buffer = substr ($buffer, 24, 9999);
@@ -66,6 +72,8 @@ sub l00http_blog_desc {
 # Blog style/Log style/Bare style: cycle through different style of prepend header
 ## Blog style:
 ### 20150322 120000
+## star style:
+### * 20150322 120000
 ## Log style: 
 ### ==20150322 233225 ==
 ### * 
@@ -129,6 +137,8 @@ sub l00http_blog_proc {
             $stylecurr = 'blog';
         } elsif ($form->{'stylecurr'} eq 'bare') {
             $stylecurr = 'bare';
+        } elsif ($form->{'stylecurr'} eq 'star') {
+            $stylecurr = 'star';
         }
     }
     $stylenew = $stylecurr;
@@ -140,6 +150,8 @@ sub l00http_blog_proc {
             $stylenew = 'blog';
         } elsif ($form->{'stylenew'} eq 'bare') {
             $stylenew = 'bare';
+        } elsif ($form->{'stylenew'} eq 'star') {
+            $stylenew = 'star';
         }
     }
 
@@ -297,15 +309,19 @@ sub l00http_blog_proc {
     if ($stylenew eq 'log') {
         # log
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Blog style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"stylenew\" value=\"blog\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"star\">\n";
+    } elsif ($stylenew eq 'star') {
+        # star
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Star style add\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"bare\">\n";
     } elsif ($stylenew eq 'blog') {
         # blog
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Bare style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"stylenew\" value=\"bare\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     } elsif ($stylenew eq 'bare') {
         # bare
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"stylenew\" value=\"log\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"blog\">\n";
     }
     print $sock "</form><br>\n";
 

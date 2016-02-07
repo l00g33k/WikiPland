@@ -125,6 +125,9 @@ sub l00http_cal_proc {
     }
     if (defined ($form->{'filter'})) {
         $filter = $form->{'filter'};
+        if ($filter =~ /^ *$/) {
+            $filter = '.';
+        }
     }
 
 
@@ -306,6 +309,7 @@ sub l00http_cal_proc {
         }
         $table .= "||\n";
     }
+    $table .= "<p>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $table, 0, $fname);
 
 
