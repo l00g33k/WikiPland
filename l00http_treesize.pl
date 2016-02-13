@@ -10,6 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_treesize_proc",
               desc => "l00http_treesize_desc");
 
+my $calctreesize = '';
 
 sub l00http_treesize_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -22,9 +23,9 @@ sub l00http_treesize_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($pname, $fname, @alllines, $lineno, $buffer, $line, $ii);
+    my ($pname, $fname, @alllines, $lineno, $buffer, $line, $ii, $level);
     my ($table, $format, $size, $pathname, $path, $name, %dirsize, %treesize);
-    my ($ttlbytes, $ttldirs, %sort);
+    my ($ttlbytes, $ttldirs, %sort, $dirslash, $sizecomma);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -41,10 +42,16 @@ sub l00http_treesize_proc {
     }
     print $sock "<br>\n";
 
+    if (defined($form->{'treesize'}) && ($form->{'treesize'} eq 'on')) {
+        $calctreesize = 'checked';
+    } else {
+        $calctreesize = '';
+    }
 
     print $sock "<form action=\"/treesize.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"color\" value=\"Calculate\"> \n";
     print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<input type=\"checkbox\" name=\"treesize\" $calctreesize>Calculate tree size\n";
     print $sock "</form>\n";
 
 
@@ -75,13 +82,14 @@ sub l00http_treesize_proc {
                     $format = '3';
                     ($size, $pathname) = $line =~ /^ *\|\| +(\d+) +\|\| +\w+ +\|\| +(.+) +\|\| *$/;
                 }
+                ($dirslash) = $pathname =~ /([\/\\])/;
             }
             ($path, $name) = $pathname =~ /^(.+[\/\\])([^\/\\]+)$/;
             #print $sock "($size, $path, $name)\n";
-            if (defined($treesize{$path})) {
-                $treesize{$path} += $size;
+            if (defined($dirsize{$path})) {
+                $dirsize{$path} += $size;
             } else {
-                $treesize{$path} = $size;
+                $dirsize{$path} = $size;
             }
             
             #printf $sock ("%s\n", $line);
@@ -90,22 +98,73 @@ sub l00http_treesize_proc {
 
         print $sock "</pre>\n";
 
-        # print parsed rule table
         $table = "\n|| # || Directories || #Bytes ||\n";
-        foreach $path (sort keys %treesize) {
-            if (defined($sort{$treesize{$path}})) {
-                $sort{$treesize{$path}} .= "||$path";
-            } else {
-                $sort{$treesize{$path}} = "$path";
-            }
-        }
         $ttlbytes = 0;
         $ttldirs = 0;
-        foreach $size (sort {$a - $b} keys %sort) {
-            foreach $path (split('\|\|', $sort{$size})) {
+        if ($calctreesize ne 'checked') {
+            foreach $path (sort keys %dirsize) {
+                if (defined($sort{$dirsize{$path}})) {
+                    $sort{$dirsize{$path}} .= "||$path";
+                } else {
+                    $sort{$dirsize{$path}} = "$path";
+                }
+            }
+
+            foreach $size (sort {$a - $b} keys %sort) {
+                $sizecomma = $size;
+                $sizecomma =~ s/(\d\d\d)$/,$1/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/,+/,/g;
+                $sizecomma =~ s/^,+//g;
+                foreach $path (split('\|\|', $sort{$size})) {
+                    $ttldirs++;
+                    $ttlbytes += $size;
+                    $table .= "|| $ttldirs || $path || $sizecomma ||\n";
+                }
+            }
+        } else {
+            # print parsed rule table
+            foreach $path (sort keys %dirsize) {
+                $size = $dirsize{$path};
                 $ttldirs++;
                 $ttlbytes += $size;
-                $table .= "|| $ttldirs || $path || $size ||\n";
+                @_ = split($dirslash, $path);
+                for ($level = 0; $level <= $#_; $level++) {
+                    $_ = '';
+                    for ($ii = 0; $ii <= $level; $ii++) {
+                        $_ .= "@_[$ii]$dirslash";
+                    }
+                    if (defined($treesize{$_})) {
+                        $treesize{$_} += $size;
+                    } else {
+                        $treesize{$_} = $size;
+                    }
+                }
+            }
+
+            foreach $path (sort keys %treesize) {
+                if (defined($sort{$treesize{$path}})) {
+                    $sort{$treesize{$path}} .= "||$path";
+                } else {
+                    $sort{$treesize{$path}} = "$path";
+                }
+            }
+
+            foreach $size (sort {$a - $b} keys %sort) {
+                $sizecomma = $size;
+                $sizecomma =~ s/(\d\d\d)$/,$1/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/(\d\d\d),/,$1,/;
+                $sizecomma =~ s/,+/,/g;
+                $sizecomma =~ s/^,+//g;
+                foreach $path (split('\|\|', $sort{$size})) {
+                    $table .= "|| $ttldirs || $path || $sizecomma ||\n";
+                }
             }
         }
         $table .= "* There are $ttldirs directories and $ttlbytes bytes\n";
