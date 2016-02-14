@@ -71,7 +71,32 @@ sub l00http_recedit_proc (\%) {
                 }
                 if (/$record1/) {
                     $delete = '';
-                    if (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
+                    if (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
+                        # add 4 hours
+                        if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
+                            #20130408 100000:10:0:60:copy hurom
+                            $yr -= 1900;
+                            $mo--;
+                            $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                            $tmp += 4 * 3600;
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                            $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                substr ($obuf, 15, 9999));
+                        } elsif (($yr, $mo, $da, $tmp2) = ($obuf =~ /^(\d+)\/(\d+)\/(\d+)(.*)$/)) {
+                            #2013/4/11,1,411test 
+                            $yr -= 1900;
+                            $mo--;
+                            $hr = 0;
+                            $mi = 0;
+                            $se = 0;
+                            $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                            $tmp += 4 * 3600;
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                            $obuf = sprintf ("%d/%d/%d%s", 
+                                $yr + 1900, $mo + 1, $da, $tmp2);
+                        }
+                    } elsif (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
                         # add 1 day
                         if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
                             #20130408 100000:10:0:60:copy hurom
@@ -120,7 +145,19 @@ sub l00http_recedit_proc (\%) {
             }
             if ($found) {
                 $delete = '';
-                if (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
+                if (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
+                    # add 4 hours
+                    if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
+                        $yr -= 1900;
+                        $mo--;
+                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                        $tmp += 4 * 3600;
+                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                        $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                            $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                            substr ($obuf, 15, 9999));
+                    }
+                } elsif (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
                     # add 1 day
                     if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
                         $yr -= 1900;
@@ -196,7 +233,8 @@ sub l00http_recedit_proc (\%) {
                     if ($found) {
                         print $sock "    <tr>\n";
                         if (defined ($form->{'reminder'})) {
-                            print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1<br>\n";
+                            print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
+                            print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
                             print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
                             $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
                         } else {
@@ -261,7 +299,8 @@ sub l00http_recedit_proc (\%) {
             if ($found) {
                 print $sock "    <tr>\n";
                 if (defined ($form->{'reminder'})) {
-                    print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1<br>\n";
+                    print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
+                    print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
                     print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
                     $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
                 } else {
