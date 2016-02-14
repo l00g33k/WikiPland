@@ -128,7 +128,7 @@ sub l00http_md5sizediff_proc {
         $_ = $thispath;
         # keep name only
         s/^.+\/([^\/]+)$/$1/;
-        print $sock "<a href=\"/ls.htm?path=$thispath\">$_</a>\n";
+        print $sock "<a href=\"/view.htm?path=$thispath\">$_</a>\n";
     }
     print $sock "<p>\n";
 

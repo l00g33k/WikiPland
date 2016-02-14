@@ -229,6 +229,7 @@ sub l00http_tree_proc {
             &l00httpd::l00fwriteBuf($ctrl, "* $dir\n\n$export\n\n");
             &l00httpd::l00fwriteClose($ctrl);
             print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a>. \n";
+            print $sock "<a href=\"/treesize.htm?path=l00://tree.htm\">treesize l00://tree.htm</a>. \n";
             print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm\">filemgt tree.htm</a><p>\n";
             print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
         }
@@ -386,6 +387,7 @@ sub l00http_tree_proc {
         &l00httpd::l00fwriteBuf($ctrl, "* $base\n\n$export\n\n");
         &l00httpd::l00fwriteClose($ctrl);
         print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a>. \n";
+        print $sock "<a href=\"/treesize.htm?path=l00://tree.htm\">treesize l00://tree.htm</a>. \n";
         print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm\">filemgt tree.htm</a><p>\n";
         print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
     }
