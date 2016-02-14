@@ -11,10 +11,11 @@ use l00crc32;
 my %config = (proc => "l00http_tree_proc",
               desc => "l00http_tree_desc");
 
-my (@list, $lvl, $md5support, $depthmax);
+my (@list, $lvl, $md5support, $depthmax, $maxlines);
 
 $md5support = -1;
 $depthmax = 20;
+$maxlines = 1000;
 
 sub l00Http_tree_proxy {
     my ($sock, $target) = @_;
@@ -127,6 +128,10 @@ sub l00http_tree_proc {
         $depthmax = $1;
     } else {
         $depthmax = 20;
+    }
+    if (defined($form->{'maxlines'}) && ($form->{'maxlines'} =~ /(\d+)/)) {
+        # max output lines
+        $maxlines = $1;
     }
 
     if ($md5support < 0) {
@@ -260,8 +265,10 @@ sub l00http_tree_proc {
 		        $cnt++;
 		        $_ = $file;
 			    s/ /%20/g;
-                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">".
-                    sprintf("%3d",$cnt)."</a> ";
+                if ($cnt <= $maxlines) {
+                    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">".
+                        sprintf("%3d",$cnt)."</a> ";
+                }
 		        $_ = $file;
 			    ($path, $file) = /^(.+\/)([^\/]+)$/;
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
@@ -287,7 +294,9 @@ sub l00http_tree_proc {
                         }
                         $crc32 = &l00crc32::crc32($buf);
                     }
-                    print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
+                    if ($cnt <= $maxlines) {
+                        print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
+                    }
                     $export .= sprintf("|| %11d || %08x || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
                 } elsif (($md5support > 0) && defined($form->{'md5'}) && ($form->{'md5'} eq 'on')) {
@@ -316,7 +325,9 @@ sub l00http_tree_proc {
                         } elsif ($ctrl->{'os'} eq 'lin') {
                         }
                     }
-                    print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
+                    if ($cnt <= $maxlines) {
+                        print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
+                    }
                     $export .= sprintf("|| %11d || %s || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
                 } else {
@@ -337,14 +348,20 @@ sub l00http_tree_proc {
                             $countext{$ext} = 1;
                         }
                     }
-                    print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
+                    if ($cnt <= $maxlines) {
+                        print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
+                    }
                     $export .= sprintf("|| %11d || %s ||\n", $size, $partpath);
                 }
                 # show path from base down only
 			    $path2 = $path;
 			    $path2 =~ s/^$form->{'path'}//;
-                print $sock "<a href=\"/ls.htm?path=$path\">$path2</a>";
-                print $sock "<a href=\"/ls.htm?path=$path$file\">$file</a>\n";
+                if ($cnt <= $maxlines) {
+                    print $sock "<a href=\"/ls.htm?path=$path\">$path2</a>";
+                    print $sock "<a href=\"/ls.htm?path=$path$file\">$file</a>\n";
+                } elsif ($cnt == $maxlines + 1) {
+                    print $sock "\nTrucating output to $maxlines lines. View full <a href=\"/view.htm?path=l00://tree.htm\">outputs</a>\n";
+                }
             } else {
                 $cntbak++;
             }
