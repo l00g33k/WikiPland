@@ -29,7 +29,7 @@ sub l00http_wget_proc (\%) {
     my ($server_socket, $cnt, $hdrlen, $bdylen, $hdr, $bdy);
     my ($readable, $ready, $curr_socket, $ret, $mode);
     my ($chunksz, $host, $port, $path, $contlen);
-    my ($name, $pw);
+    my ($name, $pw, $followmoves, $moved);
 
     $mode = '';
 
@@ -118,30 +118,54 @@ sub l00http_wget_proc (\%) {
             print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a><br>\n";
             print $sock "If you don't see 'Header length' and 'Body length' below, the host may be off-line.<br>\n";
 
-            if (($name ne '') || ($pw ne '')) {
-                ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
-            } else {
-                ($hdr, $bdy) = &l00wget::wget ($url);
-            }
+            # 10 follows limit for fail safe
+            print $sock "<p>\n";
+            for ($followmoves = 0; $followmoves < 10; $followmoves++) {
+                print $sock "Pass #$followmoves: <a href=\"$url\">$url</a><br>\n";
 
-            if (defined ($hdr)) {
-                print $sock "<p>Header length ",length($hdr), " bytes<br>\n";
-                print $sock "Body length ",length($bdy), " bytes<br>\n";
-
-                print $sock "<p><pre>$hdr</pre>\n";
-                if (&l00httpd::l00fwriteOpen($ctrl, 'l00://wget.hdr')) {
-                    &l00httpd::l00fwriteBuf($ctrl, "$hdr");
-                    &l00httpd::l00fwriteClose($ctrl);
+                if (($name ne '') || ($pw ne '')) {
+                    ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
+                } else {
+                    ($hdr, $bdy) = &l00wget::wget ($url);
                 }
-                if (&l00httpd::l00fwriteOpen($ctrl, $wgetpath)) {
-                    &l00httpd::l00fwriteBuf($ctrl, "$bdy");
-                    &l00httpd::l00fwriteClose($ctrl);
-                    $bdy = substr($bdy, 0, 2000);
-                    $bdy =~ s/</&lt;/g;
-                    $bdy =~ s/>/&gt;/g;
-                    print $sock "<hr>\n";
-                    print $sock "<p>Fisrt 2000 bytes of body<p>\n";
-                    print $sock "<pre>$bdy</pre>\n";
+
+                # Find HTTP return code
+                $moved = '';
+                foreach $_ (split("\n", $hdr)) {
+                    if (($moved eq '') && (/^HTTP.* 301 /)) {
+                        print $sock " 301 moved, \n";
+                        $moved = 'moved';
+                    }
+                    if (($moved eq 'moved') && (/^location: +(.+)/i)) {
+                        $url = $1;
+                        $moved = 'found';
+                        print $sock " to: $url<p>\n";
+                    }
+                }
+                if ($moved ne 'found') {
+                    # didn't move, last fetch
+                    $followmoves = 100;
+                }
+
+                if (defined ($hdr)) {
+                    print $sock "Header length ",length($hdr), " bytes<br>\n";
+                    print $sock "Body length ",length($bdy), " bytes<br>\n";
+
+                    print $sock "<p><pre>$hdr</pre>\n";
+                    if (&l00httpd::l00fwriteOpen($ctrl, 'l00://wget.hdr')) {
+                        &l00httpd::l00fwriteBuf($ctrl, "$hdr");
+                        &l00httpd::l00fwriteClose($ctrl);
+                    }
+                    if (&l00httpd::l00fwriteOpen($ctrl, $wgetpath)) {
+                        &l00httpd::l00fwriteBuf($ctrl, "$bdy");
+                        &l00httpd::l00fwriteClose($ctrl);
+                        $bdy = substr($bdy, 0, 2000);
+                        $bdy =~ s/</&lt;/g;
+                        $bdy =~ s/>/&gt;/g;
+                        print $sock "<hr>\n";
+                        print $sock "<p>Fisrt 2000 bytes of body<p>\n";
+                        print $sock "<pre>$bdy</pre>\n";
+                    }
                 }
             }
         } else {
