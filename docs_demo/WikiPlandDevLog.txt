@@ -1,3 +1,4 @@
+20160218 002224 wget.pl now follows HTTP 302 moved
 20151111 002158 created color text module to allow coloring rules to be used to select blocks of text by regular expressions
 20151012 001126 added @shutdown cron job creator and a demo to save server log with time stamp file name
 20151004 225740 Created module md5sizediff to make off-line comparison of two unconnected directory trees by file names and md5sum

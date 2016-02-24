@@ -339,6 +339,7 @@ sub l00http_cron_perio {
     my ($retval, $eventtime, $cmd, $lnno, $cronspec, $l00name, $hdr, $bdy);
     my ($tmp, $urlpath, %FORM, $modcalled, $urlparams, @cmd_param_pairs);
     my ($cmd_param_pair, $name, $param, $subname, $socknul, $crontab);
+    my ($savehome, $savehttphead, $savehtmlhead, $savehtmlttl, $savehtmlhead2, $saveclient_ip);
 
 
 
@@ -411,6 +412,13 @@ sub l00http_cron_perio {
                                         print "CRON: callmod $subname\n", if ($ctrl->{'debug'} >= 4);
                                         $ctrl->{'FORM'} = \%FORM;
 
+                                        $savehome = $ctrl->{'home'};
+                                        $savehttphead = $ctrl->{'httphead'};
+                                        $savehtmlhead = $ctrl->{'htmlhead'};
+                                        $savehtmlttl = $ctrl->{'htmlttl'};
+                                        $savehtmlhead2 = $ctrl->{'htmlhead2'};
+                                        $saveclient_ip = $ctrl->{'client_ip'};
+
                                         $ctrl->{'home'} = '';
                                         $ctrl->{'httphead'} = '';
                                         $ctrl->{'htmlhead'} = '';
@@ -431,6 +439,12 @@ sub l00http_cron_perio {
                                         close ($socknul);
                                         &dlog  ($ctrl->{'msglog'}."\n");
 
+                                        $ctrl->{'home'} = $savehome;
+                                        $ctrl->{'httphead'} = $savehttphead;
+                                        $ctrl->{'htmlhead'} = $savehtmlhead;
+                                        $ctrl->{'htmlttl'} = $savehtmlttl;
+                                        $ctrl->{'htmlhead2'} = $savehtmlhead2;
+                                        $ctrl->{'client_ip'} = $saveclient_ip;
                                     }
 
                                 }
