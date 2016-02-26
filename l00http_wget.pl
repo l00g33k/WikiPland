@@ -29,7 +29,7 @@ sub l00http_wget_proc (\%) {
     my ($server_socket, $cnt, $hdrlen, $bdylen, $hdr, $bdy);
     my ($readable, $ready, $curr_socket, $ret, $mode);
     my ($chunksz, $host, $port, $path, $contlen);
-    my ($name, $pw, $followmoves, $moved);
+    my ($name, $pw, $followmoves, $moved, $domain);
 
     $mode = '';
 
@@ -123,6 +123,10 @@ sub l00http_wget_proc (\%) {
             for ($followmoves = 0; $followmoves < 10; $followmoves++) {
                 print $sock "Pass #$followmoves: <a href=\"$url\">$url</a><br>\n";
 
+                $domain = '';
+                if ($url =~ /http:\/\/([^\/]+?)\//) {
+                    $domain = $1;
+                }
                 if (($name ne '') || ($pw ne '')) {
                     ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
                 } else {
@@ -138,6 +142,9 @@ sub l00http_wget_proc (\%) {
                     }
                     if (($moved eq 'moved') && (/^location: +(.+)/i)) {
                         $url = $1;
+                        if (!($url =~ /^http:\/\//)) {
+                            $url = "http://$domain$url";
+                        }
                         $moved = 'found';
                         print $sock " to: $url<p>\n";
                     }
