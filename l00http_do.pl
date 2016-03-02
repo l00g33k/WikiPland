@@ -116,7 +116,7 @@ print "clear doplpath = $doplpath\n"
             print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec<br>\n";
             print $sock "</form>\n";
             if ($doplpathset) {
-                print $sock "Using Quick URL: $doplpath<p>\n";
+                print $sock "<font style=\"color:black;background-color:lime\">Using Quick URL</font>: $doplpath<p>\n";
             }
         }
     }
@@ -155,7 +155,7 @@ print "clear doplpath = $doplpath\n"
 
         print $sock "<form action=\"/do.htm\" method=\"get\">\n";
         print $sock "<input type=\"submit\" name=\"pushcb\" value=\"CB\">\n";
-        print $sock "-&gt; Arg1 -&gt; Arg2 -gt; Arg3<p>\n";
+        print $sock "-&gt; Arg1 -&gt; Arg2 -&gt; Arg3<p>\n";
         print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
         print $sock "<input type=\"submit\" name=\"set\" value=\"Set\">\n";
         print $sock "Quick URL to: $form->{'path'}\n";

@@ -122,6 +122,10 @@ sub l00http_gps_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, @countinglines);
 
+    if (!defined($ctrl->{'gpsdir'})) {
+        # if not defined
+        $ctrl->{'gpsdir'} = $ctrl->{'workdir'};
+    }
 
     if (defined ($form->{'stop'})) {
         $interval = 0;
@@ -195,12 +199,12 @@ sub l00http_gps_proc {
                     } else {
                         $fname = 'gps.trk';
                     }
-                    if (-f "$ctrl->{'workdir'}$fname") {
+                    if (-f "$ctrl->{'gpsdir'}$fname") {
                         # exist
-                        open (OUT, ">>$ctrl->{'workdir'}$fname");
+                        open (OUT, ">>$ctrl->{'gpsdir'}$fname");
                     } else {
                         # does not exist
-                        open (OUT, ">$ctrl->{'workdir'}$fname");
+                        open (OUT, ">$ctrl->{'gpsdir'}$fname");
                         print OUT "$filhdr\n";
                     }
                     print OUT "$trkhdr\n";
@@ -222,7 +226,7 @@ sub l00http_gps_proc {
 	    }
         if ($ctrl->{'os'} eq 'and') {
             $buf = &android_get_gps ($ctrl);
-            open (OUT, ">>$ctrl->{'workdir'}gps.way");
+            open (OUT, ">>$ctrl->{'gpsdir'}gps.way");
 			print OUT "$lon,$lat $buf $form->{'locremark'}\n";
 			close(OUT);
         }
@@ -240,7 +244,7 @@ sub l00http_gps_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} - <a href=\"/gps.htm\">Refresh</a> -  $ctrl->{'HOME'} - ";
-    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}$fname\">log</a> - \n";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'gpsdir'}$fname\">log</a> - \n";
     print $sock "<a href=\"#end\">Jump to end</a><br>\n";
     print $sock "<a name=\"top\"></a>\n";
  
@@ -336,7 +340,7 @@ sub l00http_gps_proc {
     print $sock "</form>\n";
 
     print $sock "<p>Mark current location in ";
-    print $sock "<a href=\"/view.htm?path=$ctrl->{'workdir'}gps.way\">$ctrl->{'workdir'}gps.way</a>:\n";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'gpsdir'}gps.way\">$ctrl->{'gpsdir'}gps.way</a>:\n";
     print $sock "<form action=\"/gps.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
@@ -372,8 +376,8 @@ sub l00http_gps_proc {
     }
     print $sock "</pre><p>\n";
 
-    print $sock "launcher <a href=\"/ls.htm?path=$ctrl->{'workdir'}\">$ctrl->{'workdir'}</a>";
-    print $sock "<a href=\"/launcher.htm?path=$ctrl->{'workdir'}$fname\">$fname</a><p>\n";
+    print $sock "launcher <a href=\"/ls.htm?path=$ctrl->{'gpsdir'}\">$ctrl->{'gpsdir'}</a>";
+    print $sock "<a href=\"/launcher.htm?path=$ctrl->{'gpsdir'}$fname\">$fname</a><p>\n";
 
     print $sock "<a name=\"end\"></a><p>\n";
     print $sock "<a href=\"#top\">Jump to top</a><p>\n";
@@ -412,12 +416,12 @@ sub l00http_gps_perio {
                         } else {
                             $fname = 'gps.trk';
                         }
-                        if (-f "$ctrl->{'workdir'}$fname") {
+                        if (-f "$ctrl->{'gpsdir'}$fname") {
                             # exist
-                            open (OUT, ">>$ctrl->{'workdir'}$fname");
+                            open (OUT, ">>$ctrl->{'gpsdir'}$fname");
                         } else {
                             # does not exist
-                            open (OUT, ">$ctrl->{'workdir'}$fname");
+                            open (OUT, ">$ctrl->{'gpsdir'}$fname");
                             print OUT "$filhdr\n";
                             print OUT "$trkhdr\n";
                         }
