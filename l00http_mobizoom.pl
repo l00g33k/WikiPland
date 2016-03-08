@@ -18,23 +18,68 @@ $url = '';
 $zoom = 120;
 $para = 1;
 
+sub l00http_mobizoom_wget_follow {
+    my ($url) = @_;
+    my ($hdr, $bdy, $followmoves, $domain, $moved);
+
+    $hdr = '';
+    $bdy = '';
+
+
+    for ($followmoves = 0; $followmoves < 10; $followmoves++) {
+        $domain = '';
+        if ($url =~ /http:\/\/([^\/]+?)\//) {
+            $domain = $1;
+        }
+        ($hdr, $bdy) = &l00wget::wget ($url);
+        &l00httpd::dbp('wget_follow', sprintf("#%d: HDR (%d B), BDY (%d B), URL:%s\n", 
+            $followmoves, length($hdr), length($bdy), $url));
+
+        # Find HTTP return code
+        $moved = '';
+        foreach $_ (split("\n", $hdr)) {
+            if (($moved eq '') && (/^HTTP.* 301 /)) {
+                $moved = 'moved';
+            }
+            if (($moved eq 'moved') && (/^location: +(.+)/i)) {
+                $url = $1;
+                if (!($url =~ /^http:\/\//)) {
+                    $url = "http://$domain$url";
+                }
+                $moved = 'found';
+            }
+        }
+        if ($moved ne 'found') {
+            # didn't move, last fetch
+            $followmoves = 100;
+        }
+    }
+
+    ($hdr, $bdy);
+}
+
+
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
-    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip);
+    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip, $last);
+    my ($on_slashdot_org);
 
 
     $wget = '';
     if (length ($url) > 6) {
 
+        if ($url =~ /slashdot\.org/i) {
+            $on_slashdot_org = 1;
+        } else {
+            $on_slashdot_org = 0;
+        }
 
         # 1) fetch target URL
-        ($hdr, $wget) = &l00wget::wget ($url);
+#       ($hdr, $wget) = &l00wget::wget ($url);
+        ($hdr, $wget) = &l00http_mobizoom_wget_follow($url);
 
 
         # 2) add navigation and content clip link for each paragraph
-
-#        # add new line before <br/><br/> (Google mobilizer specific fsormat)
-#        $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
 
         $wget2 = '';
         # modify by each new line
@@ -73,6 +118,8 @@ sub l00http_mobizoom_wget {
 #    $wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
 #  }
 #}
+
+
 ## Make a link to the start of article on LA Times articles
 #if(/Create a custom date range/) {
 #  $wget2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
@@ -90,6 +137,7 @@ sub l00http_mobizoom_wget {
 ###<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
 ###<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
 
+            $last = $_;
         }
 #        $wget = $wget2;
 
@@ -114,7 +162,7 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<iframe.+?<\/iframe>//sg;
         $wget =~ s/<style.+?<\/style>//sg;
 
-        if ($url =~ /slashdot\.org/i) {
+        if ($on_slashdot_org) {
             # slashdot special: eliminate list
             $wget =~ s/<li.*?>/<br>/sg;
             $wget =~ s/<\/li.*?>//sg;
@@ -139,6 +187,7 @@ sub l00http_mobizoom_wget {
         $wget2 =~ s/>/>\n/g;
 
         $wget = '';
+        $last = '';
         foreach $_ (split ("\n", $wget2)) {
             chomp;
             if (/^ *$/) {
@@ -160,6 +209,21 @@ sub l00http_mobizoom_wget {
             ##    <a href="#p$para">$para</a> &nbsp; 
             ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
             ##  </small> /;
+
+            if ($on_slashdot_org) {
+                #<a id="comment_link_50359309" name="comment_link_50359309" href="//developers.slashdot.org/comments.pl?sid=7880359&amp;cid=50359309" onclick="return D2.setFocusComment(50359309)" >
+                #Re:You still go through HR for jobs?
+                #</a>
+                if (($last =~ /id="comment_link_\d+/) && 
+                    !(/^Re:/)) {
+                    #&l00httpd::dbp('wget_follow', "SUBJECT: $para: $_\n");
+                    $para--;
+                    $threads .= "<a href=\"#p$para\">$para: $_</a><br>\n";
+                    $para++;
+                    $wget .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font><br>\n";
+                }
+            }
+
             if (/<br>/) {
                 s/<br>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
                 # increase paragraph count/index
@@ -173,7 +237,7 @@ sub l00http_mobizoom_wget {
 
 
             $wget .= "$_\n";
-
+            $last = $_;
         }
 
         # 5) add last navigation link
@@ -368,7 +432,7 @@ sub l00http_mobizoom_proc {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
         print $sock "<a href=\"$urlorg\">original</a> \n";
         print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
-        print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.wget\">l00://mobizoom.wget</a> \n";
+        print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.htm\">l00://mobizoom.htm</a> \n";
         print $sock "<hr>\n";
     }
 
@@ -379,7 +443,7 @@ sub l00http_mobizoom_proc {
         if ($mode1online2offline4download == 4) {
             &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         } else {
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.wget');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.htm');
         }
         if ($mode1online2offline4download == 2) {
             # reading from cached file
