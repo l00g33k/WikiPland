@@ -135,7 +135,7 @@ sub l00http_treesize_proc {
                 for ($level = 0; $level <= $#_; $level++) {
                     $_ = '';
                     for ($ii = 0; $ii <= $level; $ii++) {
-                        $_ .= "@_[$ii]$dirslash";
+                        $_ .= "$_[$ii]$dirslash";
                     }
                     if (defined($treesize{$_})) {
                         $treesize{$_} += $size;

@@ -7,6 +7,9 @@ use l00httpd;
 
 # a trivial web page mobilizer
 
+# Dropping the defunct Google mobilizer and start a local 
+# implementation. Last Google version in commit 1ea84e6
+
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
@@ -24,26 +27,124 @@ sub l00http_mobizoom_wget {
     if (length ($url) > 6) {
 
 
-        # 1) fetch target URL through (now defunct) Google mobilizer
-
-#        #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
-#        $url =~ s|:|%3A|g;
-#        $url =~ s|/|%2F|g;
-#        $url =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
-        #print $sock "$url";
-
+        # 1) fetch target URL
         ($hdr, $wget) = &l00wget::wget ($url);
 
 
         # 2) add navigation and content clip link for each paragraph
 
-        # add new line before <br/><br/> (Google mobilizer specific fsormat)
-        $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
+#        # add new line before <br/><br/> (Google mobilizer specific fsormat)
+#        $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
 
         $wget2 = '';
         # modify by each new line
         foreach $_ (split("\n", $wget)) {
-            # make link to send text to clipboard
+#            # make link to send text to clipboard
+#            $clip = $_;
+#            $clip =~ s/<.+?>//g;    # drop all HTML tags
+#            $clip = &l00httpd::urlencode ($clip);
+#
+#            # insert navigation and clip links 
+#            ## change this:
+#            ## <br/><br/>
+#            ## to:
+#            ## <br/><br/>
+#            ##  <a name="p$para"></a>
+#            ##  <small>
+#            ##    <a href="#__end__">V</a> &nbsp; 
+#            ##    <a href="#p$para">$para</a> &nbsp; 
+#            ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
+#            ##  </small> /;
+#            s/<br\/><br\/>/<br\/><br\/><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+#            s/span><span/span> <span/g;
+            $wget2 .= "$_\n";
+#
+## 2.1) and some site specific special handling:
+### slashdot: find thread head
+### latimes: find article start
+#
+## Search for Slashdot thread SUBJECT and make a list to jump to start of thread
+## <b>SUBJECT</b></a><b> (</b><a href=...><b>Score:
+#if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
+#  &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
+#  if(!($subj =~ /^Re:/)) {
+#    # This is a new subject line
+#    $threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
+#    $wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
+#  }
+#}
+## Make a link to the start of article on LA Times articles
+#if(/Create a custom date range/) {
+#  $wget2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
+#  $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
+#}
+#
+## send processed line to dbp
+##s/</&lt;/g;
+##s/>/&gt;/g;
+##&l00httpd::dbp($config{'desc'}, "$_\n");
+#
+###<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+###
+###<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
+###<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
+###<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+
+        }
+#        $wget = $wget2;
+
+        # 3) drop HTML tags and add font-size as specified:
+        ## <html>
+        ## <body>
+        ## <span>
+        ## <div>
+
+        # remote various HTML tags
+        $wget =~ s/<\/*html.*?>//gs;
+        $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
+        $wget =~ s/<\/*body.*?>//gs;
+        $wget =~ s/<\/*span.*?>//gs;
+        $wget =~ s/<\/*div.*?>//gs;
+        $wget =~ s/<\/*aside.*?>//gs;
+        $wget =~ s/<\/*article.*?>//gs;
+        $wget =~ s/<\/*section.*?>//gs;
+
+        $wget =~ s/<!.+?>//gs;
+        $wget =~ s/<script.+?<\/script>//sg;
+        $wget =~ s/<iframe.+?<\/iframe>//sg;
+        $wget =~ s/<style.+?<\/style>//sg;
+
+        if ($url =~ /slashdot\.org/i) {
+            # slashdot special: eliminate list
+            $wget =~ s/<li.*?>/<br>/sg;
+            $wget =~ s/<\/li.*?>//sg;
+            $wget =~ s/<\/*ul.*?>//sg;
+        }
+
+#        $wget =~ s/\r//g;
+#        $wget =~ s/\n//g;
+#        $wget =~ s/^.+<body.*?>\n//g;
+#        $wget =~ s/<\/body.*$>\n//g;
+#        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
+#        $wget =~ s/<\/wml.*$>\n//g;
+
+        $wget =~ s/<img src="(.+?)".*?>/ <a href="$1">IMAGE IMAGE<\/a>/sg;
+
+        $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
+
+
+        # make sure there is at most one <tag> per new line
+        $wget2 = $wget;
+        $wget2 =~ s/</\n</g;
+        $wget2 =~ s/>/>\n/g;
+
+        $wget = '';
+        foreach $_ (split ("\n", $wget2)) {
+            chomp;
+            if (/^ *$/) {
+                next;
+            }
+
             $clip = $_;
             $clip =~ s/<.+?>//g;    # drop all HTML tags
             $clip = &l00httpd::urlencode ($clip);
@@ -59,104 +160,20 @@ sub l00http_mobizoom_wget {
             ##    <a href="#p$para">$para</a> &nbsp; 
             ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
             ##  </small> /;
-            s/<br\/><br\/>/<br\/><br\/><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
-            s/span><span/span> <span/g;
-            $wget2 .= "$_\n";
-
-# 2.1) and some site specific special handling:
-## slashdot: find thread head
-## latimes: find article start
-
-# Search for Slashdot thread SUBJECT and make a list to jump to start of thread
-# <b>SUBJECT</b></a><b> (</b><a href=...><b>Score:
-if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
-  &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
-  if(!($subj =~ /^Re:/)) {
-    # This is a new subject line
-    $threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
-    $wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
-  }
-}
-# Make a link to the start of article on LA Times articles
-if(/Create a custom date range/) {
-  $wget2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
-  $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
-}
-
-# send processed line to dbp
-#s/</&lt;/g;
-#s/>/&gt;/g;
-#&l00httpd::dbp($config{'desc'}, "$_\n");
-
-##<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
-##
-##<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
-##<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
-##<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
-
-            # increase paragraph count/index
-            $para++;
-        }
-        $wget = $wget2;
-
-        # 3) drop HTML tags and add font-size as specified:
-        ## <html>
-        ## <body>
-        ## <span>
-        ## <div>
-
-        # remote various HTML tags
-        $wget =~ s/<\/*html.*?>//gm;
-        $wget =~ s/<\/*body.*?>//gm;
-        $wget =~ s/<\/*span.*?>//gm;
-        $wget =~ s/<\/*div.*?>//gm;
-
-        $wget =~ s/\r//g;
-        $wget =~ s/\n//g;
-        $wget =~ s/^.+<body.*?>\n//g;
-        $wget =~ s/<\/body.*$>\n//g;
-        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
-        $wget =~ s/<\/wml.*$>\n//g;
-
-        $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
-
-        # 4) undo Google mobilizer's /gwt/ redirection to our redirection
-
-        # make sure there is at most one <tag> per new line
-        $wget2 = $wget;
-        $wget2 =~ s/</\n</g;
-        $wget2 =~ s/>/>\n/g;
-
-        $wget = '';
-        foreach $_ (split ("\n", $wget2)) {
-            # (<....)='(/gwt/....)'(....>)
-            if (($pre,$gurl,$post) = /(<.+?)='(\/gwt\/.+?)'(.*>)/) {
-                # for each line with <tag>:
-                if ($gurl =~ /^\/xxxxxxxgwt\//) {
-                    # test only
-                    # don't change
-                    $gurl =~ s/&/%26/g;
-                    $gurl =~ s/\?/%3F/g;
-                    $gurl = "/mobizoom.htm?zoom=$zoom&url=http://google.com$gurl";
-                } elsif ($pre =~ /img +src/) {
-                    $gurl = "http://google.com$gurl";
-                } else {
-                    # THIS CLAUSE MAKES IT WORK
-                    if ($gurl =~ /=(http.*?)(&amp;.*)$/) {
-                        # extract original URL from Google's /gwt/ link
-                        $gurl = $1.$2;
-                        #print "$2\n";
-                    }
-                    $gurl =~ s|:|%3A|g;
-                    $gurl =~ s|/|%2F|g;
-                    $gurl =~ s/\?/%3F/g;
-                    $gurl =~ s/=/%3D/g;     # THIS CLAUSE MAKES IT WORK
-                    $gurl =~ s/&amp;/%26/g; # THIS CLAUSE MAKES IT WORK
-                    $gurl = "/mobizoom.htm?zoom=$zoom&url=$gurl";
-                }
-                $_ = "$pre='$gurl'$post";
+            if (/<br>/) {
+                s/<br>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+                # increase paragraph count/index
+                $para++;
             }
+            if (/<p>/) {
+                s/<p>/<p><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+                # increase paragraph count/index
+                $para++;
+            }
+
+
             $wget .= "$_\n";
+
         }
 
         # 5) add last navigation link
@@ -214,8 +231,8 @@ sub l00http_mobizoom_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($wget, $getmore, $nextpage, $mode1online2offline4download);
-    my ($skip, $tmp, $wgetall, $urlorg, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
+    my ($wget, $mode1online2offline4download);
+    my ($skip, $tmp, $urlorg, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
 
     $url = '';
     if (defined ($form->{'url'})) {
@@ -351,6 +368,7 @@ sub l00http_mobizoom_proc {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
         print $sock "<a href=\"$urlorg\">original</a> \n";
         print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
+        print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.wget\">l00://mobizoom.wget</a> \n";
         print $sock "<hr>\n";
     }
 
@@ -358,7 +376,6 @@ sub l00http_mobizoom_proc {
     $threads = "Threads:<br>\n";
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
         $para = 1;
-        $nextpage = $url;
         if ($mode1online2offline4download == 4) {
             &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         } else {
@@ -421,35 +438,17 @@ sub l00http_mobizoom_proc {
             # fetch for active reading or caching automation
 
             &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
-            $prolog = '';
-            $wgetall = '';
             # fetch repeatedly as necessary as Google mobilizer break page
             # into multiple mobilized pages
-            do {
-                $getmore = 0;
-                $wget = &l00http_mobizoom_wget ($nextpage, $zoom);
-                if ($wget =~ /<a href=.+?url=(.+?)'>\nNext page /) {
-                    # there is a 'Next page' link, follow the link
-                    $nextpage = $1;
-                    $nextpage =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
-                    #print "$nextpage \nNext page\n";
-                    $getmore = 1;
-                }
-                $wgetall .= $wget;
-#               if ($mode1online2offline4download & 3) {
-#                   print $sock $wget;
-#               }
-#               &l00httpd::l00fwriteBuf($ctrl, $wget);
-            } while ($getmore);
-            $wgetall = "$prolog$wgetall";
+            $wget = &l00http_mobizoom_wget ($url, $zoom);
 
             if ($mode1online2offline4download & 3) {
                 # web page interactive mode, render web page
-                print $sock $wgetall;
+                print $sock $wget;
             }
-            &l00httpd::l00fwriteBuf($ctrl, $wgetall);
+            &l00httpd::l00fwriteBuf($ctrl, $wget);
             &l00httpd::l00fwriteClose($ctrl);
-            if (($mode1online2offline4download == 4) && (length ($wgetall) < 5000)) {
+            if (($mode1online2offline4download == 4) && (length ($wget) < 5000)) {
                 # download too small, delete it
                 &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
                 &l00httpd::l00fwriteClose($ctrl);
