@@ -5,7 +5,7 @@ use l00httpd;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
-# this is a simple bookmark
+# a trivial web page mobilizer
 
 
 my %config = (proc => "l00http_mobizoom_proc",
@@ -17,56 +17,93 @@ $para = 1;
 
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
-    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $line, $subj, $clip);
+    my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip);
 
 
     $wget = '';
     if (length ($url) > 6) {
-        # mobilize:
 
-        #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
-        $url =~ s|:|%3A|g;
-        $url =~ s|/|%2F|g;
-        $url =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
 
+        # 1) fetch target URL through (now defunct) Google mobilizer
+
+#        #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
+#        $url =~ s|:|%3A|g;
+#        $url =~ s|/|%2F|g;
+#        $url =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
         #print $sock "$url";
 
         ($hdr, $wget) = &l00wget::wget ($url);
+
+
+        # 2) add navigation and content clip link for each paragraph
+
+        # add new line before <br/><br/> (Google mobilizer specific fsormat)
         $wget =~ s/<br\/><br\/>/\n<br\/><br\/>/g;
+
         $wget2 = '';
+        # modify by each new line
         foreach $_ (split("\n", $wget)) {
+            # make link to send text to clipboard
             $clip = $_;
-            $clip =~ s/<.+?>//g;
+            $clip =~ s/<.+?>//g;    # drop all HTML tags
             $clip = &l00httpd::urlencode ($clip);
+
+            # insert navigation and clip links 
+            ## change this:
+            ## <br/><br/>
+            ## to:
+            ## <br/><br/>
+            ##  <a name="p$para"></a>
+            ##  <small>
+            ##    <a href="#__end__">V</a> &nbsp; 
+            ##    <a href="#p$para">$para</a> &nbsp; 
+            ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
+            ##  </small> /;
             s/<br\/><br\/>/<br\/><br\/><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
             s/span><span/span> <span/g;
             $wget2 .= "$_\n";
-#l00httpd::dbpclr();
-$line = $_;
+
+# 2.1) and some site specific special handling:
+## slashdot: find thread head
+## latimes: find article start
+
+# Search for Slashdot thread SUBJECT and make a list to jump to start of thread
+# <b>SUBJECT</b></a><b> (</b><a href=...><b>Score:
 if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
-&l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
-if(!($subj =~ /^Re:/)) {
-$threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
-$wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
+  &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
+  if(!($subj =~ /^Re:/)) {
+    # This is a new subject line
+    $threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
+    $wget2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
+  }
 }
+# Make a link to the start of article on LA Times articles
+if(/Create a custom date range/) {
+  $wget2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
+  $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
 }
-$_ = $line;
-    if(/Create a custom date range/) {
-        $wget2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
-        $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
-    }
+
+# send processed line to dbp
+#s/</&lt;/g;
+#s/>/&gt;/g;
+#&l00httpd::dbp($config{'desc'}, "$_\n");
+
+##<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+##
+##<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
+##<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
+##<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+
+            # increase paragraph count/index
             $para++;
-s/</&lt;/g;
-s/>/&gt;/g;
-&l00httpd::dbp($config{'desc'}, "$_\n");
-#<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
-#
-#<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
-#<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
-#<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
         }
         $wget = $wget2;
 
+        # 3) drop HTML tags and add font-size as specified:
+        ## <html>
+        ## <body>
+        ## <span>
+        ## <div>
 
         # remote various HTML tags
         $wget =~ s/<\/*html.*?>//gm;
@@ -82,65 +119,73 @@ s/>/&gt;/g;
         $wget =~ s/<\/wml.*$>\n//g;
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
-    }
 
-    $wget2 = $wget;
-    $wget2 =~ s/</\n</g;
-    $wget2 =~ s/>/>\n/g;
+        # 4) undo Google mobilizer's /gwt/ redirection to our redirection
 
+        # make sure there is at most one <tag> per new line
+        $wget2 = $wget;
+        $wget2 =~ s/</\n</g;
+        $wget2 =~ s/>/>\n/g;
 
-    $wget = '';
-    foreach $_ (split ("\n", $wget2)) {
-        if (($pre,$gurl,$post) = /(<.+?)='(\/gwt\/.+?)'(.*>)/) {
-            if ($gurl =~ /^\/xxxxxxxgwt\//) {
-                # test only
-                # don't change
-                $gurl =~ s/&/%26/g;
-                $gurl =~ s/\?/%3F/g;
-                $gurl = "/mobizoom.htm?zoom=$zoom&url=http://google.com$gurl";
-            } elsif ($pre =~ /img +src/) {
-                $gurl = "http://google.com$gurl";
-            } else {
-                # THIS CLAUSE MAKES IT WORK
-                if ($gurl =~ /=(http.*?)(&amp;.*)$/) {
-                    # extract original URL from Google's /gwt/ link
-                    $gurl = $1.$2;
-                    #print "$2\n";
+        $wget = '';
+        foreach $_ (split ("\n", $wget2)) {
+            # (<....)='(/gwt/....)'(....>)
+            if (($pre,$gurl,$post) = /(<.+?)='(\/gwt\/.+?)'(.*>)/) {
+                # for each line with <tag>:
+                if ($gurl =~ /^\/xxxxxxxgwt\//) {
+                    # test only
+                    # don't change
+                    $gurl =~ s/&/%26/g;
+                    $gurl =~ s/\?/%3F/g;
+                    $gurl = "/mobizoom.htm?zoom=$zoom&url=http://google.com$gurl";
+                } elsif ($pre =~ /img +src/) {
+                    $gurl = "http://google.com$gurl";
+                } else {
+                    # THIS CLAUSE MAKES IT WORK
+                    if ($gurl =~ /=(http.*?)(&amp;.*)$/) {
+                        # extract original URL from Google's /gwt/ link
+                        $gurl = $1.$2;
+                        #print "$2\n";
+                    }
+                    $gurl =~ s|:|%3A|g;
+                    $gurl =~ s|/|%2F|g;
+                    $gurl =~ s/\?/%3F/g;
+                    $gurl =~ s/=/%3D/g;     # THIS CLAUSE MAKES IT WORK
+                    $gurl =~ s/&amp;/%26/g; # THIS CLAUSE MAKES IT WORK
+                    $gurl = "/mobizoom.htm?zoom=$zoom&url=$gurl";
                 }
-                $gurl =~ s|:|%3A|g;
-                $gurl =~ s|/|%2F|g;
-                $gurl =~ s/\?/%3F/g;
-                $gurl =~ s/=/%3D/g;     # THIS CLAUSE MAKES IT WORK
-                $gurl =~ s/&amp;/%26/g; # THIS CLAUSE MAKES IT WORK
-                $gurl = "/mobizoom.htm?zoom=$zoom&url=$gurl";
+                $_ = "$pre='$gurl'$post";
             }
-            $_ = "$pre='$gurl'$post";
+            $wget .= "$_\n";
         }
-        $wget .= "$_\n";
-    }
 
-    $wget .= "<br>\n";
-    $wget .= "<font style=\"color:black;background-color:lime\">\n";
-    $wget .= "<a href=\"#__top__\">TOP</a>";
-    $wget .= "</font>\n";
-    $wget .= "<font style=\"color:black;background-color:lime\">\n";
-    $wget .= "<a href=\"#__here".($here -1 ) ."__\">last</a>";
-    $wget .= "</font>\n";
-    $wget .= "<font style=\"color:black;background-color:lime\">\n";
-    $wget .= "<a href=\"#__here$here\__\">here$here</a>";
-    $wget .= "</font>\n";
-    $wget .= "<font style=\"color:black;background-color:lime\">\n";
-    $wget .= "<a href=\"#__here". ($here + 1) ."__\">next</a>";
-    $wget .= "<a name=\"__here$here\__\"></a>\n";
-    $here++;
-    $wget .= "</font>\n";
-    $wget .= "<font style=\"color:black;background-color:lime\">\n";
-    $wget .= "<a href=\"#__end__\">END</a>";
-    $wget .= "</font>\n";
-    $wget .= "<br>\n";
+        # 5) add last navigation link
+
+        $wget .= "<br>\n";
+        $wget .= "<font style=\"color:black;background-color:lime\">\n";
+        $wget .= "<a href=\"#__top__\">TOP</a>";
+        $wget .= "</font>\n";
+        $wget .= "<font style=\"color:black;background-color:lime\">\n";
+        $wget .= "<a href=\"#__here".($here -1 ) ."__\">last</a>";
+        $wget .= "</font>\n";
+        $wget .= "<font style=\"color:black;background-color:lime\">\n";
+        $wget .= "<a href=\"#__here$here\__\">here$here</a>";
+        $wget .= "</font>\n";
+        $wget .= "<font style=\"color:black;background-color:lime\">\n";
+        $wget .= "<a href=\"#__here". ($here + 1) ."__\">next</a>";
+        $wget .= "<a name=\"__here$here\__\"></a>\n";
+        $here++;
+        $wget .= "</font>\n";
+        $wget .= "<font style=\"color:black;background-color:lime\">\n";
+        $wget .= "<a href=\"#__end__\">END</a>";
+        $wget .= "</font>\n";
+        $wget .= "<br>\n";
+    }
 
     $wget;
 }
+
+
 
 sub l00http_mobizoom_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -148,6 +193,8 @@ sub l00http_mobizoom_desc {
     # Descriptions to be displayed in the list of modules table
     " A: mobizoom: Allowing font zoom on Google Mobilizer results";
 }
+
+
 
 # mobizoom API:
 # standard WikiPland module API: these are set by the form in the module:
@@ -167,7 +214,7 @@ sub l00http_mobizoom_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($wget, $getmore, $nextpage, $mobiurl, $mode1online2offline4download);
+    my ($wget, $getmore, $nextpage, $mode1online2offline4download);
     my ($skip, $tmp, $wgetall, $urlorg, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
 
     $url = '';
@@ -175,52 +222,6 @@ sub l00http_mobizoom_proc {
         $url = $form->{'url'};
     }
 
-    $title = 'Mobilizer Zoom';
-    if ((defined ($form->{'path'})) && ($ctrl->{'os'} ne 'rhc')) {
-        # only when not on RHC
-        $mode1online2offline4download = 4;
-    } elsif (&l00httpd::l00freadOpen($ctrl, $url)) {
-        $mode1online2offline4download = 2;
-        $wget = &l00httpd::l00freadAll($ctrl);
-        # find embedded page title
-        foreach $_ (split("\n", $wget)) {
-            if ($title eq 'NEXTLINEISTITLE') {
-                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
-                if (length ($_) < 10) {
-                    # title less than 10 char, can't be
-                    $title = 'Mobilizer Zoom';
-                } else {
-                    $title = $_;
-                }
-                last;
-            }
-            if (/<title>/) {
-                # next line should be page title
-                $title = 'NEXTLINEISTITLE';
-                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
-            }
-        }
-    } else {
-        $mode1online2offline4download = 1;
-    }
-
-    if ($mode1online2offline4download & 3) {
-        # standard mode
-        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$title</title>" . $ctrl->{'htmlhead2'};
-        print $sock "<a name=\"__top__\"></a>\n";
-        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-        print $sock "<a href=\"#__end__\">Jump to end</a><hr>\n";
-    }
-
-    if (defined ($form->{'zoom'})) {
-        if ($form->{'zoom'} =~ /(\d+)/) {
-            # is a number (zoom %)
-            $zoom = $1;
-        }
-    }
-    if (defined ($form->{'zoomradio'})) {
-        $zoom = $form->{'zoomradio'};
-    }
     if (defined ($form->{'paste'})) {
         $url = &l00httpd::l00getCB($ctrl);
         if (!($url =~ /^\//)) {
@@ -250,55 +251,107 @@ sub l00http_mobizoom_proc {
         $url = $1;
     }
 
-
-    if ($mode1online2offline4download & 3) {
-    print $sock "<form action=\"/mobizoom.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"fetch\" value=\"Fetch\">\n";
-    $tmp = &l00httpd::urlencode ($url);
-    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL</a>";
-    print $sock ":<input type=\"text\" size=\"16\" name=\"url\" value=\"$url\"></td>\n";
-    print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\"></td>\n";
-    if ($ctrl->{'os'} eq 'and') {
-        print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
+    if (defined ($form->{'zoom'})) {
+        if ($form->{'zoom'} =~ /(\d+)/) {
+            # is a number (zoom %)
+            $zoom = $1;
+        }
     }
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"100\">100% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"110\">110% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"133\">133% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"160\">160% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"176\">176% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"194\">194% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"300\">300% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"600\">600% ";
-    print $sock "</form>\n";
+    if (defined ($form->{'zoomradio'})) {
+        $zoom = $form->{'zoomradio'};
     }
 
-    $mobiurl = $url;
-    #http://www.google.com/gwt/x?u=http%3A%2F%2Fwww.a.com
-    $mobiurl =~ s|:|%3A|g;
-    $mobiurl =~ s|/|%2F|g;
-    $mobiurl =~ s|(https*%3A%2F%2F[^ ]+)|http://www.google.com/gwt/x?u=$1&wsc=pb&ct=pg1&whp=30|g;
+
+    $title = 'Mobilizer Zoom';
+
+    # determining mode of operation: $mode1online2offline4download
+    ## 1: online: do a live fetch (user interacts through web page)
+    ## 2: offline: fetch from a cached file (user interacts through web page)
+    ## 4: download: do a live fetch and save as a cached file (no web UI automation)
+    # for mode 1 and 2 the web page must be rendered
+    # for mode 4 the web page must not be rendered
+
+    # if $form->{'path'} is provided, then download (unless on RHC)
+    # else if $form->{'url'} points to a local cached file, do offline
+    # else do live fetch
+
+    if ((defined ($form->{'path'})) && ($ctrl->{'os'} ne 'rhc')) {
+        # only when not on RHC
+        $mode1online2offline4download = 4;
+    } elsif (&l00httpd::l00freadOpen($ctrl, $url)) {
+        $mode1online2offline4download = 2;
+        $wget = &l00httpd::l00freadAll($ctrl);
+        # find embedded page title
+        foreach $_ (split("\n", $wget)) {
+            if ($title eq 'NEXTLINEISTITLE') {
+                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
+                if (length ($_) < 10) {
+                    # title less than 10 char, can't be
+                    $title = 'Mobilizer Zoom';
+                } else {
+                    $title = $_;
+                }
+                last;
+            }
+            if (/<title>/) {
+                # next line should be page title
+                $title = 'NEXTLINEISTITLE';
+                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
+            }
+        }
+    } else {
+        $mode1online2offline4download = 1;
+    }
+
+
 
     if ($mode1online2offline4download & 3) {
-    print $sock "<hr>\n";
-    $urlorg = $url;
-    $urlorg =~ s/&ei=.*$//; # drop &ei=...
-    $tmp = $urlorg;
-    $tmp =~ s/ /+/g;
-    $tmp =~ s/:/%3A/g;
-    $tmp =~ s/&/%26/g;
-    $tmp =~ s/=/%3D/g;
-    $tmp =~ s/"/%22/g;
-    $tmp =~ s/\//%2F/g;
-    $tmp =~ s/\|/%7C/g;
-    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
-    print $sock "<a href=\"$urlorg\">original</a> \n";
-    print $sock "<a href=\"$mobiurl\">Google Mobilizer</a> \n";
-    print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
-    print $sock "<hr>\n";
+        # web page interactive mode, render web page
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$title</title>" . $ctrl->{'htmlhead2'};
+        print $sock "<a name=\"__top__\"></a>\n";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+        print $sock "<a href=\"#__end__\">Jump to end</a><hr>\n";
+
+        # web page interactive mode, render web page
+        print $sock "<form action=\"/mobizoom.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"fetch\" value=\"Fetch\">\n";
+        $tmp = &l00httpd::urlencode ($url);
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL</a>";
+        print $sock ":<input type=\"text\" size=\"16\" name=\"url\" value=\"$url\"></td>\n";
+        print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\"></td>\n";
+        if ($ctrl->{'os'} eq 'and') {
+            print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
+        }
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"100\">100% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"110\">110% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"133\">133% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"160\">160% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"176\">176% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"194\">194% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"300\">300% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500% ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"600\">600% ";
+        print $sock "</form>\n";
+
+        # web page interactive mode, render web page
+        print $sock "<hr>\n";
+        $urlorg = $url;
+        $urlorg =~ s/&ei=.*$//; # drop &ei=...
+        $tmp = $urlorg;
+        $tmp =~ s/ /+/g;
+        $tmp =~ s/:/%3A/g;
+        $tmp =~ s/&/%26/g;
+        $tmp =~ s/=/%3D/g;
+        $tmp =~ s/"/%22/g;
+        $tmp =~ s/\//%2F/g;
+        $tmp =~ s/\|/%7C/g;
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
+        print $sock "<a href=\"$urlorg\">original</a> \n";
+        print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
+        print $sock "<hr>\n";
     }
 
     $here = 1;
@@ -312,6 +365,8 @@ sub l00http_mobizoom_proc {
             &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.wget');
         }
         if ($mode1online2offline4download == 2) {
+            # reading from cached file
+
             # <head> and <form> mess with my <span font-size> so drop them
             $tmp = '';
             $skip = 0;
@@ -362,13 +417,19 @@ sub l00http_mobizoom_proc {
                 print $sock $foundthreads;
             }
         } else {
+            # $mode1online2offline4download != 2
+            # fetch for active reading or caching automation
+
             &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
             $prolog = '';
             $wgetall = '';
+            # fetch repeatedly as necessary as Google mobilizer break page
+            # into multiple mobilized pages
             do {
                 $getmore = 0;
                 $wget = &l00http_mobizoom_wget ($nextpage, $zoom);
                 if ($wget =~ /<a href=.+?url=(.+?)'>\nNext page /) {
+                    # there is a 'Next page' link, follow the link
                     $nextpage = $1;
                     $nextpage =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
                     #print "$nextpage \nNext page\n";
@@ -381,7 +442,9 @@ sub l00http_mobizoom_proc {
 #               &l00httpd::l00fwriteBuf($ctrl, $wget);
             } while ($getmore);
             $wgetall = "$prolog$wgetall";
+
             if ($mode1online2offline4download & 3) {
+                # web page interactive mode, render web page
                 print $sock $wgetall;
             }
             &l00httpd::l00fwriteBuf($ctrl, $wgetall);
@@ -395,21 +458,22 @@ sub l00http_mobizoom_proc {
     }
 
     if ($mode1online2offline4download & 3) {
-    print $sock "<hr><a name=\"__end__\"></a>";
-    print $sock "$threads\n";
-    print $sock "<p>Goto sections:\n";
-    for (1..$here){
-        print $sock "<a href=\"#__here$_\__\">$_</a> ";
-    }
-    print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+        # web page interactive mode, render web page
+        print $sock "<hr><a name=\"__end__\"></a>";
+        print $sock "$threads\n";
+        print $sock "<p>Goto sections:\n";
+        for (1..$here){
+            print $sock "<a href=\"#__here$_\__\">$_</a> ";
+        }
+        print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
-    print $sock "<p>Goto paragraph:\n";
-    for (1..$para){
-        print $sock "<a href=\"#p$_\">$_</a> ";
-    }
-    print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+        print $sock "<p>Goto paragraph:\n";
+        for (1..$para){
+            print $sock "<a href=\"#p$_\">$_</a> ";
+        }
+        print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
-    print $sock $ctrl->{'htmlfoot'};
+        print $sock $ctrl->{'htmlfoot'};
     }
 }
 
