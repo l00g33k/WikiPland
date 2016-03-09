@@ -13,7 +13,7 @@ use l00httpd;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here, $threads, $prolog);
+my ($url, $zoom, $para, $here, $prolog);
 $url = '';
 $zoom = 120;
 $para = 1;
@@ -62,10 +62,11 @@ sub l00http_mobizoom_wget_follow {
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
     my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip, $last);
-    my ($on_slashdot_org);
+    my ($on_slashdot_org, $threads, $endanchor);
 
 
     $wget = '';
+    $threads = '';
     if (length ($url) > 6) {
 
         if ($url =~ /slashdot\.org/i) {
@@ -218,6 +219,9 @@ sub l00http_mobizoom_wget {
                     !(/^Re:/)) {
                     #&l00httpd::dbp('wget_follow', "SUBJECT: $para: $_\n");
                     $para--;
+                    if ($threads eq '') {
+                        $threads = "Slashdot threads (found by 'comment_link_'):<br>\n";
+                    }
                     $threads .= "<a href=\"#p$para\">$para: $_</a><br>\n";
                     $para++;
                     $wget .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font><br>\n";
@@ -263,7 +267,23 @@ sub l00http_mobizoom_wget {
         $wget .= "<br>\n";
     }
 
-    $wget;
+    $endanchor = '';
+    # web page interactive mode, render web page
+    $endanchor .= "<hr><a name=\"__end__\"></a>";
+    $endanchor .= "<p>Goto sections:\n";
+    for (1..$here){
+        $endanchor .= "<a href=\"#__here$_\__\">$_</a> ";
+    }
+    $endanchor .= "<p><a href=\"#__top__\">Jump to top</a>\n";
+
+    $endanchor .= "<p>Goto paragraph:\n";
+    for (1..$para){
+        $endanchor .= "<a href=\"#p$_\">$_</a> ";
+    }
+    $endanchor .= "<p><a href=\"#__top__\">Jump to top</a>\n";
+
+
+    "$threads\n$wget\n$threads$endanchor";
 }
 
 
@@ -437,7 +457,6 @@ sub l00http_mobizoom_proc {
     }
 
     $here = 1;
-    $threads = "Threads:<br>\n";
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
         $para = 1;
         if ($mode1online2offline4download == 4) {
@@ -522,19 +541,18 @@ sub l00http_mobizoom_proc {
 
     if ($mode1online2offline4download & 3) {
         # web page interactive mode, render web page
-        print $sock "<hr><a name=\"__end__\"></a>";
-        print $sock "$threads\n";
-        print $sock "<p>Goto sections:\n";
-        for (1..$here){
-            print $sock "<a href=\"#__here$_\__\">$_</a> ";
-        }
-        print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+print $sock "<hr><a name=\"__end__\"></a>";
+print $sock "<p>Goto sections:\n";
+for (1..$here){
+    print $sock "<a href=\"#__here$_\__\">$_</a> ";
+}
+print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
-        print $sock "<p>Goto paragraph:\n";
-        for (1..$para){
-            print $sock "<a href=\"#p$_\">$_</a> ";
-        }
-        print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+print $sock "<p>Goto paragraph:\n";
+for (1..$para){
+    print $sock "<a href=\"#p$_\">$_</a> ";
+}
+print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
         print $sock $ctrl->{'htmlfoot'};
     }
