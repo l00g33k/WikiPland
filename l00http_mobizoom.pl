@@ -55,17 +55,18 @@ sub l00http_mobizoom_wget_follow {
         }
     }
 
-    ($hdr, $bdy);
+    ($domain, $hdr, $bdy);
 }
 
 
 sub l00http_mobizoom_wget {
     my ($url, $zoom) = @_;
     my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip, $last);
-    my ($on_slashdot_org, $threads, $endanchor);
+    my ($on_slashdot_org, $threads, $endanchor, $domain);
 
 
     $wget = '';
+    $domain = '';
     $threads = '';
     if (length ($url) > 6) {
 
@@ -76,8 +77,7 @@ sub l00http_mobizoom_wget {
         }
 
         # 1) fetch target URL
-#       ($hdr, $wget) = &l00wget::wget ($url);
-        ($hdr, $wget) = &l00http_mobizoom_wget_follow($url);
+        ($domain, $hdr, $wget) = &l00http_mobizoom_wget_follow($url);
 
 
         # 2) add navigation and content clip link for each paragraph
@@ -180,11 +180,13 @@ sub l00http_mobizoom_wget {
 #        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
 #        $wget =~ s/<\/wml.*$>\n//g;
 
-        $wget =~ s/<img src="(.+?)".*?>/ <a href="$1">IMAGE IMAGE<\/a>/sg;
+        $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
+
+        #$wget =~ s/(<a.+?href=")(\/.+?)(".+?>)/$1http:\/\/$domain$2$3/gs;  # not working
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
-        $wget =~ s/(<h\d>)/<\/span>$1/sg;
-        $wget =~ s/(<\/h\d>)/$1<span style="font-size : $zoom%;">/sg;
+        $wget =~ s/<h(\d).*?>/<\/span><h$1>/sg;
+        $wget =~ s/<\/h(\d).*?>/<\/h$1><span style="font-size : $zoom%;">/sg;
 
 
         # make sure there is at most one <tag> per new line
@@ -239,7 +241,7 @@ sub l00http_mobizoom_wget {
                 $para++;
             }
             if (/<p>/) {
-                s/<p>/<p><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+                s/<p>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
                 # increase paragraph count/index
                 $para++;
             }
@@ -279,13 +281,13 @@ sub l00http_mobizoom_wget {
     for (1..$here){
         $endanchor .= "<a href=\"#__here$_\__\">$_</a> ";
     }
-    $endanchor .= "<p><a href=\"#__top__\">Jump to top</a>\n";
+    $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
 
-    $endanchor .= "<p>Goto paragraph:\n";
+    $endanchor .= "<br>Goto paragraph:\n";
     for (1..$para){
         $endanchor .= "<a href=\"#p$_\">$_</a> ";
     }
-    $endanchor .= "<p><a href=\"#__top__\">Jump to top</a>\n";
+    $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
 
 
     "Original URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
@@ -524,7 +526,7 @@ sub l00http_mobizoom_proc {
             }
             $wget = $tmp;
             # <span style="font-size : 144%;">
-            $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/g;
+            $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/sg;
             if ($foundthreadcnt > 1) {
                 print $sock $foundthreads;
             }
