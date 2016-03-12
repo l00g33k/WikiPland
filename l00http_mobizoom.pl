@@ -155,11 +155,12 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<\/*span.*?>//gs;
         $wget =~ s/<\/*div.*?>//gs;
         $wget =~ s/<\/*aside.*?>//gs;
+        $wget =~ s/<\/*figure.*?>//gs;
         $wget =~ s/<\/*article.*?>//gs;
         $wget =~ s/<\/*section.*?>//gs;
 
         $wget =~ s/<!.+?>//gs;
-        $wget =~ s/<script.+?<\/script>//sg;
+        $wget =~ s/<script.+?<\/script *\n*\r*>//sg;
         $wget =~ s/<iframe.+?<\/iframe>//sg;
         $wget =~ s/<style.+?<\/style>//sg;
 
@@ -169,6 +170,8 @@ sub l00http_mobizoom_wget {
             $wget =~ s/<\/li.*?>//sg;
             $wget =~ s/<\/*ul.*?>//sg;
         }
+        $wget =~ s/<p.*?>/<br>/sg;
+        $wget =~ s/<\/p>/<\/br>/sg;
 
 #        $wget =~ s/\r//g;
 #        $wget =~ s/\n//g;
@@ -180,6 +183,8 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<img src="(.+?)".*?>/ <a href="$1">IMAGE IMAGE<\/a>/sg;
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
+        $wget =~ s/(<h\d>)/<\/span>$1/sg;
+        $wget =~ s/(<\/h\d>)/$1<span style="font-size : $zoom%;">/sg;
 
 
         # make sure there is at most one <tag> per new line
@@ -283,7 +288,7 @@ sub l00http_mobizoom_wget {
     $endanchor .= "<p><a href=\"#__top__\">Jump to top</a>\n";
 
 
-    "$threads\n$wget\n$threads$endanchor";
+    "Original URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
 }
 
 
@@ -452,7 +457,18 @@ sub l00http_mobizoom_proc {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
         print $sock "<a href=\"$urlorg\">original</a> \n";
         print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
-        print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.htm\">l00://mobizoom.htm</a> \n";
+        print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.htm\">l00://mobizoom.htm</a> -\n";
+        print $sock "<a href=\"/wget.htm?url=$url&submit=\">wget</a> --\n";
+#print $sock "<a href=\"http://googleweblight.com/?lite_url=$url\">gwl</a> -\n";
+        $tmp = &l00httpd::urlencode ("http://googleweblight.com/?lite_url=$url");
+        print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\">Google web light</a>\n";
+#http://127.0.0.1:30337/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2Fgoogleweblight.com%2F%3Flite_url%3Dhttp%3A%2F%2Fwww.latimes.com%2Fnation%2Fpolitics%2Fla-na-gop-establishment-trump-20160224-story.html
+#http://googleweblight.com/=lite_url
+#http://googleweblight.com/?lite_url=http://krebsonsecurity.com/2016/02/the-lowdown-on-the-apple-fbi-showdown/
+#http://googleweblight.com/=lite_url
+#http://127.0.0.1:30337/mobizoom.htm?fetch=Fetch&url=http://googleweblight.com/%3Flite_url=http://krebsonsecurity.com/2016/02/the-lowdown-on-the-apple-fbi-showdown/
+#$tmp = &l00httpd::urlencode ($clip);
+#http://googleweblight.com/?lite_url
         print $sock "<hr>\n";
     }
 
@@ -520,7 +536,7 @@ sub l00http_mobizoom_proc {
             # $mode1online2offline4download != 2
             # fetch for active reading or caching automation
 
-            &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
+#           &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
             # fetch repeatedly as necessary as Google mobilizer break page
             # into multiple mobilized pages
             $wget = &l00http_mobizoom_wget ($url, $zoom);
@@ -540,19 +556,22 @@ sub l00http_mobizoom_proc {
     }
 
     if ($mode1online2offline4download & 3) {
-        # web page interactive mode, render web page
-print $sock "<hr><a name=\"__end__\"></a>";
-print $sock "<p>Goto sections:\n";
-for (1..$here){
-    print $sock "<a href=\"#__here$_\__\">$_</a> ";
-}
-print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+        # Add jump links if missing
+        if (!($wget =~ /<a href="#__here0__">last<\/a>/s)) {
+            # web page interactive mode, render web page
+            print $sock "<hr><a name=\"__end__\"></a>";
+            print $sock "<p>Goto sections:\n";
+            for (1..$here){
+                print $sock "<a href=\"#__here$_\__\">$_</a> ";
+            }
+            print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
 
-print $sock "<p>Goto paragraph:\n";
-for (1..$para){
-    print $sock "<a href=\"#p$_\">$_</a> ";
-}
-print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+            print $sock "<p>Goto paragraph:\n";
+            for (1..$para){
+                print $sock "<a href=\"#p$_\">$_</a> ";
+            }
+            print $sock "<p><a href=\"#__top__\">Jump to top</a>\n";
+        }
 
         print $sock $ctrl->{'htmlfoot'};
     }
