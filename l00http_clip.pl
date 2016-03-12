@@ -48,7 +48,8 @@ sub l00http_clip_proc {
             }
             $tmp = &l00httpd::urlencode ($clip);
             $tmp = sprintf ("[[/clip.htm?update=Copy+to+clipboard&clip=%s|%s]]", $tmp, $words);
-            printf $sock ("Sent:<br><pre>%s</pre>to clipboard.\n", $tmp);
+            printf $sock ("Sent:<p><i>%s</i><p>to clipboard.\n", $tmp);
+#           printf $sock ("Sent:<br><pre>%s</pre>to clipboard.\n", $tmp);
             &l00httpd::l00setCB($ctrl, $tmp);
             $tmp = &l00httpd::urlencode ($tmp);
             printf $sock ("View in <a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\">clip.htm</a><p>\n", $tmp);
