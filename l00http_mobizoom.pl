@@ -19,7 +19,7 @@ $zoom = 120;
 $para = 1;
 
 sub l00http_mobizoom_wget_follow {
-    my ($url) = @_;
+    my ($ctrl, $url) = @_;
     my ($hdr, $bdy, $followmoves, $domain, $moved);
 
     $hdr = '';
@@ -33,7 +33,8 @@ sub l00http_mobizoom_wget_follow {
         }
         ($hdr, $bdy) = &l00wget::wget ($url);
         &l00httpd::dbp('wget_follow', sprintf("#%d: HDR (%d B), BDY (%d B), URL:%s\n", 
-            $followmoves, length($hdr), length($bdy), $url));
+            $followmoves, length($hdr), length($bdy), $url)) , if ($ctrl->{'debug'} >= 3);
+        &l00httpd::dbp($config{'desc'}, "Header:\n$hdr"), if ($ctrl->{'debug'} >= 4);
 
         # Find HTTP return code
         $moved = '';
@@ -60,7 +61,7 @@ sub l00http_mobizoom_wget_follow {
 
 
 sub l00http_mobizoom_wget {
-    my ($url, $zoom) = @_;
+    my ($ctrl, $url, $zoom) = @_;
     my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip, $last);
     my ($on_slashdot_org, $threads, $endanchor, $domain);
 
@@ -77,7 +78,7 @@ sub l00http_mobizoom_wget {
         }
 
         # 1) fetch target URL
-        ($domain, $hdr, $wget) = &l00http_mobizoom_wget_follow($url);
+        ($domain, $hdr, $wget) = &l00http_mobizoom_wget_follow($ctrl, $url);
 
 
         # 2) add navigation and content clip link for each paragraph
@@ -163,6 +164,7 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<script.+?<\/script *\n*\r*>//sg;
         $wget =~ s/<iframe.+?<\/iframe>//sg;
         $wget =~ s/<style.+?<\/style>//sg;
+        $wget =~ s/<figcaption.+?<\/figcaption>//sg;
 
         if ($on_slashdot_org) {
             # slashdot special: eliminate list
@@ -460,17 +462,9 @@ sub l00http_mobizoom_proc {
         print $sock "<a href=\"$urlorg\">original</a> \n";
         print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
         print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.htm\">l00://mobizoom.htm</a> -\n";
-        print $sock "<a href=\"/wget.htm?url=$url&submit=\">wget</a> --\n";
-#print $sock "<a href=\"http://googleweblight.com/?lite_url=$url\">gwl</a> -\n";
+        print $sock "<a href=\"/wget.htm?url=$url&submit=\" target=\"newwget\">wget</a> --\n";
         $tmp = &l00httpd::urlencode ("http://googleweblight.com/?lite_url=$url");
-        print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\">Google web light</a>\n";
-#http://127.0.0.1:30337/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2Fgoogleweblight.com%2F%3Flite_url%3Dhttp%3A%2F%2Fwww.latimes.com%2Fnation%2Fpolitics%2Fla-na-gop-establishment-trump-20160224-story.html
-#http://googleweblight.com/=lite_url
-#http://googleweblight.com/?lite_url=http://krebsonsecurity.com/2016/02/the-lowdown-on-the-apple-fbi-showdown/
-#http://googleweblight.com/=lite_url
-#http://127.0.0.1:30337/mobizoom.htm?fetch=Fetch&url=http://googleweblight.com/%3Flite_url=http://krebsonsecurity.com/2016/02/the-lowdown-on-the-apple-fbi-showdown/
-#$tmp = &l00httpd::urlencode ($clip);
-#http://googleweblight.com/?lite_url
+        print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\" target=\"newgwl\">Google web light</a>\n";
         print $sock "<hr>\n";
     }
 
@@ -541,7 +535,7 @@ sub l00http_mobizoom_proc {
 #           &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
             # fetch repeatedly as necessary as Google mobilizer break page
             # into multiple mobilized pages
-            $wget = &l00http_mobizoom_wget ($url, $zoom);
+            $wget = &l00http_mobizoom_wget ($ctrl, $url, $zoom);
 
             if ($mode1online2offline4download & 3) {
                 # web page interactive mode, render web page
