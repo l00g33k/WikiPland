@@ -77,9 +77,9 @@ sub l00http_scratch_proc {
     $tmp = $scratch;
     if (defined ($form->{'2l00'})) {
         if ($notbare) {
-            print $sock "<br>Scratch copied to <a href=\"/view.htm?path=l00://clipboard\">l00://clipboard</a><p>\n";
+            print $sock "<br>Scratch copied to <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a><p>\n";
         }
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard.txt');
         &l00httpd::l00fwriteBuf($ctrl, $scratch);
         &l00httpd::l00fwriteClose($ctrl);
     }
@@ -117,8 +117,8 @@ sub l00http_scratch_proc {
         print $sock "</form><p>\n";
 
 
-        print $sock "Send l00://clipboard to <a href=\"/launcher.htm?path=l00://clipboard\">launcher</a>, \n";
-        print $sock "<a href=\"/view.htm?path=l00://clipboard\">View</a> l00://clipboard.<p>\n";
+        print $sock "Send l00://clipboard.txt to <a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>, \n";
+        print $sock "<a href=\"/view.htm?path=l00://clipboard.txt\">View</a> l00://clipboard.txt.<p>\n";
     }
 
     # get submitted name and print greeting

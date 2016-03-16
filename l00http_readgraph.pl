@@ -37,10 +37,10 @@ sub l00http_readgraph_proc {
 #/ls.htm/Screenshot_2016-02-02-07-20-41.png?path=/sdcard/Pictures/Screenshots/Screenshot_2016-02-02-07-20-41.png
 
     if (defined ($form->{'x'})) {
-        $xpix = 100;
-        $ypix = 100;
+        $xpix = $form->{'x'} + 4;
+        $ypix = $form->{'y'} + 2;
         print $sock "<div style=\"position: absolute; left:$xpix"."px; top:$ypix"."px;\">\n";
-        print $sock "<font color=\"red\">X</font></div>\n";
+        print $sock "<font color=\"red\">+</font></div>\n";
     }
 
     print $sock "<input type=\"hidden\" name=\"graph\" value=\"demo\">\n";
