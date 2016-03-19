@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use l00httpd;
+use l00crc32;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -31,9 +32,17 @@ sub l00http_mobizoom_wget_follow {
         if ($url =~ /http:\/\/([^\/]+?)\//) {
             $domain = $1;
         }
+        $url =~ s/\r//g;
+        $url =~ s/\n//g;
         ($hdr, $bdy) = &l00wget::wget ($url);
-        &l00httpd::dbp('wget_follow', sprintf("#%d: HDR (%d B), BDY (%d B), URL:%s\n", 
+        &l00httpd::dbp('wget_follow', sprintf("#%d: HDR (%d B), BDY (%d B), URL:>%s<\n", 
             $followmoves, length($hdr), length($bdy), $url)) , if ($ctrl->{'debug'} >= 3);
+        if ($ctrl->{'debug'} >= 4) {
+            &l00httpd::dbp($config{'desc'}, sprintf (
+                "URL is %3d bytes long and CRC32 is 0x%08x\n",
+                length($url), 
+                &l00crc32::crc32($url)));
+        }
         &l00httpd::dbp($config{'desc'}, "Header:\n$hdr"), if ($ctrl->{'debug'} >= 4);
 
         # Find HTTP return code
@@ -63,12 +72,13 @@ sub l00http_mobizoom_wget_follow {
 sub l00http_mobizoom_wget {
     my ($ctrl, $url, $zoom) = @_;
     my ($wget, $wget2, $pre, $gurl, $post, $hdr, $subj, $clip, $last);
-    my ($on_slashdot_org, $threads, $endanchor, $domain);
+    my ($on_slashdot_org, $threads, $endanchor, $domain, $title);
 
 
     $wget = '';
     $domain = '';
     $threads = '';
+    $title = "<title>mobizoom $url</title>\n";
     if (length ($url) > 6) {
 
         if ($url =~ /slashdot\.org/i) {
@@ -80,7 +90,10 @@ sub l00http_mobizoom_wget {
         # 1) fetch target URL
         ($domain, $hdr, $wget) = &l00http_mobizoom_wget_follow($ctrl, $url);
 
-
+        # find title
+        if ($wget =~ /(<title>.+?<\/title.*?>)/s) {
+            $title = "$1\n";
+        }
         # 2) add navigation and content clip link for each paragraph
 
         $wget2 = '';
@@ -153,6 +166,10 @@ sub l00http_mobizoom_wget {
         $wget =~ s/<\/*html.*?>//gs;
         $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
         $wget =~ s/<\/*body.*?>//gs;
+
+$wget =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
+$wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
+
         $wget =~ s/<\/*span.*?>//gs;
         $wget =~ s/<\/*div.*?>//gs;
         $wget =~ s/<\/*aside.*?>//gs;
@@ -274,6 +291,12 @@ sub l00http_mobizoom_wget {
         $wget .= "<a href=\"#__end__\">END</a>";
         $wget .= "</font>\n";
         $wget .= "<br>\n";
+
+
+        # semi hide tags
+        $wget =~ s/&lt;/<font size="1" style="color:gray;background-color:white">&lt;/gs;
+        #$wget =~ s/&lt;/<font size=1">&lt;/gs;
+        $wget =~ s/&gt;/&gt;<\/font>/gs;
     }
 
     $endanchor = '';
@@ -292,7 +315,7 @@ sub l00http_mobizoom_wget {
     $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
 
 
-    "Original URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
+    "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
 }
 
 
@@ -372,7 +395,7 @@ sub l00http_mobizoom_proc {
     }
 
 
-    $title = 'Mobilizer Zoom';
+    $title = "Mobizoom $url";
 
     # determining mode of operation: $mode1online2offline4download
     ## 1: online: do a live fetch (user interacts through web page)
@@ -392,23 +415,26 @@ sub l00http_mobizoom_proc {
         $mode1online2offline4download = 2;
         $wget = &l00httpd::l00freadAll($ctrl);
         # find embedded page title
-        foreach $_ (split("\n", $wget)) {
-            if ($title eq 'NEXTLINEISTITLE') {
-                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
-                if (length ($_) < 10) {
-                    # title less than 10 char, can't be
-                    $title = 'Mobilizer Zoom';
-                } else {
-                    $title = $_;
-                }
-                last;
-            }
-            if (/<title>/) {
-                # next line should be page title
-                $title = 'NEXTLINEISTITLE';
-                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
-            }
+        if ($wget =~ /<title>(.+?)<\/title.*?>/s) {
+            $title = "$1\n";
         }
+#        foreach $_ (split("\n", $wget)) {
+#            if ($title eq 'NEXTLINEISTITLE') {
+#                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
+#                if (length ($_) < 10) {
+#                    # title less than 10 char, can't be
+#                    $title = 'Mobilizer Zoom';
+#                } else {
+#                    $title = $_;
+#                }
+#                last;
+#            }
+#            if (/<title>/) {
+#                # next line should be page title
+#                $title = 'NEXTLINEISTITLE';
+#                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
+#            }
+#        }
     } else {
         $mode1online2offline4download = 1;
     }
