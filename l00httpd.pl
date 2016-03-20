@@ -1124,7 +1124,7 @@ while(1) {
                     # a generic scheme to support system wide banner
                     # $ctrl->{'BANNER:modname'} = '<center>TEXT</center><p>';
                     # $ctrl->{'BANNER:modname'} = '<center><form action="/do.htm" method="get"><input type="submit" value="Stop Alarm"><input type="hidden" name="path" value="/sdcard/dofile.txt"><input type="hidden" name="arg1" value="stop"></form></center><p>';
-                    foreach $_ (sort keys %ctrl) {
+                    foreach $_ (sort { $b cmp $a} keys %ctrl) {
                         if (/^BANNER:(.+)/) {
                             #print "key $_\n";
                             if (defined($ctrl{$_})) {
