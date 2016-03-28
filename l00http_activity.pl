@@ -1,6 +1,5 @@
 use strict;
 use warnings;
-use l00backup;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -27,20 +26,31 @@ sub l00http_activity_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
 
-    print $sock "<form action=\"/activity.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"start\" value=\"Start\">\n";
-    print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\"><br>\n";
-    print $sock "</form>\n";
-
+    if (defined ($form->{'paste'})) {
+        $form->{'path'} = &l00httpd::l00getCB($ctrl);
+    }
     if (defined ($form->{'start'})) {
-        if (($ctrl->{'os'} eq 'and') && 
-            (defined ($form->{'path'})) && 
-            (-f $form->{'path'})) {
-            $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$form->{'path'}");
-        } else {
-            print $sock "<p>Either the server is not Android or '$form->{'path'}' does not exist. Activity not started.\n";
+        if ($ctrl->{'os'} eq 'and') {
+            if (defined ($form->{'path'})) {
+                if (-f $form->{'path'}) {
+                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$form->{'path'}");
+                } else {
+                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$form->{'path'}");
+                }
+            }
+        }
+        if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+            if (defined ($form->{'path'})) {
+                `start \"$form->{'path'}\"`;
+            }
         }
     }
+
+    print $sock "<form action=\"/activity.htm\" method=\"get\">\n";
+    print $sock "<input type=\"submit\" name=\"start\" value=\"Start\">\n";
+    print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste CB\">\n";
+    print $sock "</form>\n";
 
 }
 
