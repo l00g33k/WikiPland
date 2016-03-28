@@ -40,7 +40,7 @@ eval "use Android";
 
 
 
-my ($addr, $checked, $client_ip, $cmd_param_pair, $conf);
+my ($addr, $checked, $client_ip, $cmd_param_pair);
 my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $ctrl_port_first, $cli_port, $debug, $file, $hour);
 my ($idpw, $idpwmustbe, $ip, $isdst, $key, $mday, $min, $host_ip);
 my ($modcalled, $mod, $mon, $name, $param, $tmp, $dnspattern, $ipaddr, $buf);
@@ -201,79 +201,154 @@ $ctrl{'plpath'} = $plpath;      # make it available to modules
 
 
 
+sub readl00httpdcfg {
+    my ($conf, $tmp, $cnt, $key, $val);
+    $conf = "l00httpd.cfg";
 
-$conf = "l00httpd.cfg";
-$tmp = $plpath; # first time, find in l00httpd script directory
-# Looking fir l00httpd.cfg in 3 places
-# 1: ${plpath}l00httpd.cfg
-# 2: $ctrl{'workdir'}l00httpd.cfg
-# 3: $ctrl{'workdir'}local_l00httpd.cfg
-# 4: $ctrl{'altcfg'}l00httpd.cfg
-for ($cnt = 0; $cnt < 4; $cnt++) {
-    if (open (IN, "<$tmp$conf")) {
-        if ($cfgedit eq '') {
-            $cfgedit = "Edit l00httpd.cfg at:<br>\n";
-        }
-        $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
-        print "Reading $tmp$conf...\n";;
-        # machine specific filter
-        $skip = 0;
-        $skipfilter = '.';
-        while (<IN>) {
-            if (/^#/) {
-                next;
+    # Looking fir l00httpd.cfg in 3 places
+    # 1: ${plpath}l00httpd.cfg
+    # 2: $ctrl{'workdir'}l00httpd.cfg
+    # 3: $ctrl{'altcfg'}l00httpd.cfg
+    for ($cnt = 0; $cnt < 3; $cnt++) {
+        if ($cnt == 0) {
+            $tmp = $plpath; # first time, find in l00httpd script directory
+        } elsif ($cnt == 1) {
+            $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+	    } else {
+            if (defined($ctrl{'altcfg'})) {
+                $tmp = $ctrl{'altcfg'};
+		    } else {
+                last;
+		    }
+	    }
+        if (open (IN, "<$tmp$conf")) {
+            if ($cfgedit eq '') {
+                $cfgedit = "Edit l00httpd.cfg at:<br>\n";
             }
-        
-            s/\r//g;
-            s/\n//g;
-            if (/^machine=~\/(.+)\/ */) {
-                # new machine filter
-                $skipfilter = $1;
-                if ($ctrl{'machine'} =~ /$skipfilter/) {
-                    # matched, don't skip
-                    $skip = 0;
-                } else {
-                    # no match, skipping
-                    $skip = 1;
+            $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
+            print "Reading $tmp$conf...\n";;
+            # machine specific filter
+            $skip = 0;
+            $skipfilter = '.';
+            while (<IN>) {
+                if (/^#/) {
+                    next;
                 }
-            }
-            if ($skip) {
-                next;
-            }
+        
+                s/\r//g;
+                s/\n//g;
+                if (/^machine=~\/(.+)\/ */) {
+                    # new machine filter
+                    $skipfilter = $1;
+                    if ($ctrl{'machine'} =~ /$skipfilter/) {
+                        # matched, don't skip
+                        $skip = 0;
+                    } else {
+                        # no match, skipping
+                        $skip = 1;
+                    }
+                }
+                if ($skip) {
+                    next;
+                }
 
-            ($key, $val) = split ('\^');
-            if ((defined ($key)) &&
-                (length ($key) > 0) && 
-                (defined ($val)) &&
-                (length ($val) > 0)) {
-                print ">$key< = >$val<\n";;
-                if ($key eq 'workdir') {
-                    # special case workdir to accept only if exist
-                    if (-d $val) {
+                ($key, $val) = split ('\^');
+                if ((defined ($key)) &&
+                    (length ($key) > 0) && 
+                    (defined ($val)) &&
+                    (length ($val) > 0)) {
+                    print ">$key< = >$val<\n";;
+                    if ($key eq 'workdir') {
+                        # special case workdir to accept only if exist
+                        if (-d $val) {
+                            $ctrl{$key} = $val;
+                        }
+                    } else {
                         $ctrl{$key} = $val;
                     }
-                } else {
-                    $ctrl{$key} = $val;
-                }
-                if ($key =~ /^(\d+\.\d+\.\d+\.\d+)$/) {
-                    $ipallowed{$1}  = "yes";
+                    if ($key =~ /^(\d+\.\d+\.\d+\.\d+)$/) {
+                        $ipallowed{$1}  = "yes";
+                    }
                 }
             }
+            close (IN);
         }
-        close (IN);
     }
-    if ($cnt == 0) {
-        $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
-    } elsif ($cnt == 1) {
-        $tmp = "$ctrl{'workdir'}local_"; # second time, find in workdir directory
-	} else {
-        if (defined($ctrl{'altcfg'})) {
-            $tmp = $ctrl{'altcfg'};
-		} else {
-            last;
-		}
-	}
+
+    # check 'workdir' from 'l00httpd.cfg'
+    if (!defined ($ctrl{'workdir'})) {
+        # sets default if not defined in l00httpd.txt
+        $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
+    } elsif (!-d $ctrl{'workdir'}) {
+        # workdir is not a dir, use default
+        $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
+    }
+
+    foreach $key (keys %ctrl) {
+        if ($ctrl{$key} =~ /%PLPATH%/) {
+            print "$ctrl{$key} => ";
+            $ctrl{$key} =~ s/%PLPATH%/$plpath/g;
+            print "$ctrl{$key}\n";
+        }
+        if ($ctrl{$key} =~ /%WORKDIR%/) {
+            print "$ctrl{$key} => ";
+            $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
+            print "$ctrl{$key}\n";
+        }
+    }
+
+    # RHC special: make clipath at Perl directory so everything below is viewable by default
+    #if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
+    if ($ctrl{'os'} eq 'rhc') {
+        # on RHC
+        $ctrl{'clipath'} =~ s/\/l00httpd\/pub\/$/\//;
+        $ctrl{'nopwpath'} = $ctrl{'clipath'};
+        $nopwtimeout = 0x7fffffff;
+        # more RHC special
+        $ctrl{'alwayson_clip'} = 'rhc';
+        $ctrl{'alwayson_debug'} = 'rhc';
+        $ctrl{'alwayson_launcher'} = 'rhc';
+        $ctrl{'alwayson_readme'} = 'rhc';
+        $ctrl{'alwayson_solver'} = 'rhc';
+        $ctrl{'alwayson_tree'} = 'rhc';
+    }
+
+    # check 'quick' from 'l00httpd.cfg'
+    if (!defined ($ctrl{'quick'})) {
+        # sets default if not defined in l00httpd.txt
+        # make it available to modules
+        $ctrl{'quick'} = "/ls.htm/quick.htm?path=$ctrl{'workdir'}index.txt";
+    }
+    # check if target exist
+    if ($ctrl{'quick'} =~ m|^/ls\.htm|) {
+        # points to ls.pl
+        if (($_) = $ctrl{'quick'} =~ m|path=(.+)&*|) {
+            print "Quick target: $_\n";
+            if (!-f $_) {
+                print "target does not exist >$_<\n";
+                $ctrl{'quick'} = "/ls.htm/quick.htm?path=$ctrl{'workdir'}index.txt";
+            }
+        }
+    }
+    if (!defined ($ctrl{'HOME'})) {
+        # sets default if not defined in l00httpd.txt
+        # make it available to modules
+        $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
+    }
+    # check if target exist
+    if ($ctrl{'HOME'} =~ m|^/ls\.htm|) {
+        # points to ls.pl
+        if (($_) = $ctrl{'HOME'} =~ m|path=(.+)&*|) {
+            print "HOME target: $_\n";
+            if (!-f $_) {
+                print "target does not exist >$_<\n";
+                $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
+            }
+        }
+    }
 }
+&readl00httpdcfg;
+
 
 # parse commandline arguments
 while ($_ = shift) {
@@ -310,77 +385,6 @@ if (defined ($ctrl{'idpwmustbe'})) {
     $ctrl{'idpwmustbe'} = undef;
 }
 
-# check 'workdir' from 'l00httpd.cfg'
-if (!defined ($ctrl{'workdir'})) {
-    # sets default if not defined in l00httpd.txt
-    $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
-} elsif (!-d $ctrl{'workdir'}) {
-    # workdir is not a dir, use default
-    $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
-}
-
-foreach $key (keys %ctrl) {
-    if ($ctrl{$key} =~ /%PLPATH%/) {
-        print "$ctrl{$key} => ";
-        $ctrl{$key} =~ s/%PLPATH%/$plpath/g;
-        print "$ctrl{$key}\n";
-    }
-    if ($ctrl{$key} =~ /%WORKDIR%/) {
-        print "$ctrl{$key} => ";
-        $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
-        print "$ctrl{$key}\n";
-    }
-}
-
-# RHC special: make clipath at Perl directory so everything below is viewable by default
-#if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
-if ($ctrl{'os'} eq 'rhc') {
-    # on RHC
-    $ctrl{'clipath'} =~ s/\/l00httpd\/pub\/$/\//;
-    $ctrl{'nopwpath'} = $ctrl{'clipath'};
-    $nopwtimeout = 0x7fffffff;
-    # more RHC special
-    $ctrl{'alwayson_clip'} = 'rhc';
-    $ctrl{'alwayson_debug'} = 'rhc';
-    $ctrl{'alwayson_launcher'} = 'rhc';
-    $ctrl{'alwayson_readme'} = 'rhc';
-    $ctrl{'alwayson_solver'} = 'rhc';
-    $ctrl{'alwayson_tree'} = 'rhc';
-}
-
-# check 'quick' from 'l00httpd.cfg'
-if (!defined ($ctrl{'quick'})) {
-    # sets default if not defined in l00httpd.txt
-    # make it available to modules
-    $ctrl{'quick'} = "/ls.htm/quick.htm?path=$ctrl{'workdir'}index.txt";
-}
-# check if target exist
-if ($ctrl{'quick'} =~ m|^/ls\.htm|) {
-    # points to ls.pl
-    if (($_) = $ctrl{'quick'} =~ m|path=(.+)&*|) {
-        print "Quick target: $_\n";
-        if (!-f $_) {
-            print "target does not exist >$_<\n";
-            $ctrl{'quick'} = "/ls.htm/quick.htm?path=$ctrl{'workdir'}index.txt";
-        }
-    }
-}
-if (!defined ($ctrl{'HOME'})) {
-    # sets default if not defined in l00httpd.txt
-    # make it available to modules
-    $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
-}
-# check if target exist
-if ($ctrl{'HOME'} =~ m|^/ls\.htm|) {
-    # points to ls.pl
-    if (($_) = $ctrl{'HOME'} =~ m|path=(.+)&*|) {
-        print "HOME target: $_\n";
-        if (!-f $_) {
-            print "target does not exist >$_<\n";
-            $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$ctrl{'workdir'}index.txt\">HOME</a>"
-        }
-    }
-}
 
 
 sub loadmods {
@@ -1047,6 +1051,7 @@ while(1) {
                 # reload all modules
                 l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
                 print "Restart/reloading modules\n", if ($debug >= 2);
+                &readl00httpdcfg;
                 &loadmods;
             }
             if ($modcalled eq "shutdown") {

@@ -29,7 +29,7 @@ sub l00http_wget_proc (\%) {
     my ($server_socket, $cnt, $hdrlen, $bdylen, $hdr, $bdy);
     my ($readable, $ready, $curr_socket, $ret, $mode);
     my ($chunksz, $host, $port, $path, $contlen);
-    my ($name, $pw, $followmoves, $moved, $domain);
+    my ($name, $pw, $followmoves, $moved, $domain, $journal);
 
     $mode = '';
 
@@ -114,9 +114,10 @@ sub l00http_wget_proc (\%) {
             print $sock "Fetching '$url'<br>\n";
             print $sock "<a href=\"/ls.htm?path=$wgetpath\">$wgetpath</a> - \n";
             print $sock "<a href=\"/view.htm?path=$wgetpath\">view $wgetpath</a> - ";
-            print $sock "<a href=\"/view.htm?path=l00%3A%2F%2Fwget.hdr\">l00://wget.hdr</a><br>\n";
-            print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a><br>\n";
-            print $sock "If you don't see 'Header length' and 'Body length' below, the host may be off-line.<br>\n";
+            print $sock "<a href=\"/view.htm?path=l00%3A%2F%2Fwget.hdr\">l00://wget.hdr</a> - \n";
+            print $sock "<a href=\"/launcher.htm?path=$wgetpath\">launcher $wgetpath</a> - \n";
+            print $sock "<a href=\"/ls.htm?path=l00://journal.txt\">l00://journal.txt</a>\n";
+            print $sock "<br>If you don't see 'Header length' and 'Body length' below, the host may be off-line.<br>\n";
 
             # 10 follows limit for fail safe
             print $sock "<p>\n";
@@ -129,8 +130,14 @@ sub l00http_wget_proc (\%) {
                 }
                 if (($name ne '') || ($pw ne '')) {
                     ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
+#                   ($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url, "$name:$pw");
                 } else {
                     ($hdr, $bdy) = &l00wget::wget ($url);
+#                   ($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url);
+                }
+                if (&l00httpd::l00fwriteOpen($ctrl, 'l00://journal.txt')) {
+                    &l00httpd::l00fwriteBuf($ctrl, "$journal");
+                    &l00httpd::l00fwriteClose($ctrl);
                 }
 
                 # Find HTTP return code
