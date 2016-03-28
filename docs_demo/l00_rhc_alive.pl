@@ -1,4 +1,8 @@
 $rhc = 'l00://rhc.htm';
+if (defined($ctrl->{'rhcfile'})) {
+    # use target file from l00httpd.cfg
+    $rhc = $ctrl->{'rhcfile'};
+}
 print $sock "Polling history: <a href=\"/view.htm?path=$rhc\">$rhc</a><p>\n";
 #--------------------------
 $url = "http://wikipland-l00g33k.rhcloud.com/httpd.htm&extra=$ctrl->{'machine'}";
