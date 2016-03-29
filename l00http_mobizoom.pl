@@ -13,6 +13,8 @@ use l00wget;
 # Dropping the defunct Google mobilizer and start a local 
 # implementation. Last Google version in commit 1ea84e6
 
+# Deleting historical fragments. See:
+# git diff HEAD fe707 -- l00http_md5sizediff.pl
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
@@ -126,54 +128,6 @@ $rwgeturl =~ s/\?/%3F/g;
     ($hdr, $bdy, $domain, $journal);
 }
 
-sub l00http_mobizoom_wget_follow {
-    my ($ctrl, $url) = @_;
-    my ($hdr, $bdy, $followmoves, $domain, $moved);
-
-    $hdr = '';
-    $bdy = '';
-
-
-    for ($followmoves = 0; $followmoves < 10; $followmoves++) {
-        $domain = '';
-        if ($url =~ /https*:\/\/([^\/]+?)\//) {
-            $domain = $1;
-        }
-        $url =~ s/\r//g;
-        $url =~ s/\n//g;
-        ($hdr, $bdy) = &l00wget::wget ($url, undef, undef, undef, $ctrl->{'debug'});
-        &l00httpd::dbp('wget_follow', sprintf("#%d: HDR (%d B), BDY (%d B), URL:>%s<\n", 
-            $followmoves, length($hdr), length($bdy), $url)) , if ($ctrl->{'debug'} >= 3);
-        if ($ctrl->{'debug'} >= 4) {
-            &l00httpd::dbp($config{'desc'}, sprintf (
-                "URL is %3d bytes long and CRC32 is 0x%08x\n",
-                length($url), 
-                &l00crc32::crc32($url)));
-        }
-        &l00httpd::dbp($config{'desc'}, "Header:\n$hdr"), if ($ctrl->{'debug'} >= 4);
-
-        # Find HTTP return code
-        $moved = '';
-        foreach $_ (split("\n", $hdr)) {
-            if (($moved eq '') && (/^HTTP.* 301 /)) {
-                $moved = 'moved';
-            }
-            if (($moved eq 'moved') && (/^location: +(.+)/i)) {
-                $url = $1;
-                if (!($url =~ /^http:\/\//)) {
-                    $url = "http://$domain$url";
-                }
-                $moved = 'found';
-            }
-        }
-        if ($moved ne 'found') {
-            # didn't move, last fetch
-            $followmoves = 100;
-        }
-    }
-
-    ($domain, $hdr, $bdy);
-}
 
 
 sub l00http_mobizoom_wget {
@@ -196,8 +150,11 @@ sub l00http_mobizoom_wget {
 
         # 1) fetch target URL
         ($hdr, $bdy, $domain, $journal) = &wgetfollow2($ctrl, $url);
-#       ($domain, $hdr, $bdy) = &l00http_mobizoom_wget_follow($ctrl, $url);
 
+if (&l00httpd::l00fwriteOpen($ctrl, 'l00://mobi_wget_org.txt')) {
+    &l00httpd::l00fwriteBuf($ctrl, $bdy);
+    &l00httpd::l00fwriteClose($ctrl);
+}
         if (&l00httpd::l00fwriteOpen($ctrl, 'l00://journal.txt')) {
             &l00httpd::l00fwriteBuf($ctrl, "$journal");
             &l00httpd::l00fwriteClose($ctrl);
@@ -209,65 +166,6 @@ sub l00http_mobizoom_wget {
         }
         # 2) add navigation and content clip link for each paragraph
 
-        $bdy2 = '';
-        # modify by each new line
-        foreach $_ (split("\n", $bdy)) {
-#            # make link to send text to clipboard
-#            $clip = $_;
-#            $clip =~ s/<.+?>//g;    # drop all HTML tags
-#            $clip = &l00httpd::urlencode ($clip);
-#
-#            # insert navigation and clip links 
-#            ## change this:
-#            ## <br/><br/>
-#            ## to:
-#            ## <br/><br/>
-#            ##  <a name="p$para"></a>
-#            ##  <small>
-#            ##    <a href="#__end__">V</a> &nbsp; 
-#            ##    <a href="#p$para">$para</a> &nbsp; 
-#            ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
-#            ##  </small> /;
-#            s/<br\/><br\/>/<br\/><br\/><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
-#            s/span><span/span> <span/g;
-            $bdy2 .= "$_\n";
-#
-## 2.1) and some site specific special handling:
-### slashdot: find thread head
-### latimes: find article start
-#
-## Search for Slashdot thread SUBJECT and make a list to jump to start of thread
-## <b>SUBJECT</b></a><b> (</b><a href=...><b>Score:
-#if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
-#  &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
-#  if(!($subj =~ /^Re:/)) {
-#    # This is a new subject line
-#    $threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
-#    $bdy2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
-#  }
-#}
-
-
-## Make a link to the start of article on LA Times articles
-#if(/Create a custom date range/) {
-#  $bdy2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
-#  $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
-#}
-#
-## send processed line to dbp
-##s/</&lt;/g;
-##s/>/&gt;/g;
-##&l00httpd::dbp($config{'desc'}, "$_\n");
-#
-###<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
-###
-###<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
-###<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
-###<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
-
-            $last = $_;
-        }
-#        $bdy = $bdy2;
 
         # 3) drop HTML tags and add font-size as specified:
         ## <html>
@@ -490,18 +388,14 @@ sub l00http_mobizoom_proc {
                 $wget = &l00httpd::l00freadAll($ctrl);
             }
         }
-        #print "From clipboard:\n$url\n", if ($ctrl->{'debug'} >= 3);
+        &l00httpd::dbp($config{'desc'}, "URL from clipboard: $url\n"), 
+            if ($ctrl->{'debug'} >= 3);
     }
 
-    if ($url =~ /google\.com\/url\?.*&q=(http.+)[^&]/) {
-        $url = $1;
-    }
 
-    if (defined ($form->{'zoom'})) {
-        if ($form->{'zoom'} =~ /(\d+)/) {
-            # is a number (zoom %)
-            $zoom = $1;
-        }
+    if ((defined ($form->{'zoom'})) && ($form->{'zoom'} =~ /(\d+)/)) {
+        # is a number (zoom %)
+        $zoom = $1;
     }
     if (defined ($form->{'zoomradio'})) {
         $zoom = $form->{'zoomradio'};
@@ -531,23 +425,6 @@ sub l00http_mobizoom_proc {
         if ($wget =~ /<title>(.+?)<\/title.*?>/s) {
             $title = "$1\n";
         }
-#        foreach $_ (split("\n", $wget)) {
-#            if ($title eq 'NEXTLINEISTITLE') {
-#                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
-#                if (length ($_) < 10) {
-#                    # title less than 10 char, can't be
-#                    $title = 'Mobilizer Zoom';
-#                } else {
-#                    $title = $_;
-#                }
-#                last;
-#            }
-#            if (/<title>/) {
-#                # next line should be page title
-#                $title = 'NEXTLINEISTITLE';
-#                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
-#            }
-#        }
     } else {
         $mode1online2offline4download = 1;
     }
@@ -667,7 +544,6 @@ sub l00http_mobizoom_proc {
             # $mode1online2offline4download != 2
             # fetch for active reading or caching automation
 
-#           &l00httpd::l00fwriteBuf($ctrl, "Original URL: <a href=\"$url\">$url</a><p>\n");
             # fetch repeatedly as necessary as Google mobilizer break page
             # into multiple mobilized pages
             $wget = &l00http_mobizoom_wget ($ctrl, $url, $zoom);
@@ -715,3 +591,78 @@ sub l00http_mobizoom_proc {
 
 
 \%config;
+
+
+#            # make link to send text to clipboard
+#            $clip = $_;
+#            $clip =~ s/<.+?>//g;    # drop all HTML tags
+#            $clip = &l00httpd::urlencode ($clip);
+#
+#            # insert navigation and clip links 
+#            ## change this:
+#            ## <br/><br/>
+#            ## to:
+#            ## <br/><br/>
+#            ##  <a name="p$para"></a>
+#            ##  <small>
+#            ##    <a href="#__end__">V</a> &nbsp; 
+#            ##    <a href="#p$para">$para</a> &nbsp; 
+#            ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
+#            ##  </small> /;
+#            s/<br\/><br\/>/<br\/><br\/><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+#            s/span><span/span> <span/g;
+
+
+#
+## 2.1) and some site specific special handling:
+### slashdot: find thread head
+### latimes: find article start
+#
+## Search for Slashdot thread SUBJECT and make a list to jump to start of thread
+## <b>SUBJECT</b></a><b> (</b><a href=...><b>Score:
+#if(($subj) = /<b>(.+?)<\/b><\/a><b> \(<\/b><a href=.+?><b>Score:/) {
+#  &l00httpd::dbp($config{'desc'}, "    >>>$subj<<<\n");
+#  if(!($subj =~ /^Re:/)) {
+#    # This is a new subject line
+#    $threads .= "<a href=\"#p$para\">$para: $subj</a><br>\n";
+#    $bdy2 .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font> \n";
+#  }
+#}
+
+
+
+## Make a link to the start of article on LA Times articles
+#if(/Create a custom date range/) {
+#  $bdy2 .= "<a name=\"__latimes__\"></a>FOUDN FOUND Create a custom date range ";
+#  $prolog = '<br><a href="#__latimes__">Jump to LA Times article start.</a><p>';
+#}
+#
+## send processed line to dbp
+##s/</&lt;/g;
+##s/>/&gt;/g;
+##&l00httpd::dbp($config{'desc'}, "$_\n");
+#
+###<br/><br/><a name="__para41__"></a><small><a href="#__top__">^</a>:<a href="#__para41__">41</a></small> <a href='/gwt/x?wsc=pb&u=http://it.slashdot.org/comments.pl%3Fsid%3D4793473%26cid%3D46250423&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Posting anonymously for obvious reasons...</b></a><b> (</b><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+###
+###<b>Posting anonymously for obvious reasons...</b></a><b> (</b>
+###<a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'>
+###<b>Score:</b></a><a href='/gwt/x?wsc=pb&u=http://rss.slashdot.org/~r/Slashdot/slashdot/~3/ZLaYpqISs0Y/story01.htm&ei=-QT_UrKyMIa3kAKD4oCIDw'><b>5</b></a><b>, Interesting)</b>
+
+
+#        foreach $_ (split("\n", $wget)) {
+#            if ($title eq 'NEXTLINEISTITLE') {
+#                l00httpd::dbp($config{'desc'}, "Next line is [$_]\n"), if ($ctrl->{'debug'} >= 0);
+#                if (length ($_) < 10) {
+#                    # title less than 10 char, can't be
+#                    $title = 'Mobilizer Zoom';
+#                } else {
+#                    $title = $_;
+#                }
+#                last;
+#            }
+#            if (/<title>/) {
+#                # next line should be page title
+#                $title = 'NEXTLINEISTITLE';
+#                l00httpd::dbp($config{'desc'}, "Next line should be page title\n"), if ($ctrl->{'debug'} >= 0);
+#            }
+#        }
