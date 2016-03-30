@@ -1037,20 +1037,6 @@ print;
         $fileout = '';
         $clipfile = '';
         $clipdir = '';
-        # list internal pseudo files too
-        if (($ctrl->{'ishost'}) && (defined($ctrl->{'l00file'}))) {
-            $tmp = $ctrl->{'l00file'};
-            foreach $_ (sort keys %$tmp) {
-                if (($_ eq 'l00://ram') || (length($ctrl->{'l00file'}->{$_}) > 0)) {
-                    $dirout .= "<tr>\n";
-                    $dirout .= "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
-                    $dirout .= "<td><small>" . length($ctrl->{'l00file'}->{$_}) . "</small></td>\n";
-                    $dirout .= "<td>&nbsp;</td>\n", if ($docrc32);
-                    $dirout .= "<td><small><a href=\"/$ctrl->{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
-                    $dirout .= "</tr>\n";
-                }
-            }
-		}
         if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
             # sort by reverse time
             $llspath = $path;
