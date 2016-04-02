@@ -327,13 +327,13 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=20\">20'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=45\">45'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=60\">1h'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=90\">1.5h'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=120\">2h'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=150\">2.5h'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=180\">3h'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=300\">5h'</a></li>\n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=60\">1h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=90\">1h5</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=120\">2h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=150\">2h5</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=180\">3h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=300\">5h</a></li>\n";
     print $sock "<p>";
                                                 
     print $sock "Interval: $interval Msg: $formmsg<br>\n";
@@ -383,7 +383,7 @@ sub l00http_reminder_perio {
             $pause = 0;
 
             $ctrl->{'reminder'} = $msgtoast;
-            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> <a href=\"/reminder.htm#manage\">:::</a> <font style=\"color:yellow;background-color:red\">$msgtoast</font></center>";
+            $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - <font style=\"color:yellow;background-color:red\">$msgtoast</font> - <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - <a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - <a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - <a href=\"/reminder.htm?pause=Pause&min=60\">1h</a> - <a href=\"/reminder.htm#manage\">:::</a> </center>";
 
             if (($ctrl->{'os'} eq 'and') &&
                 (!($msgtoast =~ /^ *$/)) &&
