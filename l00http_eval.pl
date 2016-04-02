@@ -19,7 +19,7 @@ sub l00http_eval_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($line, $lncn, $rst);
+    my ($line, $lncn);
     my ($eval);
 
 #    my ($a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$l,$m);
@@ -45,6 +45,10 @@ sub l00http_eval_proc {
     }
     if (defined ($form->{'paste'})) {
         $eval = &l00httpd::l00getCB($ctrl);
+        # extract URL to remove surrounding text
+        if ($eval =~ /(https*:\/\/[^ \n\r\t]+)/) {
+            $eval = $1;
+        }
     }
     $lncn = 0;
     if (defined ($eval) && (length ($eval) > 1)) {
@@ -54,13 +58,13 @@ sub l00http_eval_proc {
             #eval $line;
             print $sock "$lncn: ";
             eval "print \$sock $line";
-            print $sock "$rst\n";
+            print $sock "\n";
             $lncn++;
         }
         print $sock "</pre>\n";
     }
 
-    print $sock "<form action=\"/eval.htm\" method=\"post\">\n";
+    print $sock "<form action=\"/eval.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Eval\">\n";
     print $sock "<br><textarea name=\"eval\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$eval</textarea><br>\n";
     print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";

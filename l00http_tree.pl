@@ -296,7 +296,7 @@ sub l00http_tree_proc {
                         $crc32 = &l00crc32::crc32($buf);
                     }
                     if ($cnt <= $maxlines) {
-                        print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
+                        print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                     }
                     $export .= sprintf("|| %11d || %08x || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
@@ -327,7 +327,7 @@ sub l00http_tree_proc {
                         }
                     }
                     if ($cnt <= $maxlines) {
-                        print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
+                        print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
                     }
                     $export .= sprintf("|| %11d || %s || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
@@ -350,7 +350,7 @@ sub l00http_tree_proc {
                         }
                     }
                     if ($cnt <= $maxlines) {
-                        print $sock sprintf ("<a href=\"/view.htm?path=$path$file\">%8d</a> ", $size);
+                        print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> ", $size);
                     }
                     $export .= sprintf("|| %11d || %s ||\n", $size, $partpath);
                 }

@@ -649,6 +649,10 @@ sub l00http_mobizoom_proc {
     if (defined ($form->{'paste'})) {
         $url = &l00httpd::l00getCB($ctrl);
         if (-f $url) {
+            # must be reading locally cached file
+            $form->{'paste'} = undef;
+            $form->{'fetch'} = 1;
+        } else {
             # extract URL if it doesn't look like a local file
             if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
                 $url = $1;
@@ -659,10 +663,6 @@ sub l00http_mobizoom_proc {
             }
             # News++ adds ?rss=1, drop it
             $url =~ s|\?rss=1$||;
-        } else {
-            # must be reading locally cached file
-            $form->{'paste'} = undef;
-            $form->{'fetch'} = 1;
         }
         &l00httpd::dbp($config{'desc'}, "URL from clipboard: $url\n"), 
             if ($ctrl->{'debug'} >= 3);
