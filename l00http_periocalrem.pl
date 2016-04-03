@@ -140,7 +140,7 @@ sub l00http_periocalrem_perio {
 				    # skip special key
 				    next;
 				}
-                l00httpd::dbp($config{'desc'}, "CALREM calrem event: >$_<\n"), if ($ctrl->{'debug'} >= 3);
+                l00httpd::dbp($config{'desc'}, "CALREM calrem event: >$_<\n"), if ($ctrl->{'debug'} >= 4);
                 if (defined($calremcolor{$_})) {
                     $color = $calremcolor{$_};
                     $font = $calremfont{$_};

@@ -49,6 +49,7 @@ sub l00http_debug_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"></td>\n";
     print $sock "        <td>jump invertval: <input type=\"text\" size=\"6\" name=\"jmpintv\" value=\"$jmpintv\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"copy\" value=\"Copy to l00://debug.txt\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "</table>\n";
@@ -58,6 +59,10 @@ sub l00http_debug_proc (\%) {
 
     if (defined($form->{'clear'})) {
         l00httpd::dbpclr();
+    }
+
+    if (defined($form->{'copy'})) {
+        $ctrl->{'l00file'}{'l00://debug.txt'} = l00httpd::dbpget();
     }
 
     $output = '';

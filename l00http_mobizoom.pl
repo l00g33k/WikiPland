@@ -1,5 +1,5 @@
+#<!-- ::mobizoom::orgurl::http... -->
 my ($wgetorg, $enableNewCode);
-$enableNewCode = 0;
 
 use strict;
 use warnings;
@@ -139,6 +139,20 @@ sub l00http_mobizoom_mobilize {
     my ($clip, $last);
     my ($on_slashdot_org, $threads, $endanchor, $title);
 
+    # This trivial mobilizer will process in two different mode:
+    # Processed mode: the original cached file has the HTML tags 
+    #   already striped, so the only processing is to remove 
+    #   the <head>, <body>, and <form> tags
+    # Raw mode: the new cache file format is identical to the 
+    #   result of wget, i.e. complete HTML file, and in addition 
+    #   the original URL is prepended as <!-- ::mobizoom::orgurl::http... -->
+
+    # remote various HTML tags
+    $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
+    $wget =~ s/<\/*body.*?>//gs;
+
+    # form
+    $wget =~ s/<form.+?<\/form *\n*\r*>//sg;
 
 
     if (!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) {
@@ -174,8 +188,11 @@ sub l00http_mobizoom_mobilize {
 
         # remote various HTML tags
         $wget =~ s/<\/*html.*?>//gs;
-        $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
-        $wget =~ s/<\/*body.*?>//gs;
+
+#    # remote various HTML tags
+#    $wget =~ s/<\/*html.*?>//gs;
+#    $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
+#    $wget =~ s/<\/*body.*?>//gs;
 
 $wget =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
 $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
@@ -329,6 +346,10 @@ $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
 
     $wget;
 }
+
+
+
+
 
 sub l00http_mobizoom_wget {
     my ($ctrl, $url, $zoom) = @_;
@@ -544,7 +565,7 @@ sub l00http_mobizoom_desc {
 
 sub l00http_mobizoom_part1 {
     my ($ctrl, $sock, $title, $url, $zoom) = @_;
-    my ($tmp, $urlorg);
+    my ($tmp, $orgurl);
 
     # web page interactive mode, render web page
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$title</title>" . $ctrl->{'htmlhead2'};
@@ -578,9 +599,9 @@ sub l00http_mobizoom_part1 {
 
     # web page interactive mode, render web page
     print $sock "<hr>\n";
-    $urlorg = $url;
-    $urlorg =~ s/&ei=.*$//; # drop &ei=...
-    $tmp = $urlorg;
+    $orgurl = $url;
+    $orgurl =~ s/&ei=.*$//; # drop &ei=...
+    $tmp = $orgurl;
     $tmp =~ s/ /+/g;
     $tmp =~ s/:/%3A/g;
     $tmp =~ s/&/%26/g;
@@ -589,7 +610,7 @@ sub l00http_mobizoom_part1 {
     $tmp =~ s/\//%2F/g;
     $tmp =~ s/\|/%7C/g;
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
-    print $sock "<a href=\"$urlorg\">original</a> \n";
+    print $sock "<a href=\"$orgurl\">original</a> \n";
     print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
     print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.htm\">l00://mobizoom.htm</a> -\n";
     print $sock "<a href=\"/wget.htm?url=$url&submit=\" target=\"newwget\">wget</a> --\n";
@@ -618,6 +639,10 @@ sub l00http_mobizoom_part2 {
 }
 
 
+
+
+
+
 # mobizoom API:
 # standard WikiPland module API: these are set by the form in the module:
 #   $form->{'paste'}
@@ -632,12 +657,20 @@ sub l00http_mobizoom_part2 {
 #   $form->{'url'} : URL
 #   $form->{'fetch'} : defined
 
+
 sub l00http_mobizoom_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $mode1online2offline4download);
-    my ($skip, $tmp, $urlorg, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
+    my ($skip, $tmp, $orgurl, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
+
+
+if(!defined($ctrl->{'l00file'}{'l00://mobinewcode'})) {
+    $ctrl->{'l00file'}{'l00://mobinewcode'} = '0';
+}
+$enableNewCode = ($ctrl->{'l00file'}{'l00://mobinewcode'} =~ /1/) ? 1 : 0;
+
 
     $url = '';
     if (defined ($form->{'url'})) {
@@ -648,7 +681,7 @@ sub l00http_mobizoom_proc {
 
     if (defined ($form->{'paste'})) {
         $url = &l00httpd::l00getCB($ctrl);
-        if (-f $url) {
+        if ((-f $url) || ($url =~ /^l00:\/\//)) {
             # must be reading locally cached file
             $form->{'paste'} = undef;
             $form->{'fetch'} = 1;
@@ -692,28 +725,38 @@ sub l00http_mobizoom_proc {
 
     $title = "Mobizoom $url";
 
+    if (defined ($form->{'path'}) && !defined ($form->{'fetch'})) {
+        # from launcher, convert to interactive fetch
+        $url = $form->{'path'};
+        undef $form->{'path'};
+    }
+    $orgurl = $url;
     if ((defined ($form->{'path'})) && ($ctrl->{'os'} ne 'rhc')) {
         # only when not on RHC
         $mode1online2offline4download = 4;
-    } elsif (-f $url) {
+    } elsif ((-f $url) || ($url =~ /^l00:\/\//)) {
+        $mode1online2offline4download = 2;
         if (&l00httpd::l00freadOpen($ctrl, $url)) {
-            $mode1online2offline4download = 2;
             $wget = &l00httpd::l00freadAll($ctrl);
-$wgetorg = $wget;
             # find embedded page title
             if ($wget =~ /<title>(.+?)<\/title.*?>/s) {
                 $title = "$1\n";
             }
+            # find original url prepended
+            if ($wget =~ /<!-- ::mobizoom::orgurl::(.+?) -->/s) {
+                $orgurl = $1;
+            }
         } else {
             $wget = "Failed top load '$url'\n";
         }
+$wgetorg = $wget;
     } else {
         $mode1online2offline4download = 1;
     }
 
 
     if ($mode1online2offline4download & 3) {
-        &l00http_mobizoom_part1($ctrl, $sock, $title, $url, $zoom);
+        &l00http_mobizoom_part1($ctrl, $sock, $title, $orgurl, $zoom);
     }
 
     $here = 1;
@@ -772,6 +815,9 @@ if($enableNewCode) {
 $wget = $wgetorg;
 $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
 }
+if($enableNewCode) {
+    print $sock "PROCESSED BY NEW CODE<p>\n";
+}
             print $sock $wget;
             if ($foundthreadcnt > 1) {
                 print $sock $foundthreads;
@@ -783,28 +829,36 @@ $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
             # fetch repeatedly as necessary as Google mobilizer break page
             # into multiple mobilized pages
             $wget = &l00http_mobizoom_wget ($ctrl, $url, $zoom);
-# mobilize page
 if($enableNewCode) {
 $wget = $wgetorg;
-$wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
+}
+
+            # save file
+            if ($mode1online2offline4download == 4) {
+                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                # download too small, delete it by not writing
+                if (length ($wget) > 2000) {
+                    &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$wget");
+                }
+                &l00httpd::l00fwriteClose($ctrl);
+            }
+# mobilize page
+if($enableNewCode) {
+            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
 }
 
             if ($mode1online2offline4download & 3) {
                 # web page interactive mode, render web page
+if($enableNewCode) {
+    print $sock "PROCESSED BY NEW CODE<p>\n";
+}
                 print $sock $wget;
             }
-            if ($mode1online2offline4download == 4) {
-                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-            } else {
+            if ($mode1online2offline4download != 4) {
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.htm');
             }
             &l00httpd::l00fwriteBuf($ctrl, $wget);
             &l00httpd::l00fwriteClose($ctrl);
-            if (($mode1online2offline4download == 4) && (length ($wget) < 5000)) {
-                # download too small, delete it
-                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-                &l00httpd::l00fwriteClose($ctrl);
-            }
         }
     }
 
