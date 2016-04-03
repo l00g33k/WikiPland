@@ -1,5 +1,4 @@
 #<!-- ::mobizoom::orgurl::http... -->
-my ($wgetorg, $enableNewCode);
 
 use strict;
 use warnings;
@@ -23,7 +22,7 @@ my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
 my ($url, $zoom, $para, $here, $prolog);
 $url = '';
-$zoom = 120;
+$zoom = 150;
 $para = 1;
 
 
@@ -137,7 +136,7 @@ sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget) = @_;
     my ($on_slashdot_org, $wget2);
     my ($clip, $last);
-    my ($on_slashdot_org, $threads, $endanchor, $title);
+    my ($threads, $endanchor, $title);
 
     # This trivial mobilizer will process in two different mode:
     # Processed mode: the original cached file has the HTML tags 
@@ -146,6 +145,11 @@ sub l00http_mobizoom_mobilize {
     # Raw mode: the new cache file format is identical to the 
     #   result of wget, i.e. complete HTML file, and in addition 
     #   the original URL is prepended as <!-- ::mobizoom::orgurl::http... -->
+
+    if ($wget =~ /<!-- ::mobizoom::orgurl::(.+?) -->/s) {
+        # recover URL from cached file
+        $url = $1;
+    }
 
     # remote various HTML tags
     $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
@@ -165,7 +169,7 @@ sub l00http_mobizoom_mobilize {
                                         if ($ctrl->{'debug'} >= 3);
 
         $threads = '';
-        $title = "<title>mobizoom $url</title>\n";
+        $title = "<title>MZ $url</title>\n";
 
         if ($url =~ /slashdot\.org/i) {
             $on_slashdot_org = 1;
@@ -194,8 +198,11 @@ sub l00http_mobizoom_mobilize {
 #    $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
 #    $wget =~ s/<\/*body.*?>//gs;
 
-$wget =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
-$wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
+        # display tags in debug mode
+        if ($ctrl->{'debug'} >= 2) {
+            $wget =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
+            $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
+        }
 
         $wget =~ s/<\/*span.*?>//gs;
         $wget =~ s/<\/*div.*?>//gs;
@@ -281,14 +288,17 @@ $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
             }
 
             if (/<br>/) {
+                #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");
                 s/<br>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
                 # increase paragraph count/index
                 $para++;
-            }
-            if (/<p>/) {
+            } elsif (/<p>/) {
+                #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
                 s/<p>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
                 # increase paragraph count/index
                 $para++;
+            } else {
+                #&l00httpd::dbp($config{'desc'}, "xx: >$_<\n");
             }
 
 
@@ -319,238 +329,35 @@ $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
         $wget .= "<br>\n";
 
 
-        # semi hide tags
-        $wget =~ s/&lt;/<font size="1" style="color:gray;background-color:white">&lt;/gs;
-        #$wget =~ s/&lt;/<font size=1">&lt;/gs;
-        $wget =~ s/&gt;/&gt;<\/font>/gs;
-
-    $endanchor = '';
-    # web page interactive mode, render web page
-    $endanchor .= "<hr><a name=\"__end__\"></a>";
-    $endanchor .= "<p>Goto sections:\n";
-    for (1..$here) {
-        $endanchor .= "<a href=\"#__here$_\__\">$_</a> ";
-    }
-    $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
-
-    $endanchor .= "<br>Goto paragraph:\n";
-    for (1..$para) {
-        $endanchor .= "<a href=\"#p$_\">$_</a> ";
-    }
-    $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
+        # display tags in debug mode
+        if ($ctrl->{'debug'} >= 2) {
+            # semi hide tags
+            $wget =~ s/&lt;/<font size="1" style="color:gray;background-color:white">&lt;/gs;
+            #$wget =~ s/&lt;/<font size=1">&lt;/gs;
+            $wget =~ s/&gt;/&gt;<\/font>/gs;
+        }
 
 
-    $wget = "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
-#herehere
+        $endanchor = '';
+        # web page interactive mode, render web page
+        $endanchor .= "<hr><a name=\"__end__\"></a>";
+        $endanchor .= "<p>Goto sections:\n";
+        for (1..$here) {
+            $endanchor .= "<a href=\"#__here$_\__\">$_</a> ";
+        }
+        $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
+
+        $endanchor .= "<br>Goto paragraph:\n";
+        for (1..$para) {
+            $endanchor .= "<a href=\"#p$_\">$_</a> ";
+        }
+        $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
+
+
+        $wget = "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
     }
 
     $wget;
-}
-
-
-
-
-
-sub l00http_mobizoom_wget {
-    my ($ctrl, $url, $zoom) = @_;
-                                my ($bdy, $bdy2, $pre, $gurl, $post, $hdr, $subj, $clip, $last);
-                                my ($on_slashdot_org, $threads, $endanchor, $domain, $title, $journal);
-
-
-                                $bdy = '';
-                                $domain = '';
-                                $threads = '';
-                                $title = "<title>mobizoom $url</title>\n";
-    if (length ($url) > 6) {
-
-                                    if ($url =~ /slashdot\.org/i) {
-                                        $on_slashdot_org = 1;
-                                    } else {
-                                        $on_slashdot_org = 0;
-                                    }
-
-        # 1) fetch target URL
-        ($hdr, $bdy, $domain, $journal) = &wgetfollow2($ctrl, $url);
-$wgetorg = $bdy;
-if (&l00httpd::l00fwriteOpen($ctrl, 'l00://mobi_wget_org.txt')) {
-    &l00httpd::l00fwriteBuf($ctrl, $bdy);
-    &l00httpd::l00fwriteClose($ctrl);
-}
-        if (&l00httpd::l00fwriteOpen($ctrl, 'l00://journal.txt')) {
-            &l00httpd::l00fwriteBuf($ctrl, "$journal");
-            &l00httpd::l00fwriteClose($ctrl);
-        }
-
-if(!$enableNewCode) {
-                                    # find title
-                                    if ($bdy =~ /(<title>.+?<\/title.*?>)/s) {
-                                        $title = "$1\n";
-                                    }
-                                    # 2) add navigation and content clip link for each paragraph
-
-
-                                    # 3) drop HTML tags and add font-size as specified:
-                                    ## <html>
-                                    ## <body>
-                                    ## <span>
-                                    ## <div>
-
-                                    # remote various HTML tags
-                                    $bdy =~ s/<\/*html.*?>//gs;
-                                    $bdy =~ s/<head.*?>.*?<\/head.*?>//gs;
-                                    $bdy =~ s/<\/*body.*?>//gs;
-
-                            $bdy =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
-                            $bdy =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
-
-                                    $bdy =~ s/<\/*span.*?>//gs;
-                                    $bdy =~ s/<\/*div.*?>//gs;
-                                    $bdy =~ s/<\/*aside.*?>//gs;
-                                    $bdy =~ s/<\/*figure.*?>//gs;
-                                    $bdy =~ s/<\/*article.*?>//gs;
-                                    $bdy =~ s/<\/*section.*?>//gs;
-
-                                    $bdy =~ s/<!.+?>//gs;
-                                    $bdy =~ s/<script.+?<\/script *\n*\r*>//sg;
-                                    $bdy =~ s/<iframe.+?<\/iframe>//sg;
-                                    $bdy =~ s/<style.+?<\/style>//sg;
-                                    $bdy =~ s/<figcaption.+?<\/figcaption>//sg;
-
-                                    if ($on_slashdot_org) {
-                                        # slashdot special: eliminate list
-                                        $bdy =~ s/<li.*?>/<br>/sg;
-                                        $bdy =~ s/<\/li.*?>//sg;
-                                        $bdy =~ s/<\/*ul.*?>//sg;
-                                    }
-                                    $bdy =~ s/<p.*?>/<br>/sg;
-                                    $bdy =~ s/<\/p>/<\/br>/sg;
-
-                            #        $bdy =~ s/\r//g;
-                            #        $bdy =~ s/\n//g;
-                            #        $bdy =~ s/^.+<body.*?>\n//g;
-                            #        $bdy =~ s/<\/body.*$>\n//g;
-                            #        $bdy =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
-                            #        $bdy =~ s/<\/wml.*$>\n//g;
-
-                                    $bdy =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
-
-                                    #$bdy =~ s/(<a.+?href=")(\/.+?)(".+?>)/$1http:\/\/$domain$2$3/gs;  # not working
-
-                                    $bdy = "<span style=\"font-size : $zoom%;\">$bdy</span>";
-                                    $bdy =~ s/<h(\d).*?>/<\/span><h$1>/sg;
-                                    $bdy =~ s/<\/h(\d).*?>/<\/h$1><span style="font-size : $zoom%;">/sg;
-
-                                    # make sure there is at most one <tag> per new line
-                                    $bdy2 = $bdy;
-                                    $bdy2 =~ s/</\n</g;
-                                    $bdy2 =~ s/>/>\n/g;
-
-                                    $bdy = '';
-                                    $last = '';
-                                    foreach $_ (split ("\n", $bdy2)) {
-                                        chomp;
-                                        if (/^ *$/) {
-                                            next;
-                                        }
-
-                                        $clip = $_;
-                                        $clip =~ s/<.+?>//g;    # drop all HTML tags
-                                        $clip = &l00httpd::urlencode ($clip);
-
-                                        # insert navigation and clip links 
-                                        ## change this:
-                                        ## <br/><br/>
-                                        ## to:
-                                        ## <br/><br/>
-                                        ##  <a name="p$para"></a>
-                                        ##  <small>
-                                        ##    <a href="#__end__">V</a> &nbsp; 
-                                        ##    <a href="#p$para">$para</a> &nbsp; 
-                                        ##    <a href="/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : </a> &nbsp; 
-                                        ##  </small> /;
-
-                                        if ($on_slashdot_org) {
-                                            #<a id="comment_link_50359309" name="comment_link_50359309" href="//developers.slashdot.org/comments.pl?sid=7880359&amp;cid=50359309" onclick="return D2.setFocusComment(50359309)" >
-                                            #Re:You still go through HR for jobs?
-                                            #</a>
-                                            if (($last =~ /id="comment_link_\d+/) && 
-                                                !(/^Re:/)) {
-                                                #&l00httpd::dbp('wget_follow', "SUBJECT: $para: $_\n");
-                                                $para--;
-                                                if ($threads eq '') {
-                                                    $threads = "Slashdot threads (found by 'comment_link_'):<br>\n";
-                                                }
-                                                $threads .= "<a href=\"#p$para\">$para: $_</a><br>\n";
-                                                $para++;
-                                                $bdy .= " <font style=\"color:black;background-color:lime\"> FOUND THREAD </font><br>\n";
-                                            }
-                                        }
-
-                                        if (/<br>/) {
-                                            s/<br>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
-                                            # increase paragraph count/index
-                                            $para++;
-                                        }
-                                        if (/<p>/) {
-                                            s/<p>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
-                                            # increase paragraph count/index
-                                            $para++;
-                                        }
-
-
-                                        $bdy .= "$_\n";
-                                        $last = $_;
-                                    }
-
-                                    # 5) add last navigation link
-
-                                    $bdy .= "<br>\n";
-                                    $bdy .= "<font style=\"color:black;background-color:lime\">\n";
-                                    $bdy .= "<a href=\"#__top__\">TOP</a>";
-                                    $bdy .= "</font>\n";
-                                    $bdy .= "<font style=\"color:black;background-color:lime\">\n";
-                                    $bdy .= "<a href=\"#__here".($here -1 ) ."__\">last</a>";
-                                    $bdy .= "</font>\n";
-                                    $bdy .= "<font style=\"color:black;background-color:lime\">\n";
-                                    $bdy .= "<a href=\"#__here$here\__\">here$here</a>";
-                                    $bdy .= "</font>\n";
-                                    $bdy .= "<font style=\"color:black;background-color:lime\">\n";
-                                    $bdy .= "<a href=\"#__here". ($here + 1) ."__\">next</a>";
-                                    $bdy .= "<a name=\"__here$here\__\"></a>\n";
-                                    $here++;
-                                    $bdy .= "</font>\n";
-                                    $bdy .= "<font style=\"color:black;background-color:lime\">\n";
-                                    $bdy .= "<a href=\"#__end__\">END</a>";
-                                    $bdy .= "</font>\n";
-                                    $bdy .= "<br>\n";
-
-
-                                    # semi hide tags
-                                    $bdy =~ s/&lt;/<font size="1" style="color:gray;background-color:white">&lt;/gs;
-                                    #$bdy =~ s/&lt;/<font size=1">&lt;/gs;
-                                    $bdy =~ s/&gt;/&gt;<\/font>/gs;
-}#herehere
-    }
-
-if(!$enableNewCode) {
-                                $endanchor = '';
-                                # web page interactive mode, render web page
-                                $endanchor .= "<hr><a name=\"__end__\"></a>";
-                                $endanchor .= "<p>Goto sections:\n";
-                                for (1..$here){
-                                    $endanchor .= "<a href=\"#__here$_\__\">$_</a> ";
-                                }
-                                $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
-
-                                $endanchor .= "<br>Goto paragraph:\n";
-                                for (1..$para){
-                                    $endanchor .= "<a href=\"#p$_\">$_</a> ";
-                                }
-                                $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
-}#herehere
-
-
-                                "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$bdy\n$threads$endanchor";
 }
 
 
@@ -612,7 +419,8 @@ sub l00http_mobizoom_part1 {
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
     print $sock "<a href=\"$orgurl\">original</a> \n";
     print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
-    print $sock "View: <a href=\"/view.htm?path=l00://mobizoom.htm\">l00://mobizoom.htm</a> -\n";
+    print $sock "View: <a href=\"/view.htm?path=l00://mobizoom_wget.htm\">l00://mobizoom_wget.htm</a> -\n";
+    print $sock "<a href=\"/view.htm?path=l00://mobizoom_mblz.htm\">l00://mobizoom_mblz.htm</a> -\n";
     print $sock "<a href=\"/wget.htm?url=$url&submit=\" target=\"newwget\">wget</a> --\n";
     $tmp = &l00httpd::urlencode ("http://googleweblight.com/?lite_url=$url");
     print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\" target=\"newgwl\">Google web light</a>\n";
@@ -663,13 +471,9 @@ sub l00http_mobizoom_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($wget, $mode1online2offline4download);
-    my ($skip, $tmp, $orgurl, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
+    my ($skip, $tmp, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
+    my ($hdr, $domain, $journal);
 
-
-if(!defined($ctrl->{'l00file'}{'l00://mobinewcode'})) {
-    $ctrl->{'l00file'}{'l00://mobinewcode'} = '0';
-}
-$enableNewCode = ($ctrl->{'l00file'}{'l00://mobinewcode'} =~ /1/) ? 1 : 0;
 
 
     $url = '';
@@ -730,7 +534,6 @@ $enableNewCode = ($ctrl->{'l00file'}{'l00://mobinewcode'} =~ /1/) ? 1 : 0;
         $url = $form->{'path'};
         undef $form->{'path'};
     }
-    $orgurl = $url;
     if ((defined ($form->{'path'})) && ($ctrl->{'os'} ne 'rhc')) {
         # only when not on RHC
         $mode1online2offline4download = 4;
@@ -742,82 +545,24 @@ $enableNewCode = ($ctrl->{'l00file'}{'l00://mobinewcode'} =~ /1/) ? 1 : 0;
             if ($wget =~ /<title>(.+?)<\/title.*?>/s) {
                 $title = "$1\n";
             }
-            # find original url prepended
-            if ($wget =~ /<!-- ::mobizoom::orgurl::(.+?) -->/s) {
-                $orgurl = $1;
-            }
         } else {
             $wget = "Failed top load '$url'\n";
         }
-$wgetorg = $wget;
     } else {
         $mode1online2offline4download = 1;
     }
 
 
     if ($mode1online2offline4download & 3) {
-        &l00http_mobizoom_part1($ctrl, $sock, $title, $orgurl, $zoom);
+        &l00http_mobizoom_part1($ctrl, $sock, $title, $url, $zoom);
     }
 
     $here = 1;
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
         $para = 1;
         if ($mode1online2offline4download == 2) {
-            # reading from cached file
-
-            # <head> and <form> mess with my <span font-size> so drop them
-            $tmp = '';
-            $skip = 0;
-            $foundthreads = '<br>Jump to Slashdot threads:<br>';
-            $foundthreadphase = 0;
-            $foundthreadcnt = 1;
-            foreach $_ (split("\n", $wget)) {
-                if (($foundthreadphase == 1) && (/<a name="(.+?)">/)) {
-                    $foundthreadphase = 0;
-                    $foundthreads .= "<a href=\"#$1\">$foundthreadcnt FOUND THREAD #$1</a><br>";
-                    $foundthreadcnt++;
-                }
-                if (/FOUND THREAD/) {
-                    $foundthreadphase = 1;
-                }
-                if (/<\/form.*>/) {
-                    $skip = 0;
-                    next;
-                }
-                if (/<form.*>/) {
-                    $skip = 1;
-                    next;
-                }
-                if (/<\/head.*>/) {
-                    $skip = 0;
-                    next;
-                }
-                if (/<head.*>/) {
-                    $skip = 1;
-                    next;
-                }
-                if ($skip) {
-                    next;
-                }
-                if (/<\?xml.*>/ || /<!DOCTYPE.*>/) {
-                    next;
-                }
-                $tmp .= "$_\n";
-            }
-            $wget = $tmp;
-            # <span style="font-size : 144%;">
-            $wget =~ s/(<span style="font-size : )\d+(%;)">/$1$zoom$2/sg;
-            if ($foundthreadcnt > 1) {
-                print $sock $foundthreads;
-            }
-# mobilize page
-if($enableNewCode) {
-$wget = $wgetorg;
-$wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
-}
-if($enableNewCode) {
-    print $sock "PROCESSED BY NEW CODE<p>\n";
-}
+            # mobilize page
+            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
             print $sock $wget;
             if ($foundthreadcnt > 1) {
                 print $sock $foundthreads;
@@ -825,13 +570,7 @@ if($enableNewCode) {
         } else {
             # $mode1online2offline4download != 2
             # fetch for active reading or caching automation
-
-            # fetch repeatedly as necessary as Google mobilizer break page
-            # into multiple mobilized pages
-            $wget = &l00http_mobizoom_wget ($ctrl, $url, $zoom);
-if($enableNewCode) {
-$wget = $wgetorg;
-}
+            ($hdr, $wget, $domain, $journal) = &wgetfollow2($ctrl, $url);
 
             # save file
             if ($mode1online2offline4download == 4) {
@@ -841,24 +580,22 @@ $wget = $wgetorg;
                     &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$wget");
                 }
                 &l00httpd::l00fwriteClose($ctrl);
+            } else {
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom_wget.htm');
+                &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$wget");
+                &l00httpd::l00fwriteClose($ctrl);
             }
-# mobilize page
-if($enableNewCode) {
             $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
-}
 
             if ($mode1online2offline4download & 3) {
                 # web page interactive mode, render web page
-if($enableNewCode) {
-    print $sock "PROCESSED BY NEW CODE<p>\n";
-}
                 print $sock $wget;
             }
             if ($mode1online2offline4download != 4) {
-                &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.htm');
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom_mblz.htm');
+                &l00httpd::l00fwriteBuf($ctrl, $wget);
+                &l00httpd::l00fwriteClose($ctrl);
             }
-            &l00httpd::l00fwriteBuf($ctrl, $wget);
-            &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
