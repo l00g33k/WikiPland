@@ -217,12 +217,12 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<style.+?<\/style>//sg;
         $wget =~ s/<figcaption.+?<\/figcaption>//sg;
 
-        if ($on_slashdot_org) {
+#        if ($on_slashdot_org) {
             # slashdot special: eliminate list
-            $wget =~ s/<li.*?>/<br>/sg;
+            $wget =~ s/<li.*?>/<br>&#164;&nbsp;&nbsp;&nbsp;/sg;
             $wget =~ s/<\/li.*?>//sg;
             $wget =~ s/<\/*ul.*?>//sg;
-        }
+#        }
         $wget =~ s/<p.*?>/<br>/sg;
         $wget =~ s/<\/p>/<\/br>/sg;
 
