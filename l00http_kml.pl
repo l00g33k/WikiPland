@@ -10,9 +10,14 @@ my %config = (proc => "l00http_kml_proc",
               desc => "l00http_kml_desc");
 
 my ($kmlheader1, $kmlheader2, $kmlfooter, $trackheight, $trackmark);
+my ($latoffset, $lonoffset, $applyoffset);
 
 $trackheight = 30;
 $trackmark = 0;
+
+$latoffset = 0;
+$lonoffset = 0;
+$applyoffset = '';
 
 $kmlheader1 = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".
@@ -98,7 +103,7 @@ sub l00http_kml_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $trkname, $trkmarks, $lnno, $pointno);
-    my ($gpxtime, $fname);
+    my ($gpxtime, $fname, $curlatoffset, $curlonoffset);
 
     $rawkml = 0;
 
@@ -128,6 +133,20 @@ sub l00http_kml_proc {
             ($form->{'trackmark'} =~ /(\d+)/)) {
             $trackmark = $1;
         }
+        if (defined ($form->{'latoffset'}) && 
+            ($form->{'latoffset'} =~ /([0-9.+-]+)/)) {
+            $latoffset = $1;
+        }
+        if (defined ($form->{'lonoffset'}) && 
+            ($form->{'lonoffset'} =~ /([0-9.+-]+)/)) {
+            $lonoffset = $1;
+        }
+        if (defined ($form->{'applyoffset'}) && 
+            ($form->{'applyoffset'} eq 'on')) {
+            $applyoffset = 'checked';
+        } else {
+            $applyoffset = '';
+        }
     }
 
 
@@ -150,6 +169,14 @@ sub l00http_kml_proc {
         } elsif (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             my ($slash, $phase, $lonlat, $name);
             $buffer = &l00httpd::l00freadAll($ctrl);
+
+            if ($applyoffset eq 'checked') {
+                $curlatoffset = $latoffset;
+                $curlonoffset = $lonoffset;
+            } else {
+                $curlatoffset = 0;
+                $curlonoffset = 0;
+            }
 
             # Maverick has only \r as line endings. So convert DOS \r\n to Unix \n
             # then convert Maverick's \r to Unix \n
@@ -239,6 +266,8 @@ sub l00http_kml_proc {
                         }
 
                         #"1","1","51.481289","-0.607417","42.0","","38","0","2015-08-14T10:26:48.952Z","","",""
+                        $fields[2] += $curlatoffset;
+                        $fields[3] += $curlonoffset;
 		                $tracks = $tracks . "\t\t\t$fields[3],$fields[2],$trackheight\n";
                         if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
                             $trkmarks .=
@@ -297,6 +326,8 @@ sub l00http_kml_proc {
                     if (/<trkpt lat="(.+?)" lon="(.+?)">/) {
                         $lat = $1;
                         $lon = $2;
+                        $lat += $curlatoffset;
+                        $lon += $curlonoffset;
                     }
                     # <time>2015-11-30T23:30:28Z</time>
                     if (/<time>(.+)<\/time>/) {
@@ -368,7 +399,11 @@ sub l00http_kml_proc {
                     } elsif ((/<name>(.+)<\/name>/) && ($phase != 0)) {
                         $name = $1;
                     } elsif ((/<coordinates>(.+),(.+),[0-9\-]*<\/coordinates>/) && ($phase != 0)) {
-                        $lonlat = "$2,$1";
+                        $lat = $1;
+                        $lon = $2;
+                        $lat += $curlatoffset;
+                        $lon += $curlonoffset;
+                        $lonlat = "$lon,$lat";
                     } elsif (/Style id/) {
                         s/</&lt;/g;
                         s/>/&gt;/g;
@@ -432,6 +467,8 @@ sub l00http_kml_proc {
                             if ($ew eq 'W') {
                                 $lon_ = -$lon_;
                             }
+                            $lat_ += $curlatoffset;
+                            $lon_ += $curlonoffset;
 		                    $tracks = $tracks . "\t\t\t$lon_,$lat_,$trackheight\n";
                             if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
                                 $trkmarks .=
@@ -474,16 +511,30 @@ sub l00http_kml_proc {
                     #-118.0347581348814,33.80816583075773,Place1
                     if (/^#/) {
                         next;
+                    } elsif (($lat, $lon) = /google\.com.*maps.*@([0-9.+-]+),([0-9.+-]+),/) {
+                        # Parse coordinate from Google Maps URL
+                        # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                        # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en Sent from Maxthon Mobile : null :: action / type android.intent.action.SEND text/plain null all fail
+                        if (/maps(.+)@/) {
+                            # use whatever as name
+                            $name = $1;
+                        }
+                        # match, falls thru
                     } elsif (($lat, $lon, $name) = /^([^,]+?),([^,]+?)[, ]+(.+)$/) {
-                        $kmlbuf .= 
-		                "\t\t<Placemark>\n".
-			            "\t\t\t<name>$name</name>\n".
-			            "\t\t\t<styleUrl>#msn_hospitals</styleUrl>\n".
-			            "\t\t\t<Point>\n".
-				        "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
-			            "\t\t\t</Point>\n".
-		                "\t\t</Placemark>\n";
+                        # match, falls thru
+                    } else {
+                        next;
                     }
+                    $lat += $curlatoffset;
+                    $lon += $curlonoffset;
+                    $kmlbuf .= 
+		            "\t\t<Placemark>\n".
+			        "\t\t\t<name>$name</name>\n".
+			        "\t\t\t<styleUrl>#msn_hospitals</styleUrl>\n".
+			        "\t\t\t<Point>\n".
+				    "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
+			        "\t\t\t</Point>\n".
+		            "\t\t</Placemark>\n";
                 }
                 $kmlbuf .= $kmlfooter;
 
@@ -531,7 +582,7 @@ sub l00http_kml_proc {
         print $sock "</td></tr>\n";
 
         print $sock "<tr><td>\n";
-        print $sock "Mark every Nth:\n";
+        print $sock "Mark every Nth (0=off):\n";
         print $sock "</td><td>\n";
         print $sock "<input type=\"text\" name=\"trackmark\" value=\"$trackmark\">\n";
         print $sock "</td></tr>\n";
@@ -539,8 +590,21 @@ sub l00http_kml_proc {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"submit\" name=\"set\" value=\"Set\">\n";
         print $sock "</td><td>\n";
-        print $sock "Nth == 0 : off\n";
+        print $sock "<input type=\"checkbox\" name=\"applyoffset\" $applyoffset>Apply offset</td>\n";
         print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "Latitude offset:\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" name=\"latoffset\" value=\"$latoffset\">\n";
+        print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "Longitude offset:\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" name=\"lonoffset\" value=\"$lonoffset\">\n";
+        print $sock "</td></tr>\n";
+
         print $sock "</table>\n";
         print $sock "</form>\n";
 
