@@ -135,7 +135,7 @@ $rwgeturl =~ s/\?/%3F/g;
 sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget) = @_;
     my ($on_slashdot_org, $wget2);
-    my ($clip, $last);
+    my ($clip, $tmp, $last);
     my ($threads, $endanchor, $title);
 
     # This trivial mobilizer will process in two different mode:
@@ -160,11 +160,9 @@ sub l00http_mobizoom_mobilize {
 
 
     if (!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) {
-#        $wget = "<h1>STRIPED</h1><p>$wget";
         &l00httpd::dbp($config{'desc'}, "Will not mobilize page\n"), 
                                         if ($ctrl->{'debug'} >= 3);
     } else {
-#        $wget = "<h1>FULL HTML</h1><p>$wget";
         &l00httpd::dbp($config{'desc'}, "Will mobilize page\n"), 
                                         if ($ctrl->{'debug'} >= 3);
 
@@ -217,14 +215,13 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<style.+?<\/style>//sg;
         $wget =~ s/<figcaption.+?<\/figcaption>//sg;
 
-        if ($on_slashdot_org) {
-            # slashdot special: eliminate list
-            $wget =~ s/<li.*?>/<br>/sg;
-            $wget =~ s/<\/li.*?>//sg;
-            $wget =~ s/<\/*ul.*?>//sg;
-        }
-        $wget =~ s/<p.*?>/<br>/sg;
-        $wget =~ s/<\/p>/<\/br>/sg;
+        # slashdot special: eliminate list
+        $wget =~ s/<li.*?>/<br>&sect;&nbsp;&nbsp;&nbsp;/sg;
+        $wget =~ s/<\/li.*?>//sg;
+        $wget =~ s/<\/*ul.*?>//sg;
+
+        $wget =~ s/<p.*?>/<br>/sgi;
+        $wget =~ s/<\/p>//sgi;
 
 #        $wget =~ s/\r//g;
 #        $wget =~ s/\n//g;
@@ -248,15 +245,16 @@ sub l00http_mobizoom_mobilize {
 
         $wget = '';
         $last = '';
+        $clip = '';
         foreach $_ (split ("\n", $wget2)) {
             chomp;
             if (/^ *$/) {
                 next;
             }
 
-            $clip = $_;
-            $clip =~ s/<.+?>//g;    # drop all HTML tags
-            $clip = &l00httpd::urlencode ($clip);
+            $tmp = $_;
+            $tmp =~ s/<.+?>//g;    # drop all HTML tags
+            $clip .= "$tmp ";
 
             # insert navigation and clip links 
             ## change this:
@@ -287,16 +285,27 @@ sub l00http_mobizoom_mobilize {
                 }
             }
 
-            if (/<br>/) {
+            if (/<br>/i) {
+                $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");
-                s/<br>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+                s/<br>/<br><a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <\/small> /i;
                 # increase paragraph count/index
                 $para++;
-            } elsif (/<p>/) {
+                $clip = '';
+            } elsif (/<h\d.*?>/i) {
+                $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
-                s/<p>/<br><a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <\/small> /;
+                s/<(h\d.*?)>/<a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <\/small><$1>/i;
                 # increase paragraph count/index
                 $para++;
+                $clip = '';
+            } elsif (/<p>/i) {
+                $clip = &l00httpd::urlencode ($clip);
+                #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
+                s/<p>/<br><a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <\/small> /i;
+                # increase paragraph count/index
+                $para++;
+                $clip = '';
             } else {
                 #&l00httpd::dbp($config{'desc'}, "xx: >$_<\n");
             }

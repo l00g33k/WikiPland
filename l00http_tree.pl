@@ -171,7 +171,7 @@ sub l00http_tree_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
-    print $sock " Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+    print $sock " Path: <a href=\"/launcher.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
     print $sock " <a href=\"#__end__\">jump to end</a><br>\n";
     print $sock "Links: line#=clip path, path=ls.pl, filename=view.pl<p>\n";
 

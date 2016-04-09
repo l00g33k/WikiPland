@@ -71,7 +71,7 @@ sub l00http_find_search {
     if ($wraptext eq '') {
         $lineend = '';
         print $sock "<pre>\n";
-        &l00httpd::l00fwriteBuf($ctrl, "<pre>\n");
+#        &l00httpd::l00fwriteBuf($ctrl, "<pre>\n");
     }
 
 
@@ -257,15 +257,17 @@ sub l00http_find_search {
         ($wraptext eq '')) {
         $output2 = join("\n", sort findsort split("\n", $output));
         print $sock $output2;
+        $output2 =~ s/<.+?>//g;
         &l00httpd::l00fwriteBuf($ctrl, $output2);
     } else {
         print $sock $output;
+        $output =~ s/<.+?>//g;
         &l00httpd::l00fwriteBuf($ctrl, $output);
     }
 
     if ($wraptext eq '') {
         print $sock "</pre>\n";
-        &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
+#        &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
     }
 
     ($mypath) = @_;
@@ -276,7 +278,7 @@ sub l00http_find_search {
             "Click path to visit directory, click filename to view file\n";
     }
     print $sock "<br>Total $totalbytes bytes in $totalfiles files\n";
-    print $sock "<p>Find results also in <a href=\"/ls.htm?path=l00://find.htm\">l00://find.htm</a>\n";
+    print $sock "<p>Find results also in <a href=\"/view.htm?path=l00://findinfile.htm\">l00://findinfile.htm</a>\n";
 
     1;
 }
@@ -464,7 +466,7 @@ sub l00http_find_proc {
     print $sock "<br>!!: Prefix '!!' to regex to list files without matching pattern<p>\n";
 
     if ($content ne '!!') {
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://find.htm');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://findinfile.htm');
         foreach $thispath (split ('\|\|\|', $path)) {
             &l00http_find_search ($thispath, $ctrl);
         }
