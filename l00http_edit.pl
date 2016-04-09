@@ -12,8 +12,8 @@ my %config = (proc => "l00http_edit_proc2",
 my ($buffer, $editwd, $editht, $editsz);
 my ($contextln, $blklineno, $blkfname);
 $editsz = 0;
-$editwd = 240;
-$editht = 30;
+$editwd = 0;
+$editht = 0;
 $contextln = 1;
 $blklineno = 0;
 $blkfname = '';
@@ -38,6 +38,21 @@ sub l00http_edit_proc2 {
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock "<a href=\"#end\">Jump to end</a>\n";
+
+    if ($editwd == 0) {
+        if (defined($ctrl->{'txtwbig'})) {
+            $editwd = $ctrl->{'txtwbig'};
+        } else {
+            $editwd = 160;
+        }
+    }
+    if ($editht == 0) {
+        if (defined($ctrl->{'txthbig'})) {
+            $editht = $ctrl->{'txthbig'};
+        } else {
+            $editht = 30;
+        }
+    }
 
     l00httpd::dbphash($config{'desc'}, 'FORM', $form);
 	$clipblk = 0;
