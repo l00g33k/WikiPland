@@ -98,7 +98,9 @@ if [ \$# != 0 ]; then
         shift
         FILE2KEEP=\$1
         shift
+
         let UNIQUEFIL+=1
+
         # verify md5sum match
         printf "### \$MD5SUM\\n" >> \$SCRIPT.log
         printf "    " >> \$SCRIPT.log
@@ -126,7 +128,7 @@ if [ \$# != 0 ]; then
     fi
 
 else
-    printf "Starting \$SCRIPT\\n" >> \$SCRIPT.log
+    printf "Starting \$SCRIPT\\n" > \$SCRIPT.log
 
     UNIQUEFIL=0
     FILEDELET=0
@@ -237,51 +239,61 @@ markunixhdrdiff
 
 
 $unixhdrsame = <<markunixhdrsame;
+#!/bin/sh
+#set -x
 
+# TBD...
 # This is a recursive script. The initial invocation is without 
 # arguments. It falls to the else clause which invokes itself 
 # with partial path to the duplicated target files.
 # The default implementation keeps the first file as the reference
-# and verifies that the second and onwards are identical to 
-# the first and then delete them.
+# and verifies that the md5sum is as expected. It then deletes all 
+# other files with matching md5sum. Files with unmatched md5sum 
+# are kept.
+# It uses 'source' because invoking another instance of itself 
+# does not work with Android TerminalIDE and I need it to work
+# on unrooted Android
 
-# Save this file as 'm5script.sh' or change this variable:
-SCRIPT=./m5script.sh
+# You need to delete 'CMD4DUP=echo' below so 'CMD4DUP=rm' takes effect
 
-COPYDIR=/copy/to/
 
 if [ \$# != 0 ]; then
     # Sample invocation: \$0 dir1/file1 dir2/file2 dir3/file3
 
-    if [ \$# -eq 1 ]; then
-        ONLYFILE=\$1
-        # just one file, must be this only or that only
-        # or same in both
-        echo ONLY/SAME "\$ONLYFILE"
-        if [ -f "\$BASEDIR\$ONLYFILE" ]; then
-            echo will cp "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
-            echo will rm "\$BASEDIR\$ONLYFILE"
-        fi
+    if [ \$# -ne 3 ]; then
+        printf "!!!     Wrong number of arguments\\n"
     else
-        FILE2KEEP=\$1
-        # while there are two or more arguments
-        while [ \$# -gt 1 ]; do
-            FILE2RM=\$2
-            diff "\$BASEDIR\$FILE2KEEP" "\$BASEDIR\$FILE2RM"
-            if [ \$? == 0 ]; then
-                echo SAME "\$BASEDIR\$FILE2KEEP" "\$BASEDIR\$FILE2RM"
-                # uncomment one of these
-                echo will rm "\$BASEDIR\$FILE2KEEP"
-                echo will rm "\$BASEDIR\$FILE2RM"
-            else
-                echo DIFF "\$BASEDIR\$FILE2KEEP" "\$BASEDIR\$FILE2RM"
-            fi
-            # pop deleted file
-            shift
-        done
+        MD5SUM=\$1
+        #DELFILE=\$2
+        DELFILE=\$3
+
+        #CMDSAME=rm
+        CMDSAME=echo
+
+        let UNIQUEFIL+=1
+
+        # verify md5sum match
+        printf "### \$MD5SUM\\n" >> \$SCRIPT.log
+        printf "    " >> \$SCRIPT.log
+        md5sum \$DELFILE | grep \$MD5SUM >> \$SCRIPT.log
+        if [ \$? -eq 0 ]; then
+            printf "        md5sum match: \$CMDSAME \$DELFILE\\n" >> \$SCRIPT.log
+            \$CMDSAME \$DELFILE >> \$SCRIPT.log
+            let FILEDELET+=1
+        else
+            printf "!!!     md5sum UNEXPECTED\\n" >> \$SCRIPT.log
+            let FILEBADM5+=1
+        fi
     fi
 
 else
+    printf "Starting \$SCRIPT\\n" > \$SCRIPT.log
+
+    UNIQUEFIL=0
+    FILEDELET=0
+    FILEBADM5=0
+
+
 markunixhdrsame
 
 
@@ -421,6 +433,7 @@ sub l00http_md5sizediff_proc {
                         }
                     } else {
                         if ($thatname eq '') {
+                            $thatname = $file;
                             $thatname =~ s/^.+\/([^\/]+)$/$1/;
                         }
                     }
@@ -784,6 +797,8 @@ sub l00http_md5sizediff_proc {
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.diff.htm>%\n";
         print $sock "Same name different md5sum: $cnt files (out of $common same name)\n";
 
+
+
         # files with same md5sum on both side
         # ----------------------------------------------------------------
         $sname = 'THIS';
@@ -801,11 +816,14 @@ sub l00http_md5sizediff_proc {
         $cnt = 0;
         if ($mode eq 'unix') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = 
-                "$unixhdr".
-                "# 'same'\n".
-                "# org dir: $orgdir{$sname} $orgdir{$oname}\n\n".
-                "BASEDIR=$orgdir{$sname}\n".
-                "$unixhdr2";
+                "$unixhdrsame".
+
+                "    # 'same'\n".
+                "    # org dir: $orgdir{$sname} $orgdir{'THAT'}\n\n".
+                "    BASEDIR=$orgdir{'THAT'}\n".
+                "    # Save this file as '$thatname.same.sh' or change this variable:\n".
+                "    SCRIPT=\${BASEDIR}../$thatname.same.sh\n\n".
+                "    if [ -f \$SCRIPT ]; then\n";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
         } else {
@@ -816,37 +834,49 @@ sub l00http_md5sizediff_proc {
             if (($md5sum ne '00000000000000000000000000000000') && defined($bymd5sum{$oname}{$md5sum})) {
                 # not a directory and is there
                 if ($mode eq 'unix') {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                        sprintf ("        #   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt);
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    sprintf ("    #   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
-                    "    source \$SCRIPT  \"$_[0]\"\n";
+                        "        source \$SCRIPT  $md5sum  \"\${BASEDIR}$_[0]\" ";
                     @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    "    source \$SCRIPT  \"$_[0]\"\n";
+                        "\"\${BASEDIR}$_[0]\"\n";
                 } elsif ($mode eq 'dos') {
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
-                    "        $_[0]\n";
+                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                        "        $_[0]\n";
                     @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    "        $_[0]\n";
+                        "        $_[0]\n";
                 } else {
                     @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
-                    "        $_[0]\n";
+                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                        "        $_[0]\n";
                     @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                    "        $_[0]\n";
+                        "        $_[0]\n";
                 }
                 $cnt++;
             }
         }
         if ($mode eq 'unix') {
-            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= $unixftr;
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"Processed \$UNIQUEFIL unique files\\n\"\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"Processed \$UNIQUEFIL unique files\\n\" >> \$SCRIPT.log\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"Deleted \$FILEDELET duplicated files\\n\"\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"Deleted \$FILEDELET duplicated files\\n\" >> \$SCRIPT.log\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"\$FILEBADM5 files have unexpected md5sum !!!\\n\"\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"\$FILEBADM5 files have unexpected md5sum !!!\\n\" >> \$SCRIPT.log\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "    else\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "        printf \"MISSING \$SCRIPT\\n\"\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "    fi\n\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "fi\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= "\n# Match = >$match<\n# $_\n";
         } elsif ($mode eq 'dos') {
         } else {
         }
@@ -919,7 +949,7 @@ sub l00http_md5sizediff_proc {
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.same.htm\">l00://md5sizediff.same.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"});
         if ($mode eq 'unix') {
-            print $sock "</td><td>&nbsp;\n";
+            print $sock "</td><td><a href=\"/filemgt.htm?path=l00://md5sizediff.same.htm&path2=$thatpath.same.sh\">same.sh</a>\n";
         }
         print $sock "</td></tr>\n";
         print $sock "</table>\n";
