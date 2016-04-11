@@ -104,7 +104,7 @@ if [ \$# != 0 ]; then
         # verify md5sum match
         printf "### \$MD5SUM\\n" >> \$SCRIPT.log
         printf "    " >> \$SCRIPT.log
-        md5sum \$FILE2KEEP | grep \$MD5SUM >> \$SCRIPT.log
+        md5sum "\$FILE2KEEP" | grep \$MD5SUM >> \$SCRIPT.log
         if [ \$? -ne 0 ]; then
             printf "!!!     keep file md5sum UNEXPECTED\\n" >> \$SCRIPT.log
             let FILEBADM5+=1
@@ -112,13 +112,13 @@ if [ \$# != 0 ]; then
             while [ \$# -ge 1 ]; do
                 FILE2DEL=\$1
                 printf "    " >> \$SCRIPT.log
-                md5sum \$FILE2DEL | grep \$MD5SUM >> \$SCRIPT.log
+                md5sum "\$FILE2DEL" | grep \$MD5SUM >> \$SCRIPT.log
                 if [ \$? -eq 0 ]; then
-                    printf "        md5sum match: \$CMD4DUP \$FILE2DEL\\n" >> \$SCRIPT.log
-                    \$CMD4DUP \$FILE2DEL >> \$SCRIPT.log
+                    printf "        md5sum match: \$CMD4DUP '\$FILE2DEL'\\n" >> \$SCRIPT.log
+                    \$CMD4DUP "\$FILE2DEL" >> \$SCRIPT.log
                     let FILEDELET+=1
                 else
-                    printf "!!!       md5sum UNEXPECTED: \$FILE2DEL\\n" >> \$SCRIPT.log
+                    printf "!!!       md5sum UNEXPECTED: '\$FILE2DEL'\\n" >> \$SCRIPT.log
                     let FILEBADM5+=1
                 fi
                 # pop deleted file
@@ -275,10 +275,10 @@ if [ \$# != 0 ]; then
         # verify md5sum match
         printf "### \$MD5SUM\\n" >> \$SCRIPT.log
         printf "    " >> \$SCRIPT.log
-        md5sum \$DELFILE | grep \$MD5SUM >> \$SCRIPT.log
+        md5sum "\$DELFILE" | grep \$MD5SUM >> \$SCRIPT.log
         if [ \$? -eq 0 ]; then
-            printf "        md5sum match: \$CMDSAME \$DELFILE\\n" >> \$SCRIPT.log
-            \$CMDSAME \$DELFILE >> \$SCRIPT.log
+            printf "        md5sum match: \$CMDSAME '\$DELFILE'\\n" >> \$SCRIPT.log
+            \$CMDSAME "\$DELFILE" >> \$SCRIPT.log
             let FILEDELET+=1
         else
             printf "!!!     md5sum UNEXPECTED\\n" >> \$SCRIPT.log
@@ -515,7 +515,7 @@ sub l00http_md5sizediff_proc {
                 # for each md5sum
                 if ($md5sum ne '00000000000000000000000000000000') {
                     # not a directory
-                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     # is there more than one file name recorded?
                     if ($#_ > 0) {
                         $matchlist = '';
@@ -817,7 +817,6 @@ sub l00http_md5sizediff_proc {
         if ($mode eq 'unix') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = 
                 "$unixhdrsame".
-
                 "    # 'same'\n".
                 "    # org dir: $orgdir{$sname} $orgdir{'THAT'}\n\n".
                 "    BASEDIR=$orgdir{'THAT'}\n".
@@ -836,28 +835,28 @@ sub l00http_md5sizediff_proc {
                 if ($mode eq 'unix') {
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         sprintf ("        #   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt);
-                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         "        source \$SCRIPT  $md5sum  \"\${BASEDIR}$_[0]\" ";
-                    @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         "\"\${BASEDIR}$_[0]\"\n";
                 } elsif ($mode eq 'dos') {
-                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
                         "        $_[0]\n";
-                    @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         "        $_[0]\n";
                 } else {
-                    @_ = (keys %{$bymd5sum{$sname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
                         "        $_[0]\n";
-                    @_ = (keys %{$bymd5sum{$oname}{$md5sum}});
+                    @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
                         "        $_[0]\n";
                 }
