@@ -317,6 +317,7 @@ sub l00http_md5sizediff_proc {
     my (%cnt, $oname, %out, $idx, $md5sum1st, $ii);
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
+    my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum);
 
     if (defined ($form->{'mode'})) {
         if ($form->{'mode'} eq 'dos') {
@@ -693,9 +694,11 @@ sub l00http_md5sizediff_proc {
                 }
                 #print $sock "\n";
                 if ($sname eq 'THIS') {
+                    $thisonly = $cnt;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "This only: $cnt files (out of $common md5sum)\n\n";
                     print $sock "This only: $cnt files (out of $common same md5sum)\n";
                 } else {
+                    $thatonly = $cnt;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "That only: $cnt files (out of $common md5sum)\n\n";
                     print $sock "That only: $cnt files (out of $common same md5sum)\n";
                 }
@@ -793,6 +796,7 @@ sub l00http_md5sizediff_proc {
                 }
             }
         }
+        $diffmd5sum = $cnt;
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Same name different md5sum: $cnt files (out of $common same name)\n\n";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.diff.htm>%\n";
         print $sock "Same name different md5sum: $cnt files (out of $common same name)\n";
@@ -879,6 +883,7 @@ sub l00http_md5sizediff_proc {
         } elsif ($mode eq 'dos') {
         } else {
         }
+        $samemd5sum = $cnt;
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "Same md5sum: $cnt files\n\n";
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.same.htm>%\n";
         print $sock "Same md5sum: $cnt files\n";
@@ -901,24 +906,28 @@ sub l00http_md5sizediff_proc {
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
         print $sock "RAM file</td><td align=\"right\">bytes\n";
+        print $sock "</td><td align=\"right\">files\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>copy script\n";
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"});
+        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.all.htm\">l00://md5sizediff.all.htm</a> </td><td align=\"right\"> &nbsp;";
+        print $sock "</td><td align=\"right\">&nbsp;\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup.htm\">l00://md5sizediff.THIS.self_dup.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.self_dup.htm"});
+        print $sock "</td><td align=\"right\">$cnt{'THIS'}\n";
         if ($mode eq 'unix') {
             print $sock "</td><td><a href=\"/filemgt.htm?path=l00://md5sizediff.THIS.self_dup.htm&path2=$thispath.THIS.self_dup.sh\">THIS.self_dup.sh</a>\n";
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.self_dup.htm"});
+        print $sock "</td><td align=\"right\">$cnt{'THAT'}\n";
         if ($mode eq 'unix') {
             if ($thatpath ne '') {
                 print $sock "</td><td><a href=\"/filemgt.htm?path=l00://md5sizediff.THAT.self_dup.htm&path2=$thispath.THAT.self_dup.sh\">THAT.self_dup.sh</a>\n";
@@ -929,24 +938,28 @@ sub l00http_md5sizediff_proc {
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.only.htm"});
+        print $sock "</td><td align=\"right\">$thisonly\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.only.htm\">l00://md5sizediff.THAT.only.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.only.htm"});
+        print $sock "</td><td align=\"right\">$thatonly\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"});
+        print $sock "</td><td align=\"right\">$diffmd5sum\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.same.htm\">l00://md5sizediff.same.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"});
+        print $sock "</td><td align=\"right\">$samemd5sum\n";
         if ($mode eq 'unix') {
             print $sock "</td><td><a href=\"/filemgt.htm?path=l00://md5sizediff.same.htm&path2=$thatpath.same.sh\">same.sh</a>\n";
         }
