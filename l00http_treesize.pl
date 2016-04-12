@@ -110,7 +110,7 @@ sub l00http_treesize_proc {
                 }
             }
 
-            foreach $size (sort {$a - $b} keys %sort) {
+            foreach $size (sort {$b - $a} keys %sort) {
                 $sizecomma = $size;
                 $sizecomma =~ s/(\d\d\d)$/,$1/;
                 $sizecomma =~ s/(\d\d\d),/,$1,/;
@@ -153,7 +153,7 @@ sub l00http_treesize_proc {
                 }
             }
 
-            foreach $size (sort {$a - $b} keys %sort) {
+            foreach $size (sort {$b - $a} keys %sort) {
                 $sizecomma = $size;
                 $sizecomma =~ s/(\d\d\d)$/,$1/;
                 $sizecomma =~ s/(\d\d\d),/,$1,/;
