@@ -162,6 +162,12 @@ sub l00http_mobizoom_mobilize {
     if (!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) {
         &l00httpd::dbp($config{'desc'}, "Will not mobilize page\n"), 
                                         if ($ctrl->{'debug'} >= 3);
+        # make paragraph jump table
+        $tmp = '';
+        foreach $_ ($wget =~ /<a name="__para(\d+)__">/gm) {
+            $tmp .= "<a href=\"#__para${_}__\">$_</a> ";
+        }
+        $wget = "Paragraph: $tmp<br>$wget<p><hr><a name=\"__end__\"></a>Paragraph: $tmp";
     } else {
         &l00httpd::dbp($config{'desc'}, "Will mobilize page\n"), 
                                         if ($ctrl->{'debug'} >= 3);

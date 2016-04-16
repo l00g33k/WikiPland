@@ -522,16 +522,16 @@ sub l00http_kml_proc {
                         #-118.0347581348814,33.80816583075773,Place1
                         if (/^#/) {
                             next;
-                        } elsif (($lat, $lon) = /google\.com.*maps.*@([0-9.+-]+),([0-9.+-]+),/) {
+                        }
+                        $name = "way$toKmlCnt";
+                        #https://www.google.com/maps/PVG@31.151045,121.8012844,15z
+                        #http://www.google.cn/maps/@31.3228158,120.6269192,502m/data=!3m1!1e3
+                        if (($name, $lat, $lon) = /\.google\..+?\/maps\/(.*)@([0-9.+-]+),([0-9.+-]+),/) {
                             # Parse coordinate from Google Maps URL
                             # https://www.google.com/maps/@31.1956864,121.3522793,15z
-                            # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en Sent from Maxthon Mobile : null :: action / type android.intent.action.SEND text/plain null all fail
-                            if (/maps(.+)@/) {
-                                # use whatever as name
-                                $name = $1;
-                            }
+                            # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en
                             # match, falls thru
-                        } elsif (($lat, $lon, $name) = /^([^,]+?),([^,]+?)[, ]+(.+)$/) {
+                        } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
                             # match, falls thru
                         } else {
                             next;
@@ -559,6 +559,9 @@ sub l00http_kml_proc {
             $rawkml = 1;
                 }
             }
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://kml.kml');
+            &l00httpd::l00fwriteBuf($ctrl, $kmlbuf);
+            &l00httpd::l00fwriteClose($ctrl);
         }
     }
     if (($rawkml == 0) && ($httphdr ne '')) {
@@ -581,7 +584,7 @@ sub l00http_kml_proc {
         print $sock "<input type=\"submit\" name=\"cb2file\" value=\"CB to Filename\">\n";
         print $sock "</td></tr>\n";
         print $sock "</table>\n";
-        print $sock "</form>\n";
+        print $sock "</form><br>\n";
 
 
         print $sock "<form action=\"/kml.htm\" method=\"get\">\n";

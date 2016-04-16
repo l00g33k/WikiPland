@@ -104,7 +104,7 @@ if [ \$# != 0 ]; then
         # verify md5sum match
         printf "### \$MD5SUM\\n" >> \$SCRIPT.log
         printf "    " >> \$SCRIPT.log
-        md5sum "\$FILE2KEEP" | grep \$MD5SUM >> \$SCRIPT.log
+        md5sum "\$BASEDIR\$FILE2KEEP" | grep \$MD5SUM >> \$SCRIPT.log
         if [ \$? -ne 0 ]; then
             printf "!!!     keep file md5sum UNEXPECTED\\n" >> \$SCRIPT.log
             let FILEBADM5+=1
@@ -112,13 +112,13 @@ if [ \$# != 0 ]; then
             while [ \$# -ge 1 ]; do
                 FILE2DEL=\$1
                 printf "    " >> \$SCRIPT.log
-                md5sum "\$FILE2DEL" | grep \$MD5SUM >> \$SCRIPT.log
+                md5sum "\$BASEDIR\$FILE2DEL" | grep \$MD5SUM >> \$SCRIPT.log
                 if [ \$? -eq 0 ]; then
-                    printf "        md5sum match: \$CMD4DUP '\$FILE2DEL'\\n" >> \$SCRIPT.log
-                    \$CMD4DUP "\$FILE2DEL" >> \$SCRIPT.log
+                    printf "        md5sum match: \$CMD4DUP '\$BASEDIR\$FILE2DEL'\\n" >> \$SCRIPT.log
+                    \$CMD4DUP "\$BASEDIR\$FILE2DEL" >> \$SCRIPT.log
                     let FILEDELET+=1
                 else
-                    printf "!!!       md5sum UNEXPECTED: '\$FILE2DEL'\\n" >> \$SCRIPT.log
+                    printf "!!!       md5sum UNEXPECTED: '\$BASEDIR\$FILE2DEL'\\n" >> \$SCRIPT.log
                     let FILEBADM5+=1
                 fi
                 # pop deleted file
@@ -275,13 +275,13 @@ if [ \$# != 0 ]; then
         # verify md5sum match
         printf "### \$MD5SUM\\n" >> \$SCRIPT.log
         printf "    " >> \$SCRIPT.log
-        md5sum "\$DELFILE" | grep \$MD5SUM >> \$SCRIPT.log
+        md5sum "\$BASEDIR\$DELFILE" | grep \$MD5SUM >> \$SCRIPT.log
         if [ \$? -eq 0 ]; then
-            printf "        md5sum match: \$CMDSAME '\$DELFILE'\\n" >> \$SCRIPT.log
-            \$CMDSAME "\$DELFILE" >> \$SCRIPT.log
+            printf "        md5sum match: \$CMDSAME '\$BASEDIR\$DELFILE'\\n" >> \$SCRIPT.log
+            \$CMDSAME "\$BASEDIR\$DELFILE" >> \$SCRIPT.log
             let FILEDELET+=1
         else
-            printf "!!!     md5sum UNEXPECTED\\n" >> \$SCRIPT.log
+            printf "!!!     md5sum UNEXPECTED: \$BASEDIR\$DELFILE\\n" >> \$SCRIPT.log
             let FILEBADM5+=1
         fi
     fi
@@ -528,7 +528,7 @@ sub l00http_md5sizediff_proc {
                                 if ($_[$ii] =~ /$match/) {
                                     $matchcnt++;
                                     if ($mode eq 'unix') {
-                                        $matchlist .= "  \"\$BASEDIR$_[$ii]\"";
+                                        $matchlist .= "  \"$_[$ii]\"";
                                     } else {
                                         $matchlist .= "         \"$_[$ii]\"\n";
                                     }
@@ -545,7 +545,7 @@ sub l00http_md5sizediff_proc {
                             for ($ii = 0; $ii <= $#_; $ii++) {
                                 if (!($_[$ii] =~ /$match/)) {
                                     if ($mode eq 'unix') {
-                                        $matchlist .= "  \"\$BASEDIR$_[$ii]\"";
+                                        $matchlist .= "  \"$_[$ii]\"";
                                     } else {
                                         $matchlist .= "         \"$_[$ii]\"\n";
                                     }
@@ -555,7 +555,7 @@ sub l00http_md5sizediff_proc {
                             # no match regex, list all
                             for ($ii = 0; $ii <= $#_; $ii++) {
                                 if ($mode eq 'unix') {
-                                    $matchlist .= "  \"\$BASEDIR$_[$ii]\"";
+                                    $matchlist .= "  \"$_[$ii]\"";
                                 } else {
                                     $matchlist .= "         \"$_[$ii]\"\n";
                                 }
@@ -824,8 +824,8 @@ sub l00http_md5sizediff_proc {
                 "    # 'same'\n".
                 "    # org dir: $orgdir{$sname} $orgdir{'THAT'}\n\n".
                 "    BASEDIR=$orgdir{'THAT'}\n".
-                "    # Save this file as '$thatname.same.sh' or change this variable:\n".
-                "    SCRIPT=\${BASEDIR}../$thatname.same.sh\n\n".
+                "    # Save this file as '\$BASEDIR../$thatname.same.sh' or change this variable:\n".
+                "    SCRIPT=\$BASEDIR../$thatname.same.sh\n\n".
                 "    if [ -f \$SCRIPT ]; then\n";
         } elsif ($mode eq 'dos') {
             $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} = '';
@@ -842,11 +842,11 @@ sub l00http_md5sizediff_proc {
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        "        source \$SCRIPT  $md5sum  \"\${BASEDIR}$_[0]\" ";
+                        "        source \$SCRIPT  $md5sum  \"$_[0]\" ";
                     @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        "\"\${BASEDIR}$_[0]\"\n";
+                        "\"$_[0]\"\n";
                 } elsif ($mode eq 'dos') {
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 

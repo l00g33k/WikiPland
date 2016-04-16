@@ -244,7 +244,8 @@ sub l00http_gps_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} - <a href=\"/gps.htm\">Refresh</a> -  $ctrl->{'HOME'} - ";
-    print $sock "<a href=\"/view.htm?path=$ctrl->{'gpsdir'}$fname\">log</a> - \n";
+    print $sock "<a href=\"/view.htm?path=$ctrl->{'gpsdir'}$fname\">view log</a> - \n";
+    print $sock "<a href=\"#mark\">mark</a> - \n";
     print $sock "<a href=\"#end\">Jump to end</a><br>\n";
     print $sock "<a name=\"top\"></a>\n";
  
@@ -339,6 +340,7 @@ sub l00http_gps_proc {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    print $sock "<a name=\"mark\"></a>\n";
     print $sock "<p>Mark current location in ";
     print $sock "<a href=\"/view.htm?path=$ctrl->{'gpsdir'}gps.way\">$ctrl->{'gpsdir'}gps.way</a>:\n";
     print $sock "<form action=\"/gps.htm\" method=\"get\">\n";

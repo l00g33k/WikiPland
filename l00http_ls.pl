@@ -162,6 +162,8 @@ $conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.k
     } elsif (($path =~ /\.html$/i) ||
              ($path =~ /\.htm$/i) ||
              ($path =~ /\.bak$/i) ||
+             ($path =~ /\.way$/i) ||
+             ($path =~ /\.trk$/i) ||
              ($path =~ /\.txt$/i)) {
         $conttype = "Content-Type: text/html\r\n";
     } else {
@@ -493,6 +495,8 @@ sub l00http_ls_proc {
                 # if not usual text file extension, make it raw
 #::heremark::
                 if (!($path =~ /\.txt$/i) &&
+                    !($path =~ /\.way$/i) &&
+                    !($path =~ /\.trk$/i) &&
                     !($path =~ /\.inc$/i) &&
                     !($path =~ /\.bak$/i) &&
                     !($path =~ /\.csv$/i) &&
