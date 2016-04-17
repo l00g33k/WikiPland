@@ -340,6 +340,11 @@ sub l00fwriteOpen {
     $writeName = $fname;
     $writeBuf = '';
 
+    if ($writeName =~ /^l00:\/\/./) {
+        # initial time stamp
+        $ctrl->{'l00filetime'}->{$writeName} = time;
+    }
+
     1;
 }
 
@@ -394,8 +399,12 @@ sub l00fwriteClose {
         # ram file
         if ($writeBuf eq '') {
             $ctrl->{'l00file'}->{$writeName} = undef;
+            # final time stamp
+            $ctrl->{'l00filetime'}->{$writeName} = 0;
         } else {
             $ctrl->{'l00file'}->{$writeName} = $writeBuf;
+            # final time stamp
+            $ctrl->{'l00filetime'}->{$writeName} = time;
         }
     } else {
         if ($writeBuf eq '') {

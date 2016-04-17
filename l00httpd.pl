@@ -1591,7 +1591,7 @@ while(1) {
                     print $sock "<tr>\n";
                     print $sock "<td>names</td>\n";
                     print $sock "<td>bytes</td>\n";
-                    print $sock "<td>launcher</td>\n";
+                    print $sock "<td>time</td>\n";
                     print $sock "</tr>\n";
                     # list ram files
                     $tmp = $ctrl{'l00file'};
@@ -1600,14 +1600,26 @@ while(1) {
                         if (($_ eq 'l00://ram') ||
                            (defined($ctrl{'l00file'}->{$_}) &&
                             (length($ctrl{'l00file'}->{$_}) > 0))) {
+                            my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
 
                             print $sock "<tr>\n";
 
                             print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
 
-                            print $sock "<td><small>" . length($ctrl{'l00file'}->{$_}) . "</small></td>\n";
+#                           print $sock "<td><small>" . length($ctrl{'l00file'}->{$_}) . "</small></td>\n";
+#                           print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
 
-                            print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
+                            print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">" . 
+                                length($ctrl{'l00file'}->{$_}) . "</a></small></td>\n";
+
+                            # display time
+                            if (!defined($ctrl{'l00filetime'}->{$_})) {
+                                $ctrl{'l00filetime'}->{$_} = 0;
+                            }
+                            ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+                                = localtime($ctrl{'l00filetime'}->{$_});
+                            print $sock sprintf ("<td><small>%4d/%02d/%02d %02d:%02d:%02d</small></td>\n", 
+                                1900+$year, 1+$mon, $mday, $hour, $min, $sec);
 
                             print $sock "</tr>\n";
 	            	    }
