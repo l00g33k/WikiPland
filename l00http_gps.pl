@@ -227,7 +227,7 @@ sub l00http_gps_proc {
         if ($ctrl->{'os'} eq 'and') {
             $buf = &android_get_gps ($ctrl);
             open (OUT, ">>$ctrl->{'gpsdir'}gps.way");
-			print OUT "$lon,$lat $buf $form->{'locremark'}\n";
+			print OUT "$lat,$lon $form->{'locremark'} $buf\n";
 			close(OUT);
         }
     } elsif (defined ($form->{"getgps"})) {
