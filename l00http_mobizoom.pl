@@ -214,6 +214,7 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/*figure.*?>//gs;
         $wget =~ s/<\/*article.*?>//gs;
         $wget =~ s/<\/*section.*?>//gs;
+        $wget =~ s/<\/*nav.*?>//gs;
 
         $wget =~ s/<!.+?>//gs;
         $wget =~ s/<script.+?<\/script *\n*\r*>//sg;
