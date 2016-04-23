@@ -919,6 +919,9 @@ print;
                             $found = $foundhdr . $found;
                             if ($prefmt ne '') {
                                 $found .= "</pre>\n";
+                            } else {
+                                # remove line number
+                                $found =~ s/^\d+: //gm;
                             }
                             $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                             # render found results
