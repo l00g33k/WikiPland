@@ -113,7 +113,7 @@ sub l00http_tree_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $path2, $path, $file, $cnt, $cntbak, $crc32, $export, $buf);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
-        $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
+        $nolinks, $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
     my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums, $base, $partpath);
 
 
@@ -164,6 +164,11 @@ sub l00http_tree_proc {
         $showbak = 'checked';
     } else  {
         $showbak = '';
+    }
+    if (defined($form->{'nolinks'})) {
+        $nolinks = 'checked';
+    } else  {
+        $nolinks = '';
     }
 
 
@@ -267,8 +272,12 @@ sub l00http_tree_proc {
 		        $_ = $file;
 			    s/ /%20/g;
                 if ($cnt <= $maxlines) {
-                    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">".
-                        sprintf("%3d",$cnt)."</a> ";
+                    if ($nolinks ne 'checked') {
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\">".
+                            sprintf("%3d",$cnt)."</a> ";
+                    } else {
+                        print $sock sprintf("%3d ",$cnt);
+                    }
                 }
 		        $_ = $file;
 			    ($path, $file) = /^(.+\/)([^\/]+)$/;
@@ -296,7 +305,11 @@ sub l00http_tree_proc {
                         $crc32 = &l00crc32::crc32($buf);
                     }
                     if ($cnt <= $maxlines) {
-                        print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
+                        if ($nolinks ne 'checked') {
+                            print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
+                        } else {
+                            print $sock sprintf ("%8d %08x ", $size, $crc32);
+                        }
                     }
                     $export .= sprintf("|| %11d || %08x || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
@@ -327,7 +340,11 @@ sub l00http_tree_proc {
                         }
                     }
                     if ($cnt <= $maxlines) {
-                        print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
+                        if ($nolinks ne 'checked') {
+                            print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
+                        } else {
+                            print $sock sprintf ("%8d %s ", $size, $crc32);
+                        }
                     }
                     $export .= sprintf("|| %11d || %s || %s ||\n", $size, $crc32, $partpath);
                     $allsums .= $crc32;
@@ -350,7 +367,11 @@ sub l00http_tree_proc {
                         }
                     }
                     if ($cnt <= $maxlines) {
-                        print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> ", $size);
+                        if ($nolinks ne 'checked') {
+                            print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> ", $size);
+                        } else {
+                            print $sock sprintf ("%8d ", $size);
+                        }
                     }
                     $export .= sprintf("|| %11d || %s ||\n", $size, $partpath);
                 }
@@ -358,8 +379,12 @@ sub l00http_tree_proc {
 			    $path2 = $path;
 			    $path2 =~ s/^$form->{'path'}//;
                 if ($cnt <= $maxlines) {
-                    print $sock "<a href=\"/ls.htm?path=$path\">$path2</a>";
-                    print $sock "<a href=\"/ls.htm?path=$path$file\">$file</a>\n";
+                    if ($nolinks ne 'checked') {
+                        print $sock "<a href=\"/ls.htm?path=$path\">$path2</a>";
+                        print $sock "<a href=\"/ls.htm?path=$path$file\">$file</a>\n";
+                    } else {
+                        print $sock "$path2$file\n";
+                    }
                 } elsif ($cnt == $maxlines + 1) {
                     print $sock "\nTrucating output to $maxlines lines. View full <a href=\"/view.htm?path=l00://tree.htm\">outputs</a>\n";
                 }
@@ -430,6 +455,7 @@ $form->{'filter'} = 'not implemented';
         }
     }
     print $sock "<br><input type=\"checkbox\" name=\"showbak\" $showbak>Show *.bak too\n";
+    print $sock "<br><input type=\"checkbox\" name=\"nolinks\" $nolinks>Do not make links\n";
     print $sock "</form><br>\n";
 
     my ($logname);
