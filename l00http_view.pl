@@ -10,11 +10,12 @@ my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
 my ($hostpath, $lastpath);
-my ($findtext, $block, $wraptext, $found, $pname, $fname, $maxln, $skip, $hilitetext);
+my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
 $wraptext = '';
+$nohdr = '';
 $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
@@ -34,29 +35,40 @@ sub l00http_view_proc {
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt);
 
+
+    if (defined ($form->{'nohdr'})) {
+        $nohdr = 'checked';
+    } else {
+        $nohdr = '';
+    }
+
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
-    print $sock "<a href=\"#end\">Jump to end</a>\n";
+    if ($nohdr eq '') {
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
+        print $sock "<a href=\"#end\">Jump to end</a>\n";
+    }
     print $sock "<a name=\"top\"></a>\n";
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
         $form->{'path'} =~ s/\n//g;
-        $tmp = $form->{'path'};
-        if ($ctrl->{'os'} eq 'win') {
-            $tmp =~ s/\//\\/g;
+        if ($nohdr eq '') {
+            $tmp = $form->{'path'};
+            if ($ctrl->{'os'} eq 'win') {
+                $tmp =~ s/\//\\/g;
+            }
+            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">Path</a>: ";
+            if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
+                # not ending in / or \, not a dir
+                print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
+                print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a>\n";
+            } else {
+                print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+            }
+            print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
+            print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
         }
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">Path</a>: ";
-        if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
-            # not ending in / or \, not a dir
-            print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
-            print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a>\n";
-        } else {
-            print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        }
-        print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
-        print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
         if ($lastpath ne $form->{'path'}) {
             # reset skip and length for different file
             $skip = 0;
@@ -107,29 +119,32 @@ sub l00http_view_proc {
         }
     }
 
-    print $sock "<form action=\"/view.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"update\" value=\"Skip\">\n";
-    print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
-    print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
-    # skip backward $maxln
-    $tmp = $skip - $maxln;
-    if ($tmp < 0) {
-        $tmp = 0;
+    if ($nohdr eq '') {
+        print $sock "<form action=\"/view.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"update\" value=\"Skip\">\n";
+        print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
+        print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
+        print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
+        # skip backward $maxln
+        $tmp = $skip - $maxln;
+        if ($tmp < 0) {
+            $tmp = 0;
+        }
+        print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
+        # skip forward $maxln
+        $tmp = int ($skip - $maxln / 2);
+        if ($tmp < 0) {
+            $tmp = 0;
+        }
+        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+        $tmp = int ($skip + $maxln / 2);
+        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+        $tmp = int ($skip + $maxln);
+        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+        print $sock "</form>\n";
     }
-    print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
-    # skip forward $maxln
-    $tmp = int ($skip - $maxln / 2);
-    if ($tmp < 0) {
-        $tmp = 0;
-    }
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
-    $tmp = int ($skip + $maxln / 2);
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
-    $tmp = int ($skip + $maxln);
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
-    print $sock "</form>\n";
 
     if ($hilite > 0) {
         # and now we add a jump to link

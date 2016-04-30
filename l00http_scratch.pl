@@ -118,7 +118,8 @@ sub l00http_scratch_proc {
 
 
         print $sock "Send l00://clipboard.txt to <a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>, \n";
-        print $sock "<a href=\"/view.htm?path=l00://clipboard.txt\">View</a> l00://clipboard.txt.<p>\n";
+        $_ = length($scratch);
+        print $sock "<a href=\"/view.htm?path=l00://clipboard.txt\">View</a> l00://clipboard.txt. There are $_ bytes.<p>\n";
     }
 
     # get submitted name and print greeting
