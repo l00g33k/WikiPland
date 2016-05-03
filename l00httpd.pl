@@ -148,15 +148,20 @@ $ctrl{'bbox'} = '';
 $ctrl{'os'} = '(unknown)';
 $ctrl{'machine'} = '(unknown)';
 if (defined ($ENV{'ANDROID_ROOT'})) {
-    $ctrl{'os'} = 'and';
-    $ctrl{'bbox'} = 'busybox ';
-    $ctrl{'droid'} = Android->new();
     if (open (IN, "</proc/cpuinfo")) {
         while (<IN>) {
             if (/Hardware\W*: *(.+) */) {
                 $ctrl{'machine'} = $1;
             }
         }
+    }
+    if ($ENV{'HOME'} eq '/data/data/com.termux/files/home') {
+        $ctrl{'os'} = 'lin';
+        $ctrl{'machine'} = "TERMUX: $ctrl{'machine'}";
+    } else {
+        $ctrl{'os'} = 'and';
+        $ctrl{'bbox'} = 'busybox ';
+        $ctrl{'droid'} = Android->new();
     }
 } elsif ($^O eq 'cygwin') {
     $ctrl{'os'} = 'cyg';
