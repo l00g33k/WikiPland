@@ -82,8 +82,8 @@ sub l00http_periocalrem_perio {
                     next;
                 }
                 ($date, $len, $todo) = split (',', $_);
-                if ($todo =~ /^ *!/) {
-                    # leading ! hides item
+                if ($todo =~ /^ *\./) {
+                    # leading . hides item
                     $todo = "#$todo";
                 }
                 if (defined ($date) && defined ($len) && defined ($todo)) {
