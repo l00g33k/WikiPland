@@ -624,7 +624,11 @@ sub l00http_periobattery_perio {
                         #l00httpd::dbp($config{'desc'}, "$_");
                         # POWER_SUPPLY_VOLTAGE_NOW=4176000
                         if (/POWER_SUPPLY_VOLTAGE_NOW=(\d+)/) {
-                            $vol = $1 / 1000;
+                            $vol = int ($1);
+                            if ($vol > 100000) {
+                                # it is in uV. Convert to mV
+                                $vol = int ($vol / 1000);
+                            }
                         }
                         # POWER_SUPPLY_TEMP=315
                         if (/POWER_SUPPLY_TEMP=(\d+)/) {
@@ -637,6 +641,9 @@ sub l00http_periobattery_perio {
                         # POWER_SUPPLY_CURRENT_NOW=-334840
                         if (/POWER_SUPPLY_CURRENT_NOW=(-*\d+)/) {
                             $curr = int ($1 / 1000);
+                            $dis_curr = 0;
+                        } else {
+                            $curr = 0;
                             $dis_curr = 0;
                         }
 
