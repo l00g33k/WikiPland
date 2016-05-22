@@ -24,6 +24,7 @@ $kmlheader1 =
     "<kml xmlns=\"http://www.opengis.net/kml/2.2\" xmlns:gx=\"http://www.google.com/kml/ext/2.2\" xmlns:kml=\"http://www.opengis.net/kml/2.2\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n".
     "<Document>\n".
     "	<name>";
+
 $kmlheader2 = "</name>\n".
     "	<open>1</open>\n".
     "	<StyleMap id=\"msn_hospitals\">\n".
@@ -155,7 +156,7 @@ sub l00http_kml_proc {
         (length ($form->{'path'}) > 0)) {
         if ($form->{'path'} =~ /\.kmz$/) {
             # .kmz
-			if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
                 $buffer = &l00httpd::l00freadAll($ctrl);
 
                 $size = length ($buffer);
@@ -189,7 +190,90 @@ sub l00http_kml_proc {
                 $buffer =~ s/\r\n/\n/g;
                 $buffer =~ s/\r/\n/g;
                 $phase = 0;
-                if ($buffer =~ /^<\?xml/) {
+                if ($form->{'path'} =~ /\.gpx$/) {
+                    $toKmlCnt++;
+                    my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
+                    my ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $dtstamp);
+                    $tracks = '';
+                    $phase = 'find_track';
+                    $debug = 1;
+                    $trackno = 1;
+                    # gps track, convert to .kml
+                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $trkmarks = '';
+
+                    $lnno = 0;
+                    $pointno = -1;
+                    foreach $_ (split ("\n", $buffer)) {
+                        $lnno++;
+                        $pointno++;
+                        #<trkseg>
+            	        if (($phase eq 'find_track') && 
+                            (/<trkseg>/)) {
+                            $phase = 'found_new_header';
+                            $pointno = 0;
+                        }
+                        # <trkpt lat="25.106161" lon="121.529244">
+                        if (/<trkpt lat="(.+?)" lon="(.+?)">/) {
+                            $lat = $1;
+                            $lon = $2;
+                            $lat += $curlatoffset;
+                            $lon += $curlonoffset;
+                        }
+                        # <time>2015-11-30T23:30:28Z</time>
+                        if (/<time>(.+)<\/time>/) {
+                            $gpxtime = $1;
+                        }
+                        # </trkpt>
+                        if (/<\/trkpt>/) {
+                            if ($phase eq 'found_new_header') {
+                                $phase = 'find_track';
+                                if ($tracks ne '') {
+                                    # not first time
+                                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                                }
+                                $tracks = $tracks . 
+                                    "\t\t<Placemark><name>Track $gpxtime</name>\n" .
+                                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                    "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                    "\t\t\t<coordinates>\n";
+                                $trackno++;
+                            }
+                            $tracks = $tracks . "\t\t\t$lon,$lat,$trackheight\n";
+                            if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
+                                $trkmarks .=
+                                "\t\t\t<Placemark>\n".
+                                "\t\t\t\t<name>$lnno</name>\n".
+                                "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                                "\t\t\t\t<Point>\n".
+                                "\t\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
+                                "\t\t\t\t</Point>\n".
+                                "\t\t\t</Placemark>\n";
+                            }
+                        }
+                    }
+                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                    $kmlbuf .= $tracks;
+                    if ($trackmark > 0) {
+                        $kmlbuf .=  "		<Folder>\n".
+                                    "			<name>Timemark</name>\n".
+                                    "			<open>1</open>\n".
+                                    $trkmarks.
+                                    "		</Folder>\n";
+                    }
+                    $kmlbuf .= $kmlfooter;
+                    #l00httpd::dbp($config{'desc'}, "kmlbuf: \n$kmlbuf\n");
+
+                    $size = length ($kmlbuf);
+                    $httphdr = "Content-Type: application/gpx+xml\r\n";
+                    $httphdr .= "Content-Length: $size\r\n";
+                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                    print $sock $kmlbuf;
+                    $sock->close;
+                    $rawkml = 1;
+                } elsif ($buffer =~ /^<\?xml/) {
                     $frKmlCnt++;
                     # reading real .kml file
                     print $sock "$httphdr<br>\n";
@@ -234,7 +318,7 @@ sub l00http_kml_proc {
                     $debug = 1;
                     $trackno = 1;
                     # gps track, convert to .kml
-            $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
                     $trkmarks = '';
 
                     $lastseg = -1;
@@ -256,8 +340,8 @@ sub l00http_kml_proc {
                         }
 
                         #"Name","Activity type","Description"
-            	        if ((($phase eq 'find_header') ||
-                             ($phase eq 'find_more_point')) && 
+                        if ((($phase eq 'find_header') ||
+                            ($phase eq 'find_more_point')) && 
                             ($fields[1] =~ /Activity type/)) {
                             $phase = 'found_header';
                             $lastseg = -1;
@@ -267,18 +351,18 @@ sub l00http_kml_proc {
                             #"1","1","51.481289","-0.607417","42.0","","38","0","2015-08-14T10:26:48.952Z","","",""
                             $phase = 'find_more_point';
                             $lastseg = $fields[0];
-		                    # track or new track
-		                    if ($tracks ne '') {
-			                    # not first time
-			                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
-		                    }
+                            # track or new track
+                            if ($tracks ne '') {
+                                # not first time
+                                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                            }
                             $trkname = "Track $stamp";
-		                    $tracks = $tracks . 
-			                    "\t\t<Placemark><name>$trkname</name>\n" .
-			                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
-			                    "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-			                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
-			                    "\t\t\t<coordinates>\n";
+                            $tracks = $tracks . 
+                                "\t\t<Placemark><name>$trkname</name>\n" .
+                                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                "\t\t\t<coordinates>\n";
                             $trackno++;
                             $pointno = 0;
                         }
@@ -286,18 +370,18 @@ sub l00http_kml_proc {
                             if ($lastseg != $fields[0]) {
                                 # new segment
                                 $lastseg = $fields[0];
-		                        # track or new track
-		                        if ($tracks ne '') {
-			                        # not first time
-			                        $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
-		                        }
+                                # track or new track
+                                if ($tracks ne '') {
+                                    # not first time
+                                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                                }
                                 $trkname = "Track $stamp";
-		                        $tracks = $tracks . 
-			                        "\t\t<Placemark><name>$trkname</name>\n" .
-			                        "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
-			                        "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-			                        "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
-			                        "\t\t\t<coordinates>\n";
+                                $tracks = $tracks . 
+                                    "\t\t<Placemark><name>$trkname</name>\n" .
+                                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                    "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                    "\t\t\t<coordinates>\n";
                                 $trackno++;
                                 $pointno = 0;
                             }
@@ -318,7 +402,7 @@ sub l00http_kml_proc {
                             }
                         }
                     }
-	                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
                     $kmlbuf .= $tracks;
                     if ($trackmark > 0) {
                         $kmlbuf .=  "		<Folder>\n".
@@ -327,99 +411,16 @@ sub l00http_kml_proc {
                                     $trkmarks.
                                     "		</Folder>\n";
                     }
-            $kmlbuf .= $kmlfooter;
+                    $kmlbuf .= $kmlfooter;
 
-            $size = length ($kmlbuf);
-            $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-            $httphdr .= "Content-Length: $size\r\n";
-            $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-            print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-            print $sock $kmlbuf;
-            $sock->close;
-            $rawkml = 1;
-                } elsif ($form->{'path'} =~ /\.gpx$/) {
-                    $toKmlCnt++;
-                    my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
-                    my ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $dtstamp);
-                    $tracks = '';
-                    $phase = 'find_track';
-                    $debug = 1;
-                    $trackno = 1;
-                    # gps track, convert to .kml
-            $kmlbuf = "$kmlheader1$fname$kmlheader2";
-                    $trkmarks = '';
-
-                    $lnno = 0;
-                    $pointno = -1;
-                    foreach $_ (split ("\n", $buffer)) {
-                        $lnno++;
-                        $pointno++;
-                        #<trkseg>
-            	        if (($phase eq 'find_track') && 
-                            (/<trkseg>/)) {
-                            $phase = 'found_new_header';
-                            $pointno = 0;
-                        }
-                        # <trkpt lat="25.106161" lon="121.529244">
-                        if (/<trkpt lat="(.+?)" lon="(.+?)">/) {
-                            $lat = $1;
-                            $lon = $2;
-                            $lat += $curlatoffset;
-                            $lon += $curlonoffset;
-                        }
-                        # <time>2015-11-30T23:30:28Z</time>
-                        if (/<time>(.+)<\/time>/) {
-                            $gpxtime = $1;
-                        }
-                        # </trkpt>
-                        if (/<\/trkpt>/) {
-                            if ($phase eq 'found_new_header') {
-                                $phase = 'find_track';
-		                        if ($tracks ne '') {
-			                        # not first time
-			                        $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
-		                        }
-		                        $tracks = $tracks . 
-			                        "\t\t<Placemark><name>Track $gpxtime</name>\n" .
-			                        "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
-			                        "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-			                        "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
-			                        "\t\t\t<coordinates>\n";
-                                $trackno++;
-                            }
-		                    $tracks = $tracks . "\t\t\t$lon,$lat,$trackheight\n";
-                            if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
-                                $trkmarks .=
-                                "\t\t\t<Placemark>\n".
-                                "\t\t\t\t<name>$lnno</name>\n".
-                                "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
-                                "\t\t\t\t<Point>\n".
-                                "\t\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
-                                "\t\t\t\t</Point>\n".
-                                "\t\t\t</Placemark>\n";
-                            }
-                        }
-                    }
-	                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
-                    $kmlbuf .= $tracks;
-                    if ($trackmark > 0) {
-                        $kmlbuf .=  "		<Folder>\n".
-                                    "			<name>Timemark</name>\n".
-                                    "			<open>1</open>\n".
-                                    $trkmarks.
-                                    "		</Folder>\n";
-                    }
-            $kmlbuf .= $kmlfooter;
-            #l00httpd::dbp($config{'desc'}, "kmlbuf: \n$kmlbuf\n");
-
-            $size = length ($kmlbuf);
-            $httphdr = "Content-Type: application/gpx+xml\r\n";
-            $httphdr .= "Content-Length: $size\r\n";
-            $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-            print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-            print $sock $kmlbuf;
-            $sock->close;
-            $rawkml = 1;
+                    $size = length ($kmlbuf);
+                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+                    $httphdr .= "Content-Length: $size\r\n";
+                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                    print $sock $kmlbuf;
+                    $sock->close;
+                    $rawkml = 1;
                 } elsif ($buffer =~ /^H  SOFTWARE NAME & VERSION/) {
                     $toKmlCnt++;
                     my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
@@ -429,7 +430,7 @@ sub l00http_kml_proc {
                     $debug = 1;
                     $trackno = 1;
                     # gps track, convert to .kml
-            $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
                     $trkmarks = '';
 
                     $lnno = 0;
@@ -439,7 +440,7 @@ sub l00http_kml_proc {
                         $pointno++;
                         #H  LATITUDE    LONGITUDE    DATE      TIME     ALT    ;track
             	        if ((($phase eq 'find_header') ||
-                             ($phase eq 'find_more_point')) && 
+                            ($phase eq 'find_more_point')) && 
                             (/^H  LATITUDE    LONGITUDE/)) {
                             $phase = 'found_header';
                             $pointno = 0;
@@ -447,21 +448,21 @@ sub l00http_kml_proc {
                         } elsif (($phase eq 'found_header') && 
                             (/^T +[NS]/)) {
                             $phase = 'find_more_point';
-		                    # track or new track
-		                    if ($tracks ne '') {
-			                    # not first time
-			                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
-		                    }
+                            # track or new track
+                            if ($tracks ne '') {
+                                # not first time
+                                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                            }
                             $trkname = "Track $trackno";
                             if (/^T +[NS].+; (.+)/) {
                                 $trkname = "Track $1";
                             }
-		                    $tracks = $tracks . 
-			                    "\t\t<Placemark><name>$trkname</name>\n" .
-			                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
-			                    "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-			                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
-			                    "\t\t\t<coordinates>\n";
+                            $tracks = $tracks . 
+                                "\t\t<Placemark><name>$trkname</name>\n" .
+                                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                "\t\t\t<coordinates>\n";
                             $trackno++;
                         }
                         if (($phase eq 'find_more_point') && 
@@ -493,7 +494,7 @@ sub l00http_kml_proc {
                             }
                         }
                     }
-	                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
                     $kmlbuf .= $tracks;
                     if ($trackmark > 0) {
                         $kmlbuf .=  "		<Folder>\n".
@@ -502,20 +503,20 @@ sub l00http_kml_proc {
                                     $trkmarks.
                                     "		</Folder>\n";
                     }
-            $kmlbuf .= $kmlfooter;
+                    $kmlbuf .= $kmlfooter;
 
-            $size = length ($kmlbuf);
-            $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-            $httphdr .= "Content-Length: $size\r\n";
-            $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-            print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-            print $sock $kmlbuf;
-            $sock->close;
-            $rawkml = 1;
+                    $size = length ($kmlbuf);
+                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+                    $httphdr .= "Content-Length: $size\r\n";
+                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                    print $sock $kmlbuf;
+                    $sock->close;
+                    $rawkml = 1;
                 } else {
                     $toKmlCnt++;
                     # reading long,lat,name file
-            $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
                     foreach $_ (split ("\n", $buffer)) {
                         s/\r//g;
                         s/\n//g;
@@ -539,24 +540,24 @@ sub l00http_kml_proc {
                         $lat += $curlatoffset;
                         $lon += $curlonoffset;
                         $kmlbuf .= 
-		                "\t\t<Placemark>\n".
-			            "\t\t\t<name>$name</name>\n".
-			            "\t\t\t<styleUrl>#msn_hospitals</styleUrl>\n".
-			            "\t\t\t<Point>\n".
-				        "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
-			            "\t\t\t</Point>\n".
-		                "\t\t</Placemark>\n";
+                            "\t\t<Placemark>\n".
+                            "\t\t\t<name>$name</name>\n".
+                            "\t\t\t<styleUrl>#msn_hospitals</styleUrl>\n".
+                            "\t\t\t<Point>\n".
+                            "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
+                            "\t\t\t</Point>\n".
+                            "\t\t</Placemark>\n";
                     }
-            $kmlbuf .= $kmlfooter;
+                    $kmlbuf .= $kmlfooter;
 
-            $size = length ($kmlbuf);
-            $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-            $httphdr .= "Content-Length: $size\r\n";
-            $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-            print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-            print $sock $kmlbuf;
-            $sock->close;
-            $rawkml = 1;
+                    $size = length ($kmlbuf);
+                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+                    $httphdr .= "Content-Length: $size\r\n";
+                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                    print $sock $kmlbuf;
+                    $sock->close;
+                    $rawkml = 1;
                 }
             }
             &l00httpd::l00fwriteOpen($ctrl, 'l00://kml.kml');
