@@ -53,24 +53,24 @@ sub l00http_sleep_proc {
             } else {
                 print $sock "Unable to write '$form->{'path'}'<p>\n";
             }
-            if (defined ($form->{'bright'})) {
-                if (($form->{'bright'} >= 0) && 
-                    ($form->{'bright'} <= 255)) {
-                    $ctrl->{'droid'}->setScreenBrightness ($form->{'bright'});
-                    $ctrl->{'screenbrightness'} = $form->{'bright'};
-                }
+        }
+        if (defined ($form->{'bright'})) {
+            if (($form->{'bright'} >= 0) && 
+                ($form->{'bright'} <= 255)) {
+                $ctrl->{'droid'}->setScreenBrightness ($form->{'bright'});
+                $ctrl->{'screenbrightness'} = $form->{'bright'};
             }
-            if (($ctrl->{'os'} eq 'and') &&
-                defined ($form->{'offwakelock'}) && 
-                ($form->{'offwakelock'} eq 'on')) {
-                $ctrl->{'droid'}->wakeLockRelease();
-            }
-            if (defined ($form->{'iamsleeping'}) && 
-                ($form->{'iamsleeping'} eq 'on')) {
-                $ctrl->{'iamsleeping'} = 'yes';
-            } else {
-                $ctrl->{'iamsleeping'} = 'no';
-            }
+        }
+        if (($ctrl->{'os'} eq 'and') &&
+            defined ($form->{'offwakelock'}) && 
+            ($form->{'offwakelock'} eq 'on')) {
+            $ctrl->{'droid'}->wakeLockRelease();
+        }
+        if (defined ($form->{'iamsleeping'}) && 
+            ($form->{'iamsleeping'} eq 'on')) {
+            $ctrl->{'iamsleeping'} = 'yes';
+        } else {
+            $ctrl->{'iamsleeping'} = 'no';
         }
     }
 
