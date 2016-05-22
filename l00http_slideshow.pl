@@ -102,7 +102,7 @@ sub l00http_slideshow_proc {
                     if ($phase == 0) {
                         # remember the one that comes before 'this'. Because
                         # we are in reverse order, what's before 'this' is next
-                        $tmp = $ii - $picsperpage;
+                        $tmp = $ii - $picsperpage + 1;
                         if ($tmp < 0) {
                             $tmp = 0;
                         }
