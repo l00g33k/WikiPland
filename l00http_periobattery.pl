@@ -568,6 +568,10 @@ sub l00http_periobattery_perio {
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $lastcalled = time;
         $retval = $interval;
+        if (($retval < 300) && ($ctrl->{'iamsleeping'} eq 'yes')) {
+             # don't poll more than once every 5 minutes when sleeping
+             $retval = 300;
+        }
 
         $tempe = '';
         if ($ctrl->{'os'} eq 'and') {
@@ -620,6 +624,8 @@ sub l00http_periobattery_perio {
                     $chg_en = 0;
                     $over_vchg = 0;
                     $batt_state = 0;
+                    $curr = 0;
+                    $dis_curr = 0;
                     while (<IN>) {
                         #l00httpd::dbp($config{'desc'}, "$_");
                         # POWER_SUPPLY_VOLTAGE_NOW=4176000
@@ -641,9 +647,6 @@ sub l00http_periobattery_perio {
                         # POWER_SUPPLY_CURRENT_NOW=-334840
                         if (/POWER_SUPPLY_CURRENT_NOW=(-*\d+)/) {
                             $curr = int ($1 / 1000);
-                            $dis_curr = 0;
-                        } else {
-                            $curr = 0;
                             $dis_curr = 0;
                         }
 
