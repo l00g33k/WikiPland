@@ -54,7 +54,8 @@ sub l00http_sleep_proc {
                 print $sock "Unable to write '$form->{'path'}'<p>\n";
             }
         }
-        if (defined ($form->{'bright'})) {
+        if (($ctrl->{'os'} eq 'and') &&
+            (defined ($form->{'bright'}))) {
             if (($form->{'bright'} >= 0) && 
                 ($form->{'bright'} <= 255)) {
                 $ctrl->{'droid'}->setScreenBrightness ($form->{'bright'});
