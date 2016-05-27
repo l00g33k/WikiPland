@@ -81,9 +81,6 @@ $unixhdrdup = <<markunixhdrdup;
 # and verifies that the md5sum is as expected. It then deletes all 
 # other files with matching md5sum. Files with unmatched md5sum 
 # are kept.
-# It uses 'source' because invoking another instance of itself 
-# does not work with Android TerminalIDE and I need it to work
-# on unrooted Android
 
 # You need to delete 'CMD4DUP=echo' below so 'CMD4DUP=rm' takes effect
 
@@ -102,7 +99,7 @@ if [ \$# != 0 ]; then
         let UNIQUEFIL+=1
 
         # verify md5sum match
-        printf "### \$MD5SUM\\n" >> \$SCRIPT.log
+        printf "### \$MD5SUM (# \$UNIQUEFIL)\\n" >> \$SCRIPT.log
         printf "    " >> \$SCRIPT.log
         md5sum "\$BASEDIR\$FILE2KEEP" | grep \$MD5SUM >> \$SCRIPT.log
         if [ \$? -ne 0 ]; then
@@ -126,8 +123,13 @@ if [ \$# != 0 ]; then
             done
         fi
     fi
+    # pause per set. Comment out for non stop run
+    #read
 
 else
+#fi
+# To make a shorter script file for faster run, uncomment fi above 
+# and delete everything below this line
     printf "Starting \$SCRIPT\\n" > \$SCRIPT.log
 
     UNIQUEFIL=0
@@ -502,7 +504,8 @@ sub l00http_md5sizediff_proc {
                     "    BASEDIR=$orgdir{$sname}\n".
                     "    # Save this file as '$orgname.THIS.self_dup.sh' or change this variable:\n".
                     "    SCRIPT=\${BASEDIR}../$orgname.THIS.self_dup.sh\n\n".
-                    "    if [ -f \$SCRIPT ]; then\n";
+                    "    if [ -f \$SCRIPT ]; then\n".
+                    "        printf \"Starting \$SCRIPT\\n\" > \$SCRIPT.log\n";
             } elsif ($mode eq 'dos') {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "\@echo off\n";
             } else {
@@ -603,6 +606,10 @@ sub l00http_md5sizediff_proc {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        printf \"Deleted \$FILEDELET duplicated files\\n\" >> \$SCRIPT.log\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        printf \"\$FILEBADM5 files have unexpected md5sum !!!\\n\"\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        printf \"\$FILEBADM5 files have unexpected md5sum !!!\\n\" >> \$SCRIPT.log\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        \n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        printf \"*** About to launch less to review \$SCRIPT.log. ^C to cancel\\n\"\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        read\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        less -N \$SCRIPT.log\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "    else\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "        printf \"MISSING \$SCRIPT\\n\"\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "    fi\n\n";
