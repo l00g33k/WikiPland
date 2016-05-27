@@ -111,11 +111,11 @@ if [ \$# != 0 ]; then
                 printf "    " >> \$SCRIPT.log
                 md5sum "\$BASEDIR\$FILE2DEL" | grep \$MD5SUM >> \$SCRIPT.log
                 if [ \$? -eq 0 ]; then
-                    printf "        md5sum match: \$CMD4DUP '\$BASEDIR\$FILE2DEL'\\n" >> \$SCRIPT.log
+                    printf "        md5sum match: \$CMD4DUP \\\"\$BASEDIR\$FILE2DEL\\\"\\n" >> \$SCRIPT.log
                     \$CMD4DUP "\$BASEDIR\$FILE2DEL" >> \$SCRIPT.log
                     let FILEDELET+=1
                 else
-                    printf "!!!       md5sum UNEXPECTED: '\$BASEDIR\$FILE2DEL'\\n" >> \$SCRIPT.log
+                    printf "!!!       md5sum UNEXPECTED: \\\"\$BASEDIR\$FILE2DEL\\\"\\n" >> \$SCRIPT.log
                     let FILEBADM5+=1
                 fi
                 # pop deleted file
@@ -130,14 +130,13 @@ else
 #fi
 # To make a shorter script file for faster run, uncomment fi above 
 # and delete everything below this line
-    printf "Starting \$SCRIPT\\n" > \$SCRIPT.log
 
     UNIQUEFIL=0
     FILEDELET=0
     FILEBADM5=0
 
     CMD4DUP=rm
-    CMD4DUP=echo
+    CMD4DUP='echo WILL RM '
 
 markunixhdrdup
 
@@ -574,6 +573,10 @@ sub l00http_md5sizediff_proc {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 sprintf ("        #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n",   $cnt{$sname}).
                                 "        source \$SCRIPT  $md5sum $matchlist\n";
+                            if ($matchcnt != 1) {
+                                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                    "        # matched matchcnt: $matchcnt\n";
+                            }
                             if (($cnt{$sname} > 0) && ($cnt{$sname} % $progressstep) == 0) {
                                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                     "        echo $cnt{$sname} files\n";
@@ -594,7 +597,7 @@ sub l00http_md5sizediff_proc {
             }
             # create $match output
             if ($match ne '') {
-                $_ = "Unique files: $cnt{$sname}, matched: none $matchnone, one, $matchone, more $matchmulti";
+                $_ = "Unique files: $cnt{$sname}, matched: none $matchnone, one, $matchone, more $matchmulti (find '# matched matchcnt')";
             } else {
                 $_ = "Match regex not specified, not counting match";
             }
