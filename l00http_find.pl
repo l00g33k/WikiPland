@@ -27,7 +27,7 @@ my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx);
 my ($fmatch, $fmatches, $content, $fullname, $lineno, $lineno0, $maxlines, $sock);
-my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $srcdoc, $sortoffset);
+my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $filenameonly, $srcdoc, $sortoffset);
 
 my ($path);
 
@@ -37,6 +37,7 @@ $content = '';
 $maxlines = 4000;
 $sendto = 'ls';
 $wraptext = '';
+$filenameonly = '';
 $srcdoc = '';
 $context = 0;
 $sortoffset = '';
@@ -230,11 +231,16 @@ sub l00http_find_search {
 									  = localtime($mtime);
 									$fstat = 
 									 sprintf ("%9d %4d/%02d/%02d %02d:%02d:%02d", $size, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
-                                    $output .= 
-                                        "$fstat ".
-                                        "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                        "<a href=\"/$sendto.htm?path=$fullname\">$file</a>".
-                                        "$lineend\n";
+                                    if ($filenameonly eq '') {
+                                        $output .= 
+                                            "$fstat ".
+                                            "<a href=\"/ls.htm?path=$mypath\">$mypath</a>".
+                                            "<a href=\"/$sendto.htm?path=$fullname\">$file</a>".
+                                            "$lineend\n";
+                                    } else {
+                                        # filename only
+                                        $output .= "$mypath$file\n";
+                                    }
                                     $totalfiles++;
                                     $totalbytes += $size;
                                     #print $sock 
@@ -309,6 +315,11 @@ sub l00http_find_proc {
         $recursive = "checked";
     } else {
         $recursive = "";
+    }
+    if (defined ($form->{'filenameonly'})) {
+        $filenameonly = 'checked';
+    } else {
+        $filenameonly = '';
     }
     if (defined ($form->{'wraptext'})) {
         $wraptext = 'checked';
@@ -445,10 +456,14 @@ sub l00http_find_proc {
     print $sock "            <td>Sort offset: <input type=\"text\" size=\"4\" name=\"sortoffset\" value=\"$sortoffset\"></td>\n";
     print $sock "        </tr>\n";
 
-
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"wraptext\" $wraptext>Wrapped text</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"filenameonly\" $filenameonly>Filename only</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";

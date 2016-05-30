@@ -347,6 +347,7 @@ sub l00http_periobattery_proc {
                     $mo--;
                     $now = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                     $lnno++;
+# my ($nosmps @times, @levels, @volts, @temps, @currs);
                     if ((($skip >= 0) && ($lnno >= $skip) && ($lnno <= $skip + $len))  ||
                         (($skip <  0) && ($lnno > ($noln - $len)))) {
 						# $skip < 0: plot last $len
