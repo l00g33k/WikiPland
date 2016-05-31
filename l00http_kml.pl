@@ -571,12 +571,13 @@ sub l00http_kml_proc {
 
 
     if ($rawkml == 0) {
-        print $sock "<form action=\"/kml.htm\" method=\"get\">\n";
+        print $sock "<form action=\"/kml.htm/kml.kml\" method=\"get\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
         print $sock "Filename:\n";
         print $sock "</td><td>\n";
-        print $sock "<input type=\"text\" name=\"path\" value=\"$form->{'path'}\">\n";
+#       print $sock "<input type=\"text\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path'}</textarea>\n";
         print $sock "</td></tr>\n";
 
         print $sock "<tr><td>\n";
