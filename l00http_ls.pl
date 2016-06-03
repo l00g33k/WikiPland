@@ -1064,6 +1064,14 @@ print;
                         $fullpath = "";
                     }
                 }
+                # get timestamp
+                ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+                 $size, $atime, $mtime, $ctime, $blksize, $blocks)
+                 = stat($fullpath);
+                ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+                 = localtime($mtime);
+
+                # escape to %xx
                 $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
 
                 # clip path listing
@@ -1081,7 +1089,9 @@ print;
                     $dirout .= "<td><small><a href=\"/tree.htm?path=$fullpath/\">&lt;dir&gt;</a></small></td>\n";
                 }
                 $dirout .= "<td>&nbsp;</td>\n", if ($docrc32);
-                $dirout .= "<td>&nbsp;</td>\n";
+                $dirout .= "<td><small>". 
+                    sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec) 
+                    ."</small></td>\n";
                 $dirout .= "</tr>\n";
                 $nodirs++;
             } else {
