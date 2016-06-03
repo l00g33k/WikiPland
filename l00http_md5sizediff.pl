@@ -106,6 +106,7 @@ if [ \$# != 0 ]; then
             printf "!!!     keep file md5sum UNEXPECTED\\n" >> \$SCRIPT.log
             let FILEBADM5+=1
         else
+            printf "!!!     keep file md5sum VERIFIED OK\\n" >> \$SCRIPT.log
             while [ \$# -ge 1 ]; do
                 FILE2DEL=\$1
                 printf "    " >> \$SCRIPT.log
@@ -125,7 +126,6 @@ if [ \$# != 0 ]; then
     fi
     # pause per set. Comment out for non stop run
     #read
-
 else
 #fi
 # To make a shorter script file for faster run, uncomment fi above 
