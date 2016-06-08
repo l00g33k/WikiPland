@@ -1414,7 +1414,7 @@ while(1) {
                     }
                     print $sock "<tr>";
                     print $sock "<td><input type=\"text\" size=\"4\" name=\"nopw\" value=\"$tmp\"></td>\n";
-                    print $sock "<td><a href=\"/httpd?allappson=on&timeout=43200&noclinavof=on\">wide open</a></td>\n";
+                    print $sock "<td><a href=\"/httpd?allappson=on&timeout=1800&noclinavof=on\">wide open</a></td>\n";
                     print $sock "<td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath'.) <a href=\"/httpd.htm?defaulton=on&allappoff=on&timeout=300&noclinavon=on\">Default only</a></td>\n";
 
                     print $sock "<tr>";
