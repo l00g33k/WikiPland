@@ -10,7 +10,7 @@ my %config = (proc => "l00http_periobattery_proc",
               perio => "l00http_periobattery_perio");
 my ($savedpath, $battperc, $battvolts, $batttemp, $battmA, $lasttimestamp);
 my ($table, $tablehdr, $firstdmesg, $lastdmesg, $maxreclen, $skip, $len);
-my ($graphwd, $graphht, $mAAvgLen);
+my ($graphwd, $graphht, $mAAvgLen, $svgblifeIntv);
 my $interval = 0, $lastcalled = 0;
 $battcnt = 0;
 $perltime = 0;
@@ -32,6 +32,7 @@ $len = 60 * 12;
 $graphwd = 400;
 $graphht = 300;
 $mAAvgLen = 7;
+$svgblifeIntv = 30;
 
 sub l00http_periobattery_suspend {
     my ($ctrl) = @_;
@@ -174,11 +175,12 @@ sub l00http_periobattery_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $lnno, $keep, $noln);
-    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep, $svgscr);
+    my ($tmp, $tmp2, $lnno, $keep, $noln, $ii, $lnnoold);
+    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep, $svgscr, $svgblife);
     my ($yr, $mo, $da, $hr, $mi, $se, $now, $lastnow);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
-    my (@svgmAAvgBuf, $mAsum, $scrbrgt, $backlight);
+    my ($mAsum, $scrbrgt, $backlight, $skipnow);
+    my ($nosmps, @times, @levels, @volts, @temps, @currs, @scrbrgts);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -208,6 +210,9 @@ sub l00http_periobattery_proc {
     }
     if ((defined ($form->{'skip'})) && ($form->{'skip'} =~ /([0-9\-]+)/)) {
         $skip = $1;
+    }
+    if ((defined ($form->{'svgblifeIntv'})) && ($form->{'svgblifeIntv'} =~ /([0-9\-]+)/)) {
+        $svgblifeIntv = $1;
     }
     if ((defined ($form->{'len'})) && ($form->{'len'} =~ /(\d+)/)) {
         $len = $1;
@@ -324,17 +329,10 @@ sub l00http_periobattery_proc {
 
 
     if (defined ($form->{"graphs"})) {
-        $svgperc = '';
-        $svgvolt = '';
-        $svgtemp = '';
-        $svgmA = '';
-        $svgmAAvg = '';
-        $svgsleep = '';
-        $svgscr = '';
-        undef @svgmAAvgBuf;
         $lnno = 0;
         $noln = $battlog =~ s/\n/\n/g;
         $lastnow = 0;
+        $nosmps = 0;
         foreach $_ (split("\n", $battlog)) {
             if (($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $scrbrgt, $timestamp) 
                 = /level=(\d+), vol=(\d+), temp=(\d+), curr=(-*\d+), dis_curr=(\d+), chg_src=(\d+), chg_en=(\d+), over_vchg=(\d+), batt_state=(\d+), scr_brgt=(\d+) at \d+ \((.+? UTC)\)/) {
@@ -347,43 +345,82 @@ sub l00http_periobattery_proc {
                     $mo--;
                     $now = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                     $lnno++;
-# my ($nosmps @times, @levels, @volts, @temps, @currs);
-                    if ((($skip >= 0) && ($lnno >= $skip) && ($lnno <= $skip + $len))  ||
-                        (($skip <  0) && ($lnno > ($noln - $len)))) {
-						# $skip < 0: plot last $len
-					    # within skip and len (poor man's zoom in)
-                        $svgperc .= "$now,$level ";
-                        $svgvolt .= "$now,$vol ";
-                        $svgtemp .= "$now,$temp ";
-                        $tmp = $curr + $dis_curr;
-                        $svgmA .= "$now,$tmp ";
-                        push (@svgmAAvgBuf, $tmp);
-                        if ($#svgmAAvgBuf >= $mAAvgLen) {
-                            # trim history buffer to $mAAvgLen
-                            shift (@svgmAAvgBuf);
-                        }
-                        $mAsum = 0;
-                        foreach $tmp (@svgmAAvgBuf) {
-                            $mAsum += $tmp;
-                        }
-                        $mAsum /= ($#svgmAAvgBuf + 1);
-                        $svgmAAvg .= "$now,$mAsum ";
-                        if ($lastnow == 0) {
-                            $tmp = 0;
-                        } else {
-                            $tmp = $now - $lastnow;
-                        }
-                        $svgsleep .= "$now,$tmp ";
-                        $svgscr .= "$now,$scrbrgt ";
-                        $lastnow = $now;
-                    }
+                    $times[$nosmps] = $now;
+                    $levels[$nosmps] = $level;
+                    $volts[$nosmps] = $vol;
+                    $temps[$nosmps] = $temp;
+                    $currs[$nosmps] = $curr + $dis_curr;
+                    $scrbrgts[$nosmps] = $scrbrgt;
+                    $nosmps++;
                 }
             }
+        }
+        $svgperc = '';
+        $svgvolt = '';
+        $svgtemp = '';
+        $svgmA = '';
+        $svgmAAvg = '';
+        $svgsleep = '';
+        $svgscr = '';
+        $svgblife = '';
+        if ($skip >= 0) {
+            $skipnow = $skip;
+        } else {
+            $skipnow = $nosmps - $len;
+            if ($skipnow < 0) {
+                $skipnow = 0;
+            }
+        }
+        for ($lnno = $skipnow; ($lnno < ($skipnow + $len)) &&
+                               ($lnno < $nosmps); $lnno++) {
+            $svgperc .= "$times[$lnno],$levels[$lnno] ";
+
+            $tmp = 0;
+            $lnnoold = $lnno - 1;
+            while ($lnnoold >= 0) {
+                if ((($times[$lnno]  - $times[$lnnoold] ) > $svgblifeIntv * 60) &&
+                    (($levels[$lnno] - $levels[$lnnoold]) != 0)) {
+                    $tmp = $times[$lnno] - $times[$lnnoold];
+                    $tmp = ($levels[$lnnoold] - $levels[$lnno]) / 
+                            $tmp * 3600;
+                    $tmp = int ($tmp * 1000 + 0.5) / 1000;
+                    last;
+                }
+                $lnnoold--;
+            }
+            $svgblife .= "$times[$lnno],$tmp ";
+            $svgvolt .= "$times[$lnno],$volts[$lnno] ";
+            $svgtemp .= "$times[$lnno],$temps[$lnno] ";
+            $svgmA .= "$times[$lnno],$currs[$lnno] ";
+            $tmp = 0;
+            $tmp2 = 0;
+            for ($ii = 0; $ii < $mAAvgLen; $ii++) {
+                if (($lnno - $ii) >= 0) {
+                    $tmp += $currs[$lnno - $ii];
+                    $tmp2++;
+                }
+            }
+            if ($tmp2 > 1) {
+                $tmp /= $tmp2;
+            }
+            $svgmAAvg .= "$times[$lnno],$tmp ";
+            if ($lnno == 0) {
+                $svgsleep .= "$times[$lnno],0 ";
+            } else {
+                $tmp = $times[$lnno] - $times[$lnno - 1];
+                $svgsleep .= "$times[$lnno],$tmp ";
+            }
+            $svgscr .= "$times[$lnno],$scrbrgts[$lnno] ";
         }
         if ($svgperc ne '') {
             &l00svg::plotsvg ('battpercentage', $svgperc, $graphwd, $graphht);
             print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
             print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
+        }
+        if ($svgblife ne '') {
+            &l00svg::plotsvg ('battlife', $svgblife, $graphwd, $graphht);
+            $tmp = $svgblifeIntv / 60;
+            print $sock "<p>%/hour (over $tmp hours span):<br><a href=\"/svg.htm?graph=battlife&view=\"><img src=\"/svg.htm?graph=battlife\" alt=\"level % over time\"></a>\n";
         }
         if ($svgsleep ne '') {
             &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
@@ -413,11 +450,9 @@ sub l00http_periobattery_proc {
         }
     }
 
-    print $sock "<form action=\"/periobattery.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
+    print $sock "<form action=\"/periobattery.htm\" method=\"get\">\n"; print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
-    print $sock "    <tr>\n";
-    print $sock "        <td>Run interval (sec, e.g. 30):</td>\n";
+    print $sock "    <tr>\n"; print $sock "        <td>Run interval (sec, e.g. 30):</td>\n";
     print $sock "        <td><input type=\"text\" size=\"6\" name=\"interval\" value=\"$interval\"></td>\n";
     print $sock "    </tr>\n";
                                                 
@@ -546,6 +581,11 @@ sub l00http_periobattery_proc {
     print $sock "        samples. Skip -1 to use record tail.</td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "    <tr>\n";
+    print $sock "        <td>Battery life</td>\n";
+    print $sock "        <td>Measure over <input type=\"text\" size=\"6\" name=\"svgblifeIntv\" value=\"$svgblifeIntv\"> minutes</td>\n";
+    print $sock "    </tr>\n";
+
     print $sock "</table>\n";
     print $sock "</form>\n";
 
@@ -569,7 +609,9 @@ sub l00http_periobattery_perio {
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $lastcalled = time;
         $retval = $interval;
-        if (($retval < 300) && ($ctrl->{'iamsleeping'} eq 'yes')) {
+        if (($retval < 300) && (
+            (defined($ctrl->{'iamsleeping'}) &&
+             ($ctrl->{'iamsleeping'} eq 'yes')))) {
              # don't poll more than once every 5 minutes when sleeping
              $retval = 300;
         }
