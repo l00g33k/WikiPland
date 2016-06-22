@@ -487,9 +487,16 @@ sub l00http_ls_proc {
                 if ($ctrl->{'os'} eq 'and') {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
                 } elsif (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
-                    $_ = $path;
-                    s/\//\\/g;
-                    `cmd /c \"start notepad ^\"$path^\"\"`;
+                    my ($pid);
+                    if ($pid = fork) {
+                    } else {
+                        # http://www.oreilly.com/openbook/cgi/ch10_10.html
+                        # child process
+                        $_ = $path;
+                        s/\//\\/g;
+                        system ("cmd /c \"start notepad ^\"$path^\"\"");
+                        exit (0);
+                    }
                 }
             }
             $urlraw = 0;
