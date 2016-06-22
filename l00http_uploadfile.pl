@@ -91,6 +91,8 @@ sub l00http_uploadfile_proc {
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 
+    print $sock "WARNING: Be certain you intend to overwrite target file. Under unknown conditions, target directory may be lost. You are warned.<p>\n".
+
     print $sock "Note: The directory part of the 'Upload to' field is used as the destination direction. ".
         "The filename is taken from the file being uploaded. If only directory is given, it must end in '/' or '\'. Pick a file in launcher and only the directory part will be kept<p>\n";
 
