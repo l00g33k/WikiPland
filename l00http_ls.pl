@@ -483,8 +483,14 @@ sub l00http_ls_proc {
                 }
             }
             # launch editor
-            if (($ctrl->{'os'} eq 'and') && defined ($form->{'exteditor'})) {
-                $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
+            if (defined ($form->{'exteditor'})) {
+                if ($ctrl->{'os'} eq 'and') {
+                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
+                } elsif (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+                    $_ = $path;
+                    s/\//\\/g;
+                    `cmd /c \"start notepad ^\"$path^\"\"`;
+                }
             }
             $urlraw = 0;
             if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
