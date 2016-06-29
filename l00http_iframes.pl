@@ -57,6 +57,12 @@ sub l00http_iframes_proc (\%) {
             $form->{'url'} = $1;
         }
     }
+#::now::
+# add paste CB for this button
+#<input type=\"submit\" name=\"row$rowidx\" value=\"Row $rowidx\">
+#new row%d to trigger 'update'
+#CB -> $form->{"url_$rowidx"}
+#::herehere::
     if (defined ($form->{'update'})) {
         $spec = '';
         $rowidx = 0;
@@ -68,6 +74,10 @@ sub l00http_iframes_proc (\%) {
                 last;
             }
             if ($spec ne '') {
+                if (defined ($form->{"lf_$rowidx"}) &&
+                    ($form->{"lf_$rowidx"} eq 'on')) {
+#                    $form->{"url_$rowidx"} = &l00httpd::l00getCB($ctrl);
+                }
                 if (defined ($form->{"lf_$rowidx"}) &&
                     ($form->{"lf_$rowidx"} eq 'on')) {
                     $spec .= '   ';
@@ -165,7 +175,7 @@ sub l00http_iframes_proc (\%) {
                 ($u, $wd, $ht) = split (' ', $frame);
 
                 $formout .= "    <tr>\n";
-                $formout .= "        <td>Row $rowidx</td>\n";
+                $formout .= "        <td>Row $rowidx<input type=\"checkbox\" name=\"cb_$rowidx\"> CB-&gt;</td>\n";
                 $formout .= "        <td>";
                 if (($colidx == 0) && ($rowidx != 0)) {
                     $tmp = 'checked';
@@ -173,7 +183,8 @@ sub l00http_iframes_proc (\%) {
                     $tmp = '';
                 }
                 $formout .= "        <input type=\"checkbox\" name=\"lf_$rowidx\" $tmp> &lt;p&gt; ";
-                $formout .= "        URL: <input type=\"text\" size=\"6\" name=\"url_$rowidx\" value=\"$u\"> ";
+                $formout .= "        <a href=\"$u\">URL</a>: ";
+                $formout .= "             <input type=\"text\" size=\"6\" name=\"url_$rowidx\" value=\"$u\"> ";
                 $formout .= "        wd: <input type=\"text\" size=\"2\" name=\"wd_$rowidx\" value=\"$wd\"> ";
                 $formout .= "        ht: <input type=\"text\" size=\"3\" name=\"ht_$rowidx\" value=\"$ht\"> ";
                 $formout .= "        </td>\n";
