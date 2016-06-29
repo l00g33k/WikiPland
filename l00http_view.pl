@@ -33,7 +33,7 @@ sub l00http_view_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
-    my ($tmpno, $tmpln, $tmptop, $foundcnt);
+    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0);
 
 
     if (defined ($form->{'nohdr'})) {
@@ -89,9 +89,9 @@ sub l00http_view_proc {
         }
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
-            if ($skip < 0) {
-                $skip = 0;
-            }
+#            if ($skip < 0) {
+#                $skip = 0;
+#            }
         }
 #    } else {
 #        $skip = 0;
@@ -108,14 +108,14 @@ sub l00http_view_proc {
     # bring high lighted line into view
     if ($hilite > 0) {
         # we are highlighting
-        if (($hilite < $skip) || ($hilite > $skip + $maxln)) {
+        if (($skip >= 0) && 
+            (($hilite < $skip) || ($hilite > $skip + $maxln))) {
+            # only if skipping from the start
             # but it won't be in view. adjust skip and maxln
-#            $skip = $hilite - 500;
             $skip = $hilite - int ($maxln / 2);
             if ($skip < 0) {
                 $skip = 0;
             }
-#            $maxln = 1000;
         }
     }
 
@@ -128,20 +128,40 @@ sub l00http_view_proc {
         print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
         print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
         # skip backward $maxln
-        $tmp = $skip - $maxln;
-        if ($tmp < 0) {
+        if ($skip >= 0) {
+            # only if skipping from the start
+            $tmp = $skip - $maxln;
+            if ($tmp < 0) {
+                $tmp = 0;
+            }
+        } else {
             $tmp = 0;
         }
         print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
         # skip forward $maxln
-        $tmp = int ($skip - $maxln / 2);
-        if ($tmp < 0) {
+        if ($skip >= 0) {
+            # only if skipping from the start
+            $tmp = int ($skip - $maxln / 2);
+            if ($tmp < 0) {
+                $tmp = 0;
+            }
+        } else {
             $tmp = 0;
         }
         print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
-        $tmp = int ($skip + $maxln / 2);
+        if ($skip >= 0) {
+            # only if skipping from the start
+            $tmp = int ($skip + $maxln / 2);
+        } else {
+            $tmp = 0;
+        }
         print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
-        $tmp = int ($skip + $maxln);
+        if ($skip >= 0) {
+            # only if skipping from the start
+            $tmp = int ($skip + $maxln);
+        } else {
+            $tmp = 0;
+        }
         print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
         print $sock "</form>\n";
     }
@@ -238,15 +258,22 @@ sub l00http_view_proc {
 
             print $sock sprintf ("<a name=\"hilitetext_%d\"></a>", 0);
             $hilitetextidx = 1;
+            if ($skip < 0) {
+                @_ = split ("\n", $buffer);
+                $totallns = $#_ + 1;
+                $skip0  = $totallns - $maxln + 1;
+            } else {
+                $skip0  = $skip;
+            }
             foreach $_ (split ("\n", $buffer)) {
                 $lineno++;
-                if ($lineno < $skip) {
+                if ($lineno < $skip0) {
                     if ($lineno == 1) {
-                        print $sock "\nFirst $skip lines skipped\n";
+                        print $sock "\nFirst $skip0 lines skipped\n";
                     }
                     next;
                 }
-                if (($lineno - $skip) > $maxln) {
+                if (($lineno - $skip0) > $maxln) {
                     next;
                 }
                 s/\r//g;
@@ -299,8 +326,11 @@ sub l00http_view_proc {
         }
     }
     print $sock "<hr><a name=\"end\"></a><p>\n";
-    if (($lineno + $skip) > $maxln) {
-        print $sock "\nAnother " . ($lineno - $skip - $maxln) . " lines skipped<br>\n";
+    if ($skip >= 0) {
+        # only if skipping from the start
+        if (($lineno + $skip) > $maxln) {
+            print $sock "\nAnother " . ($lineno - $skip - $maxln) . " lines skipped<br>\n";
+        }
     }
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
             $size, $atime, $mtimea, $ctime, $blksize, $blocks);
