@@ -28,10 +28,12 @@ sub l00http_clip_proc {
     print $sock "Go to <a href=\"/scratch.htm\">scratch</a> - \n";
     print $sock "<a href=\"/httpd.htm#ram\">RAM files</a><br>\n";
 
-    $clip = "";
+    $clip = '';
     if (defined ($form->{'clear'})) {
-	    # clears
-    } elsif (defined ($form->{'append'})) {
+        # clears
+        $form->{'clip'} = '';
+    }
+    if (defined ($form->{'append'})) {
         $clip = $form->{'clip'};
         $clip .= &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'clip'})) {

@@ -42,13 +42,9 @@ sub l00http_clipbrdxfer_proc (\%) {
     }
     if (defined ($form->{'name'})) {
         $name = $form->{'name'}
-    } else {
-#       $name = '';
     }
     if (defined ($form->{'pw'})) {
         $pw = $form->{'pw'}
-    } else {
-#       $pw = '';
     }
 
     print $sock "<form action=\"/clipbrdxfer.htm\" method=\"get\">\n";
