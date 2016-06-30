@@ -53,7 +53,7 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-
+my ($cmdlnhome);
 
 # set listening port
 $ctrl_port = 20337;
@@ -66,6 +66,7 @@ $shutdown = 0;
 $cfgedit = '';
 $httpmax = 1024 * 1024 * 3;
 $ctrl{'bannermute'} = 0;
+$cmdlnhome = '';
 
 undef $timeout;
 
@@ -351,7 +352,13 @@ sub readl00httpdcfg {
             }
         }
     }
+    if ($cmdlnhome ne '') {
+        # use command line supplied HOME target
+        # on start up $ctrl{'HOME'} is set by ARGV parser
+        $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$cmdlnhome\">HOME</a>"
+    }
 }
+
 &readl00httpdcfg;
 
 
@@ -371,6 +378,10 @@ while ($_ = shift) {
         $debug = $1;
         $ctrl{'debug'} = $debug;
         print "debug set to $debug\n";
+    } elsif (/^home=(.+)/) {
+        $cmdlnhome = $1;
+        print "home set to $cmdlnhome\n";
+        $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$cmdlnhome\">HOME</a>"
     } elsif (/^open$/) {
 	    $nopwtimeout = 0x7fffffff;
         $ctrl{'noclinav'}  = 0;
