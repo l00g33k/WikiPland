@@ -9,7 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
-my ($hostpath, $lastpath);
+my ($hostpath, $lastpath, $refresh);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
@@ -20,6 +20,8 @@ $skip = 0;
 $maxln = 1000;
 $hilitetext = '';
 $lastpath = '';
+$refresh = '';
+
 
 sub l00http_view_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -33,7 +35,7 @@ sub l00http_view_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
-    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0);
+    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
 
 
     if (defined ($form->{'nohdr'})) {
@@ -42,8 +44,26 @@ sub l00http_view_proc {
         $nohdr = '';
     }
 
+    if (defined ($form->{'update'})) {
+        if (defined ($form->{'refresh'})) {
+            $refresh = '';
+            if ($form->{'refresh'} =~ /(\d+)/) {
+                $refresh = $1;
+                if ($refresh <= 0) {
+                    $refresh = '';
+                }
+            }
+        }
+    }
+
+    if ($refresh eq '') {
+        $refreshtag = '';
+    } else {
+        $refreshtag = "<meta http-equiv=\"refresh\" content=\"$refresh\"> ";
+    }
+
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $refreshtag . $ctrl->{'htmlhead2'};
     if ($nohdr eq '') {
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
         print $sock "<a href=\"#end\">Jump to end</a>\n";
@@ -89,13 +109,10 @@ sub l00http_view_proc {
         }
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
-#            if ($skip < 0) {
-#                $skip = 0;
-#            }
         }
-#    } else {
-#        $skip = 0;
-#        $maxln = 1000;
+    } else {
+        $skip = 0;
+        $maxln = 1000;
     }
 
     $hilite = 0;
@@ -127,6 +144,7 @@ sub l00http_view_proc {
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
         print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
         print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
+        print $sock "Auto-refresh (0=off) <input type=\"text\" size=\"3\" name=\"refresh\" value=\"\"> sec.\n";
         # skip backward $maxln
         if ($skip >= 0) {
             # only if skipping from the start
