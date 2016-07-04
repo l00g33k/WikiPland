@@ -9,7 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
-my ($hostpath, $lastpath, $refresh);
+my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
@@ -21,6 +21,7 @@ $maxln = 1000;
 $hilitetext = '';
 $lastpath = '';
 $refresh = '';
+$refreshfile = '';
 
 
 sub l00http_view_desc {
@@ -37,6 +38,15 @@ sub l00http_view_proc {
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
 
+    if (defined ($form->{'path'})) {
+        $form->{'path'} =~ s/\r//g;
+        $form->{'path'} =~ s/\n//g;
+        if ($refreshfile ne $form->{'path'}) {
+            # viewing different file, reset auto-refresh
+            $refreshfile = $form->{'path'};
+            $refresh = '';
+        }
+    }
 
     if (defined ($form->{'nohdr'})) {
         $nohdr = 'checked';
@@ -71,8 +81,6 @@ sub l00http_view_proc {
     print $sock "<a name=\"top\"></a>\n";
 
     if (defined ($form->{'path'})) {
-        $form->{'path'} =~ s/\r//g;
-        $form->{'path'} =~ s/\n//g;
         if ($nohdr eq '') {
             $tmp = $form->{'path'};
             if ($ctrl->{'os'} eq 'win') {
