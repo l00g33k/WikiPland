@@ -486,8 +486,8 @@ sub l00http_mobizoom_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($wget, $mode1online2offline4download);
-    my ($skip, $tmp, $title, $foundthreads, $foundthreadphase, $foundthreadcnt);
+    my ($wget, $mode1online2offline4download, $path);
+    my ($skip, $tmp, $title, $foundthreadphase);
     my ($hdr, $domain, $journal);
 
 
@@ -561,6 +561,12 @@ sub l00http_mobizoom_proc {
             if ($wget =~ /<title>(.+?)<\/title.*?>/s) {
                 $title = "$1\n";
             }
+            if (-f $url) {
+                # is a file, do path=./ substitution
+                $path = $url;
+                $path =~ s/([\\\/])[^\\\/]+$/$1/;
+                $wget =~ s/path=.\//path=$path/gm;
+            }
         } else {
             $wget = "Failed top load '$url'\n";
         }
@@ -580,9 +586,6 @@ sub l00http_mobizoom_proc {
             # mobilize page
             $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
             print $sock $wget;
-            if ($foundthreadcnt > 1) {
-                print $sock $foundthreads;
-            }
         } else {
             # $mode1online2offline4download != 2
             # fetch for active reading or caching automation
