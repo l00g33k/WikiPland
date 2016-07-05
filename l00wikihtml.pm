@@ -279,8 +279,9 @@ if(1){
                 } else {
                     $inbuf .= " - [[$url|$desc]]";
                 }
-            } elsif (($desc, $url) = /^(.+) *\| *(.+)$/) {
-                # bookmarks
+            } elsif (($desc, $url) = /^([^&].+) *\| *(.+)$/) {
+                # [^&] prevents indented lines with | to be made bookmarks
+                # bookmarks; must start in column 0
                 $desc =~ s/ +$//g;
                 if ($last =~ /^\*/) {
                     $inbuf .= "[[$url|$desc]]";
