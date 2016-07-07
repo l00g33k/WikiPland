@@ -12,28 +12,29 @@ my %config = (proc => "l00http_syncview_proc",
               desc => "l00http_syncview_desc");
 
 
-my ($width, $oldfile, $newfile);
-my ($hide, $maxline, $debug, @OLD, @NEW);
+my ($width, $rightfile, $leftfile);
+my ($hide, $maxline, $debug, @RIGHT, @LEFT, $leftregex, $rightregex);
 $width = 20;
-$oldfile = '';
-$newfile = '';
+$rightfile = '';
+$leftfile = '';
 $hide = '';
 $maxline = 4000;
 $debug = 0;
-
+$leftregex = '';
+$rightregex = '';
 
 sub l00http_syncview_make_outline {
-    my ($oii, $nii, $width, $oldfile, $newfile) = @_;
+    my ($oii, $nii, $width, $rightfile, $leftfile) = @_;
     my ($oout, $nout, $ospc, $tmp, $clip, $view, $lineno0, $lineno);
 
 
-    if (($oii >= 0) && ($oii <= $#OLD)) {
-        $tmp = sprintf ("%-${width}s", substr($OLD[$oii],0,$width));
+    if (($oii >= 0) && ($oii <= $#RIGHT)) {
+        $tmp = sprintf ("%-${width}s", substr($RIGHT[$oii],0,$width));
         $ospc = sprintf ("%3d: %-${width}s", $oii + 1, ' ');
         $ospc =~ s/./ /g;
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
-        #$clip = &l00httpd::urlencode ($OLD[$oii]);
+        #$clip = &l00httpd::urlencode ($RIGHT[$oii]);
         #$clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
 
         $lineno = $oii + 1;
@@ -41,7 +42,7 @@ sub l00http_syncview_make_outline {
         if ($lineno0 < 1) {
             $lineno0 = 1;
         }
-        $view = "/view.htm?path=$oldfile&hiliteln=$lineno&lineno=on#line$lineno0";
+        $view = "/view.htm?path=$rightfile&hiliteln=$lineno&lineno=on#line$lineno0";
         $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
     } else {
         # make a string of space of same length
@@ -49,11 +50,11 @@ sub l00http_syncview_make_outline {
         $ospc =~ s/./ /g;
         $oout = $ospc;
     }
-    if (($nii >= 0) && ($nii <= $#NEW)) {
-        $tmp = sprintf ("%-${width}s", substr($NEW[$nii],0,$width));
+    if (($nii >= 0) && ($nii <= $#LEFT)) {
+        $tmp = sprintf ("%-${width}s", substr($LEFT[$nii],0,$width));
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
-        #$clip = &l00httpd::urlencode ($NEW[$nii]);
+        #$clip = &l00httpd::urlencode ($LEFT[$nii]);
         #$clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
 
         $lineno = $nii + 1;
@@ -61,7 +62,7 @@ sub l00http_syncview_make_outline {
         if ($lineno0 < 1) {
             $lineno0 = 1;
         }
-        $view = "/view.htm?path=$newfile&hiliteln=$lineno&lineno=on#line$lineno0";
+        $view = "/view.htm?path=$leftfile&hiliteln=$lineno&lineno=on#line$lineno0";
         $nout = sprintf ("%3d<a href=\"%s\">:</a> %s", $nii + 1, $view, $tmp);
     } else {
         $nout = '';
@@ -130,88 +131,100 @@ my ($oout, $nout, $ospc);
             $maxline = $1;
         }
     }
+    if (defined ($form->{'leftregex'})) {
+        $leftregex = $form->{'leftregex'};
+    }
+    if (defined ($form->{'rightregex'})) {
+        $rightregex = $form->{'rightregex'};
+    }
 
     # copy paste target
     if (defined ($form->{'swap'})) {
-        $_ = $newfile;
-        $newfile = $oldfile;
-        $oldfile = $_;
-    } elsif (defined ($form->{'pasteold'})) {
-        # if pasting old file
+        $_ = $leftfile;
+        $leftfile = $rightfile;
+        $rightfile = $_;
+    } elsif (defined ($form->{'pasteright'})) {
+        # if pasting right file
         # this takes precedence over 'path'
-        $oldfile = &l00httpd::l00getCB($ctrl);
-    } elsif (defined ($form->{'pastenew'})) {
-        # if pasting new file
+        $rightfile = &l00httpd::l00getCB($ctrl);
+    } elsif (defined ($form->{'pasteleft'})) {
+        # if pasting left file
         # this takes precedence over 'path'
-        $newfile = &l00httpd::l00getCB($ctrl);
+        $leftfile = &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'path'})) {
         # could be 'view' or from launcher.htm
-        if (defined ($form->{'pathold'})) {
-            # 'view' clicked, old file from oldfile field
-            $oldfile = $form->{'pathold'};
+        if (defined ($form->{'pathright'})) {
+            # 'view' clicked, right file from rightfile field
+            $rightfile = $form->{'pathright'};
         } else {
-            # from ls.htm, push first file to be oldfile
-            $oldfile = $newfile;
+            # from ls.htm, push first file to be rightfile
+            $rightfile = $leftfile;
         }
-        # new file always from 'path' (field or from ls.htm)
-        $newfile = $form->{'path'};
+        # left file always from 'path' (field or from ls.htm)
+        $leftfile = $form->{'path'};
     }
 
     if (defined ($form->{'view'})) {
         # 'view' clicked
-        if ((defined ($form->{'pathold'})) && (length($form->{'pathold'}) > 2)) {
-            $oldfile = $form->{'pathold'};
+        if ((defined ($form->{'pathright'})) && (length($form->{'pathright'}) > 2)) {
+            $rightfile = $form->{'pathright'};
         }
-        if ((defined ($form->{'pathnew'})) && (length($form->{'pathnew'}) > 2)) {
-            $newfile = $form->{'pathnew'};
+        if ((defined ($form->{'pathleft'})) && (length($form->{'pathleft'}) > 2)) {
+            $leftfile = $form->{'pathleft'};
         }
 
-        $htmlout = "output: $oldfile $newfile\n";
+        $htmlout = "output: $rightfile $leftfile\n";
 
     $htmlout .= "<pre>\n";
 
-    if (&l00httpd::l00freadOpen($ctrl, "$oldfile")) {
-        $htmlout .= "&lt; Old file: <a href=\"/view.htm?path=$oldfile\">$oldfile</a>\n";
-        undef @OLD;
+    if (&l00httpd::l00freadOpen($ctrl, "$rightfile")) {
+        $htmlout .= "&lt; Right file: <a href=\"/view.htm?path=$rightfile\">$rightfile</a>\n";
+        undef @RIGHT;
         $cnt = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             $cnt++;
             s/\r//;
             s/\n//;
-            push (@OLD, $_);
+if (/$rightregex/) {
+    print "RGHT($cnt): $1\n";
+}
+            push (@RIGHT, $_);
         }
         $htmlout .= "    read $cnt lines\n";
     } else {
-        $htmlout .= "$oldfile open failed\n";
+        $htmlout .= "$rightfile open failed\n";
     }
 
-    if (&l00httpd::l00freadOpen($ctrl, "$newfile")) {
-        $htmlout .= "&gt; New file: <a href=\"/view.htm?path=$newfile\">$newfile</a>\n";
-        undef @NEW;
+    if (&l00httpd::l00freadOpen($ctrl, "$leftfile")) {
+        $htmlout .= "&gt; Left file: <a href=\"/view.htm?path=$leftfile\">$leftfile</a>\n";
+        undef @LEFT;
         $cnt = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             $cnt++;
             s/\r//;
             s/\n//;
-            push (@NEW, $_);
+if (/$leftregex/) {
+    print "LEFT($cnt): $1\n";
+}
+            push (@LEFT, $_);
         }
         $htmlout .= "    read $cnt lines\n\n";
     } else {
-        $htmlout .= "$newfile open failed\n";
+        $htmlout .= "$leftfile open failed\n";
     }
 
-#    for ($ln = 0; $ln <= $#OLD; $ln++) {
-#        $htmlout .= "$ln: <  $OLD[$ln]\n";
+#    for ($ln = 0; $ln <= $#RIGHT; $ln++) {
+#        $htmlout .= "$ln: <  $RIGHT[$ln]\n";
 #    }
 
-    $max = $#OLD;
-    if ($max > $#NEW) {
-        $max = $#NEW;
+    $max = $#RIGHT;
+    if ($max > $#LEFT) {
+        $max = $#LEFT;
     }
     for ($ln = 0; $ln <= $max; $ln++) {
-        ($oout, $nout, $ospc) = &l00http_syncview_make_outline($ln, $ln, $width, $oldfile, $newfile);
+        ($oout, $nout, $ospc) = &l00http_syncview_make_outline($ln, $ln, $width, $rightfile, $leftfile);
         $htmlout .= " $oout =$nout\n";
-#        $htmlout .= "$ln: $OLD[$ln] = $NEW[$ln]\n";
+#        $htmlout .= "$ln: $RIGHT[$ln] = $LEFT[$ln]\n";
     }
 
         print $sock $htmlout;
@@ -226,13 +239,15 @@ my ($oout, $nout, $ospc);
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"pastenew\" value=\"CB>New:\">";
-    print $sock "<br><textarea name=\"pathnew\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$newfile</textarea>\n";
+    print $sock "<input type=\"submit\" name=\"pasteleft\" value=\"CB>Left:\">";
+    print $sock " Stamp regex: <input type=\"text\" size=\"8\" name=\"leftregex\" value=\"$leftregex\">\n";
+    print $sock "<br><textarea name=\"pathleft\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$leftfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"pasteold\" value=\"CB>Old:\">";
-    print $sock "<br><textarea name=\"pathold\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$oldfile</textarea>\n";
+    print $sock "<input type=\"submit\" name=\"pasteright\" value=\"CB>Right:\">";
+    print $sock " Stamp regex: <input type=\"text\" size=\"8\" name=\"rightregex\" value=\"$rightregex\">\n";
+    print $sock "<br><textarea name=\"pathright\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$rightfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
