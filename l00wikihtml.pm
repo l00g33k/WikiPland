@@ -288,6 +288,24 @@ if(1){
                 } else {
                     $inbuf .= " - [[$url|$desc]]";
                 }
+            } elsif (($desc, $url) = /^(&nbsp;) *\| *(.+)$/) {
+                # special case of above with only one space (&nbsp;), case b
+                # bookmarks; must start in column or 1
+                $desc =~ s/ +$//g;
+                if ($last =~ /^\*/) {
+                    $inbuf .= "[[$url|$desc]]";
+                } else {
+                    $inbuf .= " - [[$url|$desc]]";
+                }
+            } elsif (($desc, $url) = /^(&nbsp;[^&].+) *\| *(.+)$/) {
+                # special case of above with only one space (&nbsp;), case a
+                # bookmarks; must start in column or 1
+                $desc =~ s/ +$//g;
+                if ($last =~ /^\*/) {
+                    $inbuf .= "[[$url|$desc]]";
+                } else {
+                    $inbuf .= " - [[$url|$desc]]";
+                }
             } elsif (/^ *$/) {
                 # newline
                 if ($lnnoinfo ne '') {
