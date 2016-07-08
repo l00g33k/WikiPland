@@ -12,29 +12,30 @@ my %config = (proc => "l00http_syncview_proc",
               desc => "l00http_syncview_desc");
 
 
-my ($width, $rightfile, $leftfile);
+my ($width, $rightfile, $leftfile, $skip);
 my ($hide, $maxline, $debug, @RIGHT, @LEFT, $leftregex, $rightregex);
 $width = 20;
 $rightfile = '';
 $leftfile = '';
 $hide = '';
-$maxline = 4000;
+$maxline = 1000;
 $debug = 0;
 $leftregex = '';
 $rightregex = '';
+$skip = 0;
 
 sub l00http_syncview_make_outline {
-    my ($oii, $nii, $width, $rightfile, $leftfile) = @_;
+    my ($oii, $nii, $width, $leftfile, $rightfile) = @_;
     my ($oout, $nout, $ospc, $tmp, $clip, $view, $lineno0, $lineno);
 
 
-    if (($oii >= 0) && ($oii <= $#RIGHT)) {
-        $tmp = sprintf ("%-${width}s", substr($RIGHT[$oii],0,$width));
+    if (($oii >= 0) && ($oii <= $#LEFT)) {
+        $tmp = sprintf ("%-${width}s", substr($LEFT[$oii],0,$width));
         $ospc = sprintf ("%3d: %-${width}s", $oii + 1, ' ');
         $ospc =~ s/./ /g;
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
-        #$clip = &l00httpd::urlencode ($RIGHT[$oii]);
+        #$clip = &l00httpd::urlencode ($LEFT[$oii]);
         #$clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
 
         $lineno = $oii + 1;
@@ -42,7 +43,7 @@ sub l00http_syncview_make_outline {
         if ($lineno0 < 1) {
             $lineno0 = 1;
         }
-        $view = "/view.htm?path=$rightfile&hiliteln=$lineno&lineno=on#line$lineno0";
+        $view = "/view.htm?path=$leftfile&hiliteln=$lineno&lineno=on#line$lineno0";
         $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
     } else {
         # make a string of space of same length
@@ -50,11 +51,11 @@ sub l00http_syncview_make_outline {
         $ospc =~ s/./ /g;
         $oout = $ospc;
     }
-    if (($nii >= 0) && ($nii <= $#LEFT)) {
-        $tmp = sprintf ("%-${width}s", substr($LEFT[$nii],0,$width));
+    if (($nii >= 0) && ($nii <= $#RIGHT)) {
+        $tmp = sprintf ("%-${width}s", substr($RIGHT[$nii],0,$width));
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
-        #$clip = &l00httpd::urlencode ($LEFT[$nii]);
+        #$clip = &l00httpd::urlencode ($RIGHT[$nii]);
         #$clip = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
 
         $lineno = $nii + 1;
@@ -62,7 +63,7 @@ sub l00http_syncview_make_outline {
         if ($lineno0 < 1) {
             $lineno0 = 1;
         }
-        $view = "/view.htm?path=$leftfile&hiliteln=$lineno&lineno=on#line$lineno0";
+        $view = "/view.htm?path=$rightfile&hiliteln=$lineno&lineno=on#line$lineno0";
         $nout = sprintf ("%3d<a href=\"%s\">:</a> %s", $nii + 1, $view, $tmp);
     } else {
         $nout = '';
@@ -82,7 +83,10 @@ sub l00http_syncview_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($htmlout, $cnt, $ln);
+    my ($htmlout, $cnt, $ln, $ii);
+    my (@leftblkat, @leftmarkers, @leftblksz, $leftblkcnt, $lastblksz);
+    my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
+
 my ($max);
 my ($oout, $nout, $ospc);
 
@@ -126,9 +130,14 @@ my ($oout, $nout, $ospc);
             $width = $1;
         }
     }
-    if (defined ($form->{'maxline'})) {
-        if ($form->{'maxline'} =~ /(\d+)/) {
-            $maxline = $1;
+    if (defined ($form->{'width'})) {
+        if ($form->{'width'} =~ /(\d+)/) {
+            $width = $1;
+        }
+    }
+    if (defined ($form->{'skip'})) {
+        if ($form->{'skip'} =~ /(\d+)/) {
+            $skip = $1;
         }
     }
     if (defined ($form->{'leftregex'})) {
@@ -175,57 +184,166 @@ my ($oout, $nout, $ospc);
 
         $htmlout = "output: $rightfile $leftfile\n";
 
-    $htmlout .= "<pre>\n";
+        $htmlout .= "<pre>\n";
 
-    if (&l00httpd::l00freadOpen($ctrl, "$rightfile")) {
-        $htmlout .= "&lt; Right file: <a href=\"/view.htm?path=$rightfile\">$rightfile</a>\n";
-        undef @RIGHT;
-        $cnt = 0;
-        while ($_ = &l00httpd::l00freadLine($ctrl)) {
-            $cnt++;
-            s/\r//;
-            s/\n//;
-if (/$rightregex/) {
-    print "RGHT($cnt): $1\n";
-}
-            push (@RIGHT, $_);
+        if (&l00httpd::l00freadOpen($ctrl, "$leftfile")) {
+            $htmlout .= "Left file: <a href=\"/view.htm?path=$leftfile\">$leftfile</a>\n";
+            undef @LEFT;
+            $cnt = 0;
+            undef @leftblkat;
+            undef @leftmarkers;
+            undef @leftblksz;
+            $leftblkcnt = 0;
+            $lastblksz = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/\r//;
+                s/\n//;
+                $lastblksz++;
+                if (/$leftregex/) {
+                    $leftblkat[$leftblkcnt] = $cnt;
+                    $leftmarkers[$leftblkcnt] = $1;
+                    if ($leftblkcnt > 0) {
+                        $leftblksz[$leftblkcnt - 1] = $lastblksz;
+                    }
+                    $leftblkcnt++;
+                    $lastblksz = 0;
+                }
+                push (@LEFT, $_);
+                $cnt++;
+            }
+            $leftblksz[$leftblkcnt - 1] = $lastblksz;
+            $htmlout .= "    read $cnt lines\n";
+        } else {
+            $htmlout .= "$leftfile open failed\n";
         }
-        $htmlout .= "    read $cnt lines\n";
-    } else {
-        $htmlout .= "$rightfile open failed\n";
-    }
 
-    if (&l00httpd::l00freadOpen($ctrl, "$leftfile")) {
-        $htmlout .= "&gt; Left file: <a href=\"/view.htm?path=$leftfile\">$leftfile</a>\n";
-        undef @LEFT;
-        $cnt = 0;
-        while ($_ = &l00httpd::l00freadLine($ctrl)) {
-            $cnt++;
-            s/\r//;
-            s/\n//;
-if (/$leftregex/) {
-    print "LEFT($cnt): $1\n";
-}
-            push (@LEFT, $_);
+
+        if (&l00httpd::l00freadOpen($ctrl, "$rightfile")) {
+            $htmlout .= "Right file: <a href=\"/view.htm?path=$rightfile\">$rightfile</a>\n";
+            undef @RIGHT;
+            $cnt = 0;
+            undef %rightmarkerat;
+            undef %rightblksz;
+            $lastrightmkr = '';
+            $lastblksz = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/\r//;
+                s/\n//;
+                $lastblksz++;
+                if (/$rightregex/) {
+                    $rightmarkerat{$1} = $cnt;
+                    if ($lastrightmkr ne '') {
+                        $rightblksz{$lastrightmkr} = $lastblksz;
+                    }
+                    $lastblksz = 0;
+                    $lastrightmkr = $1;
+                }
+                push (@RIGHT, $_);
+                $cnt++;
+            }
+            $rightblksz{$lastrightmkr} = $lastblksz;
+            $htmlout .= "    read $cnt lines\n\n";
+        } else {
+            $htmlout .= "$rightfile open failed\n\n";
         }
-        $htmlout .= "    read $cnt lines\n\n";
-    } else {
-        $htmlout .= "$leftfile open failed\n";
-    }
 
-#    for ($ln = 0; $ln <= $#RIGHT; $ln++) {
-#        $htmlout .= "$ln: <  $RIGHT[$ln]\n";
-#    }
+#for ($cnt = 0; $cnt < $leftblkcnt; $cnt++) 
+#for ($cnt = 0; $cnt < 30; $cnt++) {
+#print "LEFT($cnt): at $leftblkat[$cnt], $leftblksz[$cnt] lines >$leftmarkers[$cnt]<. RIGHT: $rightmarkerat{$leftmarkers[$cnt]}, $rightblksz{$leftmarkers[$cnt]} lines\n";
+#}
 
-    $max = $#RIGHT;
-    if ($max > $#LEFT) {
-        $max = $#LEFT;
-    }
-    for ($ln = 0; $ln <= $max; $ln++) {
-        ($oout, $nout, $ospc) = &l00http_syncview_make_outline($ln, $ln, $width, $rightfile, $leftfile);
-        $htmlout .= " $oout =$nout\n";
-#        $htmlout .= "$ln: $RIGHT[$ln] = $LEFT[$ln]\n";
-    }
+
+$max = $#RIGHT;
+if ($max > $#LEFT) {
+$max = $#LEFT;
+}
+if ($max > $maxline) {
+$max = $maxline;
+}
+
+        $lnsoutput = 0;
+        $blkidx = 0;
+        while ($lnsoutput++ < $maxline) {
+            for ($blkidx = 0; $blkidx < $leftblkcnt; $blkidx++) {
+                if ($leftblkat[$blkidx] < $skip) {
+                    next;
+                }
+                #print "LEFT($blkidx): at $leftblkat[$blkidx], $leftblksz[$blkidx] lines >$leftmarkers[$blkidx]<. RIGHT: $rightmarkerat{$leftmarkers[$blkidx]}, $rightblksz{$leftmarkers[$blkidx]} lines\n";
+                if ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]}) {
+                    # left block larger
+                    # print both
+                    for ($ii = 0; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
+                        ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                            $leftblkat[$blkidx] + $ii, 
+                            $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
+                            $width, $leftfile, $rightfile);
+                        if ($ii == 0) {
+                            $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                            $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                        }
+                        $htmlout .= " $oout =$nout\n";
+                        if ($lnsoutput++ >= $maxline) {
+                            last;
+                        }
+                    }
+                    if ($lnsoutput >= $maxline) {
+                        last;
+                    }
+                    # and remaining left
+                    for (; $ii < $leftblksz[$blkidx]; $ii++) {
+                        ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                            $leftblkat[$blkidx] + $ii, 
+                            -1, 
+                            $width, $leftfile, $rightfile);
+                        $htmlout .= " $oout =$nout\n";
+                        if ($lnsoutput++ >= $maxline) {
+                            last;
+                        }
+                    }
+                } else {
+                    # right block larger
+                    # print both
+                    for ($ii = 0; $ii < $leftblksz[$blkidx]; $ii++) {
+                        ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                            $leftblkat[$blkidx] + $ii, 
+                            $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
+                            $width, $leftfile, $rightfile);
+                        if ($ii == 0) {
+                            $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                            $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                        }
+                        $htmlout .= " $oout =$nout\n";
+                        if ($lnsoutput++ >= $maxline) {
+                            last;
+                        }
+                    }
+                    if ($lnsoutput >= $maxline) {
+                        last;
+                    }
+                    # and remaining left
+                    for (; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
+                        ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                            -1, 
+                            $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
+                            $width, $leftfile, $rightfile);
+                        $htmlout .= " $oout =$nout\n";
+                        if ($lnsoutput++ >= $maxline) {
+                            last;
+                        }
+                    }
+                }
+                if ($lnsoutput >= $maxline) {
+                    last;
+                }
+            }
+            last;
+        }
+
+#$htmlout .= " -----------------------------------------\n";
+#for ($ln = 0; $ln <= $max; $ln++) {
+#    ($oout, $nout, $ospc) = &l00http_syncview_make_outline($ln, $ln, $width, $leftfile, $rightfile);
+#    $htmlout .= " $oout =$nout\n";
+#}
 
         print $sock $htmlout;
     }
@@ -257,8 +375,9 @@ if (/$leftregex/) {
 
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
-    print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\"> ";
-    print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max\n";
+    print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">; ";
+    print $sock "Skip <input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\"> lines, view\n";
+    print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max.\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
