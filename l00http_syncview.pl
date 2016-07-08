@@ -211,7 +211,9 @@ my ($oout, $nout, $ospc);
                 push (@LEFT, $_);
                 $cnt++;
             }
-            $leftblksz[$leftblkcnt - 1] = $lastblksz;
+            if ($leftblkcnt > 0) {
+                $leftblksz[$leftblkcnt - 1] = $lastblksz;
+            }
             $htmlout .= "    read $cnt lines\n";
         } else {
             $htmlout .= "$leftfile open failed\n";
