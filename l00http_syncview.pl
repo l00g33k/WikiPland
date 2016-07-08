@@ -12,17 +12,29 @@ my %config = (proc => "l00http_syncview_proc",
               desc => "l00http_syncview_desc");
 
 
-my ($width, $rightfile, $leftfile, $skip);
-my ($hide, $maxline, $debug, @RIGHT, @LEFT, $leftregex, $rightregex);
+# Theory of operation
+# 1) Scan left file for first apperance of markers matching regex 
+# and record start line and length of block and save in array
+# 2) Scan right file for first apperance of markers matching regex 
+# and record start line and length of block in associative array
+# 3) Find first marker in left beyond specified number of lines 
+# to skip, display the block on the left
+# 4) Using associative array to look for the matching marker in 
+# the right file and display matching block. Handle missing 
+# associative array index
+
+
+
+my ($width, $rightfile, $leftfile, $skip, $highlight);
+my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex);
 $width = 20;
 $rightfile = '';
 $leftfile = '';
-$hide = '';
 $maxline = 1000;
-$debug = 0;
 $leftregex = '';
 $rightregex = '';
 $skip = 0;
+$highlight = '';
 
 sub l00http_syncview_make_outline {
     my ($oii, $nii, $width, $leftfile, $rightfile) = @_;
@@ -31,7 +43,7 @@ sub l00http_syncview_make_outline {
 
     if (($oii >= 0) && ($oii <= $#LEFT)) {
         $tmp = sprintf ("%-${width}s", substr($LEFT[$oii],0,$width));
-        $ospc = sprintf ("%3d: %-${width}s", $oii + 1, ' ');
+        $ospc = sprintf ("%5d: %-${width}s", $oii + 1, ' ');
         $ospc =~ s/./ /g;
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
@@ -44,10 +56,10 @@ sub l00http_syncview_make_outline {
             $lineno0 = 1;
         }
         $view = "/view.htm?path=$leftfile&hiliteln=$lineno&lineno=on#line$lineno0";
-        $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
+        $oout = sprintf ("%5d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
     } else {
         # make a string of space of same length
-        $ospc = sprintf ("%3d: %-${width}s", 0, ' ');
+        $ospc = sprintf ("%5d: %-${width}s", 0, ' ');
         $ospc =~ s/./ /g;
         $oout = $ospc;
     }
@@ -64,7 +76,7 @@ sub l00http_syncview_make_outline {
             $lineno0 = 1;
         }
         $view = "/view.htm?path=$rightfile&hiliteln=$lineno&lineno=on#line$lineno0";
-        $nout = sprintf ("%3d<a href=\"%s\">:</a> %s", $nii + 1, $view, $tmp);
+        $nout = sprintf ("%5d<a href=\"%s\">:</a> %s", $nii + 1, $view, $tmp);
     } else {
         $nout = '';
     }
@@ -84,14 +96,13 @@ sub l00http_syncview_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($htmlout, $cnt, $ln, $ii);
-    my (@leftblkat, @leftmarkers, @leftblksz, $leftblkcnt, $lastblksz);
+    my (@leftblkat, @leftmarkers, @leftblksz, $leftblkcnt, $rightblkcnt, $lastblksz);
     my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
-
-my ($max);
-my ($oout, $nout, $ospc);
+    my ($oout, $nout, $ospc, $dupmarkercnt, %dummymarker);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock "<a name=\"_top_\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     if ((defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
@@ -106,33 +117,18 @@ my ($oout, $nout, $ospc);
         s/^.+\/([^\/]+)$/$1/;
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$_</a>\n";
     }
-    print $sock "<a href=\"/syncview.htm\">Refresh</a>\n";
     print $sock "- <a href=\"#form\">Jump to end</a>\n";
     print $sock "<p>\n";
 
 
-    if (defined ($form->{'debug'})) {
-        if ($form->{'debug'} =~ /(\d+)/) {
-            $debug = $1;
-        } else {
-            $debug = 5;
-        }
-    }
-
-    if (defined ($form->{'hide'}) && ($form->{'hide'} eq 'on')) {
-        $hide = 'checked';
-    } else {
-        $hide = '';
-    }
-
     if (defined ($form->{'width'})) {
         if ($form->{'width'} =~ /(\d+)/) {
             $width = $1;
         }
     }
-    if (defined ($form->{'width'})) {
-        if ($form->{'width'} =~ /(\d+)/) {
-            $width = $1;
+    if (defined ($form->{'maxline'})) {
+        if ($form->{'maxline'} =~ /(\d+)/) {
+            $maxline = $1;
         }
     }
     if (defined ($form->{'skip'})) {
@@ -146,12 +142,19 @@ my ($oout, $nout, $ospc);
     if (defined ($form->{'rightregex'})) {
         $rightregex = $form->{'rightregex'};
     }
+    if (defined ($form->{'highlight'})) {
+        $highlight = $form->{'highlight'};
+    }
 
     # copy paste target
     if (defined ($form->{'swap'})) {
         $_ = $leftfile;
         $leftfile = $rightfile;
         $rightfile = $_;
+
+        $_ = $leftregex;
+        $leftregex = $rightregex;
+        $rightregex = $_;
     } elsif (defined ($form->{'pasteright'})) {
         # if pasting right file
         # this takes precedence over 'path'
@@ -182,10 +185,10 @@ my ($oout, $nout, $ospc);
             $leftfile = $form->{'pathleft'};
         }
 
-        $htmlout = "output: $rightfile $leftfile\n";
+        $htmlout = "<pre>\n";
 
-        $htmlout .= "<pre>\n";
-
+        # 1) Scan left file for first apperance of markers matching regex 
+        # and record start line and length of block and save in array
         if (&l00httpd::l00freadOpen($ctrl, "$leftfile")) {
             $htmlout .= "Left file: <a href=\"/view.htm?path=$leftfile\">$leftfile</a>\n";
             undef @LEFT;
@@ -195,18 +198,26 @@ my ($oout, $nout, $ospc);
             undef @leftblksz;
             $leftblkcnt = 0;
             $lastblksz = 0;
+            $dupmarkercnt = 0;
+            undef %dummymarker;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
                 $lastblksz++;
                 if (/$leftregex/) {
-                    $leftblkat[$leftblkcnt] = $cnt;
-                    $leftmarkers[$leftblkcnt] = $1;
-                    if ($leftblkcnt > 0) {
-                        $leftblksz[$leftblkcnt - 1] = $lastblksz;
+                    if (defined($dummymarker{$1})) {
+                        # ignore duplicated marker
+                        $dupmarkercnt++;
+                    } else {
+                        $dummymarker{$1} = 1;
+                        $leftblkat[$leftblkcnt] = $cnt;
+                        $leftmarkers[$leftblkcnt] = $1;
+                        if ($leftblkcnt > 0) {
+                            $leftblksz[$leftblkcnt - 1] = $lastblksz;
+                        }
+                        $leftblkcnt++;
+                        $lastblksz = 1;
                     }
-                    $leftblkcnt++;
-                    $lastblksz = 0;
                 }
                 push (@LEFT, $_);
                 $cnt++;
@@ -214,12 +225,14 @@ my ($oout, $nout, $ospc);
             if ($leftblkcnt > 0) {
                 $leftblksz[$leftblkcnt - 1] = $lastblksz;
             }
-            $htmlout .= "    read $cnt lines\n";
+            $htmlout .= "    read $cnt lines and found $leftblkcnt markers, $dupmarkercnt duplicates\n";
         } else {
             $htmlout .= "$leftfile open failed\n";
         }
 
 
+        # 2) Scan right file for first apperance of markers matching regex 
+        # and record start line and length of block in associative array
         if (&l00httpd::l00freadOpen($ctrl, "$rightfile")) {
             $htmlout .= "Right file: <a href=\"/view.htm?path=$rightfile\">$rightfile</a>\n";
             undef @RIGHT;
@@ -227,41 +240,36 @@ my ($oout, $nout, $ospc);
             undef %rightmarkerat;
             undef %rightblksz;
             $lastrightmkr = '';
+            $rightblkcnt = 0;
             $lastblksz = 0;
+            $dupmarkercnt = 0;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
                 $lastblksz++;
                 if (/$rightregex/) {
-                    $rightmarkerat{$1} = $cnt;
-                    if ($lastrightmkr ne '') {
-                        $rightblksz{$lastrightmkr} = $lastblksz;
+                    if (defined($rightmarkerat{$1})) {
+                        # ignore duplicated marker
+                        $dupmarkercnt++;
+                    } else {
+                        $rightmarkerat{$1} = $cnt;
+                        if ($lastrightmkr ne '') {
+                            $rightblksz{$lastrightmkr} = $lastblksz;
+                        }
+                        $lastblksz = 1;
+                        $lastrightmkr = $1;
+                        $rightblkcnt++;
                     }
-                    $lastblksz = 0;
-                    $lastrightmkr = $1;
                 }
                 push (@RIGHT, $_);
                 $cnt++;
             }
             $rightblksz{$lastrightmkr} = $lastblksz;
-            $htmlout .= "    read $cnt lines\n\n";
+            $htmlout .= "    read $cnt lines and found $rightblkcnt markers, $dupmarkercnt duplicates\n\n";
         } else {
             $htmlout .= "$rightfile open failed\n\n";
         }
 
-#for ($cnt = 0; $cnt < $leftblkcnt; $cnt++) 
-#for ($cnt = 0; $cnt < 30; $cnt++) {
-#print "LEFT($cnt): at $leftblkat[$cnt], $leftblksz[$cnt] lines >$leftmarkers[$cnt]<. RIGHT: $rightmarkerat{$leftmarkers[$cnt]}, $rightblksz{$leftmarkers[$cnt]} lines\n";
-#}
-
-
-$max = $#RIGHT;
-if ($max > $#LEFT) {
-$max = $#LEFT;
-}
-if ($max > $maxline) {
-$max = $maxline;
-}
 
         $lnsoutput = 0;
         $blkidx = 0;
@@ -270,26 +278,34 @@ $max = $maxline;
                 if ($leftblkat[$blkidx] < $skip) {
                     next;
                 }
-                #print "LEFT($blkidx): at $leftblkat[$blkidx], $leftblksz[$blkidx] lines >$leftmarkers[$blkidx]<. RIGHT: $rightmarkerat{$leftmarkers[$blkidx]}, $rightblksz{$leftmarkers[$blkidx]} lines\n";
-                if ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]}) {
+                # 3) Find first marker in left beyond specified number of lines 
+                # to skip, display the block on the left
+                # 4) Using associative array to look for the matching marker in 
+                # the right file and display matching block. Handle missing 
+                # associative array index
+                if (!defined($rightblksz{$leftmarkers[$blkidx]}) ||
+                    ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]})) {
                     # left block larger
                     # print both
-                    for ($ii = 0; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
-                        ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
-                            $leftblkat[$blkidx] + $ii, 
-                            $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
-                            $width, $leftfile, $rightfile);
-                        if ($ii == 0) {
-                            $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
-                            $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                    $ii = 0;
+                    if (defined($rightblksz{$leftmarkers[$blkidx]})) {
+                        for (; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
+                            ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                                $leftblkat[$blkidx] + $ii, 
+                                $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
+                                $width, $leftfile, $rightfile);
+                            if ($ii == 0) {
+                                $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                                $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                            }
+                            $htmlout .= " $oout |$nout\n";
+                            if ($lnsoutput++ >= $maxline) {
+                                last;
+                            }
                         }
-                        $htmlout .= " $oout =$nout\n";
-                        if ($lnsoutput++ >= $maxline) {
+                        if ($lnsoutput >= $maxline) {
                             last;
                         }
-                    }
-                    if ($lnsoutput >= $maxline) {
-                        last;
                     }
                     # and remaining left
                     for (; $ii < $leftblksz[$blkidx]; $ii++) {
@@ -297,7 +313,7 @@ $max = $maxline;
                             $leftblkat[$blkidx] + $ii, 
                             -1, 
                             $width, $leftfile, $rightfile);
-                        $htmlout .= " $oout =$nout\n";
+                        $htmlout .= " $oout |$nout\n";
                         if ($lnsoutput++ >= $maxline) {
                             last;
                         }
@@ -305,22 +321,25 @@ $max = $maxline;
                 } else {
                     # right block larger
                     # print both
-                    for ($ii = 0; $ii < $leftblksz[$blkidx]; $ii++) {
-                        ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
-                            $leftblkat[$blkidx] + $ii, 
-                            $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
-                            $width, $leftfile, $rightfile);
-                        if ($ii == 0) {
-                            $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
-                            $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                    $ii = 0;
+                    if (defined($rightmarkerat{$leftmarkers[$blkidx]})) {
+                        for (; $ii < $leftblksz[$blkidx]; $ii++) {
+                            ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                                $leftblkat[$blkidx] + $ii, 
+                                $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
+                                $width, $leftfile, $rightfile);
+                            if ($ii == 0) {
+                                $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                                $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                            }
+                            $htmlout .= " $oout |$nout\n";
+                            if ($lnsoutput++ >= $maxline) {
+                                last;
+                            }
                         }
-                        $htmlout .= " $oout =$nout\n";
-                        if ($lnsoutput++ >= $maxline) {
+                        if ($lnsoutput >= $maxline) {
                             last;
                         }
-                    }
-                    if ($lnsoutput >= $maxline) {
-                        last;
                     }
                     # and remaining left
                     for (; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
@@ -328,7 +347,7 @@ $max = $maxline;
                             -1, 
                             $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
                             $width, $leftfile, $rightfile);
-                        $htmlout .= " $oout =$nout\n";
+                        $htmlout .= " $oout |$nout\n";
                         if ($lnsoutput++ >= $maxline) {
                             last;
                         }
@@ -340,39 +359,36 @@ $max = $maxline;
             }
             last;
         }
+        $htmlout .= "</pre>\n";
 
-#$htmlout .= " -----------------------------------------\n";
-#for ($ln = 0; $ln <= $max; $ln++) {
-#    ($oout, $nout, $ospc) = &l00http_syncview_make_outline($ln, $ln, $width, $leftfile, $rightfile);
-#    $htmlout .= " $oout =$nout\n";
-#}
+        # global highlight
+        if (($highlight ne '') && (length($highlight) > 1)) {
+            $htmlout =~ s/($highlight)/<font style="color:black;background-color:yellow">$1<\/font>/gsm;
+        }
 
         print $sock $htmlout;
     }
 
+    print $sock "<a href=\"#_top_\">Jump to top</a><br>\n";
     print $sock "<a name=\"form\"></a>\n";
     print $sock "<form action=\"/syncview.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"view\" value=\"View\">\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
+    print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteleft\" value=\"CB>Left:\">";
-    print $sock " Stamp regex: <input type=\"text\" size=\"8\" name=\"leftregex\" value=\"$leftregex\">\n";
+    print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"leftregex\" value=\"$leftregex\">\n";
     print $sock "<br><textarea name=\"pathleft\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$leftfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteright\" value=\"CB>Right:\">";
-    print $sock " Stamp regex: <input type=\"text\" size=\"8\" name=\"rightregex\" value=\"$rightregex\">\n";
+    print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"rightregex\" value=\"$rightregex\">\n";
     print $sock "<br><textarea name=\"pathright\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$rightfile</textarea>\n";
-    print $sock "</td></tr>\n";
-
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"debug\">debug";
-    print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide same lines\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
