@@ -330,7 +330,7 @@ while(1) {
 
             $htmlout .= "        <tr>\n";
             $htmlout .= "            <td><input type=\"text\" size=\"20\" name=\"only\" value=\"$only\"></td>\n";
-            $htmlout .= "            <td>only ('any' for any)</td>\n";
+            $htmlout .= "            <td>only (blank for any)</td>\n";
             $htmlout .= "        </tr>\n";
 
 
@@ -342,7 +342,7 @@ while(1) {
             }
             $htmlout .= "        <tr>\n";
             $htmlout .= "            <td><input type=\"submit\" name=\"setconfig\" value=\"Set Config\"></td>\n";
-            $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update<input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
+            $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update <input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
             $htmlout .= "        </tr>\n";
 
             $out_buf = "";
