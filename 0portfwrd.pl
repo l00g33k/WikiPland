@@ -193,53 +193,54 @@ while(1) {
                 $params{$name} = $param;
             }
 
-            if ($params{'statusonly'} eq "on") {
-                $statusonly = 1;
-            } else {
-                $statusonly = 0;
-            }
-            if (defined ($params{'statusonly'})) {
-                $statusonly = 1;
-            }
-            if ($statusonly == 0) {
-                if ((defined $params{'server_ip'}) && ($server_ip ne $params{'server_ip'})) {
-                    $server_ip = $params{'server_ip'};
-                    &close_server_sock;
-                    &close_client_sock;
-                }
-                if ((defined $params{'server_port'}) && ($server_port ne $params{'server_port'})) {
-                    $server_port = $params{'server_port'};
-                    &close_server_sock;
-                    &close_client_sock;
-                }
-                if ((defined $params{'only'}) && ($only ne $params{'only'})) {
-                    $only = $params{'only'};
-                    &close_server_sock;
-                    &close_client_sock;
-                }
-                if ((defined $params{'timeout_mins'}) && ($timeout_mins ne $params{'timeout_mins'})) {
-                    $timeout_mins = $params{'timeout_mins'};
-                    $tend = time + $timeout_mins * 60;
-                }
-                if ($params{'forwardmode'} eq "okfwrd") {
-                    $ok2fwrd = 2;
-                } else {
-                    $ok2fwrd = 0;
-                    &close_server_sock;
-                    &close_client_sock;
-                }
-                if ($params{'debug'} eq "on") {
-                    $debug = 1;
-                } else {
-                    $debug = 0;
-                }
-                if ($params{'noisy'} eq "on") {
-                    $noisy = 1;
-                } else {
-                    $noisy = 0;
-                }
-            }
-
+			if (defined ($params{'setconfig'})) {
+				if ($params{'statusonly'} eq "on") {
+					$statusonly = 1;
+				} else {
+					$statusonly = 0;
+				}
+				if (defined ($params{'statusonly'})) {
+					$statusonly = 1;
+				}
+				if ($statusonly == 0) {
+					if ((defined $params{'server_ip'}) && ($server_ip ne $params{'server_ip'})) {
+						$server_ip = $params{'server_ip'};
+						&close_server_sock;
+						&close_client_sock;
+					}
+					if ((defined $params{'server_port'}) && ($server_port ne $params{'server_port'})) {
+						$server_port = $params{'server_port'};
+						&close_server_sock;
+						&close_client_sock;
+					}
+					if ((defined $params{'only'}) && ($only ne $params{'only'})) {
+						$only = $params{'only'};
+						&close_server_sock;
+						&close_client_sock;
+					}
+					if ((defined $params{'timeout_mins'}) && ($timeout_mins ne $params{'timeout_mins'})) {
+						$timeout_mins = $params{'timeout_mins'};
+						$tend = time + $timeout_mins * 60;
+					}
+					if ($params{'forwardmode'} eq "okfwrd") {
+						$ok2fwrd = 2;
+					} else {
+						$ok2fwrd = 0;
+						&close_server_sock;
+						&close_client_sock;
+					}
+					if ($params{'debug'} eq "on") {
+						$debug = 1;
+					} else {
+						$debug = 0;
+					}
+					if ($params{'noisy'} eq "on") {
+						$noisy = 1;
+					} else {
+						$noisy = 0;
+					}
+				}
+			}	
 
 
 
@@ -330,7 +331,7 @@ while(1) {
 
             $htmlout .= "        <tr>\n";
             $htmlout .= "            <td><input type=\"text\" size=\"20\" name=\"only\" value=\"$only\"></td>\n";
-            $htmlout .= "            <td>only (blank for any)</td>\n";
+            $htmlout .= "            <td>only ('any' for any)</td>\n";
             $htmlout .= "        </tr>\n";
 
 
@@ -342,7 +343,7 @@ while(1) {
             }
             $htmlout .= "        <tr>\n";
             $htmlout .= "            <td><input type=\"submit\" name=\"setconfig\" value=\"Set Config\"></td>\n";
-            $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update <input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
+            $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update<input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
             $htmlout .= "        </tr>\n";
 
             $out_buf = "";
@@ -528,6 +529,8 @@ while(1) {
                         # if $only ends in .*, makes $client_ip2 look like .*
                         $client_ip2 =~ s/\.\d+$/.*/;
                     }
+print "LISTEN server_socket $server_socket - ok2fwrd $ok2fwrd - only >$only< client_ip2 >$client_ip2<\n", if (1);
+
                     if (($server_socket == 0) && ($ok2fwrd != 0) && ($only eq $client_ip2)) {
                         $connallowed = 1;
                     }
