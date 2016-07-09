@@ -99,6 +99,7 @@ sub l00http_syncview_proc {
     my (@leftblkat, @leftmarkers, @leftblksz, $leftblkcnt, $rightblkcnt, $lastblksz);
     my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
     my ($oout, $nout, $ospc, $dupmarkercnt, %dummymarker);
+    my ($leftttllns, $rightttllns);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -132,7 +133,7 @@ sub l00http_syncview_proc {
         }
     }
     if (defined ($form->{'skip'})) {
-        if ($form->{'skip'} =~ /(\d+)/) {
+        if ($form->{'skip'} =~ /(-*\d+)/) {
             $skip = $1;
         }
     }
@@ -192,7 +193,7 @@ sub l00http_syncview_proc {
         if (&l00httpd::l00freadOpen($ctrl, "$leftfile")) {
             $htmlout .= "Left file: <a href=\"/view.htm?path=$leftfile\">$leftfile</a>\n";
             undef @LEFT;
-            $cnt = 0;
+            $leftttllns = 0;
             undef @leftblkat;
             undef @leftmarkers;
             undef @leftblksz;
@@ -210,22 +211,22 @@ sub l00http_syncview_proc {
                         $dupmarkercnt++;
                     } else {
                         $dummymarker{$1} = 1;
-                        $leftblkat[$leftblkcnt] = $cnt;
+                        $leftblkat[$leftblkcnt] = $leftttllns;
                         $leftmarkers[$leftblkcnt] = $1;
                         if ($leftblkcnt > 0) {
                             $leftblksz[$leftblkcnt - 1] = $lastblksz;
                         }
                         $leftblkcnt++;
-                        $lastblksz = 1;
+                        $lastblksz = 0;
                     }
                 }
                 push (@LEFT, $_);
-                $cnt++;
+                $leftttllns++;
             }
             if ($leftblkcnt > 0) {
                 $leftblksz[$leftblkcnt - 1] = $lastblksz;
             }
-            $htmlout .= "    read $cnt lines and found $leftblkcnt markers, $dupmarkercnt duplicates\n";
+            $htmlout .= "    read $leftttllns lines and found $leftblkcnt markers, $dupmarkercnt duplicates\n";
         } else {
             $htmlout .= "$leftfile open failed\n";
         }
@@ -236,7 +237,7 @@ sub l00http_syncview_proc {
         if (&l00httpd::l00freadOpen($ctrl, "$rightfile")) {
             $htmlout .= "Right file: <a href=\"/view.htm?path=$rightfile\">$rightfile</a>\n";
             undef @RIGHT;
-            $cnt = 0;
+            $rightttllns = 0;
             undef %rightmarkerat;
             undef %rightblksz;
             $lastrightmkr = '';
@@ -252,20 +253,20 @@ sub l00http_syncview_proc {
                         # ignore duplicated marker
                         $dupmarkercnt++;
                     } else {
-                        $rightmarkerat{$1} = $cnt;
+                        $rightmarkerat{$1} = $rightttllns;
                         if ($lastrightmkr ne '') {
                             $rightblksz{$lastrightmkr} = $lastblksz;
                         }
-                        $lastblksz = 1;
+                        $lastblksz = 0;
                         $lastrightmkr = $1;
                         $rightblkcnt++;
                     }
                 }
                 push (@RIGHT, $_);
-                $cnt++;
+                $rightttllns++;
             }
             $rightblksz{$lastrightmkr} = $lastblksz;
-            $htmlout .= "    read $cnt lines and found $rightblkcnt markers, $dupmarkercnt duplicates\n\n";
+            $htmlout .= "    read $rightttllns lines and found $rightblkcnt markers, $dupmarkercnt duplicates\n\n";
         } else {
             $htmlout .= "$rightfile open failed\n\n";
         }
@@ -275,8 +276,16 @@ sub l00http_syncview_proc {
         $blkidx = 0;
         while ($lnsoutput++ < $maxline) {
             for ($blkidx = 0; $blkidx < $leftblkcnt; $blkidx++) {
-                if ($leftblkat[$blkidx] < $skip) {
-                    next;
+                if ($skip >= 0) {
+                    # skip from start
+                    if ($leftblkat[$blkidx] < $skip) {
+                        next;
+                    }
+                } else {
+                    # skip to last $maxline lines
+                    if ($leftblkat[$blkidx] < ($leftttllns - $maxline)) {
+                        next;
+                    }
                 }
                 # 3) Find first marker in left beyond specified number of lines 
                 # to skip, display the block on the left
@@ -313,6 +322,9 @@ sub l00http_syncview_proc {
                             $leftblkat[$blkidx] + $ii, 
                             -1, 
                             $width, $leftfile, $rightfile);
+                        if ($ii == 0) {
+                            $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                        }
                         $htmlout .= " $oout |$nout\n";
                         if ($lnsoutput++ >= $maxline) {
                             last;
@@ -347,6 +359,9 @@ sub l00http_syncview_proc {
                             -1, 
                             $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
                             $width, $leftfile, $rightfile);
+                        if ($ii == 0) {
+                            $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                        }
                         $htmlout .= " $oout |$nout\n";
                         if ($lnsoutput++ >= $maxline) {
                             last;
