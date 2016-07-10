@@ -293,12 +293,18 @@ sub l00http_ls_proc {
 #l00:
         if ($form->{'path'} =~ /^l00:\/\//) {
             if (defined($ctrl->{'l00file'})) {
-                if (defined($ctrl->{'l00file'}->{$form->{'path'}})) {
+                if (!defined($ctrl->{'l00file'}->{$form->{'path'}})) {
+                    $httphdr = "Content-Type: text/html\r\n";
+                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+                    ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                    print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+                    print $sock "File $form->{'path'} not found.<p>\n";
+                } else {
 #::heremark::
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
                     $editable = 1;
 
-#                    $httphdr = "Content-Type: text/html\r\n";
                     ($httphdr, $urlraw) = &l00http_ls_conttype($form->{'path'});
 
                     if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
