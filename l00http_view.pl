@@ -37,6 +37,7 @@ sub l00http_view_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
+    my ($foundfullrst);
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -238,13 +239,13 @@ sub l00http_view_proc {
                     $wraptext = 'checked';
                 } else {
                     $wraptext = '';
-                    $found .= "<pre>\n";
                 }
-                $found .= &l00httpd::findInBuf ($findtext, $block, $buffer);
+                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer);
                 if ($wraptext eq '') {
+                    $found .= "<pre>\n";
 				    $tmp = '';
                     $foundcnt = 0;
-					foreach $_ (split("\n", $found)) {
+					foreach $_ (split("\n", $foundfullrst)) {
                         $foundcnt++;
 					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
                             # extract if we find parathesis
@@ -260,23 +261,37 @@ sub l00http_view_proc {
 						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>:$tmpln";
 						}
 					    $tmp .= "$_\n";
+                        if ($foundcnt <= $maxln) {
+                            $found .= "$_\n";
+                        }
 					}
-					$found = $tmp;
+					$foundfullrst = "<pre>\n$tmp\n</pre>\n";
                     $found .= "</pre>\n";
                 } else {
                     $foundcnt = 0;
-					foreach $_ (split("\n", $found)) {
+					foreach $_ (split("\n", $foundfullrst)) {
                         $foundcnt++;
+                        if ($foundcnt <= $maxln) {
+                            $found .= $_;
+                        }
                     }
                 }
+
                 $foundcnt -= 2; # adjustment
-                $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.<hr>\n";
+                if ($foundcnt > $maxln) {
+                    $tmp = $foundcnt - $maxln;
+                    $found .= "There are $tmp more results: ".
+                        "<a href=\"/view.htm?path=l00://find.htm&skip=$maxln&update=Skip\">View l00://find.htm</a>. ".
+                        "<a href=\"/ls.htm?path=l00://find.htm\">Full page l00://find.htm</a>\n";
+                }
+                $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.\n";
                 $found = "Found $foundcnt matches. $found";
+                $found .= "<hr>\n";
                 print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, 0);
                 print $sock "<p>\n";
                 # save in RAM file too
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://find.htm');
-                &l00httpd::l00fwriteBuf($ctrl, $found);
+                &l00httpd::l00fwriteBuf($ctrl, $foundfullrst);
                 &l00httpd::l00fwriteClose($ctrl);
             }
 
