@@ -226,6 +226,17 @@ sub l00http_cal_proc {
             if ($finalweek < $wkno) {
                 $finalweek = $wkno;
             }
+            if ($todo =~ /\[\[.+\]\]/) {
+                # if it is a link, put in [link]
+                $todo = "&#91;$todo&#93;";
+            } else {
+                # else make a link to send text to clip.htm
+                $tmp = $todo;
+                $tmp =~ s/<.+?>//g;
+                $tmp =~ s/^ +//;
+                $tmp =~ s/ +$//;
+                $todo = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=".&l00httpd::urlencode ($tmp)."\" target=newwin>$todo</a>";
+            }
             if (defined ($list {"$wkno`$dayofwk"})) {
                 $list {"$wkno`$dayofwk"} .= " ! $todo";
             } else {
