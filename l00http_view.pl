@@ -112,7 +112,7 @@ sub l00http_view_proc {
     }
 
     print $sock "<p>\n";
-    if (defined ($form->{'update'})) {
+    if (defined ($form->{'update'}) || defined ($form->{'find'})) {
         if (defined ($form->{'maxln'})) {
             $maxln = $form->{'maxln'};
         }
@@ -450,6 +450,8 @@ sub l00http_view_proc {
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
+    print $sock "<input type=\"hidden\" name=\"skip\" value=\"$skip\">\n";
+    print $sock "<input type=\"hidden\" name=\"maxln\" value=\"$maxln\">\n";
     print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
