@@ -10,7 +10,7 @@ use IO::Select;
 #use Net::hostent;              # for OO version of gethostbyaddr
 
 $server_ip = "localhost";
-$server_port = 80;
+$server_port = 20337;
 $listen_port = 60123;
 $ctrl_port = 60124;
 $only = '';
