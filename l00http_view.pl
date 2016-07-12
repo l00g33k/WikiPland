@@ -37,7 +37,7 @@ sub l00http_view_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
-    my ($foundfullrst);
+    my ($foundfullrst, @foundfullarray);
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -241,11 +241,13 @@ sub l00http_view_proc {
                     $wraptext = '';
                 }
                 $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer);
+                # l00httpd::findInBuf should return the number of matches
+                @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
                     $found .= "<pre>\n";
 				    $tmp = '';
                     $foundcnt = 0;
-					foreach $_ (split("\n", $foundfullrst)) {
+					foreach $_ (@foundfullarray) {
                         $foundcnt++;
 					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
                             # extract if we find parathesis
@@ -261,8 +263,14 @@ sub l00http_view_proc {
 						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>:$tmpln";
 						}
 					    $tmp .= "$_\n";
-                        if ($foundcnt <= $maxln) {
-                            $found .= "$_\n";
+                        if ($skip >= 0) {
+                            if ($foundcnt <= $maxln) {
+                                $found .= "$_\n";
+                            }
+                        } else {
+                            if ($foundcnt >= $#foundfullarray - $maxln) {
+                                $found .= "$_\n";
+                            }
                         }
 					}
 					$foundfullrst = "<pre>\n$tmp\n</pre>\n";
@@ -271,8 +279,14 @@ sub l00http_view_proc {
                     $foundcnt = 0;
 					foreach $_ (split("\n", $foundfullrst)) {
                         $foundcnt++;
-                        if ($foundcnt <= $maxln) {
-                            $found .= $_;
+                        if ($skip >= 0) {
+                            if ($foundcnt <= $maxln) {
+                                $found .= $_;
+                            }
+                        } else {
+                            if ($foundcnt >= $#foundfullarray - $maxln) {
+                                $found .= $_;
+                            }
                         }
                     }
                 }
@@ -281,7 +295,7 @@ sub l00http_view_proc {
                 if ($foundcnt > $maxln) {
                     $tmp = $foundcnt - $maxln;
                     $found .= "There are $tmp more results: ".
-                        "<a href=\"/view.htm?path=l00://find.htm&skip=$maxln&update=Skip\">View l00://find.htm</a>. ".
+                        "<a href=\"/view.htm?path=l00://find.htm&update=Skip\">View l00://find.htm</a>. ".
                         "<a href=\"/ls.htm?path=l00://find.htm\">Full page l00://find.htm</a>\n";
                 }
                 $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.\n";
@@ -448,10 +462,13 @@ sub l00http_view_proc {
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"12\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Skip <input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
+    print $sock "</td><td>\n";
+    print $sock "max. <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
+    print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
-    print $sock "<input type=\"hidden\" name=\"skip\" value=\"$skip\">\n";
-    print $sock "<input type=\"hidden\" name=\"maxln\" value=\"$maxln\">\n";
     print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
