@@ -183,8 +183,8 @@ sub findInBuf  {
 #           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $llnno);
             $llnno++;
         }
-        if ($line =~ /$block/i) {
-            # found new block
+        if (($block eq '.') || ($line =~ /$block/i)) {
+            # found new block, or line mode
             if ($hit) {
                 # if single line mode, $block eq '.', make single line
                 if ($block eq '.') {
