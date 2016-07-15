@@ -292,6 +292,9 @@ sub l00http_mobizoom_mobilize {
                 }
             }
 
+            # convert URL to mobizoom
+            s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2"/g;
+
             if (/<br>/i) {
                 $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");

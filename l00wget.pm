@@ -51,6 +51,10 @@ sub wget {
                 $host = $1;
                 $port = $2;
             }
+        } else {
+            $host = $url;
+            $host =~ s/^http:\/\///i;
+            $path = '/';
         }
     }
     if (defined($host)) {
