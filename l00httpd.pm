@@ -614,7 +614,7 @@ sub l00setCB {
 
 #&l00httpd::l00PopMsg($ctrl, $buf);
 sub l00PopMsg {
-    ($ctrl, $buf) = @_;
+    my ($ctrl, $buf) = @_;
 
     if ($ctrl->{'os'} eq 'and') {
         $ctrl->{'droid'}->makeToast($buf);
