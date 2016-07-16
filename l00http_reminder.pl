@@ -77,8 +77,11 @@ sub l00http_reminder_find {
         $mgall = '';
         while (<IN>) {
             chop;
-            if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
+            if (($st, $it, $vb, $vs, $mg) = /^#{0,1}!{0,1}([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
                 $st = &l00http_reminder_date2j ($st);
+                if (/^#!/) {
+                    $mg = ".HIDDEN $mg";
+                }
 		        #print "st $st $_\n";
                 if (($st0 == 0) || ($st < $st0)) {
                     ($st0, $it0, $vb0, $vs0, $mg0) = ($st, $it, $vb, $vs, $mg);
@@ -392,10 +395,9 @@ sub l00http_reminder_perio {
                 "<a href=\"/reminder.htm?pause=Pause&min=60\">1h</a> - ".
                 "<a href=\"/reminder.htm#manage\">:::</a> </center>";
 
-            if (($ctrl->{'os'} eq 'and') &&
-                (!($msgtoast =~ /^ *$/)) &&
+            if ((!($msgtoast =~ /^ *$/)) &&
                 ($ctrl->{'bannermute'} <= time)) {
-                $ctrl->{'droid'}->makeToast("$percnt: $msgtoast");
+                &l00httpd::l00PopMsg($ctrl, "$percnt: $msgtoast");
             }
             $percnt++;
 
