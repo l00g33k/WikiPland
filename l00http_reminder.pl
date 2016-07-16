@@ -46,7 +46,7 @@ sub l00http_reminder_find {
 # find active reminder (oldest)
     my $ctrl = pop;
     my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
-    my ($vb, $vs, $vb0, $vs0, $secs);
+    my ($vb, $vs, $vb0, $vs0, $secs, $found);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
 
     # compute UTC and localtime offset in seconds
@@ -77,10 +77,16 @@ sub l00http_reminder_find {
         $mgall = '';
         while (<IN>) {
             chop;
-            if (($st, $it, $vb, $vs, $mg) = /^#{0,1}!{0,1}([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
+            $found = 0;
+            if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
+                $found = 1;
+            } elsif (($st, $it, $vb, $vs, $mg) = /^#!([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
+                $found = 1;
+            }
+            if ($found) {
                 $st = &l00http_reminder_date2j ($st);
                 if (/^#!/) {
-                    $mg = ".HIDDEN $mg";
+                    $mg = "#!HIDDEN $mg";
                 }
 		        #print "st $st $_\n";
                 if (($st0 == 0) || ($st < $st0)) {
@@ -383,9 +389,7 @@ sub l00http_reminder_perio {
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
             $lastcalled = time - $utcoffsec;
-            $pause = 0;
-
-            $ctrl->{'reminder'} = $msgtoast;
+            $pause = 0; $ctrl->{'reminder'} = $msgtoast;
             $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - ".
