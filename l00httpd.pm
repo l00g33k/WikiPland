@@ -612,5 +612,17 @@ sub l00setCB {
     }
 }
 
+#&l00httpd::l00PopMsg($ctrl, $buf);
+sub l00PopMsg {
+    ($ctrl, $buf) = @_;
+
+    if ($ctrl->{'os'} eq 'and') {
+        $ctrl->{'droid'}->makeToast($buf);
+    } elsif ($ctrl->{'os'} eq 'win') {
+        `msg %USERNAME% /TIME:1 $buf`;
+    }
+
+}
+
 
 1;
