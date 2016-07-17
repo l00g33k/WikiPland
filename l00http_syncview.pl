@@ -25,9 +25,10 @@ my %config = (proc => "l00http_syncview_proc",
 
 
 
-my ($width, $rightfile, $leftfile, $skip, $highlight);
+my ($lwidth, $rwidth, $rightfile, $leftfile, $skip, $highlight);
 my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex);
-$width = 20;
+$lwidth = 20;
+$rwidth = 20;
 $rightfile = '';
 $leftfile = '';
 $maxline = 1000;
@@ -37,13 +38,13 @@ $skip = 0;
 $highlight = '';
 
 sub l00http_syncview_make_outline {
-    my ($oii, $nii, $width, $leftfile, $rightfile) = @_;
+    my ($oii, $nii, $lwidth, $rwidth, $leftfile, $rightfile) = @_;
     my ($oout, $nout, $ospc, $tmp, $clip, $view, $lineno0, $lineno);
 
 
     if (($oii >= 0) && ($oii <= $#LEFT)) {
-        $tmp = sprintf ("%-${width}s", substr($LEFT[$oii],0,$width));
-        $ospc = sprintf ("%5d: %-${width}s", $oii + 1, ' ');
+        $tmp = sprintf ("%-${lwidth}s", substr($LEFT[$oii],0,$lwidth));
+        $ospc = sprintf ("%5d: %-${lwidth}s", $oii + 1, ' ');
         $ospc =~ s/./ /g;
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
@@ -59,12 +60,12 @@ sub l00http_syncview_make_outline {
         $oout = sprintf ("%5d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
     } else {
         # make a string of space of same length
-        $ospc = sprintf ("%5d: %-${width}s", 0, ' ');
+        $ospc = sprintf ("%5d: %-${lwidth}s", 0, ' ');
         $ospc =~ s/./ /g;
         $oout = $ospc;
     }
     if (($nii >= 0) && ($nii <= $#RIGHT)) {
-        $tmp = sprintf ("%-${width}s", substr($RIGHT[$nii],0,$width));
+        $tmp = sprintf ("%-${rwidth}s", substr($RIGHT[$nii],0,$rwidth));
         $tmp =~ s/</&lt;/g;
         $tmp =~ s/>/&gt;/g;
         #$clip = &l00httpd::urlencode ($RIGHT[$nii]);
@@ -122,9 +123,14 @@ sub l00http_syncview_proc {
     print $sock "<p>\n";
 
 
-    if (defined ($form->{'width'})) {
-        if ($form->{'width'} =~ /(\d+)/) {
-            $width = $1;
+    if (defined ($form->{'lwidth'})) {
+        if ($form->{'lwidth'} =~ /(\d+)/) {
+            $lwidth = $1;
+        }
+    }
+    if (defined ($form->{'rwidth'})) {
+        if ($form->{'rwidth'} =~ /(\d+)/) {
+            $rwidth = $1;
         }
     }
     if (defined ($form->{'maxline'})) {
@@ -302,7 +308,7 @@ sub l00http_syncview_proc {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                                 $leftblkat[$blkidx] + $ii, 
                                 $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
-                                $width, $leftfile, $rightfile);
+                                $lwidth, $rwidth, $leftfile, $rightfile);
                             if ($ii == 0) {
                                 $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
                                 $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
@@ -321,7 +327,7 @@ sub l00http_syncview_proc {
                         ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                             $leftblkat[$blkidx] + $ii, 
                             -1, 
-                            $width, $leftfile, $rightfile);
+                            $lwidth, $rwidth, $leftfile, $rightfile);
                         if ($ii == 0) {
                             $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
                         }
@@ -339,7 +345,7 @@ sub l00http_syncview_proc {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                                 $leftblkat[$blkidx] + $ii, 
                                 $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
-                                $width, $leftfile, $rightfile);
+                                $lwidth, $rwidth, $leftfile, $rightfile);
                             if ($ii == 0) {
                                 $oout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
                                 $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
@@ -358,7 +364,7 @@ sub l00http_syncview_proc {
                         ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                             -1, 
                             $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
-                            $width, $leftfile, $rightfile);
+                            $lwidth, $rwidth, $leftfile, $rightfile);
                         if ($ii == 0) {
                             $nout =~ s/($leftmarkers[$blkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
                         }
@@ -390,19 +396,20 @@ sub l00http_syncview_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"view\" value=\"View\">\n";
-    print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteleft\" value=\"CB>Left:\">";
     print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"leftregex\" value=\"$leftregex\">\n";
+    print $sock " Width: <input type=\"text\" size=\"4\" name=\"lwidth\" value=\"$lwidth\">\n";
     print $sock "<br><textarea name=\"pathleft\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$leftfile</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteright\" value=\"CB>Right:\">";
     print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"rightregex\" value=\"$rightregex\">\n";
+    print $sock " Width: <input type=\"text\" size=\"4\" name=\"rwidth\" value=\"$rwidth\">\n";
     print $sock "<br><textarea name=\"pathright\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$rightfile</textarea>\n";
     print $sock "</td></tr>\n";
 

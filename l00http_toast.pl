@@ -51,11 +51,7 @@ sub l00http_toast_proc (\%) {
     # get submitted name and print greeting
     print $sock "<p>Someone says this to the phone: $name<p>\n";
 
-    if ($ctrl->{'os'} eq 'and') {
-        $ctrl->{'droid'}->makeToast($name);
-    } elsif ($ctrl->{'os'} eq 'win') {
-        `msg %USERNAME% /TIME:1 $name`;
-    }
+    &l00httpd::l00PopMsg($ctrl, $name);
 
 
     # send HTML footer and ends

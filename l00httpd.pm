@@ -183,8 +183,8 @@ sub findInBuf  {
 #           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $llnno);
             $llnno++;
         }
-        if ($line =~ /$block/i) {
-            # found new block
+        if (($block eq '.') || ($line =~ /$block/i)) {
+            # found new block, or line mode
             if ($hit) {
                 # if single line mode, $block eq '.', make single line
                 if ($block eq '.') {
@@ -610,6 +610,18 @@ sub l00setCB {
         $clip = Win32::Clipboard();
         $clip->Set($buf);
     }
+}
+
+#&l00httpd::l00PopMsg($ctrl, $buf);
+sub l00PopMsg {
+    my ($ctrl, $buf) = @_;
+
+    if ($ctrl->{'os'} eq 'and') {
+        $ctrl->{'droid'}->makeToast($buf);
+    } elsif ($ctrl->{'os'} eq 'win') {
+        `msg %USERNAME% /TIME:1 $buf`;
+    }
+
 }
 
 
