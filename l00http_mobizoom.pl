@@ -136,7 +136,7 @@ sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget) = @_;
     my ($on_slashdot_org, $wget2);
     my ($clip, $tmp, $last);
-    my ($threads, $endanchor, $title);
+    my ($threads, $endanchor, $title, $freetag);
 
     # This trivial mobilizer will process in two different mode:
     # Processed mode: the original cached file has the HTML tags 
@@ -238,9 +238,9 @@ sub l00http_mobizoom_mobilize {
 #        $wget =~ s/<\/wml.*$>\n//g;
 
         if ($freeimgsize eq 'checked') {
-            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
-        } else {
             $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/sg;
+        } else {
+            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
         }
 
 
@@ -253,6 +253,12 @@ sub l00http_mobizoom_mobilize {
         $wget2 = $wget;
         $wget2 =~ s/</\n</g;
         $wget2 =~ s/>/>\n/g;
+
+        if ($freeimgsize eq 'checked') {
+            $freetag = '&freeimgsize=on';
+        } else {
+            $freetag = '';
+        }
 
         $wget = '';
         $last = '';
@@ -297,7 +303,7 @@ sub l00http_mobizoom_mobilize {
             }
 
             # convert URL to mobizoom
-            s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2"/g;
+            s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
 
             if (/<br>/i) {
                 $clip = &l00httpd::urlencode ($clip);
@@ -504,10 +510,12 @@ sub l00http_mobizoom_proc {
     if (defined ($form->{'url'})) {
         $url = $form->{'url'};
     }
-    if ((defined ($form->{'freeimgsize'})) && ($form->{'freeimgsize'} eq 'on')) {
-        $freeimgsize = 'checked';
-    } else {
-        $freeimgsize = '';
+    if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
+        if ((defined ($form->{'freeimgsize'})) && ($form->{'freeimgsize'} eq 'on')) {
+            $freeimgsize = 'checked';
+        } else {
+            $freeimgsize = '';
+        }
     }
 
     $mode1online2offline4download = 0;
