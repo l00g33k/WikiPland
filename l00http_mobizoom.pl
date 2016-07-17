@@ -20,11 +20,11 @@ use l00wget;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here, $prolog);
+my ($url, $zoom, $para, $here, $prolog, $freeimgsize);
 $url = '';
 $zoom = 150;
 $para = 1;
-
+$freeimgsize = 'checked';
 
 sub wgetfollow2 {
     my ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
@@ -237,7 +237,11 @@ sub l00http_mobizoom_mobilize {
 #        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
 #        $wget =~ s/<\/wml.*$>\n//g;
 
-        $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
+        if ($freeimgsize eq 'checked') {
+            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
+        } else {
+            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/sg;
+        }
 
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
@@ -421,6 +425,7 @@ sub l00http_mobizoom_part1 {
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"600\">600% ";
+    print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size\n";
     print $sock "</form>\n";
 
     # web page interactive mode, render web page
@@ -498,6 +503,11 @@ sub l00http_mobizoom_proc {
     $url = '';
     if (defined ($form->{'url'})) {
         $url = $form->{'url'};
+    }
+    if ((defined ($form->{'freeimgsize'})) && ($form->{'freeimgsize'} eq 'on')) {
+        $freeimgsize = 'checked';
+    } else {
+        $freeimgsize = '';
     }
 
     $mode1online2offline4download = 0;
@@ -585,6 +595,8 @@ sub l00http_mobizoom_proc {
     $here = 1;
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
         $para = 1;
+
+
         if ($mode1online2offline4download == 2) {
             # mobilize page
             $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
