@@ -302,8 +302,8 @@ sub l00http_mobizoom_mobilize {
                 }
             }
 
-            # convert URL to mobizoom
-            s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
+            # convert URL to mobizoom, some uses ' instead of "
+            s/(<a.+href=["'])(https*:\/\/.+?)(["'])/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag$3/g;
 
             if (/<br>/i) {
                 $clip = &l00httpd::urlencode ($clip);
