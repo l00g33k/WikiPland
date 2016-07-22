@@ -40,7 +40,7 @@ sub wgetfollow2 {
         if ($followmoves > 0) {
             $journal .= "<p><hr>";
         }
-        $domain = '';
+        $domain = 'http://';
         $url =~ s/\r//g;
         $url =~ s/\n//g;
         if ($url =~ /https*:\/\/([^\/]+?)\//) {
