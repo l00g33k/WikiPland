@@ -40,7 +40,7 @@ sub wgetfollow2 {
         if ($followmoves > 0) {
             $journal .= "<p><hr>";
         }
-        $domain = '';
+        $domain = 'http://';
         $url =~ s/\r//g;
         $url =~ s/\n//g;
         if ($url =~ /https*:\/\/([^\/]+?)\//) {
@@ -310,7 +310,7 @@ sub l00http_mobizoom_mobilize {
             }
 
             # add domain for local domain url
-            s/(<a.+href=")\//$1$domain\//g;
+            s/(<a.+href=['"])\//$1$domain\//g;
             # convert URL to mobizoom, some uses ' instead of "
             s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
             s/(<a.+href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
