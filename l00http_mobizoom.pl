@@ -310,7 +310,9 @@ sub l00http_mobizoom_mobilize {
             }
 
             # add domain for local domain url
-            s/(<a.+href=")\//$1$domain\//g;
+            s/(<a.+href=["'])\//$1$domain\//g;
+            # remote target=
+            s/(<a.+href=["'].+) target=".+?"(.*?>)/$1$2/g;
             # convert URL to mobizoom, some uses ' instead of "
             s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
             s/(<a.+href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
