@@ -154,9 +154,11 @@ sub l00http_mobizoom_mobilize {
     $domain = '';
     $url =~ s/\r//g;
     $url =~ s/\n//g;
+print "URL >$url<\n";
     if ($url =~ /(https*:\/\/[^\/]+?)\//) {
         $domain = $1;
     }
+print "domain >$domain<\n";
 
     # remote various HTML tags
     $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
@@ -164,6 +166,13 @@ sub l00http_mobizoom_mobilize {
 
     # form
     $wget =~ s/<form.+?<\/form *\n*\r*>//sg;
+
+    # free size image
+    if ($freeimgsize eq 'checked') {
+        $freetag = '&freeimgsize=on';
+    } else {
+        $freetag = '';
+    }
 
 
     if (!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) {
@@ -174,6 +183,15 @@ sub l00http_mobizoom_mobilize {
         foreach $_ ($wget =~ /<a name="__para(\d+)__">/gm) {
             $tmp .= "<a href=\"#__para${_}__\">$_</a> ";
         }
+
+        # add domain for local domain url
+        $wget =~ s/(<a.+?href=["'])\//$1$domain\//gm;
+        # remote target=
+        $wget =~ s/(<a.+href=["'].+) target=".+?"(.*?>)/$1$2/g;
+        # convert URL to mobizoom, some uses ' instead of "
+        $wget =~ s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
+        $wget =~ s/(<a.+href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
+
         $wget = "Paragraph: $tmp<br>$wget<p><hr><a name=\"__end__\"></a>Paragraph: $tmp";
     } else {
         &l00httpd::dbp($config{'desc'}, "Will mobilize page\n"), 
@@ -261,12 +279,6 @@ sub l00http_mobizoom_mobilize {
         $wget2 =~ s/</\n</g;
         $wget2 =~ s/>/>\n/g;
 
-        if ($freeimgsize eq 'checked') {
-            $freetag = '&freeimgsize=on';
-        } else {
-            $freetag = '';
-        }
-
         $wget = '';
         $last = '';
         $clip = '';
@@ -310,7 +322,7 @@ sub l00http_mobizoom_mobilize {
             }
 
             # add domain for local domain url
-            s/(<a.+href=["'])\//$1$domain\//g;
+            s/(<a.+?href=["'])\//$1$domain\//gm;
             # remote target=
             s/(<a.+href=["'].+) target=".+?"(.*?>)/$1$2/g;
             # convert URL to mobizoom, some uses ' instead of "
