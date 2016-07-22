@@ -134,7 +134,7 @@ $rwgeturl =~ s/\?/%3F/g;
 
 sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget) = @_;
-    my ($on_slashdot_org, $wget2);
+    my ($on_slashdot_org, $wget2, $domain);
     my ($clip, $tmp, $last);
     my ($threads, $endanchor, $title, $freetag);
 
@@ -149,6 +149,13 @@ sub l00http_mobizoom_mobilize {
     if ($wget =~ /<!-- ::mobizoom::orgurl::(.+?) -->/s) {
         # recover URL from cached file
         $url = $1;
+    }
+
+    $domain = '';
+    $url =~ s/\r//g;
+    $url =~ s/\n//g;
+    if ($url =~ /(https*:\/\/[^\/]+?)\//) {
+        $domain = $1;
     }
 
     # remote various HTML tags
@@ -302,6 +309,8 @@ sub l00http_mobizoom_mobilize {
                 }
             }
 
+            # add domain for local domain url
+            s/(<a.+href=")\//$1$domain\//g;
             # convert URL to mobizoom, some uses ' instead of "
             s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
             s/(<a.+href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
