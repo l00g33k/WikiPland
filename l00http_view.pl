@@ -11,6 +11,7 @@ my %config = (proc => "l00http_view_proc",
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
+my ($findmaxln, $findskip);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -18,6 +19,8 @@ $wraptext = '';
 $nohdr = '';
 $skip = 0;
 $maxln = 1000;
+$findskip = 0;
+$findmaxln = 1000;
 $hilitetext = '';
 $lastpath = '';
 $refresh = '';
@@ -112,16 +115,21 @@ sub l00http_view_proc {
     }
 
     print $sock "<p>\n";
-    if (defined ($form->{'update'}) || defined ($form->{'find'})) {
+    if (defined ($form->{'find'})) {
+        if (defined ($form->{'findmaxln'})) {
+            $findmaxln = $form->{'findmaxln'};
+        }
+        if (defined ($form->{'findskip'})) {
+            $findskip = $form->{'findskip'};
+        }
+    }
+    if (defined ($form->{'update'})) {
         if (defined ($form->{'maxln'})) {
             $maxln = $form->{'maxln'};
         }
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
         }
-    } else {
-        $skip = 0;
-        $maxln = 1000;
     }
 
     $hilite = 0;
@@ -263,12 +271,12 @@ sub l00http_view_proc {
 						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>:$tmpln";
 						}
 					    $tmp .= "$_\n";
-                        if ($skip >= 0) {
-                            if ($foundcnt <= $maxln) {
+                        if ($findskip >= 0) {
+                            if ($foundcnt <= $findmaxln) {
                                 $found .= "$_\n";
                             }
                         } else {
-                            if ($foundcnt >= $#foundfullarray - $maxln) {
+                            if ($foundcnt >= $#foundfullarray - $findmaxln) {
                                 $found .= "$_\n";
                             }
                         }
@@ -279,12 +287,12 @@ sub l00http_view_proc {
                     $foundcnt = 0;
 					foreach $_ (split("\n", $foundfullrst)) {
                         $foundcnt++;
-                        if ($skip >= 0) {
-                            if ($foundcnt <= $maxln) {
+                        if ($findskip >= 0) {
+                            if ($foundcnt <= $findmaxln) {
                                 $found .= $_;
                             }
                         } else {
-                            if ($foundcnt >= $#foundfullarray - $maxln) {
+                            if ($foundcnt >= $#foundfullarray - $findmaxln) {
                                 $found .= $_;
                             }
                         }
@@ -292,8 +300,8 @@ sub l00http_view_proc {
                 }
 
                 $foundcnt -= 2; # adjustment
-                if ($foundcnt > $maxln) {
-                    $tmp = $foundcnt - $maxln;
+                if ($foundcnt > $findmaxln) {
+                    $tmp = $foundcnt - $findmaxln;
                     $found .= "There are $tmp more results: ".
                         "<a href=\"/view.htm?path=l00://find.htm&update=Skip\">View l00://find.htm</a>. ".
                         "<a href=\"/ls.htm?path=l00://find.htm\">Full page l00://find.htm</a>\n";
@@ -463,9 +471,9 @@ sub l00http_view_proc {
     print $sock "<input type=\"text\" size=\"12\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "Skip <input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
+    print $sock "Skip <input type=\"text\" size=\"4\" name=\"findskip\" value=\"$findskip\">\n";
     print $sock "</td><td>\n";
-    print $sock "max. <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
+    print $sock "max. <input type=\"text\" size=\"4\" name=\"findmaxln\" value=\"$findmaxln\"> lines\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
