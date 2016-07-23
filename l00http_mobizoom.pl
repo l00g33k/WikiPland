@@ -154,11 +154,9 @@ sub l00http_mobizoom_mobilize {
     $domain = '';
     $url =~ s/\r//g;
     $url =~ s/\n//g;
-print "URL >$url<\n";
     if ($url =~ /(https*:\/\/[^\/]+?)\//) {
         $domain = $1;
     }
-print "domain >$domain<\n";
 
     # remote various HTML tags
     $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
@@ -186,11 +184,13 @@ print "domain >$domain<\n";
 
         # add domain for local domain url
         $wget =~ s/(<a.+?href=["'])\//$1$domain\//gm;
+        $wget =~ s/(<a.+?href=)\//$1$domain\//gm;
         # remote target=
-        $wget =~ s/(<a.+href=["'].+) target=".+?"(.*?>)/$1$2/g;
+        $wget =~ s/(<a.+?href=["'].+?) target=".+?"(.*?>)/$1$2/g;
         # convert URL to mobizoom, some uses ' instead of "
-        $wget =~ s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
-        $wget =~ s/(<a.+href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
+        $wget =~ s/(<a.+?href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
+        $wget =~ s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
+        $wget =~ s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag>/g;
 
         $wget = "Paragraph: $tmp<br>$wget<p><hr><a name=\"__end__\"></a>Paragraph: $tmp";
     } else {
@@ -323,11 +323,13 @@ print "domain >$domain<\n";
 
             # add domain for local domain url
             s/(<a.+?href=["'])\//$1$domain\//gm;
+            s/(<a.+?href=)\//$1$domain\//gm;
             # remote target=
-            s/(<a.+href=["'].+) target=".+?"(.*?>)/$1$2/g;
+            s/(<a.+?href=["'].+?) target=".+?"(.*?>)/$1$2/g;
             # convert URL to mobizoom, some uses ' instead of "
-            s/(<a.+href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
-            s/(<a.+href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
+            s/(<a.+?href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
+            s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
+            s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag>/g;
 
             if (/<br>/i) {
                 $clip = &l00httpd::urlencode ($clip);
