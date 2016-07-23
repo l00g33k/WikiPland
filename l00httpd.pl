@@ -570,9 +570,11 @@ $ttlconns = 0;
 
 
 &updateNow_string ();
-if (open (OUT, ">${plpath}l00httpd.log")) {
-    print OUT "$ctrl{'now_string'} WikiPland started\n";
-    close OUT;
+if ($debug >= 2) {
+    if (open (OUT, ">${plpath}l00httpd.log")) {
+        print OUT "$ctrl{'now_string'} WikiPland started\n";
+        close OUT;
+    }
 }
 
 $ctrl{'l00file'}->{'l00://server.log'} = '';
