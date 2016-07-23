@@ -406,6 +406,7 @@ if (defined ($ctrl{'idpwmustbe'})) {
 sub loadmods {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $ctime, $blksize, $blocks);
+    my ($newestmtime, $newestmod);
     # scan directory
     if (opendir (DIR, $plpath)) {
         foreach $file (sort readdir (DIR)) {
@@ -417,6 +418,7 @@ sub loadmods {
         closedir (DIR);
     }
 
+    $newestmtime = 0;
     # load modules
     print "(Re)Loading modules from $plpath...\n";
     foreach $mod (sort keys %httpmods) {
@@ -429,6 +431,11 @@ sub loadmods {
             # never loaded or signature changed, reload
             # remember file signature for smart reload
             $httpmodssig{$mod} = "$size $mtimea";
+
+            if ($newestmtime < $mtimea) {
+                $newestmtime = $mtimea;
+                $newestmod = $mod;
+            }
 
             print "$mod ";
             $rethash = do $httpmods{$mod};
@@ -458,7 +465,21 @@ sub loadmods {
         }
     }
 
-    print "\nReady\n";
+    # print l00httpd.pl time stamp
+    ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+    $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+    = stat("${plpath}l00httpd.pl");
+    ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+     = localtime($mtimea);
+    printf ("\nl00httpd.pl at %4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+    if ($newestmtime > 0) {
+        # print newest module time stamp
+        ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+         = localtime($newestmtime);
+        print "Newest module loaded is '$newestmod' at ";
+        printf ("%4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+    }
+    print "Ready\n";
 }
 $ctrl{'modsinfo'} = \%modsinfo;
 
