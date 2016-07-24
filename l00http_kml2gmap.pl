@@ -83,7 +83,7 @@ sub l00http_kml2gmap_proc {
     if (defined ($form->{'generate'})) {
         print $sock "<div id=\"googleMap\" style=\"width:500px;height:380px;\"></div>\n";
     } else {
-        print $sock "Download this <a href=\"/kml2gmap.htm?path=$mypath&generate=gen\">HTML file</a>\n";
+        print $sock "View or download <a href=\"/kml2gmap.htm?path=$mypath&generate=gen\">Google Maps HTML file</a>.\n";
     }
 
 
