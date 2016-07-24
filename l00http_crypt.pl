@@ -170,7 +170,7 @@ sub l00http_crypt_proc (\%) {
         print $sock "<hr><h1>Passphrase not set!</h1></p><hr>\n";
     } else {
         print $sock "Jump to <a href=\"#toram\">save to RAM</a>, then ".
-            "<a href=\"/edit.htm?path=l00://crypt.htm\" target=\"newwin\">edit RAM</a><hr>\n";
+            "<a href=\"/ls.htm?path=l00://crypt.htm\" target=\"newwin\">see RAM</a><hr>\n";
 
         if ($plain eq "true") {
             $plain = $crypt;
