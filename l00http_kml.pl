@@ -27,64 +27,38 @@ $kmlheader1 =
 
 $kmlheader2 = "</name>\n".
     "	<open>1</open>\n".
-    "	<StyleMap id=\"msn_hospitals\">\n".
-    "		<Pair>\n".
-    "			<key>normal</key>\n".
-    "			<styleUrl>#sn_hospitals</styleUrl>\n".
-    "		</Pair>\n".
-    "		<Pair>\n".
-    "			<key>highlight</key>\n".
-    "			<styleUrl>#sh_hospitals</styleUrl>\n".
-    "		</Pair>\n".
-    "	</StyleMap>\n".
-    "	<Style id=\"sn_hospitals\">\n".
-    "		<IconStyle>\n".
-    "			<scale>1.2</scale>\n".
-    "			<Icon>\n".
-    "				<href>http://maps.google.com/mapfiles/kml/shapes/hospitals.png</href>\n".
-    "			</Icon>\n".
-    "			<hotSpot x=\"0.5\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>\n".
-    "		</IconStyle>\n".
-    "	</Style>\n".
-    "	<Style id=\"sh_hospitals\">\n".
-    "		<IconStyle>\n".
-    "			<scale>1.4</scale>\n".
-    "			<Icon>\n".
-    "				<href>http://maps.google.com/mapfiles/kml/shapes/hospitals.png</href>\n".
-    "			</Icon>\n".
-    "			<hotSpot x=\"0.5\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\"/>\n".
-    "		</IconStyle>\n".
-    "	</Style>\n".
-    "	<Style id=\"sn_circle\">\n".
-    "		<IconStyle>\n".
-    "			<scale>1.2</scale>\n".
-    "			<Icon>\n".
-    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>\n".
-    "			</Icon>\n".
-    "		</IconStyle>\n".
-    "		<ListStyle>\n".
-    "		</ListStyle>\n".
-    "	</Style>\n".
-    "	<Style id=\"sh_circle\">\n".
-    "		<IconStyle>\n".
-    "			<scale>1.2</scale>\n".
-    "			<Icon>\n".
-    "				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png</href>\n".
-    "			</Icon>\n".
-    "		</IconStyle>\n".
-    "		<ListStyle>\n".
-    "		</ListStyle>\n".
-    "	</Style>\n".
-    "	<StyleMap id=\"msn_circle\">\n".
-    "		<Pair>\n".
-    "			<key>normal</key>\n".
-    "			<styleUrl>#sn_circle</styleUrl>\n".
-    "		</Pair>\n".
-    "		<Pair>\n".
-    "			<key>highlight</key>\n".
-    "			<styleUrl>#sh_circle</styleUrl>\n".
-    "		</Pair>\n".
-    "	</StyleMap>\n".
+    "   <Style id=\"sh_donut\">\n".
+    "       <IconStyle>\n".
+    "           <color>ff0000ff</color>\n".
+    "           <scale>1.4</scale>\n".
+    "           <Icon>\n".
+    "               <href>http://maps.google.com/mapfiles/kml/shapes/donut.png</href>\n".
+    "           </Icon>\n".
+    "       </IconStyle>\n".
+    "       <ListStyle>\n".
+    "       </ListStyle>\n".
+    "   </Style>\n".
+    "   <Style id=\"sn_donut\">\n".
+    "       <IconStyle>\n".
+    "           <color>ff0000ff</color>\n".
+    "           <scale>1.2</scale>\n".
+    "           <Icon>\n".
+    "               <href>http://maps.google.com/mapfiles/kml/shapes/donut.png</href>\n".
+    "           </Icon>\n".
+    "       </IconStyle>\n".
+    "       <ListStyle>\n".
+    "       </ListStyle>\n".
+    "   </Style>\n".
+    "   <StyleMap id=\"msn_donut\">\n".
+    "       <Pair>\n".
+    "           <key>normal</key>\n".
+    "           <styleUrl>#sn_donut</styleUrl>\n".
+    "       </Pair>\n".
+    "       <Pair>\n".
+    "           <key>highlight</key>\n".
+    "           <styleUrl>#sh_donut</styleUrl>\n".
+    "       </Pair>\n".
+    "   </StyleMap>\n".
     "	<Folder>\n".
     "		<name>Temporary Places</name>\n".
     "		<open>1</open>\n";
@@ -103,7 +77,7 @@ sub l00http_kml_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
-    my ($lat, $lon, $name, $trkname, $trkmarks, $lnno, $pointno);
+    my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
     my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $thisfile);
     my ($toKmlCnt, $frKmlCnt);
 
@@ -245,7 +219,7 @@ sub l00http_kml_proc {
                                 $trkmarks .=
                                 "\t\t\t<Placemark>\n".
                                 "\t\t\t\t<name>$lnno</name>\n".
-                                "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                                "\t\t\t\t<styleUrl>#msn_donut</styleUrl>\n".
                                 "\t\t\t\t<Point>\n".
                                 "\t\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
                                 "\t\t\t\t</Point>\n".
@@ -394,7 +368,7 @@ sub l00http_kml_proc {
                                 $trkmarks .=
                                 "\t\t\t<Placemark>\n".
                                 "\t\t\t\t<name>$lnno</name>\n".
-                                "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                                "\t\t\t\t<styleUrl>#msn_donut</styleUrl>\n".
                                 "\t\t\t\t<Point>\n".
                                 "\t\t\t\t\t<coordinates>$fields[3],$fields[2],0</coordinates>\n".
                                 "\t\t\t\t</Point>\n".
@@ -485,7 +459,7 @@ sub l00http_kml_proc {
                                     $trkmarks .=
                                     "\t\t\t<Placemark>\n".
                                     "\t\t\t\t<name>$lnno</name>\n".
-                                    "\t\t\t\t<styleUrl>#msn_circle</styleUrl>\n".
+                                    "\t\t\t\t<styleUrl>#msn_donut</styleUrl>\n".
                                     "\t\t\t\t<Point>\n".
                                     "\t\t\t\t\t<coordinates>$lon_,$lat_,0</coordinates>\n".
                                     "\t\t\t\t</Point>\n".
@@ -517,6 +491,7 @@ sub l00http_kml_proc {
                     $toKmlCnt++;
                     # reading long,lat,name file
                     $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $starname = '';
                     foreach $_ (split ("\n", $buffer)) {
                         s/\r//g;
                         s/\n//g;
@@ -524,7 +499,6 @@ sub l00http_kml_proc {
                         if (/^#/) {
                             next;
                         }
-                        $name = "way$toKmlCnt";
                         #https://www.google.com/maps/PVG@31.151045,121.8012844,15z
                         #http://www.google.cn/maps/@31.3228158,120.6269192,502m/data=!3m1!1e3
                         if (($name, $lat, $lon) = /\.google\..+?\/maps\/(.*)@([0-9.+-]+),([0-9.+-]+),/) {
@@ -532,9 +506,24 @@ sub l00http_kml_proc {
                             # https://www.google.com/maps/@31.1956864,121.3522793,15z
                             # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en
                             # match, falls thru
+                            if ($starname ne '') {
+                                # * name from line above over writes name from URL
+                                $name = $starname;
+                            }
                         } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
                             # match, falls thru
+                            if ($starname ne '') {
+                                # * name from line above over writes name from URL
+                                $name = $starname;
+                            }
+                        } elsif (/^\* +([^ ]+)/) {
+                            # of the form:
+                            # * name
+                            # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                            $starname = $1;
+                            next;
                         } else {
+                            $starname = '';
                             next;
                         }
                         $lat += $curlatoffset;
@@ -542,7 +531,7 @@ sub l00http_kml_proc {
                         $kmlbuf .= 
                             "\t\t<Placemark>\n".
                             "\t\t\t<name>$name</name>\n".
-                            "\t\t\t<styleUrl>#msn_hospitals</styleUrl>\n".
+                            "\t\t\t<styleUrl>#msn_donut</styleUrl>\n".
                             "\t\t\t<Point>\n".
                             "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
                             "\t\t\t</Point>\n".
