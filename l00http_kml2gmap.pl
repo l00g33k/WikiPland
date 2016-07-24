@@ -1,9 +1,44 @@
-#use strict;
-#use warnings;
+use strict;
+use warnings;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
-# Copy to Android 
+my ($gmapscript);
+
+$gmapscript = <<ENDOFSCRIPT;
+<script
+src="http://maps.googleapis.com/maps/api/js">
+</script>
+
+<script>
+var myCenter=new google.maps.LatLng(45.4357487,12.3098395);
+var myCenter2=new google.maps.LatLng(46.4357487,13.3098395);
+
+function initialize()
+{
+var mapProp = {
+  center:myCenter,
+  zoom:7,
+  mapTypeId:google.maps.MapTypeId.ROADMAP
+  };
+
+var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+
+var marker=new google.maps.Marker({
+  position:myCenter,
+  });
+var marker2=new google.maps.Marker({
+  position:myCenter2,
+  });
+
+marker.setMap(map);
+marker2.setMap(map);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+ENDOFSCRIPT
+
 
 my %config = (proc => "l00http_kml2gmap_proc",
               desc => "l00http_kml2gmap_desc");
@@ -16,10 +51,16 @@ sub l00http_kml2gmap_desc {
 }
 
 
+my ($htmlhead);
+$htmlhead = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A".
+            "<html>\x0D\x0A".
+            "<head>\x0D\x0A".
+            "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
+            "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A";
+
 sub l00http_kml2gmap_proc {
-    my ($main);
-    ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    $sock = $ctrl->{'sock'};     # dereference network socket
+    my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($mypath, $host, $tmp);
 
@@ -33,31 +74,17 @@ sub l00http_kml2gmap_proc {
     } else {
         $host = 'http://127.0.0.1:20337';
     }
-    if (defined ($form->{'host'})) {
-        $host = $form->{'host'};
-    }
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>kml2gmap</title>\n" . $refreshtag . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+    print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . 
+        $gmapscript .
+        $ctrl->{'htmlhead2'};
 
-    if ((!($mypath =~ m|/|)) && (!($mypath =~ m|\\|))) {
-        # try default path
-        $mypath = $ctrl->{'plpath'} . $mypath;
+    if (defined ($form->{'generate'})) {
+        print $sock "<div id=\"googleMap\" style=\"width:500px;height:380px;\"></div>\n";
+    } else {
+        print $sock "Download this <a href=\"/kml2gmap.htm?path=$mypath&generate=gen\">HTML file</a>\n";
     }
-
-    print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"do\" value=\"Create link\"><p>\n";
-    print $sock "Path: <input type=\"text\" name=\"path\" size=\"12\" value=\"$mypath\"><br>\n";
-    print $sock "Host: <input type=\"text\" name=\"host\" size=\"12\" value=\"$host\"><br>\n";
-    print $sock "</form>\n";
-
-    print $sock "<p>\n";
-
-    $tmp = &l00httpd::urlencode ("$host/kml.htm?path=$mypath");
-    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Copy external URL to clipboard</a><p>\n";
-    print $sock "<a href=\"$host/kml.htm?path=$mypath\">$host/kml.htm?path=$mypath</a><p>\n";
-    print $sock "<a href=\"geo:0,0?q=$host/kml.htm?path=$mypath\">geo:0,0?q=$host/kml.htm?path=$mypath</a>\n";
 
 
     # send HTML footer and ends
