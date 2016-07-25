@@ -3,41 +3,62 @@ use warnings;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
-my ($gmapscript);
+my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, 
+    $gmapscript3, $myCenters, $myMarkers, $mySetMap);
+my ($width, $height, $apikey, $satellite);
 
-$gmapscript = <<ENDOFSCRIPT;
-<script
-src="http://maps.googleapis.com/maps/api/js">
+$myCenters = '';
+$myMarkers = '';
+$mySetMap = '';
+
+$width = 500;
+$height = 380;
+$satellite = 0;
+
+$apikey = '';
+
+$gmapscript0 = "<script\n";
+#src="http://maps.googleapis.com/maps/api/js?key=$apikey">
+$gmapscript1 = <<ENDOFSCRIPT1;
 </script>
 
 <script>
-var myCenter=new google.maps.LatLng(45.4357487,12.3098395);
-var myCenter2=new google.maps.LatLng(46.4357487,13.3098395);
+var  myCenter=new google.maps.LatLng(0,0);
+ENDOFSCRIPT1
+
+#var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
+#var myCenter2=new google.maps.LatLng(46.4357487,13.3098395);
+#$myCenters
+
+$gmapscript2 = <<ENDOFSCRIPT2;
 
 function initialize()
 {
 var mapProp = {
-  center:myCenter,
-  zoom:7,
-  mapTypeId:google.maps.MapTypeId.ROADMAP
+  center:myCenter0,
+ENDOFSCRIPT2
+#  zoom:1,
+#  mapTypeId:google.maps.MapTypeId.ROADMAP
+$gmapscript2a = <<ENDOFSCRIPT2a;
   };
 
 var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
-var marker=new google.maps.Marker({
-  position:myCenter,
-  });
-var marker2=new google.maps.Marker({
-  position:myCenter2,
-  });
+ENDOFSCRIPT2a
 
-marker.setMap(map);
-marker2.setMap(map);
+#var marker =new google.maps.Marker({ position:myCenter , });
+#var marker2=new google.maps.Marker({ position:myCenter2, });
+#$myMarkers
+
+#marker.setMap(map);
+#marker2.setMap(map);
+#$mySetMap
+
+$gmapscript3 = <<ENDOFSCRIPT3;
 }
-
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
-ENDOFSCRIPT
+ENDOFSCRIPT3
 
 
 my %config = (proc => "l00http_kml2gmap_proc",
@@ -62,29 +83,159 @@ sub l00http_kml2gmap_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($mypath, $host, $tmp);
+    my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable);
 
-    $mypath = '';
-    if (defined ($form->{'path'})) {
-        $mypath = $form->{'path'};
+
+    if (defined($ctrl->{'googleapikey'})) {
+        $apikey = $ctrl->{'googleapikey'};
     }
 
-    if (defined ($ctrl->{'kml2gmap'})) {
-        $host = $ctrl->{'kml2gmap'};
+    if (defined ($form->{'width'}) && ($form->{'width'} =~ /(\d+)/)) {
+        $width = $form->{'width'};
+    }
+    if (defined ($form->{'height'}) && ($form->{'height'} =~ /(\d+)/)) {
+        $height = $form->{'height'};
+    }
+
+    if (defined ($form->{'maptype'}) && ($form->{'maptype'} eq 'satellite')) {
+        $satellite = 2;
+    } elsif (defined ($form->{'maptype'}) && ($form->{'maptype'} eq 'hybrid')) {
+        $satellite = 1;
     } else {
-        $host = 'http://127.0.0.1:20337';
+        $satellite = 0;
     }
 
-    # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . 
-        $gmapscript .
-        $ctrl->{'htmlhead2'};
 
-    if (defined ($form->{'generate'})) {
-        print $sock "<div id=\"googleMap\" style=\"width:500px;height:380px;\"></div>\n";
+    $labeltable = '';
+    if (!defined ($form->{'path'})) {
+        $form->{'path'} = '';
     } else {
-        print $sock "View or download <a href=\"/kml2gmap.htm?path=$mypath&generate=gen\">Google Maps HTML file</a>.\n";
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+            $buffer =~ s/\r\n/\n/g;
+            $buffer =~ s/\r/\n/g;
+            $myCenters = '';
+            $myMarkers = '';
+            $mySetMap = '';
+            $nowypts = 0;
+            foreach $_ (split ("\n", $buffer)) {
+                s/\r//g;
+                s/\n//g;
+                #-118.0347581348814,33.80816583075773,Place1
+                if (/^#/) {
+                    next;
+                }
+                #https://www.google.com/maps/PVG@31.151045,121.8012844,15z
+                #http://www.google.cn/maps/@31.3228158,120.6269192,502m/data=!3m1!1e3
+                if (($name, $lat, $lon) = /\.google\..+?\/maps\/(.*)@([0-9.+-]+),([0-9.+-]+),/) {
+                    # Parse coordinate from Google Maps URL
+                    # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                    # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en
+                    # match, falls thru
+                    if ($starname ne '') {
+                        # * name from line above over writes name from URL
+                        $name = $starname;
+                    }
+                } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
+                    # match, falls thru
+                    if ($starname ne '') {
+                        # * name from line above over writes name from URL
+                        $name = $starname;
+                    }
+                } elsif (/^\* +([^ ]+)/) {
+                    # of the form:
+                    # * name
+                    # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                    $starname = $1;
+                    next;
+                } else {
+                    $starname = '';
+                    next;
+                }
+                # var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
+                $myCenters .= "var myCenter$nowypts =new google.maps.LatLng($lat,$lon);\n";
+
+                # var marker =new google.maps.Marker({ position:myCenter , });
+                if ($nowypts < 26) {
+                    $_ = chr(65 + $nowypts);
+                } else {
+                    $_ = chr(97 + $nowypts - 26);
+                }
+print "$_ $name: $lon,$lat\n";
+                $labeltable .= "$_: $name<br>\n";
+                $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
+                    "  position:myCenter$nowypts , \n".
+                    "  label: '$_' , \n".
+                    "  title: '$name'});\n";
+
+                # marker.setMap(map);
+                $mySetMap .= "marker$nowypts.setMap(map);\n";
+                $nowypts++;
+            }
+        }
     }
+
+
+    if (defined ($form->{'makemap'})) {
+        # Send HTTP and HTML headers
+        if ($satellite == 1) {
+            # http://www.w3schools.com/googleapi/google_maps_basic.asp
+            $_ = 'HYBRID';
+        } elsif ($satellite == 2) {
+            # http://www.w3schools.com/googleapi/google_maps_basic.asp
+            $_ = 'SATELLITE';
+        } else {
+            $_ = 'ROADMAP';
+        }
+        print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . 
+            $gmapscript0 .
+            "src=\"http://maps.googleapis.com/maps/api/js?key=$apikey\">\n" .
+            $gmapscript1 .
+            $myCenters .
+            $gmapscript2 .
+            "  zoom:2,\n" .
+            "  mapTypeId:google.maps.MapTypeId.$_\n" .
+            $gmapscript2a .
+            $myMarkers .
+            $mySetMap .
+            $gmapscript3 .
+            $ctrl->{'htmlhead2'};
+
+        print $sock "<div id=\"googleMap\" style=\"width:${width}px;height:${height}px;\"></div>\n";
+    } else {
+        # Send HTTP and HTML headers
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>kml2gmap</title>\n" . $ctrl->{'htmlhead2'};
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<p>\n";
+    }
+
+    print $sock "<p>View or download <a href=\"/kml2gmap.htm?path=$form->{'path'}&generate=gen\">Google Maps HTML file</a>.\n";
+
+    print $sock "<p>$labeltable<p>\n";
+
+    print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
+    print $sock "<input type=\"submit\" name=\"makemap\" value=\"Make map\"><p>\n";
+    print $sock "Path: <input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\"><br>\n";
+    print $sock "width: <input type=\"text\" name=\"width\" size=\"6\" value=\"$width\"><br>\n";
+    print $sock "height: <input type=\"text\" name=\"height\" size=\"6\" value=\"$height\"><br>\n";
+    if ($satellite == 0) {
+        $_ = 'checked';
+    } else {
+        $_ = 'unchecked';
+    }
+    print $sock "<input type=\"radio\" name=\"maptype\" value=\"street\"    $_>Street<br>";
+    if ($satellite == 1) {
+        $_ = 'checked';
+    } else {
+        $_ = 'unchecked';
+    }
+    print $sock "<input type=\"radio\" name=\"maptype\" value=\"hybrid\" $_>Hybrid<br>";
+    if ($satellite == 2) {
+        $_ = 'checked';
+    } else {
+        $_ = 'unchecked';
+    }
+    print $sock "<input type=\"radio\" name=\"maptype\" value=\"satellite\" $_>Satellite<br>";
+    print $sock "</form>\n";
 
 
     # send HTML footer and ends
