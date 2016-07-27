@@ -30,8 +30,22 @@ ENDOFSCRIPT1
 #var myCenter2=new google.maps.LatLng(46.4357487,13.3098395);
 #$myCenters
 
+#    var worldCoordinate = project(latLng);
+#    var marker = new google.maps.Marker({
+#      position: latLng,
+#      map: map
+#    });
 $gmapscript2 = <<ENDOFSCRIPT2;
 
+
+function placeMarkerAndPanTo(latLng, map) {
+    var zoom = map.getZoom();
+    var scale = 1 << zoom;
+
+    document.getElementById("lonlat").firstChild.nodeValue = "Lat,Long: " + latLng;
+    document.getElementById("zoom").firstChild.nodeValue = "Zoom: " + zoom;
+}
+      
 function initialize()
 {
 var mapProp = {
@@ -43,6 +57,10 @@ $gmapscript2a = <<ENDOFSCRIPT2a;
   };
 
 var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+
+map.addListener('click', function(e) {
+    placeMarkerAndPanTo(e.latLng, map);
+});
 
 ENDOFSCRIPT2a
 
@@ -248,11 +266,13 @@ sub l00http_kml2gmap_proc {
 
     print $sock "<p><pre>$labeltable</pre><p>\n";
 
+
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<p>\n";
+
     print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"><p>\n";
-    print $sock "Path: <input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\"><br>\n";
-    print $sock "width: <input type=\"text\" name=\"width\" size=\"5\" value=\"$width\"><br>\n";
-    print $sock "height: <input type=\"text\" name=\"height\" size=\"5\" value=\"$height\"><br>\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
     if ($satellite == 0) {
         $_ = 'checked';
     } else {
@@ -271,10 +291,42 @@ sub l00http_kml2gmap_proc {
         $_ = 'unchecked';
     }
     print $sock "<input type=\"radio\" name=\"maptype\" value=\"satellite\" $_>Satellite<br>";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "</table>\n";
     print $sock "</form>\n";
 
     if (defined ($form->{'path'})) {
         print $sock "<p>View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+
+        print $sock "<span id=\"lonlat\">&nbsp;</span><br>";
+        print $sock "<span id=\"zoom\">&nbsp;</span><br>";
+
+        print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>&nbsp;\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\">\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "Longitude:</td><td><input type=\"text\" name=\"long\" size=\"12\">\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  size=\"12\">\n";
+        print $sock "</td></tr>\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "</table><br>\n";
+        print $sock "</form>\n";
     }
 
     # send HTML footer and ends
