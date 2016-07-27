@@ -42,8 +42,9 @@ function placeMarkerAndPanTo(latLng, map) {
     var zoom = map.getZoom();
     var scale = 1 << zoom;
 
-    document.getElementById("lonlat").firstChild.nodeValue = "Lat,Long: " + latLng;
-    document.getElementById("zoom").firstChild.nodeValue = "Zoom: " + zoom;
+    document.getElementById("zoom").firstChild.nodeValue = "Zoom level: " + zoom;
+    document.getElementById("long").value = latLng.lng();
+    document.getElementById("lat").value = latLng.lat();
 }
       
 function initialize()
@@ -124,6 +125,25 @@ sub l00http_kml2gmap_proc {
         $satellite = 0;
     }
 
+    # add new waypoint
+    if (defined ($form->{'path'}) && 
+        defined ($form->{'addway'}) &&
+        defined ($form->{'desc'}) &&
+        defined ($form->{'long'}) &&
+        defined ($form->{'lat'})) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+            $buffer = "$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
+
+            # back up
+            &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            # update file
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteBuf($ctrl, $buffer);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    }
+
 
     $labeltable = '';
     if (!defined ($form->{'path'})) {
@@ -138,6 +158,7 @@ sub l00http_kml2gmap_proc {
             $mySetMap = '';
             $nowypts = 0;
             $lonmax = undef;
+            $starname = '';
             foreach $_ (split ("\n", $buffer)) {
                 s/\r//g;
                 s/\n//g;
@@ -155,12 +176,15 @@ sub l00http_kml2gmap_proc {
                     if ($starname ne '') {
                         # * name from line above over writes name from URL
                         $name = $starname;
+                        $starname = '';
                     }
                 } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
                     # match, falls thru
                     if ($starname ne '') {
                         # * name from line above over writes name from URL
                         $name = $starname;
+                        $starname = '';
+print "($lat, $lon, $name)\n";
                     }
                 } elsif (/^\* +([^ ]+)/) {
                     # of the form:
@@ -264,33 +288,37 @@ sub l00http_kml2gmap_proc {
     }
 
 
-    print $sock "<p><pre>$labeltable</pre><p>\n";
+    print $sock "<p><pre>$labeltable</pre>\n";
+    print $sock "<span id=\"zoom\">&nbsp;</span><p>";
 
 
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<p>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    print $sock "View: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+
 
     print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
-    if ($satellite == 0) {
-        $_ = 'checked';
-    } else {
-        $_ = 'unchecked';
-    }
-    print $sock "<input type=\"radio\" name=\"maptype\" value=\"street\"    $_>Street<br>";
-    if ($satellite == 1) {
-        $_ = 'checked';
-    } else {
-        $_ = 'unchecked';
-    }
-    print $sock "<input type=\"radio\" name=\"maptype\" value=\"hybrid\" $_>Hybrid<br>";
-    if ($satellite == 2) {
-        $_ = 'checked';
-    } else {
-        $_ = 'unchecked';
-    }
-    print $sock "<input type=\"radio\" name=\"maptype\" value=\"satellite\" $_>Satellite<br>";
+    print $sock "&nbsp;\n";
+#    if ($satellite == 0) {
+#        $_ = 'checked';
+#    } else {
+#        $_ = 'unchecked';
+#    }
+#    print $sock "<input type=\"radio\" name=\"maptype\" value=\"street\"    $_>Street<br>";
+#    if ($satellite == 1) {
+#        $_ = 'checked';
+#    } else {
+#        $_ = 'unchecked';
+#    }
+#    print $sock "<input type=\"radio\" name=\"maptype\" value=\"hybrid\" $_>Hybrid<br>";
+#    if ($satellite == 2) {
+#        $_ = 'checked';
+#    } else {
+#        $_ = 'unchecked';
+#    }
+#    print $sock "<input type=\"radio\" name=\"maptype\" value=\"satellite\" $_>Satellite<br>";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
@@ -305,26 +333,23 @@ sub l00http_kml2gmap_proc {
     print $sock "</form>\n";
 
     if (defined ($form->{'path'})) {
-        print $sock "<p>View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
-
-        print $sock "<span id=\"lonlat\">&nbsp;</span><br>";
-        print $sock "<span id=\"zoom\">&nbsp;</span><br>";
-
-        print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
+        print $sock "<p><form action=\"/kml2gmap.htm\" method=\"post\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>&nbsp;\n";
+        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\">\n";
+        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"new\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Longitude:</td><td><input type=\"text\" name=\"long\" size=\"12\">\n";
+        print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  size=\"12\">\n";
+        print $sock "Longitude:</td><td><input type=\"text\" name=\"long\" id=\"long\" size=\"12\">\n";
         print $sock "</td></tr>\n";
-        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "<tr><td>\n";
+        print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\">\n";
+        print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "</form>\n";
     }
