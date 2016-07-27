@@ -26,7 +26,7 @@ my %config = (proc => "l00http_syncview_proc",
 
 
 my ($lwidth, $rwidth, $rightfile, $leftfile, $skip, $highlight);
-my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex);
+my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex, $maxsecline);
 $lwidth = 20;
 $rwidth = 20;
 $rightfile = '';
@@ -36,6 +36,7 @@ $leftregex = '';
 $rightregex = '';
 $skip = 0;
 $highlight = '';
+$maxsecline = 1000;
 
 sub l00http_syncview_make_outline {
     my ($oii, $nii, $lwidth, $rwidth, $leftfile, $rightfile) = @_;
@@ -136,6 +137,11 @@ sub l00http_syncview_proc {
     if (defined ($form->{'maxline'})) {
         if ($form->{'maxline'} =~ /(\d+)/) {
             $maxline = $1;
+        }
+    }
+    if (defined ($form->{'maxsecline'})) {
+        if ($form->{'maxsecline'} =~ /(\d+)/) {
+            $maxsecline = $1;
         }
     }
     if (defined ($form->{'skip'})) {
@@ -304,7 +310,8 @@ sub l00http_syncview_proc {
                     # print both
                     $ii = 0;
                     if (defined($rightblksz{$leftmarkers[$blkidx]})) {
-                        for (; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
+                        for (; $ii < $rightblksz{$leftmarkers[$blkidx]} &&
+                            $ii < $maxsecline; $ii++) {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                                 $leftblkat[$blkidx] + $ii, 
                                 $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
@@ -323,7 +330,8 @@ sub l00http_syncview_proc {
                         }
                     }
                     # and remaining left
-                    for (; $ii < $leftblksz[$blkidx]; $ii++) {
+                    for (; $ii < $leftblksz[$blkidx] &&
+                        $ii < $maxsecline; $ii++) {
                         ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                             $leftblkat[$blkidx] + $ii, 
                             -1, 
@@ -341,7 +349,8 @@ sub l00http_syncview_proc {
                     # print both
                     $ii = 0;
                     if (defined($rightmarkerat{$leftmarkers[$blkidx]})) {
-                        for (; $ii < $leftblksz[$blkidx]; $ii++) {
+                        for (; $ii < $leftblksz[$blkidx] &&
+                            $ii < $maxsecline; $ii++) {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                                 $leftblkat[$blkidx] + $ii, 
                                 $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
@@ -360,7 +369,8 @@ sub l00http_syncview_proc {
                         }
                     }
                     # and remaining left
-                    for (; $ii < $rightblksz{$leftmarkers[$blkidx]}; $ii++) {
+                    for (; $ii < $rightblksz{$leftmarkers[$blkidx]} &&
+                        $ii < $maxsecline; $ii++) {
                         ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
                             -1, 
                             $rightmarkerat{$leftmarkers[$blkidx]} + $ii, 
@@ -418,6 +428,7 @@ sub l00http_syncview_proc {
     print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">; ";
     print $sock "Skip <input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\"> lines, view\n";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max.\n";
+    print $sock "<input type=\"text\" size=\"4\" name=\"maxsecline\" value=\"$maxsecline\"> lines max per section.\n";
     print $sock "</td></tr>\n";
     print $sock "</table><br>\n";
     print $sock "</form>\n";
