@@ -37,14 +37,20 @@ ENDOFSCRIPT1
 #    });
 $gmapscript2 = <<ENDOFSCRIPT2;
 
+var lng0, lat0;
 
 function placeMarkerAndPanTo(latLng, map) {
     var zoom = map.getZoom();
     var scale = 1 << zoom;
 
     document.getElementById("zoom").firstChild.nodeValue = "Zoom level: " + zoom;
+    document.getElementById("distance").firstChild.nodeValue = 
+        "Distance: " + latLng.lng() + " " + latLng.lat() +
+        ". Distance0: " + lng0 + " " + lat0;
     document.getElementById("long").value = latLng.lng();
     document.getElementById("lat").value = latLng.lat();
+    lng0 = latLng.lng();
+    lat0 = latLng.lat();
 }
       
 function initialize()
@@ -147,100 +153,102 @@ sub l00http_kml2gmap_proc {
 
     $labeltable = '';
     if (!defined ($form->{'path'})) {
-        $form->{'path'} = '';
-    } else {
-        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-            $buffer = &l00httpd::l00freadAll($ctrl);
-            $buffer =~ s/\r\n/\n/g;
-            $buffer =~ s/\r/\n/g;
-            $myCenters = '';
-            $myMarkers = '';
-            $mySetMap = '';
-            $nowypts = 0;
-            $lonmax = undef;
-            $starname = '';
-            foreach $_ (split ("\n", $buffer)) {
-                s/\r//g;
-                s/\n//g;
-                #-118.0347581348814,33.80816583075773,Place1
-                if (/^#/) {
-                    next;
-                }
-                #https://www.google.com/maps/PVG@31.151045,121.8012844,15z
-                #http://www.google.cn/maps/@31.3228158,120.6269192,502m/data=!3m1!1e3
-                if (($name, $lat, $lon) = /\.google\..+?\/maps\/(.*)@([0-9.+-]+),([0-9.+-]+),/) {
-                    # Parse coordinate from Google Maps URL
-                    # https://www.google.com/maps/@31.1956864,121.3522793,15z
-                    # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en
-                    # match, falls thru
-                    if ($starname ne '') {
-                        # * name from line above over writes name from URL
-                        $name = $starname;
-                        $starname = '';
-                    }
-                } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
-                    # match, falls thru
-                    if ($starname ne '') {
-                        # * name from line above over writes name from URL
-                        $name = $starname;
-                        $starname = '';
-print "($lat, $lon, $name)\n";
-                    }
-                } elsif (/^\* +([^ ]+)/) {
-                    # of the form:
-                    # * name
-                    # https://www.google.com/maps/@31.1956864,121.3522793,15z
-                    $starname = $1;
-                    next;
-                } else {
-                    $starname = '';
-                    next;
-                }
-
-                # find max span
-                if (!defined($lonmax)) {
-                    $lonmax = $lon;
-                    $lonmin = $lon;
-                    $latmax = $lat;
-                    $latmin = $lat;
-                } else {
-                    if ($lonmax < $lon) {
-                        $lonmax = $lon;
-                    }
-                    if ($lonmin > $lon) {
-                        $lonmin = $lon;
-                    }
-                    if ($latmax < $lat) {
-                        $latmax = $lat;
-                    }
-                    if ($latmin > $lat) {
-                        $latmin = $lat;
-                    }
-                }
-
-                # var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
-                $myCenters .= "var myCenter$nowypts =new google.maps.LatLng($lat,$lon);\n";
-
-                # var marker =new google.maps.Marker({ position:myCenter , });
-                if ($nowypts < 26) {
-                    $_ = chr(65 + $nowypts);
-                } else {
-                    $_ = chr(97 + $nowypts - 26);
-                }
-                $labeltable .= "$_: $name (lon/lat: $lon,$lat)\n";
-                $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
-                    "  position:myCenter$nowypts , \n".
-                    "  label: '$_' , \n".
-                    "  title: '$name'});\n";
-
-                # marker.setMap(map);
-                $mySetMap .= "marker$nowypts.setMap(map);\n";
-                $nowypts++;
+        $form->{'path'} = 'l00://waypoint.txt';
+        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint file\n0,0 origin\n");
+        &l00httpd::l00fwriteClose($ctrl);
+    }
+    if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+        $buffer = &l00httpd::l00freadAll($ctrl);
+        $buffer =~ s/\r\n/\n/g;
+        $buffer =~ s/\r/\n/g;
+        $myCenters = '';
+        $myMarkers = '';
+        $mySetMap = '';
+        $nowypts = 0;
+        $lonmax = undef;
+        $starname = '';
+        foreach $_ (split ("\n", $buffer)) {
+            s/\r//g;
+            s/\n//g;
+            #-118.0347581348814,33.80816583075773,Place1
+            if (/^#/) {
+                next;
             }
+            #https://www.google.com/maps/PVG@31.151045,121.8012844,15z
+            #http://www.google.cn/maps/@31.3228158,120.6269192,502m/data=!3m1!1e3
+            if (($name, $lat, $lon) = /\.google\..+?\/maps\/(.*)@([0-9.+-]+),([0-9.+-]+),/) {
+                # Parse coordinate from Google Maps URL
+                # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                # https://www.google.com/maps/place/30%C2%B012'26.5%22N+115%C2%B002'06.5%22E/@30.206403,115.0352586,19z?hl=en
+                # match, falls thru
+                if ($starname ne '') {
+                    # * name from line above over writes name from URL
+                    $name = $starname;
+                    $starname = '';
+                }
+            } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
+                # match, falls thru
+                if ($starname ne '') {
+                    # * name from line above over writes name from URL
+                    $name = $starname;
+                    $starname = '';
+                }
+            } elsif (/^\* +([^ ]+)/) {
+                # of the form:
+                # * name
+                # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                $starname = $1;
+                next;
+            } else {
+                $starname = '';
+                next;
+            }
+
+            # find max span
+            if (!defined($lonmax)) {
+                $lonmax = $lon;
+                $lonmin = $lon;
+                $latmax = $lat;
+                $latmin = $lat;
+            } else {
+                if ($lonmax < $lon) {
+                    $lonmax = $lon;
+                }
+                if ($lonmin > $lon) {
+                    $lonmin = $lon;
+                }
+                if ($latmax < $lat) {
+                    $latmax = $lat;
+                }
+                if ($latmin > $lat) {
+                    $latmin = $lat;
+                }
+            }
+
+            # var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
+            $myCenters .= "var myCenter$nowypts =new google.maps.LatLng($lat,$lon);\n";
+
+            # var marker =new google.maps.Marker({ position:myCenter , });
+            if ($nowypts < 26) {
+                $_ = chr(65 + $nowypts);
+            } else {
+                $_ = chr(97 + $nowypts - 26);
+            }
+            $labeltable .= "$_: $name (lon/lat: $lon,$lat)\n";
+            $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
+                "  position:myCenter$nowypts , \n".
+                "  label: '$_' , \n".
+                "  title: '$name'});\n";
+
+            # marker.setMap(map);
+            $mySetMap .= "marker$nowypts.setMap(map);\n";
+            $nowypts++;
         }
     }
 
 
+    $span = 0;
     if (defined ($form->{'path'})) {
         # Send HTTP and HTML headers
         if ($satellite == 1) {
@@ -259,13 +267,15 @@ print "($lat, $lon, $name)\n";
                       cos (($latmax + $latmin) / 2 / 180 
                         * 3.141592653589793)) ** 2);
         $zoom = 1;
-        while () {
-            if ($span * 2 ** $zoom > 180) {
-                last;
-            }
-            $zoom++;
-            if ($zoom >= 17) {
-                last;
+        if ($span > 1e-9) {
+            while (1) {
+                if ($span * 2 ** $zoom > 180) {
+                    last;
+                }
+                $zoom++;
+                if ($zoom >= 17) {
+                    last;
+                }
             }
         }
 
@@ -289,10 +299,11 @@ print "($lat, $lon, $name)\n";
 
 
     print $sock "<p><pre>$labeltable</pre>\n";
-    print $sock "<span id=\"zoom\">&nbsp;</span><p>";
+    print $sock "<span id=\"zoom\">&nbsp;</span><br>";
+    print $sock "<span id=\"distance\">&nbsp;</span><p>";
 
 
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/kml2gmap.htm\">Clear map</a> - \n";
     print $sock "View: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
 
 
