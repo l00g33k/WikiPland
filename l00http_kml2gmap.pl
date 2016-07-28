@@ -102,6 +102,70 @@ map.addListener('click', function(e) {
     placeMarkerAndPanTo(e.latLng, map);
 });
 
+// Create the search box and link it to the UI element.
+var input = document.getElementById('pac-input');
+var searchBox = new google.maps.places.SearchBox(input);
+map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+// Bias the SearchBox results towards current map's viewport.
+map.addListener('bounds_changed', function() {
+  searchBox.setBounds(map.getBounds());
+});
+
+
+
+// search map
+
+var markers = [];
+// Listen for the event fired when the user selects a prediction and retrieve
+// more details for that place.
+searchBox.addListener('places_changed', function() {
+  var places = searchBox.getPlaces();
+
+  if (places.length == 0) {
+    return;
+  }
+
+  // Clear out the old markers.
+  markers.forEach(function(marker) {
+    marker.setMap(null);
+  });
+  markers = [];
+
+  // For each place, get the icon, name and location.
+  var bounds = new google.maps.LatLngBounds();
+  places.forEach(function(place) {
+    if (!place.geometry) {
+      console.log("Returned place contains no geometry");
+      return;
+    }
+    var icon = {
+      url: place.icon,
+      size: new google.maps.Size(71, 71),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(17, 34),
+      scaledSize: new google.maps.Size(25, 25)
+    };
+
+    // Create a marker for each place.
+    markers.push(new google.maps.Marker({
+      map: map,
+      icon: icon,
+      title: place.name,
+      position: place.geometry.location
+    }));
+
+    if (place.geometry.viewport) {
+      // Only geocodes have viewport.
+      bounds.union(place.geometry.viewport);
+    } else {
+      bounds.extend(place.geometry.location);
+    }
+  });
+  map.fitBounds(bounds);
+});
+
+
 ENDOFSCRIPT2a
 
 #var marker =new google.maps.Marker({ position:myCenter , });
@@ -194,7 +258,7 @@ sub l00http_kml2gmap_proc {
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint file\n0,0 origin\n");
+        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint file\n40.7488798,-73.9701978 origin\n");
         &l00httpd::l00fwriteClose($ctrl);
     }
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
@@ -328,7 +392,7 @@ sub l00http_kml2gmap_proc {
 
         print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . 
             $gmapscript0 .
-            "src=\"http://maps.googleapis.com/maps/api/js?key=$apikey\">\n" .
+            "src=\"http://maps.googleapis.com/maps/api/js?key=$apikey&libraries=places\">\n" .
             $gmapscript1 .
             "var  myCenter=new google.maps.LatLng($ctrlat,$ctrlon);\n" .
             $myCenters .
@@ -341,6 +405,7 @@ sub l00http_kml2gmap_proc {
             $gmapscript3 .
             $ctrl->{'htmlhead2'};
 
+        print $sock "<input id=\"pac-input\" class=\"controls\" type=\"text\" placeholder=\"Search Box\">\n";
         print $sock "<div id=\"googleMap\" style=\"width:${width}px;height:${height}px;\"></div>\n";
     }
 
