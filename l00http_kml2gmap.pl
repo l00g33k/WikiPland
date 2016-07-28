@@ -258,7 +258,7 @@ sub l00http_kml2gmap_proc {
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint file\n40.7488798,-73.9701978 origin\n");
+        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
         &l00httpd::l00fwriteClose($ctrl);
     }
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
