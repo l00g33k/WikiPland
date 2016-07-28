@@ -38,25 +38,52 @@ ENDOFSCRIPT1
 $gmapscript2 = <<ENDOFSCRIPT2;
 
 var lng0, lat0;
+var latLngLast;
 var cursor;
 var map;
+
+function getDistanceFromLatLonInKm(p1, p2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(p2.lat()-p1.lat());  // deg2rad below
+    var dLon = deg2rad(p2.lng()-p1.lng()); 
+    var a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(deg2rad(p1.lat())) * Math.cos(deg2rad(p2.lat())) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c; // Distance in km
+    return d;
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI/180)
+}
 
 function placeMarkerAndPanTo(latLng, map) {
     var zoom = map.getZoom();
     var scale = 1 << zoom;
+
 
     cursor.setPosition(latLng);
     cursor.setVisible(true);
     cursor.setMap(map);
 
     document.getElementById("zoom").firstChild.nodeValue = "Zoom level: " + zoom;
-    document.getElementById("distance").firstChild.nodeValue = 
-        "Distance: " + latLng.lng() + " " + latLng.lat() +
-        ". Distance0: " + lng0 + " " + lat0;
+    document.getElementById("coor").firstChild.nodeValue = 
+        "Coor (lat, lng): " + latLng;
+    if (typeof latLngLast !== 'undefined') {
+        // the latLngLast is defined
+        document.getElementById("distance").firstChild.nodeValue = 
+            "Distance: " + 
+            getDistanceFromLatLonInKm(latLng, latLngLast) + " km";
+    }
     document.getElementById("long").value = latLng.lng();
     document.getElementById("lat").value = latLng.lat();
     lng0 = latLng.lng();
     lat0 = latLng.lat();
+
+    latLngLast = latLng;
 }
       
 function initialize()
@@ -251,7 +278,7 @@ sub l00http_kml2gmap_proc {
             } else {
                 $_ = chr(97 + $nowypts - 26);
             }
-            $labeltable .= "$_: $name (lon/lat: $lon,$lat)\n";
+            $labeltable .= "$_: $name (lat, lng): $lat, $lon\n";
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
                 "  label: '$_' , \n".
@@ -320,6 +347,7 @@ sub l00http_kml2gmap_proc {
 
     print $sock "<p><pre>$labeltable</pre>\n";
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
+    print $sock "<span id=\"coor\">&nbsp;</span><br>";
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
 
 
