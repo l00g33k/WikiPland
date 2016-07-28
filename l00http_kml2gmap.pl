@@ -212,7 +212,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
-    my ($nomarkers);
+    my ($nomarkers, $lnno);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -233,6 +233,31 @@ sub l00http_kml2gmap_proc {
     } else {
         $satellite = 0;
     }
+
+
+    # delete waypoint
+    if (defined ($form->{'path'}) && 
+        defined ($form->{'delln'})) {
+        $buffer = '';
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            # back up
+            &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            $lnno = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                $lnno++;
+                if ($lnno == $form->{'delln'}) {
+                    $_ = "#$_";
+                }
+                $buffer .= $_;
+            }
+
+            # update file
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteBuf($ctrl, $buffer);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    }
+
 
     # add new waypoint
     if (defined ($form->{'path'}) && 
@@ -272,7 +297,9 @@ sub l00http_kml2gmap_proc {
         $lonmax = undef;
         $starname = '';
         $nomarkers = 0;
+        $lnno = 0;
         foreach $_ (split ("\n", $buffer)) {
+            $lnno++;
             s/\r//g;
             s/\n//g;
             #-118.0347581348814,33.80816583075773,Place1
@@ -342,6 +369,8 @@ sub l00http_kml2gmap_proc {
             } else {
                 $_ = chr(97 + $nowypts - 26);
             }
+#           $labeltable .= "$_: $name (lat, lng): $lat, $lon\n";
+            $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
             $labeltable .= "$_: $name (lat, lng): $lat, $lon\n";
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
