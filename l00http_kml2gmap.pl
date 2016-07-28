@@ -38,10 +38,16 @@ ENDOFSCRIPT1
 $gmapscript2 = <<ENDOFSCRIPT2;
 
 var lng0, lat0;
+var cursor;
+var map;
 
 function placeMarkerAndPanTo(latLng, map) {
     var zoom = map.getZoom();
     var scale = 1 << zoom;
+
+    cursor.setPosition(latLng);
+    cursor.setVisible(true);
+    cursor.setMap(map);
 
     document.getElementById("zoom").firstChild.nodeValue = "Zoom level: " + zoom;
     document.getElementById("distance").firstChild.nodeValue = 
@@ -63,7 +69,7 @@ ENDOFSCRIPT2
 $gmapscript2a = <<ENDOFSCRIPT2a;
   };
 
-var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
 map.addListener('click', function(e) {
     placeMarkerAndPanTo(e.latLng, map);
@@ -75,11 +81,16 @@ ENDOFSCRIPT2a
 #var marker2=new google.maps.Marker({ position:myCenter2, });
 #$myMarkers
 
+
 #marker.setMap(map);
 #marker2.setMap(map);
 #$mySetMap
 
 $gmapscript3 = <<ENDOFSCRIPT3;
+
+var myCenterCursor =new google.maps.LatLng(0,0);
+cursor=new google.maps.Marker({ position:myCenterCursor});
+
 }
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
