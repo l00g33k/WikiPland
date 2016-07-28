@@ -121,6 +121,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
+    my ($nomarkers);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -150,7 +151,7 @@ sub l00http_kml2gmap_proc {
         defined ($form->{'lat'})) {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             $buffer = &l00httpd::l00freadAll($ctrl);
-            $buffer = "$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
+            $buffer = "* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
 
             # back up
             &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
@@ -179,6 +180,7 @@ sub l00http_kml2gmap_proc {
         $nowypts = 0;
         $lonmax = undef;
         $starname = '';
+        $nomarkers = 0;
         foreach $_ (split ("\n", $buffer)) {
             s/\r//g;
             s/\n//g;
@@ -215,6 +217,9 @@ sub l00http_kml2gmap_proc {
                 $starname = '';
                 next;
             }
+
+            # count markers
+            $nomarkers++;
 
             # find max span
             if (!defined($lonmax)) {
@@ -277,15 +282,19 @@ sub l00http_kml2gmap_proc {
                       (($latmax - $latmin) * 
                       cos (($latmax + $latmin) / 2 / 180 
                         * 3.141592653589793)) ** 2);
-        $zoom = 1;
-        if ($span > 1e-9) {
-            while (1) {
-                if ($span * 2 ** $zoom > 180) {
-                    last;
-                }
-                $zoom++;
-                if ($zoom >= 17) {
-                    last;
+        if ($nomarkers == 1) {
+            $zoom = 11;
+        } else {
+            $zoom = 1;
+            if ($span > 1e-9) {
+                while (1) {
+                    if ($span * 2 ** $zoom > 180) {
+                        last;
+                    }
+                    $zoom++;
+                    if ($zoom >= 17) {
+                        last;
+                    }
                 }
             }
         }
