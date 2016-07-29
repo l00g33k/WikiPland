@@ -304,7 +304,6 @@ sub readl00httpdcfg {
     }
 
     # RHC special: make clipath at Perl directory so everything below is viewable by default
-    #if ($ctrl{'clipath'} =~ /\/var\/lib\/openshift\//) {
     if ($ctrl{'os'} eq 'rhc') {
         # on RHC
         $ctrl{'clipath'} =~ s/\/l00httpd\/pub\/$/\//;
