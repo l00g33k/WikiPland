@@ -330,7 +330,7 @@ sub l00http_kml2gmap_proc {
                     $name = $starname;
                     $starname = '';
                 }
-            } elsif (/^\* +([^ ]+)/) {
+            } elsif (/^\* +(.+)/) {
                 # of the form:
                 # * name
                 # https://www.google.com/maps/@31.1956864,121.3522793,15z
