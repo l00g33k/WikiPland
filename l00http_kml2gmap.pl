@@ -6,7 +6,9 @@ use warnings;
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
 my ($width, $height, $apikey, $satellite);
+my ($new);
 
+$new = 1;
 $myCenters = '';
 $myMarkers = '';
 $mySetMap = '';
@@ -268,6 +270,9 @@ sub l00http_kml2gmap_proc {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             $buffer = &l00httpd::l00freadAll($ctrl);
             $buffer = "* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
+            if ($form->{'desc'} =~ /^new\d/) {
+                $new++;
+            }
 
             # back up
             &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
@@ -444,7 +449,7 @@ sub l00http_kml2gmap_proc {
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
 
 
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/kml2gmap.htm\">Clear map</a> - \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - \n";
     print $sock "View: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
 
 
@@ -491,7 +496,7 @@ sub l00http_kml2gmap_proc {
         print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"new\">\n";
+        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"new$new\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
