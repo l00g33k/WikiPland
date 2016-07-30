@@ -318,7 +318,7 @@ sub l00http_kml2gmap_proc {
                     $name = $starname;
                     $starname = '';
                 }
-            } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
+            } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+(.+)/) {
                 # match, falls thru
                 if ($starname ne '') {
                     # * name from line above over writes name from URL
@@ -369,7 +369,6 @@ sub l00http_kml2gmap_proc {
             } else {
                 $_ = chr(97 + $nowypts - 26);
             }
-#           $labeltable .= "$_: $name (lat, lng): $lat, $lon\n";
             $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
             $labeltable .= "$_: $name (lat, lng): $lat, $lon\n";
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
