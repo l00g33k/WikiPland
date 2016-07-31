@@ -73,7 +73,7 @@ function placeMarkerAndPanTo(latLng, map) {
 
     document.getElementById("zoom").firstChild.nodeValue = "Zoom level: " + zoom;
     document.getElementById("coor").firstChild.nodeValue = 
-        "Coor (lat, lng): " + latLng;
+        "Coor (lat,lng): " + latLng;
     if (typeof latLngLast !== 'undefined') {
         // the latLngLast is defined
         document.getElementById("distance").firstChild.nodeValue = 
@@ -375,7 +375,7 @@ sub l00http_kml2gmap_proc {
                 $_ = chr(97 + $nowypts - 26);
             }
             $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
-            $labeltable .= "$_: $name (lat, lng): $lat, $lon\n";
+            $labeltable .= "$_: $name (lat,lng): <a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
                 "  label: '$_' , \n".
@@ -431,6 +431,7 @@ sub l00http_kml2gmap_proc {
             $myCenters .
             $gmapscript2 .
             "  zoom:$zoom,\n" .
+            "  scaleControl: true,\n" .
             "  mapTypeId:google.maps.MapTypeId.$_\n" .
             $gmapscript2a .
             $myMarkers .
@@ -449,7 +450,8 @@ sub l00http_kml2gmap_proc {
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
 
 
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - \n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a>. \n";
     print $sock "View: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
 
 
