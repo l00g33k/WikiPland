@@ -375,7 +375,10 @@ sub l00http_kml2gmap_proc {
                 $_ = chr(97 + $nowypts - 26);
             }
             $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
-            $labeltable .= "$_: $name (lat,lng): <a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+            $labeltable .= "$_: <a href=\"/clip.htm?update=&clip=";
+            $labeltable .= &l00httpd::urlencode ($name);
+            $labeltable .= "\" target=\"newwin\">$name</a>";
+            $labeltable .= " (lat,lng): <a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
                 "  label: '$_' , \n".
