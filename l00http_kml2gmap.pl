@@ -214,7 +214,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
-    my ($nomarkers, $lnno);
+    my ($nomarkers, $lnno, $jlabel, $jname);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -284,7 +284,7 @@ sub l00http_kml2gmap_proc {
     }
 
 
-    $labeltable = '';
+    $labeltable = "Description: latitute,longitude\n";
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
@@ -341,11 +341,23 @@ sub l00http_kml2gmap_proc {
                 next;
             }
 
-            # count markers
-            $nomarkers++;
-
             # find max span
-            if (!defined($lonmax)) {
+            if (defined ($form->{'mkridx'})) {
+                if (!defined($lonmax)) {
+                    # so it is always defined
+                    $lonmax = $lon;
+                    $lonmin = $lon;
+                    $latmax = $lat;
+                    $latmin = $lat;
+                }
+                if ($form->{'mkridx'} == $nomarkers) {
+                    # and we overwrite if selected
+                    $lonmax = $lon;
+                    $lonmin = $lon;
+                    $latmax = $lat;
+                    $latmin = $lat;
+                }
+            } elsif (!defined($lonmax)) {
                 $lonmax = $lon;
                 $lonmin = $lon;
                 $latmax = $lat;
@@ -365,24 +377,30 @@ sub l00http_kml2gmap_proc {
                 }
             }
 
+            # count markers
+            $nomarkers++;
+            $jname = $name;
+            $jname =~ s/'/\\'/g;
+
             # var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
             $myCenters .= "var myCenter$nowypts =new google.maps.LatLng($lat,$lon);\n";
 
             # var marker =new google.maps.Marker({ position:myCenter , });
             if ($nowypts < 26) {
-                $_ = chr(65 + $nowypts);
+                $jlabel = chr(65 + $nowypts);
             } else {
-                $_ = chr(97 + $nowypts - 26);
+                $jlabel = chr(97 + $nowypts - 26);
             }
             $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
-            $labeltable .= "$_: <a href=\"/clip.htm?update=&clip=";
+            $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
+            $labeltable .= "$name <a href=\"/clip.htm?update=&clip=";
             $labeltable .= &l00httpd::urlencode ($name);
-            $labeltable .= "\" target=\"newwin\">$name</a>";
-            $labeltable .= " (lat,lng): <a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+            $labeltable .= "\" target=\"newwin\">:</a> ";
+            $labeltable .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
-                "  label: '$_' , \n".
-                "  title: '$name'});\n";
+                "  label: '$jlabel' , \n".
+                "  title: '$jname'});\n";
 
             # marker.setMap(map);
             $mySetMap .= "marker$nowypts.setMap(map);\n";
@@ -410,7 +428,14 @@ sub l00http_kml2gmap_proc {
                       cos (($latmax + $latmin) / 2 / 180 
                         * 3.141592653589793)) ** 2);
         if ($nomarkers == 1) {
+            # if only one marker or
             $zoom = 11;
+        } elsif (defined ($form->{'mkridx'})) {
+            # selecting one
+            $zoom = 15;
+            # the selected marker
+            $ctrlon = ($lonmax + $lonmin) / 2;
+            $ctrlat = ($latmax + $latmin) / 2;
         } else {
             $zoom = 1;
             if ($span > 1e-9) {
@@ -454,8 +479,9 @@ sub l00http_kml2gmap_proc {
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
-    print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a>. \n";
-    print $sock "View: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+    print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
+    print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
+    print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a><p>\n";
 
 
     print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
@@ -463,24 +489,6 @@ sub l00http_kml2gmap_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
     print $sock "&nbsp;\n";
-#    if ($satellite == 0) {
-#        $_ = 'checked';
-#    } else {
-#        $_ = 'unchecked';
-#    }
-#    print $sock "<input type=\"radio\" name=\"maptype\" value=\"street\"    $_>Street<br>";
-#    if ($satellite == 1) {
-#        $_ = 'checked';
-#    } else {
-#        $_ = 'unchecked';
-#    }
-#    print $sock "<input type=\"radio\" name=\"maptype\" value=\"hybrid\" $_>Hybrid<br>";
-#    if ($satellite == 2) {
-#        $_ = 'checked';
-#    } else {
-#        $_ = 'unchecked';
-#    }
-#    print $sock "<input type=\"radio\" name=\"maptype\" value=\"satellite\" $_>Satellite<br>";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
