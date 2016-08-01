@@ -284,7 +284,8 @@ sub l00http_kml2gmap_proc {
     }
 
 
-    $labeltable = "Description: latitute,longitude\n";
+    $labeltable = "Description: latitute,longitude ";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>)\n";
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
