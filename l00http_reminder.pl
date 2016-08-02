@@ -234,7 +234,7 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_reminder.txt\">$ctrl->{'workdir'}l00_reminder.txt</a><p> \n";
 
-    print $sock "<form action=\"/reminder.htm\" method=\"post\">\n";
+    print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
@@ -392,11 +392,11 @@ sub l00http_reminder_perio {
             $pause = 0; $ctrl->{'reminder'} = $msgtoast;
             $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=1\">1'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=45\">45'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=60\">1h</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=60\">60'</a> - ".
                 "<a href=\"/reminder.htm#manage\">:::</a> </center>";
 
             if ((!($msgtoast =~ /^ *$/)) &&

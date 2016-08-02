@@ -254,7 +254,7 @@ sub l00http_recedit_proc (\%) {
                                 $tmp =~ s/"/%22/g;
                                 $tmp =~ s/\//%2F/g;
                                 $tmp =~ s/\|/%7C/g;
-                                $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">".substr($line,0,30)."</a>";
+                                $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,30)."</a>";
                             }
                             if (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
                                # cal specific
@@ -266,7 +266,7 @@ sub l00http_recedit_proc (\%) {
                                $tmp =~ s/"/%22/g;
                                $tmp =~ s/\//%2F/g;
                                $tmp =~ s/\|/%7C/g;
-                               $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">".substr($line,0,30)."</a>";
+                               $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,30)."</a>";
                             }
                             if ($record1 eq '.') {
                                # drop leading date/time
@@ -280,7 +280,7 @@ sub l00http_recedit_proc (\%) {
                                $tmp =~ s/"/%22/g;
                                $tmp =~ s/\//%2F/g;
                                $tmp =~ s/\|/%7C/g;
-                               $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">".substr($line,0,30)."</a>";
+                               $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,30)."</a>";
                             }
                             print $sock "$line<br>";
                         }
@@ -320,7 +320,7 @@ sub l00http_recedit_proc (\%) {
                         $tmp =~ s/"/%22/g;
                         $tmp =~ s/\//%2F/g;
                         $tmp =~ s/\|/%7C/g;
-                        $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">".substr($line,0,30)."</a>";
+                        $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,30)."</a>";
                     }
                     if (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
                         # cal specific
@@ -332,7 +332,7 @@ sub l00http_recedit_proc (\%) {
                         $tmp =~ s/"/%22/g;
                         $tmp =~ s/\//%2F/g;
                         $tmp =~ s/\|/%7C/g;
-                        $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">".substr($line,0,30)."</a>";
+                        $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,30)."</a>";
                     }
                     if ($record1 eq '.') {
                         # drop leading date/time
@@ -346,7 +346,7 @@ sub l00http_recedit_proc (\%) {
                         $tmp =~ s/"/%22/g;
                         $tmp =~ s/\//%2F/g;
                         $tmp =~ s/\|/%7C/g;
-                        $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">".substr($line,0,30)."</a>";
+                        $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,30)."</a>";
                     }
                     print $sock "$line<br>";
                 }
