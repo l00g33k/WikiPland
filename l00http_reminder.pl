@@ -401,6 +401,7 @@ sub l00http_reminder_perio {
 
             if ((!($msgtoast =~ /^ *$/)) &&
                 ($ctrl->{'bannermute'} <= time)) {
+$percnt = (time - $utcoffsec) - $starttime;
                 &l00httpd::l00PopMsg($ctrl, "$percnt: $msgtoast");
             }
             $percnt++;
