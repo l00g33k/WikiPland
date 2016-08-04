@@ -7,7 +7,7 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($lastcalled, $percnt, $interval, $starttime, $msgtoast, $vibra, $vibracnt, 
+my ($lastcalled, $interval, $starttime, $msgtoast, $vibra, $vibracnt, 
     $utcoffsec, $wake, $vmsec, $pause, $filetime);
 my %config = (proc => "l00http_reminder_proc",
               desc => "l00http_reminder_desc",
@@ -16,7 +16,6 @@ $interval = 0;
 $starttime = 0x7fffffff;
 $msgtoast = '?';
 $lastcalled = 0;
-$percnt = 0;
 $vibra = 0;
 $vibracnt = 0;
 $wake = 0;
@@ -152,12 +151,35 @@ sub l00http_reminder_proc {
     if (defined ($form->{'paste'})) {
         $formmsg = &l00httpd::l00getCB($ctrl);
     }
+    $timstr = $ctrl->{'now_string'};
+    if (defined ($form->{"newtime"})) {
+        if (defined ($form->{"day"})) {
+            if ($form->{"day"} =~ /(\d+)/) {
+			    substr($timstr, 6, 2) = sprintf("%02d", $1);
+			    substr($timstr, 13, 2) = '00';
+            }
+		}
+        if (defined ($form->{"hour"})) {
+            if ($form->{"hour"} =~ /(\d+)/) {
+			    substr($timstr, 9, 2) = sprintf("%02d", $1);
+			    substr($timstr, 13, 2) = '00';
+            }
+		}
+        if (defined ($form->{"min"})) {
+            if ($form->{"min"} =~ /(\d+)/) {
+			    substr($timstr, 11, 2) = sprintf("%02d", $1);
+			    substr($timstr, 13, 2) = '00';
+            }
+		}
+    }
+    if (defined ($form->{"nowtime"})) {
+        $form->{"starttime"} = $ctrl->{'now_string'};
+    }
     if (defined ($form->{"set"})) {
         if ($wake != 0) {
             $wake = 0;
             $ctrl->{'droid'}->wakeLockRelease();
         }
-        $percnt = 0;
         if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
             $interval = $form->{"interval"};
         }
@@ -182,7 +204,6 @@ sub l00http_reminder_proc {
     }
 
     if (defined ($form->{"reload"})) {
-        $percnt = 0;
         $interval = 0;
         $starttime = 0x7fffffff;
         $lastcalled = 0;
@@ -195,7 +216,6 @@ sub l00http_reminder_proc {
         &l00http_reminder_find ($ctrl);
     }
     if (defined ($form->{"stop"})) {
-        $percnt = 0;
         $interval = 0;
         $starttime = 0x7fffffff;
         $lastcalled = 0;
@@ -203,27 +223,6 @@ sub l00http_reminder_proc {
             $wake = 0;
             $ctrl->{'droid'}->wakeLockRelease();
         }
-    }
-    $timstr = $ctrl->{'now_string'};
-    if (defined ($form->{"newtime"})) {
-        if (defined ($form->{"day"})) {
-            if ($form->{"day"} =~ /(\d+)/) {
-			    substr($timstr, 6, 2) = sprintf("%02d", $1);
-			    substr($timstr, 13, 2) = '00';
-            }
-		}
-        if (defined ($form->{"hour"})) {
-            if ($form->{"hour"} =~ /(\d+)/) {
-			    substr($timstr, 9, 2) = sprintf("%02d", $1);
-			    substr($timstr, 13, 2) = '00';
-            }
-		}
-        if (defined ($form->{"min"})) {
-            if ($form->{"min"} =~ /(\d+)/) {
-			    substr($timstr, 11, 2) = sprintf("%02d", $1);
-			    substr($timstr, 13, 2) = '00';
-            }
-		}
     }
 
     # Send HTTP and HTML headers
@@ -359,7 +358,6 @@ sub l00http_reminder_proc {
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
     print $sock sprintf ("Now: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
-    print $sock "Count: $percnt<br>\n";
 
     if (open (IN, "<$ctrl->{'workdir'}l00_reminder.txt")) {
         print $sock "<pre>\n";
@@ -377,7 +375,7 @@ sub l00http_reminder_proc {
 
 sub l00http_reminder_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($retval);
+    my ($retval, $life);
 
     # see notes in l00http_reminder_find() about time + $utcoffsec
     if ((!defined($ctrl->{'remBannerDisabled'})) &&
@@ -401,10 +399,11 @@ sub l00http_reminder_perio {
 
             if ((!($msgtoast =~ /^ *$/)) &&
                 ($ctrl->{'bannermute'} <= time)) {
-$percnt = (time - $utcoffsec) - $starttime;
-                &l00httpd::l00PopMsg($ctrl, "$percnt: $msgtoast");
+                $life = sprintf ("%d.%02d:", 
+                    int (((time - $utcoffsec) - $starttime) / 60),
+                    ((time - $utcoffsec) - $starttime) % 60);
+                &l00httpd::l00PopMsg($ctrl, "$life $msgtoast");
             }
-            $percnt++;
 
             if (($vibra > 0) && ($vibracnt >= $vibra)) {
                 $vibracnt = 1;
