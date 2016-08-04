@@ -56,8 +56,10 @@ sub l00http_svg_proc {
                 }
                 $off++;    
             }
+            $xpix += 3;
+            $ypix += 0;
             print $sock "<div style=\"position: absolute; left:$xpix"."px; top:$ypix"."px;\">\n";
-            print $sock "<font color=\"red\">X</font></div>\n";
+            print $sock "<font color=\"red\">+</font></div>\n";
         }
 
         print $sock "<input type=\"hidden\" name=\"graph\" value=\"$graphname\">\n";
