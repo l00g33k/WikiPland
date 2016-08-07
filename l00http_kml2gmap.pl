@@ -263,12 +263,23 @@ sub l00http_kml2gmap_proc {
 
     # add new waypoint
     if (defined ($form->{'path'}) && 
-        defined ($form->{'addway'}) &&
+        (defined ($form->{'addway'}) || defined ($form->{'pasteadd'})) &&
         defined ($form->{'desc'}) &&
         defined ($form->{'long'}) &&
         defined ($form->{'lat'})) {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             $buffer = &l00httpd::l00freadAll($ctrl);
+            if (defined ($form->{'pasteadd'})) {
+                # get name from clipboard
+                $form->{'desc'} = &l00httpd::l00getCB($ctrl);
+                if (length($form->{'desc'}) < 1) {
+                    $form->{'desc'} = "new$new";
+                    $new++;
+                } else {
+                    $form->{'desc'} =~ s/\r//g;
+                    $form->{'desc'} =~ s/\n//g;
+                }
+            }
             $buffer = "* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
             if ($form->{'desc'} =~ /^new\d/) {
                 $new++;
@@ -507,7 +518,12 @@ sub l00http_kml2gmap_proc {
         print $sock "<p><form action=\"/kml2gmap.htm\" method=\"post\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>Click on map for coor\n";
+        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>\n";
+        if (($ctrl->{'os'} eq 'and') ||
+            ($ctrl->{'os'} eq 'win')) {
+            print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"Paste Add\">\n";
+        }
+        print $sock "Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"new$new\">\n";

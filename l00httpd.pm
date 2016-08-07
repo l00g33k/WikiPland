@@ -577,6 +577,8 @@ sub l00getCB {
         eval 'use Win32::Clipboard';
         $clip = Win32::Clipboard();
         $buf = $clip->Get();
+    } elsif ($ctrl->{'os'} eq 'cyg') {
+        $buf = `cat /dev/clipboard`;
     } else {
         &l00freadOpen($ctrl, 'l00://clipboard.txt');
         $buf = &l00freadAll($ctrl);
@@ -609,6 +611,14 @@ sub l00setCB {
         eval 'use Win32::Clipboard';
         $clip = Win32::Clipboard();
         $clip->Set($buf);
+    } elsif ($ctrl->{'os'} eq 'cyg') {
+        $buf =~ s/\\/\\\\/gm;
+        $buf =~ s/\//\\\//gm;
+        $buf =~ s/|/\|/gm;
+        $buf =~ s/\(/\\\(/gm;
+        $buf =~ s/\)/\\\)/gm;
+        $buf =~ s/'/\\'/gm;
+        `echo "$buf" > /dev/clipboard`;
     }
 }
 
