@@ -53,7 +53,7 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome);
+my ($cmdlnhome, $waketil);
 
 # set listening port
 $ctrl_port = 20337;
@@ -67,6 +67,7 @@ $cfgedit = '';
 $httpmax = 1024 * 1024 * 3;
 $ctrl{'bannermute'} = 0;
 $cmdlnhome = '';
+$waketil = 0;
 
 undef $timeout;
 
@@ -579,6 +580,15 @@ sub periodictask {
             }
         }
     }
+
+    if (($waketil != 0) &&
+        ($waketil < time)) {
+        # $waketil is active, turn it off
+        $waketil = 0;
+        # release wake lock
+        $ctrl{'droid'}->wakeLockRelease();
+    }
+
     my ($timeis);
     $timeis = localtime (time);
     print "perio: tickdelta $tickdelta $timeis\n", if ($debug >= 4);
@@ -1273,10 +1283,15 @@ while(1) {
                                 $ctrl{'droid'}->wakeLockRelease();
                             }
                         }
-                        if (defined ($FORM{'wakeon'}) && ($FORM{'wakeon'} eq 'on')) {
+                        if (defined ($FORM{'wakeon'}) && ($FORM{'wakeon'} eq 'on') && ($ctrl{'os'} eq 'and')) {
                             $ctrl{'droid'}->wakeLockAcquirePartial();
+                            if (defined ($FORM{'waketil'}) && 
+                                ($FORM{'waketil'} =~ /(\d+)/)) {
+                                # sleep time
+                                $waketil = time + $1 * 60;
+                            }
                         }
-                        if (defined ($FORM{'wakeof'}) && ($FORM{'wakeof'} eq 'on')) {
+                        if (defined ($FORM{'wakeof'}) && ($FORM{'wakeof'} eq 'on') && ($ctrl{'os'} eq 'and')) {
                             $ctrl{'droid'}->wakeLockRelease();
                         }
                         if (defined ($FORM{'wifi'})) {
@@ -1548,7 +1563,12 @@ while(1) {
 
                     if ($ctrl{'os'} eq 'and') {
                         print $sock "<tr>";
-                        print $sock "<td><input type=\"checkbox\" name=\"wakeon\">on</td>\n";
+                        print $sock "<td><input type=\"checkbox\" name=\"wakeon\">on\n";
+                        $tmp = '';
+                        if ($waketil != 0) {
+                            $tmp = int(($waketil - time) / 60);
+                        }
+                        print $sock "<input type=\"text\" size=\"2\" name=\"waketil\" value=\"$tmp\">min</td>\n";
                         print $sock "<td><input type=\"checkbox\" name=\"wakeof\">off</td>\n";
                         print $sock "<td>wake: on to prevent Android from sleeping</td>\n";
                         print $sock "</tr>\n";
