@@ -68,12 +68,10 @@ sub l00http_cal_proc {
         $fullpathname = $ctrl->{'workdir'} . "l00_cal.txt";
     }
     print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
-#    ($pname) = $fullpathname =~ /^(.+)[\/\\][^\/\\]+/;
     ($pname, $fname) = $fullpathname =~ /^(.+\/)([^\/]+)$/;
 
     # handling moving lnno to moveto
     if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {
-#       $tmp = "<META http-equiv=\"refresh\" content=\"3;URL=http://www.indiana.edu/~account/new-directory\">\r\n";
         # redirect back to calendar
         $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=/cal.htm?path=$fullpathname\">\r\n";
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $tmp . $ctrl->{'htmlhead2'};
@@ -300,8 +298,6 @@ sub l00http_cal_proc {
     foreach $wk (sort keys %list) {
         ($wkno, $dayofwk) = split ('`', $wk);
         $todo = $list {$wk};
-#        $todo =~ s/\n//g;
-#        $todo =~ s/\r//g;
         $wkos = $wkno - $firstweek;
         $idx = sprintf ("%02d%d", $wkos, $dayofwk);
         $tbl{"$idx"} .= "<br><small>$todo</small>";
