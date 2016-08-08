@@ -520,6 +520,7 @@ sub l00http_kml2gmap_proc {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>\n";
         if (($ctrl->{'os'} eq 'and') ||
+            ($ctrl->{'os'} eq 'cyg') ||
             ($ctrl->{'os'} eq 'win')) {
             print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"Paste Add\">\n";
         }
