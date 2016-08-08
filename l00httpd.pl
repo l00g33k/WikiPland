@@ -1293,6 +1293,7 @@ while(1) {
                         }
                         if (defined ($FORM{'wakeof'}) && ($FORM{'wakeof'} eq 'on') && ($ctrl{'os'} eq 'and')) {
                             $ctrl{'droid'}->wakeLockRelease();
+                            $waketil = 0;
                         }
                         if (defined ($FORM{'wifi'})) {
                             if ($FORM{'wifi'} eq 'on') {

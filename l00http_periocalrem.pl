@@ -27,7 +27,6 @@ sub l00http_periocalrem_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} - <a href=\"/periocalrem.htm\">Refresh</a> \n";
-#   print $sock "$ctrl->{'home'} - <a href=\"/periocalrem.htm\">Refresh</a><br> \n";
 
     print $sock "Calendar reminder.\n";
 
@@ -59,11 +58,9 @@ sub l00http_periocalrem_perio {
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 	# a nowstamp that changes 4 times a day for more frequent reminder
     $nowstamp = sprintf ("%4d%02d%02d %d", $year + 1900, $mon+1, $mday, int ($hour / 6));
-#   if ($lastchkdate ne substr($ctrl->{'now_string'},0,8)) {
     if ($lastchkdate ne $nowstamp) {
         l00httpd::dbp($config{'desc'}, "$lastchkdate is old\n"), if ($ctrl->{'debug'} >= 5);
         $lastchkdate = $nowstamp;
-#       $lastchkdate = substr($ctrl->{'now_string'},0,8);
 		if (open (IN, "<$ctrl->{'workdir'}l00_cal.txt")) {
             ($year, $mon, $mday) = $lastchkdate =~ /(\d\d\d\d)(\d\d)(\d\d)/;
             $year -= 1900;
@@ -114,9 +111,12 @@ sub l00http_periocalrem_perio {
 		    close (IN);
 
             if ($eventnear ne '') {
-#               $eventnear = "* CLEAR_THIS_STOPS_ALL\n* [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|Delete calrem.txt]] to refresh\n$eventnear";
-                $eventnear = "* CLEAR_THIS_STOPS_ALL\n* [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|Delete calrem.txt]] to refresh\n* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&lenwk=18&today=on|View calendar]]\n$eventnear";
-                $eventnear .= "* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&lenwk=18&today=on|View calendar]]\n";
+                $eventnear = "* CLEAR_THIS_STOPS_ALL\n".
+                             "* To refresh, [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|delete calrem.txt]]\n".
+                             "* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&today=on|View calendar]]\n".
+                             "* List of current calendar events:\n\n".
+                             "$eventnear\n".
+                             "* End of list\n";
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
 		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
 			    &l00httpd::l00fwriteClose($ctrl);
@@ -125,7 +125,7 @@ sub l00http_periocalrem_perio {
     }
     undef $ctrl->{'BANNER:periocalrem'};
     if ((!defined($ctrl->{'calremBannerDisabled'})) && 
-       &l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
+        &l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
         $eventnear = '';
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_\n"), if ($ctrl->{'debug'} >= 5);

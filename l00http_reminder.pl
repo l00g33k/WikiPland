@@ -390,7 +390,7 @@ sub l00http_reminder_perio {
             $pause = 0; $ctrl->{'reminder'} = $msgtoast;
             $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=1\">1'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=1\">_1'_</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - ".
