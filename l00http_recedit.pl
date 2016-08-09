@@ -40,7 +40,8 @@ sub l00http_recedit_proc (\%) {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>recedit</title>" . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} ";
-    print $sock "<a href=\"/recedit.htm\">recedit</a><p>\n";
+    print $sock "<a href=\"/recedit.htm\">recedit</a> - \n";
+    print $sock "<a href=\"#end\">end</a><p>\n";
 
     if (length($record1) == 0) {
         $record1 = '^\d{8,8} \d{6,6} ';
@@ -359,6 +360,7 @@ sub l00http_recedit_proc (\%) {
 
     print $sock "</table>\n";
     print $sock "</form>\n";
+    print $sock "<a name=\"end\"></a><p>\n";
 
 
     if (&l00httpd::l00freadOpen($ctrl, $path)) {
