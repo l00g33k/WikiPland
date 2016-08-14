@@ -158,7 +158,7 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
         }
     }
     if ($ENV{'HOME'} eq '/data/data/com.termux/files/home') {
-        $ctrl{'os'} = 'lin';
+        $ctrl{'os'} = 'tmx';
         $ctrl{'machine'} = "TERMUX: $ctrl{'machine'}";
     } else {
         $ctrl{'os'} = 'and';

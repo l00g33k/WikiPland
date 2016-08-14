@@ -514,7 +514,9 @@ sub l00http_perionetifcon_perio {
         $retval = $interval;
 
 
-        if ($ctrl->{'os'} eq 'and') {
+        if (($ctrl->{'os'} eq 'and') ||
+            ($ctrl->{'os'} eq 'lin') ||
+            ($ctrl->{'os'} eq 'tmx')) {
             # netstat
 
             $tempe = '';

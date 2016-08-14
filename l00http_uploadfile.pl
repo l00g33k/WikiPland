@@ -42,6 +42,9 @@ sub l00http_uploadfile_proc {
             $path = 'c:/';
         } elsif ($ctrl->{'os'} eq 'lin') {
             $path = '/home/';
+        } elsif ($ctrl->{'os'} eq 'tmx') {
+            # termux on Android
+            $path = '/sdcard/';
         } else {
             $path = '/';
         }
