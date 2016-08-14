@@ -38,7 +38,7 @@ sub l00http_diff_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
+    print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} - ";
     if ((defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
         $form->{'path'} =~ s/\r//g;
@@ -52,7 +52,8 @@ sub l00http_diff_proc {
         s/^.+\/([^\/]+)$/$1/;
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$_</a>\n";
     }
-    print $sock "<a href=\"/diff.htm\">Refresh</a>\n";
+    print $sock "<a href=\"/diff.htm\">Refresh</a> - \n";
+    print $sock "<a href=\"#diffchanges\">Jump to changes</a>\n";
     print $sock "<p>\n";
 
 
@@ -149,6 +150,7 @@ sub l00http_diff_proc {
 
 
     if (defined ($form->{'compare'})) {
+        print $sock "<a name=\"diffchanges\"><a href=\"#top\">Jump to top</a><br>\n";
         ($htmlout, $OA, $NA) = &l00diff::l00http_diff_compare ($ctrl, $sock, 
             $width, $oldfile, $newfile, $hide, $maxline, $debug);
         print $sock $htmlout;

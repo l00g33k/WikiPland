@@ -31,7 +31,9 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf);
-	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip);
+	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip, $diffurl);
+
+    $diffurl  = '';
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -179,8 +181,18 @@ sub l00http_edit_proc2 {
             if (!($form->{'path'} =~ /^l00:\/\//)) {
                 if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+                    $diffurl = "URL to <a href=\"/diff.htm?compare=Compare&width=20".
+                        "&pathnew=$form->{'path'}".
+                        "&pathold=$form->{'path'}.bak".
+                        "&hide=on&maxline=4000#diffchanges\" target=\"newwin\">".
+                        "compare previous and current versions</a><p>\n";
                 } else {
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
+                    $diffurl = "URL to <a href=\"/diff.htm?compare=Compare&width=20".
+                        "&pathnew=$form->{'path'}".
+                        "&pathold=$form->{'path'}.-.bak".
+                        "&hide=on&maxline=4000#diffchanges\" target=\"newwin\">".
+                        "compare previous and current versions</a><p>\n";
                 }
             }
             # allow &clear=&save= to delete file from URL
@@ -314,7 +326,7 @@ sub l00http_edit_proc2 {
     } else{
         print $sock "<textarea name=\"buffer\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$buffer</textarea>\n";
     }
-    print $sock "<p>\n";
+    print $sock "<p>$diffurl\n";
 
     if ($blklineno > 0) {
         print $sock "In block editing mode: editing line ", 
