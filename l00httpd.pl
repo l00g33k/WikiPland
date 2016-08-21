@@ -361,6 +361,15 @@ sub readl00httpdcfg {
 
 &readl00httpdcfg;
 
+# read .whoami
+if (open(IN, "<$ctrl{'workdir'}.whoami")) {
+    $ctrl{'whoami'} = <IN>;
+    close(IN);
+}
+if (!defined($ctrl{'whoami'})) {
+    $ctrl{'whoami'} = 'unknown';
+}
+
 
 # parse commandline arguments
 while ($_ = shift) {
@@ -1376,7 +1385,7 @@ while(1) {
                 # Send HTTP and HTML headers
                 print "Send host control HTTP header\n", if ($debug >= 5);
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
-                print $sock "$ctrl{'now_string'}: $client_ip connected to WikiPland on '$ctrl{'machine'}'. \n";
+                print $sock "$ctrl{'now_string'}: $client_ip connected to WikiPland on '$ctrl{'machine'}' aka '$ctrl{'whoami'}'. \n";
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm\">$ip</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns.\n";
