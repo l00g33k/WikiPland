@@ -1,12 +1,14 @@
 # powercfg /batteryreport /output C:\x\battery.html"
 
-$report = 'C:\\x\\battery.html';
+$report = "C:\\x\\win_batt_rpt_$ctrl->{'now_string'}.txt";
+$report =~ s/ /_/g;
+
 
 print $sock `powercfg /batteryreport /output \"$report\"`;
-print $sock " <a href=\"/ls.htm?path=$report&raw=on\">$report</a>\n";
+print $sock " <a href=\"/ls.htm?path=$report&raw=on\" target=\"newwin\">$report</a>. \n";
 print $sock "<p>\n";
 
-if (open(IN, "<C:\\x\\battery.html")) {
+if (open(IN, "<$report")) {
     $cnt = 0;
 
     # skip to Recent usage table
@@ -21,7 +23,10 @@ if (open(IN, "<C:\\x\\battery.html")) {
     $lasttime = 0;
     $lastlevel = -1;
     $values = '';
+    $findstate = 0;
     while (<IN>) {
+        s/\n//g;
+        s/\r//g;
         # stop at the end of table (start of next)
         if(/Battery usage/) {
             last;
@@ -40,6 +45,21 @@ if (open(IN, "<C:\\x\\battery.html")) {
             $mi = $2;
             $se = $3;
         }
+        # </td></tr></thead><tr class="even dc 1"><td class="dateTime"><span class="date">2016-08-18 </span><span class="time">21:19:25</span></td><td class="state">
+        #   Connected standby
+        #  </td><td class="acdc">
+        if ($findstate && 
+            (length($_) > 4) &&
+            (!/^ *$/)) {
+            s/^ *//;
+            s/ *$//;
+            $state = $_;
+            $findstate = 0;
+        }
+        if (/class="state"/) {
+            $findstate = 1;
+        }
+
         # extract battery level
         # </td><td class="percent">64 %
         if (/<td class="percent">(\d+?) %/) {
@@ -62,7 +82,7 @@ if (open(IN, "<C:\\x\\battery.html")) {
             # make battery level delta per hour graph
             if ($lastlevel >= 0) {
                 if ($time != $lasttime) {
-                    $diff = int (($lastlevel - $level) * 3600 / ($time - $lasttime));
+                    $diff = $lastlevel - $level;
                 } else {
                     $diff = 0;
                 }
@@ -70,15 +90,7 @@ if (open(IN, "<C:\\x\\battery.html")) {
             } else {
                 push (@battdiff, "$time,0");
             }
-$diff2 = $lastlevel - $level;
-$diff2 .= ' ';
-$diff2 .= $time - $lasttime;
-if ($time != $lasttime) {
-    $diff = int (($lastlevel - $level) * 3600 / ($time - $lasttime));
-} else {
-    $diff = 0;
-}
-            $values .= "$cnt: $yr-$mo-$da $hr:$mi:$se : $level $diff2 $diff\n";
+            $values .= "$cnt: $yr-$mo-$da $hr:$mi:$se : $level $diff $state\n";
             $lasttime = $time;
             $lastlevel = $level;
         }
@@ -94,7 +106,7 @@ if ($time != $lasttime) {
     print $sock "<a href=\"/svg.pl?graph=winbatt&view=\"><img src=\"/svg.pl?graph=winbatt\" alt=\"alt\"></a><p>\n";
     print $sock "Battery measurement interval<br>\n";
     print $sock "<a href=\"/svg.pl?graph=winintv&view=\"><img src=\"/svg.pl?graph=winintv\" alt=\"alt\"></a><p>\n";
-    print $sock "Battery consumption per hour estimate<br>\n";
+    print $sock "Battery level delta<br>\n";
     print $sock "<a href=\"/svg.pl?graph=windiff&view=\"><img src=\"/svg.pl?graph=windiff\" alt=\"alt\"></a>\n";
 
     print $sock "<p>There are $cnt lines of battery readings:\n";
