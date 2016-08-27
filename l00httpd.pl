@@ -738,8 +738,10 @@ while(1) {
             } elsif (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                 $ip = `ipconfig`;
             } else {
-                print "shell /sbin/ifconfig\n", if ($debug >= 5);
-                $ip = `/sbin/ifconfig`;
+                #print "shell /sbin/ifconfig\n", if ($debug >= 5);
+                #$ip = `/sbin/ifconfig`;
+                print "shell ifconfig\n", if ($debug >= 5);
+                $ip = `ifconfig`;
             }
             print "raw ip = $ip\n", if ($debug >= 5);
             if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
@@ -795,7 +797,7 @@ while(1) {
             # 3) Parse client HTTP submission and identify module plugin name
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
-            select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
+            select ($rout = $rin, undef, $eout = $rin, 0.1); # public network needs 3 sec?
             if (vec($eout,fileno($sock),1) == 1) {
                 print "sock error\n";
                 next;
