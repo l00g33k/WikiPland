@@ -19,11 +19,14 @@ if (open(IN, "<$report")) {
     }
     undef @graph;
     undef @battdiff;
+    undef @battsrc;
     undef @interval;
     $lasttime = 0;
     $lastlevel = -1;
+    $lastbattsrc = '';
     $values = '';
     $findstate = 0;
+    $findsource = 0;
     while (<IN>) {
         s/\n//g;
         s/\r//g;
@@ -31,6 +34,7 @@ if (open(IN, "<$report")) {
         if(/Battery usage/) {
             last;
         }
+        # </td></tr></thead><tr class="even dc 1"><td class="dateTime"><span class="date">2016-08-18 </span><span class="time">21:19:25</span></td><td class="state">
         # extract date
         # <span class="date">2016-08-17 </span>
         if (/class="date">(\d+)-(\d+)-(\d+) *</) {
@@ -45,9 +49,9 @@ if (open(IN, "<$report")) {
             $mi = $2;
             $se = $3;
         }
-        # </td></tr></thead><tr class="even dc 1"><td class="dateTime"><span class="date">2016-08-18 </span><span class="time">21:19:25</span></td><td class="state">
+        # extract state
         #   Connected standby
-        #  </td><td class="acdc">
+        #   <td class="state">
         if ($findstate && 
             (length($_) > 4) &&
             (!/^ *$/)) {
@@ -58,6 +62,20 @@ if (open(IN, "<$report")) {
         }
         if (/class="state"/) {
             $findstate = 1;
+        }
+
+        # extract source
+        #  </td><td class="acdc">
+        if ($findsource && 
+            (length($_) > 4) &&
+            (!/^ *$/)) {
+            s/^ *//;
+            s/ *$//;
+            $source = $_;
+            $findsource = 0;
+        }
+        if (/class="acdc"/) {
+            $findsource = 1;
         }
 
         # extract battery level
@@ -79,6 +97,19 @@ if (open(IN, "<$report")) {
                 push (@interval, "$time,0");
             }
 
+            # make charging graph
+            if ($source eq 'AC') {
+                if ($lastbattsrc ne $source) {
+                    push (@battsrc, "$time,0");
+                }
+                push (@battsrc, "$time,1");
+            } else {
+                if ($lastbattsrc ne $source) {
+                    push (@battsrc, "$time,1");
+                }
+                push (@battsrc, "$time,0");
+            }
+
             # make battery level delta per hour graph
             if ($lastlevel >= 0) {
                 if ($time != $lasttime) {
@@ -90,20 +121,26 @@ if (open(IN, "<$report")) {
             } else {
                 push (@battdiff, "$time,0");
             }
-            $values .= "$cnt: $yr-$mo-$da $hr:$mi:$se : $level $diff $state\n";
+            $values .= 
+                sprintf("$cnt: $yr-$mo-$da $hr:$mi:$se : %3d % 3d   %-20s %-10s\n",
+                $level, $diff, $state, $source);
             $lasttime = $time;
             $lastlevel = $level;
+            $lastbattsrc = $source;
         }
     }
 
     # plot graphs
-    &l00svg::plotsvg ('winbatt', join (' ', sort (@graph)), 500, 300);
-    &l00svg::plotsvg ('winintv', join (' ', sort (@interval)), 500, 300);
-    &l00svg::plotsvg ('windiff', join (' ', sort (@battdiff)), 500, 300);
+    &l00svg::plotsvg ('winbatt', join (' ', @graph), 500, 300);
+    &l00svg::plotsvg ('winintv', join (' ', @interval), 500, 300);
+    &l00svg::plotsvg ('windsrc', join (' ', @battsrc), 500, 300);
+    &l00svg::plotsvg ('windiff', join (' ', @battdiff), 500, 300);
 
     # display graphs
     print $sock "Battery level<br>\n";
     print $sock "<a href=\"/svg.pl?graph=winbatt&view=\"><img src=\"/svg.pl?graph=winbatt\" alt=\"alt\"></a><p>\n";
+    print $sock "Battery charging<br>\n";
+    print $sock "<a href=\"/svg.pl?graph=windsrc&view=\"><img src=\"/svg.pl?graph=windsrc\" alt=\"alt\"></a><p>\n";
     print $sock "Battery measurement interval<br>\n";
     print $sock "<a href=\"/svg.pl?graph=winintv&view=\"><img src=\"/svg.pl?graph=winintv\" alt=\"alt\"></a><p>\n";
     print $sock "Battery level delta<br>\n";
