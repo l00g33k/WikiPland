@@ -825,6 +825,9 @@ print;
                                 } elsif (/^%SHOWOFF/) {
                                     # hide all %SHOW...
                                     next;
+                                } elsif (/^%SHOWO/) {
+                                    # in SHOWOFF/SHOWON mode, hide all controls
+                                    next;
                                 }
                             }
 
