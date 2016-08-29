@@ -212,7 +212,7 @@ sub l00http_kml2gmap_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable);
+    my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
     my ($nomarkers, $lnno, $jlabel, $jname);
 
@@ -295,8 +295,19 @@ sub l00http_kml2gmap_proc {
     }
 
 
+    undef %labelsort;
+    if (defined ($form->{'mkridx'})) {
+        if ($form->{'mkridx'} < 26) {
+            $_ = chr(65 + $form->{'mkridx'});
+        } else {
+            $_ = chr(97 + $form->{'mkridx'} - 26);
+        }
+        $_ = " Centered on marker '$_'";
+    } else {
+        $_ = "";
+    }
     $labeltable = "Description: latitute,longitude ";
-    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>)\n";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>)$_\n";
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
@@ -403,12 +414,13 @@ sub l00http_kml2gmap_proc {
             } else {
                 $jlabel = chr(97 + $nowypts - 26);
             }
-            $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
-            $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
-            $labeltable .= "$name <a href=\"/clip.htm?update=&clip=";
-            $labeltable .= &l00httpd::urlencode ($name);
-            $labeltable .= "\" target=\"newwin\">:</a> ";
-            $labeltable .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+            $labelsort{"$name -- $jlabel"}  = "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
+            $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
+            $labelsort{"$name -- $jlabel"} .= "$name <a href=\"/clip.htm?update=&clip=";
+            $labelsort{"$name -- $jlabel"} .= &l00httpd::urlencode ($name);
+            $labelsort{"$name -- $jlabel"} .= "\" target=\"newwin\">:</a> ";
+            $labelsort{"$name -- $jlabel"} .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
                 "  label: '$jlabel' , \n".
@@ -483,6 +495,10 @@ sub l00http_kml2gmap_proc {
         print $sock "<div id=\"googleMap\" style=\"width:${width}px;height:${height}px;\"></div>\n";
     }
 
+    # sort markers
+    foreach $_ (sort keys %labelsort) {
+        $labeltable .= $labelsort{$_};
+    }
 
     print $sock "<p><pre>$labeltable</pre>\n";
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
