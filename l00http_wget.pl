@@ -122,7 +122,9 @@ sub l00http_wget_proc (\%) {
             # 10 follows limit for fail safe
             print $sock "<p>\n";
             for ($followmoves = 0; $followmoves < 10; $followmoves++) {
-                print $sock "Pass #$followmoves: <a href=\"$url\">$url</a><br>\n";
+                print $sock "<hr>\n";
+                $_ = length ($url);
+                print $sock "Pass #$followmoves: <a href=\"$url\">$url</a> ($_ bytes)<br>\n";
 
                 $domain = '';
                 if ($url =~ /http:\/\/([^\/]+?)\//) {
@@ -143,6 +145,7 @@ sub l00http_wget_proc (\%) {
                 # Find HTTP return code
                 $moved = '';
                 foreach $_ (split("\n", $hdr)) {
+                    s/\r//;
                     if (($moved eq '') && (/^HTTP.* 301 /)) {
                         print $sock " 301 moved, \n";
                         $moved = 'moved';
@@ -176,7 +179,6 @@ sub l00http_wget_proc (\%) {
                         $bdy = substr($bdy, 0, 2000);
                         $bdy =~ s/</&lt;/g;
                         $bdy =~ s/>/&gt;/g;
-                        print $sock "<hr>\n";
                         print $sock "<p>Fisrt 2000 bytes of body<p>\n";
                         print $sock "<pre>$bdy</pre>\n";
                     }
