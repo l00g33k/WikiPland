@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+use l00wikihtml;
+
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -214,7 +216,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
-    my ($nomarkers, $lnno, $jlabel, $jname);
+    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -314,6 +316,7 @@ sub l00http_kml2gmap_proc {
         &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
         &l00httpd::l00fwriteClose($ctrl);
     }
+    $htmlout = '';
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $buffer = &l00httpd::l00freadAll($ctrl);
         $buffer =~ s/\r\n/\n/g;
@@ -327,6 +330,7 @@ sub l00http_kml2gmap_proc {
         $nomarkers = 0;
         $lnno = 0;
         foreach $_ (split ("\n", $buffer)) {
+            $htmlout .= "$_\n";
             $lnno++;
             s/\r//g;
             s/\n//g;
@@ -507,6 +511,7 @@ sub l00http_kml2gmap_proc {
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    print $sock "<a href=\"#__toc__\">TOC</a> - \n";
     print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a><p>\n";
@@ -556,6 +561,15 @@ sub l00http_kml2gmap_proc {
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "</form>\n";
+
+        if ($htmlout ne '') {
+            my ($pname, $fname);
+            if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
+                $htmlout =~ s/path=\.\//path=$pname/g;
+                $htmlout =~ s/path=\$/path=$pname$fname/g;
+                print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $htmlout, '', $fname);
+            }
+        }
     }
 
     # send HTML footer and ends
