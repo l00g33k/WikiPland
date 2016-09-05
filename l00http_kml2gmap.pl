@@ -216,7 +216,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
-    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout);
+    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -305,11 +305,15 @@ sub l00http_kml2gmap_proc {
             $_ = chr(97 + $form->{'mkridx'} - 26);
         }
         $_ = " Centered on marker '$_'";
+    } elsif (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+        $_ = $form->{'selregex'};
+        $_ = " Centered by matching pattern '$_'";
     } else {
         $_ = "";
     }
-    $labeltable = "Description: latitute,longitude ";
-    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>)$_\n";
+    $labeltable = "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
+    $labeltable .= "Description: latitude,longitude ";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>).$_\n<pre>";
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
@@ -370,9 +374,19 @@ sub l00http_kml2gmap_proc {
 
             # select marker by regex
             if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
-                if ($name =~ /$form->{'selregex'}/i) {
-                    # fake mkridx corresponding to $nomarkers
-                    $form->{'mkridx'} = $nomarkers;
+                if (defined($form->{'matched'}) && 
+                    ($form->{'matched'} eq 'on')) {
+                    # select all matching
+                    if (!($name =~ /$form->{'selregex'}/i)) {
+                        # name not matching, skip
+                        next;
+                    }
+                } else {
+                    # center one matched
+                    if ($name =~ /$form->{'selregex'}/i) {
+                        # fake mkridx corresponding to $nomarkers
+                        $form->{'mkridx'} = $nomarkers;
+                    }
                 }
             }
 
@@ -468,7 +482,7 @@ sub l00http_kml2gmap_proc {
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
             # selecting one
-            $zoom = 15;
+            $zoom = 18;
             # the selected marker
             $ctrlon = ($lonmax + $lonmin) / 2;
             $ctrlat = ($latmax + $latmin) / 2;
@@ -512,7 +526,7 @@ sub l00http_kml2gmap_proc {
         $labeltable .= $labelsort{$_};
     }
 
-    print $sock "<p><pre>$labeltable</pre>\n";
+    print $sock "<p>$labeltable</pre>\n";
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
     print $sock "<span id=\"coor\">&nbsp;</span><br>";
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
@@ -529,17 +543,21 @@ sub l00http_kml2gmap_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
-    print $sock "<input type=\"text\" name=\"selregex\" size=\"5\">\n";
+    print $sock "&nbsp;\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
+    print $sock "Width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
+    print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
     print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"matched\">matched</td><td>select <input type=\"text\" name=\"selregex\" size=\"5\">\n";
+    print $sock "</td></tr>\n";
+
     print $sock "</table>\n";
     print $sock "</form>\n";
 
