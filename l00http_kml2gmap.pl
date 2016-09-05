@@ -368,6 +368,14 @@ sub l00http_kml2gmap_proc {
                 next;
             }
 
+            # select marker by regex
+            if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+                if ($name =~ /$form->{'selregex'}/i) {
+                    # fake mkridx corresponding to $nomarkers
+                    $form->{'mkridx'} = $nomarkers;
+                }
+            }
+
             # find max span
             if (defined ($form->{'mkridx'})) {
                 if (!defined($lonmax)) {
@@ -521,7 +529,7 @@ sub l00http_kml2gmap_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
-    print $sock "&nbsp;\n";
+    print $sock "<input type=\"text\" name=\"selregex\" size=\"5\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
