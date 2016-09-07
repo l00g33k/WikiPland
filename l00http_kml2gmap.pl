@@ -526,10 +526,10 @@ sub l00http_kml2gmap_proc {
         $labeltable .= $labelsort{$_};
     }
 
-    print $sock "<p>$labeltable</pre>\n";
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
     print $sock "<span id=\"coor\">&nbsp;</span><br>";
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
+    print $sock "<p>$labeltable</pre>\n";
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
