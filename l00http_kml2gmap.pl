@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+use l00wikihtml;
+
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -212,9 +214,9 @@ sub l00http_kml2gmap_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable);
+    my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
-    my ($nomarkers, $lnno, $jlabel, $jname);
+    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -295,14 +297,30 @@ sub l00http_kml2gmap_proc {
     }
 
 
-    $labeltable = "Description: latitute,longitude ";
-    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>)\n";
+    undef %labelsort;
+    if (defined ($form->{'mkridx'})) {
+        if ($form->{'mkridx'} < 26) {
+            $_ = chr(65 + $form->{'mkridx'});
+        } else {
+            $_ = chr(97 + $form->{'mkridx'} - 26);
+        }
+        $_ = " Centered on marker '$_'";
+    } elsif (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+        $_ = $form->{'selregex'};
+        $_ = " Centered by matching pattern '$_'";
+    } else {
+        $_ = "";
+    }
+    $labeltable = "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
+    $labeltable .= "Description: latitude,longitude ";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>).$_\n<pre>";
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
         &l00httpd::l00fwriteClose($ctrl);
     }
+    $htmlout = '';
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $buffer = &l00httpd::l00freadAll($ctrl);
         $buffer =~ s/\r\n/\n/g;
@@ -316,6 +334,7 @@ sub l00http_kml2gmap_proc {
         $nomarkers = 0;
         $lnno = 0;
         foreach $_ (split ("\n", $buffer)) {
+            $htmlout .= "$_\n";
             $lnno++;
             s/\r//g;
             s/\n//g;
@@ -351,6 +370,24 @@ sub l00http_kml2gmap_proc {
             } else {
                 $starname = '';
                 next;
+            }
+
+            # select marker by regex
+            if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+                if (defined($form->{'matched'}) && 
+                    ($form->{'matched'} eq 'on')) {
+                    # select all matching
+                    if (!($name =~ /$form->{'selregex'}/i)) {
+                        # name not matching, skip
+                        next;
+                    }
+                } else {
+                    # center one matched
+                    if ($name =~ /$form->{'selregex'}/i) {
+                        # fake mkridx corresponding to $nomarkers
+                        $form->{'mkridx'} = $nomarkers;
+                    }
+                }
             }
 
             # find max span
@@ -403,12 +440,13 @@ sub l00http_kml2gmap_proc {
             } else {
                 $jlabel = chr(97 + $nowypts - 26);
             }
-            $labeltable .= "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
-            $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
-            $labeltable .= "$name <a href=\"/clip.htm?update=&clip=";
-            $labeltable .= &l00httpd::urlencode ($name);
-            $labeltable .= "\" target=\"newwin\">:</a> ";
-            $labeltable .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+            $labelsort{"$name -- $jlabel"}  = "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
+            $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
+            $labelsort{"$name -- $jlabel"} .= "$name <a href=\"/clip.htm?update=&clip=";
+            $labelsort{"$name -- $jlabel"} .= &l00httpd::urlencode ($name);
+            $labelsort{"$name -- $jlabel"} .= "\" target=\"newwin\">:</a> ";
+            $labelsort{"$name -- $jlabel"} .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
                 "  label: '$jlabel' , \n".
@@ -444,7 +482,7 @@ sub l00http_kml2gmap_proc {
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
             # selecting one
-            $zoom = 15;
+            $zoom = 18;
             # the selected marker
             $ctrlon = ($lonmax + $lonmin) / 2;
             $ctrlat = ($latmax + $latmin) / 2;
@@ -483,14 +521,19 @@ sub l00http_kml2gmap_proc {
         print $sock "<div id=\"googleMap\" style=\"width:${width}px;height:${height}px;\"></div>\n";
     }
 
+    # sort markers
+    foreach $_ (sort keys %labelsort) {
+        $labeltable .= $labelsort{$_};
+    }
 
-    print $sock "<p><pre>$labeltable</pre>\n";
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
     print $sock "<span id=\"coor\">&nbsp;</span><br>";
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
+    print $sock "<p>$labeltable</pre>\n";
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    print $sock "<a href=\"#__toc__\">TOC</a> - \n";
     print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a><p>\n";
@@ -506,11 +549,15 @@ sub l00http_kml2gmap_proc {
     print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
+    print $sock "Width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
+    print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
     print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"matched\">matched</td><td>select <input type=\"text\" name=\"selregex\" size=\"5\">\n";
+    print $sock "</td></tr>\n";
+
     print $sock "</table>\n";
     print $sock "</form>\n";
 
@@ -540,6 +587,15 @@ sub l00http_kml2gmap_proc {
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "</form>\n";
+
+        if ($htmlout ne '') {
+            my ($pname, $fname);
+            if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
+                $htmlout =~ s/path=\.\//path=$pname/g;
+                $htmlout =~ s/path=\$/path=$pname$fname/g;
+                print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $htmlout, '', $fname);
+            }
+        }
     }
 
     # send HTML footer and ends

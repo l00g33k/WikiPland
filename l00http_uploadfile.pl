@@ -37,16 +37,16 @@ sub l00http_uploadfile_proc {
         $path =~ s/([\/\\])[^\/\\]+$/$1/;
     } else {
         if ($ctrl->{'os'} eq 'and') {
-            $path = '/sdcard/tmp/';
+            $path = '/sdcard/z/';
         } elsif ($ctrl->{'os'} eq 'win') {
-            $path = 'c:/';
+            $path = 'c:/z/';
         } elsif ($ctrl->{'os'} eq 'lin') {
-            $path = '/home/';
+            $path = '/home/z/';
         } elsif ($ctrl->{'os'} eq 'tmx') {
             # termux on Android
-            $path = '/sdcard/';
+            $path = '/sdcard/z/';
         } else {
-            $path = '/';
+            $path = '/z/';
         }
     }
     $form->{'path'} = $path;
