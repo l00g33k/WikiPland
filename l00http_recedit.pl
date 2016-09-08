@@ -26,7 +26,7 @@ sub l00http_recedit_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted);
-    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $leading, $tmp2);
+    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $leading, $tmp2, $disp);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -248,7 +248,8 @@ sub l00http_recedit_proc (\%) {
                         } else {
                             print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
                         }
-                        print $sock "        <td><pre>";
+#                       print $sock "        <td><pre>";
+                        print $sock "        <td><font face=\"Courier New\">";
                         foreach $line (split("\n", $obuf)) {
                             $line =~ s/\r//;
                             $line =~ s/\n//;
@@ -267,7 +268,9 @@ sub l00http_recedit_proc (\%) {
                                 $tmp =~ s/"/%22/g;
                                 $tmp =~ s/\//%2F/g;
                                 $tmp =~ s/\|/%7C/g;
-                                $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,$displen)."</a>";
+                                $disp = substr($line,0,$displen);
+                                $disp =~ s/ /&nbsp;/g;
+                                $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".$disp."</a>";
                             }
                             if (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
                                 # cal specific
@@ -282,7 +285,9 @@ sub l00http_recedit_proc (\%) {
                                 $tmp =~ s/"/%22/g;
                                 $tmp =~ s/\//%2F/g;
                                 $tmp =~ s/\|/%7C/g;
-                                $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,$displen)."</a>";
+                                $disp = substr($line,0,$displen);
+                                $disp =~ s/ /&nbsp;/g;
+                                $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".$disp."</a>";
                             }
                             if ($record1 eq '.') {
                                 # drop leading date/time
@@ -299,11 +304,14 @@ sub l00http_recedit_proc (\%) {
                                 $tmp =~ s/"/%22/g;
                                 $tmp =~ s/\//%2F/g;
                                 $tmp =~ s/\|/%7C/g;
-                                $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,$displen)."</a>";
+                                $disp = substr($line,0,$displen);
+                                $disp =~ s/ /&nbsp;/g;
+                                $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".$disp."</a>";
                             }
                             print $sock "$line";
                         }
-                        print $sock "</pre></td>\n";
+#                       print $sock "</pre></td>\n";
+                        print $sock "</font></td>\n";
                         print $sock "    </tr>\n";
                         $id++;
                     }
@@ -325,7 +333,8 @@ sub l00http_recedit_proc (\%) {
                 } else {
                     print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
                 }
-                print $sock "        <td><pre>";
+#               print $sock "        <td><pre>";
+                print $sock "        <td><font face=\"Courier New\">";
                 foreach $line (split("\n", $obuf)) {
                     # notify specific
                     if ($line =~ /^MSG:(.+)/) {
@@ -339,7 +348,9 @@ sub l00http_recedit_proc (\%) {
                         $tmp =~ s/"/%22/g;
                         $tmp =~ s/\//%2F/g;
                         $tmp =~ s/\|/%7C/g;
-                        $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,$displen)."</a>";
+                        $disp = substr($line,0,$displen);
+                        $disp =~ s/ /&nbsp;/g;
+                        $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".$disp."</a>";
                     }
                     if (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
                         # cal specific
@@ -351,7 +362,9 @@ sub l00http_recedit_proc (\%) {
                         $tmp =~ s/"/%22/g;
                         $tmp =~ s/\//%2F/g;
                         $tmp =~ s/\|/%7C/g;
-                        $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,$displen)."</a>";
+                        $disp = substr($line,0,$displen);
+                        $disp =~ s/ /&nbsp;/g;
+                        $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".$disp."</a>";
                     }
                     if ($record1 eq '.') {
                         # drop leading date/time
@@ -365,11 +378,14 @@ sub l00http_recedit_proc (\%) {
                         $tmp =~ s/"/%22/g;
                         $tmp =~ s/\//%2F/g;
                         $tmp =~ s/\|/%7C/g;
-                        $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".substr($line,0,$displen)."</a>";
+                        $disp = substr($line,0,$displen);
+                        $disp =~ s/ /&nbsp;/g;
+                        $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">".$disp."</a>";
                     }
                     print $sock "$line";
                 }
-                print $sock "</pre></td>\n";
+#               print $sock "</pre></td>\n";
+                print $sock "</font></td>\n";
                 print $sock "    </tr>\n";
             }
             close (IN);
