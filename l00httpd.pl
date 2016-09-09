@@ -739,9 +739,12 @@ while(1) {
                 $ip = `ipconfig`;
             } else {
                 #print "shell /sbin/ifconfig\n", if ($debug >= 5);
-                #$ip = `/sbin/ifconfig`;
                 print "shell ifconfig\n", if ($debug >= 5);
-                $ip = `ifconfig`;
+                if (-f "/sbin/ifconfig") {
+                    $ip = `/sbin/ifconfig`;
+                } else {
+                    $ip = `ifconfig`;
+                }
             }
             print "raw ip = $ip\n", if ($debug >= 5);
             if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
