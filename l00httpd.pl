@@ -1210,7 +1210,9 @@ while(1) {
                 if (defined ($modsinfo{"$modcalled:fn:proc"})) {
                     $subname = $modsinfo{"$modcalled:fn:proc"};
                     $ctrl{'msglog'} = "";
+                    print "Invoking $modcalled\n", if ($debug >= 5);
                     $retval = __PACKAGE__->$subname(\%ctrl);
+                    print "Returned from $modcalled\n", if ($debug >= 5);
                     &dlog  ($ctrl{'msglog'}."\n");
                 }
             } else {
@@ -1714,4 +1716,4 @@ while(1) {
     }
 }
 
-print "WikiPland forever loop existed at now_string = $ctrl{'now_string'}\n", if ($debug >= 1);
+print "WikiPland forever loop existed at now_string = $ctrl{'now_string'}\n";

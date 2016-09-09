@@ -30,6 +30,8 @@ sub l00http_do_proc {
     my ($rethash, $mypath, $refresh, $refreshtag, $notbare, $fname);
     my ($doplpathnow);
 
+    print "MOD: $config{'desc'}: Entered do\n", if ($debug >= 5);
+
     $notbare = 1;
     if (defined ($form->{'bare'})) {
         $notbare = 0;
@@ -67,12 +69,10 @@ sub l00http_do_proc {
         (defined ($form->{'path'}))) {
         $doplpath = $form->{'path'};
         $doplpathset = 1;
-print "doplpath = $doplpath\n"
     }
     if (defined ($form->{'clear'})) {
         $doplpath = '';
         $doplpathset = 0;
-print "clear doplpath = $doplpath\n"
     }
 
     # handling Quick URL
@@ -122,7 +122,9 @@ print "clear doplpath = $doplpath\n"
     }
 
 
+    print "MOD: $config{'desc'}: invoking do\n", if ($debug >= 5);
     $rethash  = do $doplpathnow;
+    print "MOD: $config{'desc'}: returned do\n", if ($debug >= 5);
     if (!defined ($rethash)) {
         if ($!) {
             print $sock "<hr>Can't read module: $doplpathnow: $!\n";
