@@ -1,0 +1,56 @@
+%TOC%
+
+
+20130808 084805 % DATETIME % auto expand %DATETIME% 
+%TOC%
+=Help for l00http_tree.pl=
+* This module lists all files within a sub directory tree
+
+=Diff'ing Two Directory Trees On Two Devices=
+* At time there is desire to sync two directory trees on 
+between the desktop and the device, and you don't want to 
+rely on the cloud, or cannot use the cloud, or is too slow. 
+For examle, trying to sync the 5 GBytes DCIM directory on 
+the device to the 9 GBytes master copy on the desktop. Or 
+may be you simply want to know the difference and what 
+are new. Oh, and you have renamed and organized into sub 
+directories on the desktop. !WikiPland can help.
+* Theory of operations:
+** For each directory tree, using Linux utilities to 
+generate a list of all files and their md5sum in the sub 
+directories.
+** Copy these files to the desktop
+** Using !WikiPland's md5sizediff module to compare md5sums
+* Follow these steps to compare the content of two 
+directories tree. 
+** Browse to the target directory using the tree module:
+http://localhost:30337/tree.htm?path=/sdcard/DCIM/Camera/
+*** In the normal directory listing view of the ls module, 
+click the &lg;dir^gt; link for the '..' listing is another 
+way to launch the tree module
+* At the bottom of the page copy the command lines and paste 
+into an appropraite console to create the signatures. 
+For example:
+    # md5sum computation can be accelerated by using bash commands as follow:
+    cd /sdcard/DCIM/Camera/
+    du -h
+    OUTDIR=./
+    DESC=_
+    pwd > ${OUTDIR}m5_20160910_161745${DESC}.m5sz
+    time find -name "*" -type f -print0 | xargs -0 stat -c "%s %n" >> ${OUTDIR}m5_20160910_161745${DESC}.m5sz
+    time find -name "*" -type f -print0 | xargs -0 md5sum >> ${OUTDIR}m5_20160910_161745${DESC}.m5sz
+    # and send m5_20160910_161745${DESC}.m5sz to tree.htm for processing
+    #speed is approximately 12-26 secs/GB
+** The variable OUTDIR=./ allows you to send the files else where. But local is usually fine
+** The variable DESC=_ allows you to easily add comment to the filenames
+* Move or copy the files to one location.
+* Open these file in tree module and save imported results in 
+'filemgt tree.htm' link
+* Open these two exported files in the md5sizediff module and 
+enter both files into and click 'Compare'
+http://localhost:20337/md5sizediff.htm
+** Notes that you need either !TerminalIDE or 
+Termux on your device if it has been rooted because Linux 
+utilities are used to speed things up.
+
+%::INDEX::%
