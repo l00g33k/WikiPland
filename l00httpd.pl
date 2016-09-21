@@ -576,8 +576,6 @@ sub periodictask {
     $tickdelta = 3600;	# tick once an hour
     &updateNow_string ();
 
-    my ($timeis);
-    $timeis = localtime (time);
     $who = 'unknown';
 
     foreach $mod (sort keys %httpmods) {
@@ -597,7 +595,7 @@ sub periodictask {
             }
         }
     }
-    print "perio: $tickdelta ($who) $timeis\n", if ($debug >= 2);
+    print "$ctrl{'now_string'} $tickdelta ($who)\n", if ($debug >= 2);
 
     if (($waketil != 0) &&
         ($waketil < time)) {

@@ -399,10 +399,18 @@ sub l00http_gps_perio {
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $retval = $interval;
+        if (($retval < 300) && (
+            (defined($ctrl->{'iamsleeping'}) &&
+             ($ctrl->{'iamsleeping'} eq 'yes')))) {
+             # don't poll more than once every 5 minutes when sleeping
+             $retval = 300;
+        }
 
         if ((((time - $lastpoll) <= $interval) ||
             ($lastcalled == 0)) &&
-            ($ctrl->{'iamsleeping'} ne 'yes')) {
+            (!defined($ctrl->{'iamsleeping'}) ||
+             ($ctrl->{'iamsleeping'} ne 'yes'))
+            ) {
             # polling could be more frequent than the period
             # e.g. running period.pl
             # if we slept for longer, the phone might be sleeping,
