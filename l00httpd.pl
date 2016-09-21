@@ -576,8 +576,6 @@ sub periodictask {
     $tickdelta = 3600;	# tick once an hour
     &updateNow_string ();
 
-    my ($timeis);
-    $timeis = localtime (time);
     $who = 'unknown';
 
     foreach $mod (sort keys %httpmods) {
@@ -597,7 +595,7 @@ sub periodictask {
             }
         }
     }
-    print "perio: $tickdelta ($who) $timeis\n", if ($debug >= 2);
+    print "$ctrl{'now_string'} $tickdelta ($who)\n", if ($debug >= 2);
 
     if (($waketil != 0) &&
         ($waketil < time)) {
@@ -665,6 +663,7 @@ while(1) {
     # Get a list of sockets that are ready to talk to us.
     print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
+    print ".", if ($debug >= 2);
     print "After Select->select()\n", if ($debug >= 5);
     &updateNow_string ();
     &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
