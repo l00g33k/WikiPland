@@ -663,6 +663,7 @@ while(1) {
     # Get a list of sockets that are ready to talk to us.
     print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
+    print ".", if ($debug >= 2);
     print "After Select->select()\n", if ($debug >= 5);
     &updateNow_string ();
     &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
