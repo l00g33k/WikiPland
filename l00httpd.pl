@@ -75,9 +75,11 @@ undef $timeout;
 $| = 1;
 
 sub dlog {
-    my $logm = pop;
-    if ($debug >= 2) {
-        if (open (OUT, ">>$plpath"."l00httpd.log")) {
+    my ($level, $logm) = @_;
+
+    if ($debug >= $level) {
+        if (open (OUT, ">>${plpath}l00httpd.log")) {
+            $logm =~ s/\n/ ($cli_port)\n/gms;
             print OUT $logm;
             close OUT;
         }
@@ -233,7 +235,7 @@ sub readl00httpdcfg {
                 $cfgedit = "Edit l00httpd.cfg at:<br>\n";
             }
             $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
-            print "Reading $tmp$conf...\n";;
+            print "Reading $tmp$conf...\n";
             # machine specific filter
             $skip = 0;
             $skipfilter = '.';
@@ -586,7 +588,7 @@ sub periodictask {
             $retval = __PACKAGE__->$subname(\%ctrl);
             if (defined ($retval) && ($retval > 0)) {
                 if ($retval < 1000000) {
-                    print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 3);
+                    &dlog (3, "perio: $mod:fn:perio -> $retval\n");
                 }
                 if ($tickdelta > $retval) {
                     $tickdelta = $retval;
@@ -612,12 +614,12 @@ $ttlconns = 0;
 
 
 &updateNow_string ();
-if ($debug >= 2) {
-    if (open (OUT, ">${plpath}l00httpd.log")) {
-        print OUT "$ctrl{'now_string'} WikiPland started\n";
-        close OUT;
-    }
+# start new log
+if (open (OUT, ">${plpath}l00httpd.log")) {
+    print OUT "$ctrl{'now_string'} WikiPland started ($cli_port)\n";
+    close OUT;
 }
+
 
 $ctrl{'l00file'}->{'l00://server.log'} = '';
 # disable restoration...
@@ -663,10 +665,10 @@ while(1) {
     # Get a list of sockets that are ready to talk to us.
     print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
-    print ".", if ($debug >= 2);
+    &dlog (2, ".");
     print "After Select->select()\n", if ($debug >= 5);
     &updateNow_string ();
-    &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
+    &dlog (3, "$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
@@ -817,11 +819,11 @@ while(1) {
             }
             print "httpsiz $httpsiz\n", if ($debug >= 5);
             if ($httpsiz <= 0) {
-                print "failed to read from socket. Abort\n", if ($debug >= 3);
+                &dlog (3, "failed to read from socket. Abort\n");
                 $sock->close;
                 next;
             }
-            &dlog  ("client $client_ip ");
+            &dlog (3, "client $client_ip ");
             $postlen = -1;
             $httphdz = -1;
             if ($httpbuf =~ /^POST +/) {
@@ -1002,15 +1004,14 @@ while(1) {
                 $sock->close;
                 next;
             }
-            &dlog  ("url:: $urlparams ");
-            &dlog  ("$modcalled\n");
+            &dlog (3, "url:: $urlparams $modcalled\n");
             
             if ($postlen > 0) {
                 $urlparams = $httpbdy;
             }
             if ($debug >= 3) {
                 $tmp = substr ($urlparams, 0, 160);
-                print "FORM mod:$modcalled urlget:$tmp\n";
+                &dlog (3, "FORM mod:$modcalled urlget:$tmp\n");
             }
 
             # prepare to extract form data
@@ -1219,7 +1220,7 @@ while(1) {
                     print "Invoking $modcalled\n", if ($debug >= 5);
                     $retval = __PACKAGE__->$subname(\%ctrl);
                     print "Returned from $modcalled\n", if ($debug >= 5);
-                    &dlog  ($ctrl{'msglog'}."\n");
+                    &dlog (4, $ctrl{'msglog'}."\n");
                 }
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
@@ -1614,6 +1615,8 @@ while(1) {
                         print $sock "$cfgedit\n";
                     }
 
+                    # show log file
+                    print $sock "<br>View log file <a href=\"/view.htm?path=${plpath}l00httpd.log\">l00httpd.log</a>\n";
 
 
                     # dump all ctrl data
