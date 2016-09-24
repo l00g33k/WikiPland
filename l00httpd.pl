@@ -77,11 +77,13 @@ $| = 1;
 sub dlog {
     my ($level, $logm) = @_;
 
-    if ($debug >= $level) {
-        if (open (OUT, ">>${plpath}l00httpd.log")) {
-            $logm =~ s/\n/ ($cli_port)\n/gms;
-            print OUT $logm;
-            close OUT;
+    if ($ctrl_port_first == $ctrl_port) {
+        if ($debug >= $level) {
+            print $logm;
+            if (open (OUT, ">>${plpath}l00httpd.log")) {
+                print OUT $logm;
+                close OUT;
+            }
         }
     }
 }
@@ -597,7 +599,7 @@ sub periodictask {
             }
         }
     }
-    print "$ctrl{'now_string'} $tickdelta ($who)\n", if ($debug >= 2);
+    &dlog (2, "$ctrl{'now_string'} $tickdelta ($who)\n");
 
     if (($waketil != 0) &&
         ($waketil < time)) {
@@ -615,11 +617,12 @@ $ttlconns = 0;
 
 &updateNow_string ();
 # start new log
-if (open (OUT, ">${plpath}l00httpd.log")) {
-    print OUT "$ctrl{'now_string'} WikiPland started ($cli_port)\n";
-    close OUT;
+if ($ctrl_port_first == $ctrl_port) {
+    if (open (OUT, ">${plpath}l00httpd.log")) {
+        print OUT "$ctrl{'now_string'} WikiPland started ($cli_port)\n";
+        close OUT;
+    }
 }
-
 
 $ctrl{'l00file'}->{'l00://server.log'} = '';
 # disable restoration...
@@ -665,10 +668,9 @@ while(1) {
     # Get a list of sockets that are ready to talk to us.
     print "Before Select->select()\n", if ($debug >= 5);
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
-    &dlog (2, ".");
     print "After Select->select()\n", if ($debug >= 5);
     &updateNow_string ();
-    &dlog (3, "$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
+    &dlog (2, "$ctrl{'now_string'} ".sprintf ("%4ds ago ", time - $l00time));
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
@@ -819,11 +821,11 @@ while(1) {
             }
             print "httpsiz $httpsiz\n", if ($debug >= 5);
             if ($httpsiz <= 0) {
-                &dlog (3, "failed to read from socket. Abort\n");
+                &dlog (3, "\nfailed to read from socket. Abort\n");
                 $sock->close;
                 next;
             }
-            &dlog (3, "client $client_ip ");
+            &dlog (2, "client $client_ip ");
             $postlen = -1;
             $httphdz = -1;
             if ($httpbuf =~ /^POST +/) {
@@ -1004,7 +1006,7 @@ while(1) {
                 $sock->close;
                 next;
             }
-            &dlog (3, "url:: $urlparams $modcalled\n");
+            &dlog (2, "url:: $urlparams $modcalled\n");
             
             if ($postlen > 0) {
                 $urlparams = $httpbdy;
@@ -1118,7 +1120,7 @@ while(1) {
                 $shutdown = 0;
                 # reload all modules
                 l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
-                print "Restart/reloading modules\n", if ($debug >= 2);
+                &dlog (2, "Restart/reloading modules\n");
                 &readl00httpdcfg;
                 &loadmods;
             }
