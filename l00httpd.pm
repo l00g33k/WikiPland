@@ -532,6 +532,9 @@ sub pcSyncCmdline {
         # append in RAM
         &l00freadOpen($ctrl, 'l00://pcSyncCmdline');
         $tmp = &l00freadAll($ctrl);
+        if (!defined($tmp)) {
+            $tmp = '';
+        }
         &l00fwriteOpen($ctrl, 'l00://pcSyncCmdline');
         &l00fwriteBuf($ctrl, "$tmp\n$clip\n");
         &l00fwriteClose($ctrl);
