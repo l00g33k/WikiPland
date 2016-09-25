@@ -399,12 +399,6 @@ sub l00http_gps_perio {
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $retval = $interval;
-        if (($retval < 300) && (
-            (defined($ctrl->{'iamsleeping'}) &&
-             ($ctrl->{'iamsleeping'} eq 'yes')))) {
-             # don't poll more than once every 5 minutes when sleeping
-             $retval = 300;
-        }
 
         if ((((time - $lastpoll) <= $interval) ||
             ($lastcalled == 0)) &&
@@ -501,6 +495,13 @@ $_ =
     } elsif ($interval > 0) {
         # remaining time to firing
         $retval = ($lastcalled + $interval) - time;
+    }
+
+    if (($retval < 300) && (
+        (defined($ctrl->{'iamsleeping'}) &&
+         ($ctrl->{'iamsleeping'} eq 'yes')))) {
+         # don't poll more than once every 5 minutes when sleeping
+         $retval = 300;
     }
 
 

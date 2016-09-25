@@ -609,12 +609,6 @@ sub l00http_periobattery_perio {
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
         $lastcalled = time;
         $retval = $interval;
-        if (($retval < 300) && (
-            (defined($ctrl->{'iamsleeping'}) &&
-             ($ctrl->{'iamsleeping'} eq 'yes')))) {
-             # don't poll more than once every 5 minutes when sleeping
-             $retval = 300;
-        }
 
         $tempe = '';
         if ($ctrl->{'os'} eq 'and') {
@@ -752,6 +746,13 @@ sub l00http_periobattery_perio {
     } elsif ($interval > 0) {
         # remaining time to firing
         $retval = ($lastcalled + $interval) - time;
+    }
+
+    if (($retval < 300) && (
+        (defined($ctrl->{'iamsleeping'}) &&
+         ($ctrl->{'iamsleeping'} eq 'yes')))) {
+         # don't poll more than once every 5 minutes when sleeping
+         $retval = 300;
     }
 
     $retval;
