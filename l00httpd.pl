@@ -63,7 +63,6 @@ $idpwmustbe = "p:p";  # change as you wish
 $debug = 1;         # 0=none, 1=minimal, 5=max
 $open = 0;
 $shutdown = 0;
-$cfgedit = '';
 $httpmax = 1024 * 1024 * 3;
 $ctrl{'bannermute'} = 0;
 $cmdlnhome = '';
@@ -76,11 +75,15 @@ undef $timeout;
 $| = 1;
 
 sub dlog {
-    my $logm = pop;
-    if ($debug >= 2) {
-        if (open (OUT, ">>$plpath"."l00httpd.log")) {
-            print OUT $logm;
-            close OUT;
+    my ($level, $logm) = @_;
+
+    if ($ctrl_port_first == $ctrl_port) {
+        if ($debug >= $level) {
+            print $logm;
+            if (open (OUT, ">>${plpath}l00httpd.log")) {
+                print OUT $logm;
+                close OUT;
+            }
         }
     }
 }
@@ -216,6 +219,7 @@ sub readl00httpdcfg {
     # 1: ${plpath}l00httpd.cfg
     # 2: $ctrl{'workdir'}l00httpd.cfg
     # 3: $ctrl{'altcfg'}l00httpd.cfg
+    $cfgedit = '';
     for ($cnt = 0; $cnt < 3; $cnt++) {
         if ($cnt == 0) {
             $tmp = $plpath; # first time, find in l00httpd script directory
@@ -233,7 +237,7 @@ sub readl00httpdcfg {
                 $cfgedit = "Edit l00httpd.cfg at:<br>\n";
             }
             $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
-            print "Reading $tmp$conf...\n";;
+            print "Reading $tmp$conf...\n";
             # machine specific filter
             $skip = 0;
             $skipfilter = '.';
@@ -571,8 +575,13 @@ $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
 $readable->add($cli_lstn_sock);    # Add the lstnsock to it
 
 sub periodictask {
+    my ($who);
+
     $tickdelta = 3600;	# tick once an hour
     &updateNow_string ();
+
+    $who = 'unknown';
+
     foreach $mod (sort keys %httpmods) {
         if (defined ($modsinfo{"$mod:fn:perio"})) {
             $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
@@ -581,14 +590,16 @@ sub periodictask {
             $retval = __PACKAGE__->$subname(\%ctrl);
             if (defined ($retval) && ($retval > 0)) {
                 if ($retval < 1000000) {
-                    print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
+                    &dlog (3, "perio: $mod:fn:perio -> $retval\n");
                 }
                 if ($tickdelta > $retval) {
                     $tickdelta = $retval;
+                    $who = $mod;
                 }
             }
         }
     }
+    &dlog (2, "$ctrl{'now_string'} $tickdelta ($who)\n");
 
     if (($waketil != 0) &&
         ($waketil < time)) {
@@ -597,10 +608,6 @@ sub periodictask {
         # release wake lock
         $ctrl{'droid'}->wakeLockRelease();
     }
-
-    my ($timeis);
-    $timeis = localtime (time);
-    print "perio: tickdelta $tickdelta $timeis\n", if ($debug >= 4);
 }
 
 $tickdelta = 3600;
@@ -609,9 +616,10 @@ $ttlconns = 0;
 
 
 &updateNow_string ();
-if ($debug >= 2) {
+# start new log
+if ($ctrl_port_first == $ctrl_port) {
     if (open (OUT, ">${plpath}l00httpd.log")) {
-        print OUT "$ctrl{'now_string'} WikiPland started\n";
+        print OUT "$ctrl{'now_string'} WikiPland started ($cli_port)\n";
         close OUT;
     }
 }
@@ -662,7 +670,7 @@ while(1) {
     my ($ready) = IO::Select->select($readable, undef, undef, $tickdelta);
     print "After Select->select()\n", if ($debug >= 5);
     &updateNow_string ();
-    &dlog  ("$ctrl{'now_string'} ".sprintf ("%4d ", time - $l00time));
+    &dlog (2, "$ctrl{'now_string'} ".sprintf ("%4ds ago ", time - $l00time));
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
@@ -795,29 +803,29 @@ while(1) {
             }
 
             # print date, time, client IP, password, and module names
-            print "------------ processing HTTP request header ----------------------\n", if ($debug >= 2);
+            print "------------ processing HTTP request header ----------------------\n", if ($debug >= 4);
 
             # 3) Parse client HTTP submission and identify module plugin name
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
-            select ($rout = $rin, undef, $eout = $rin, 0.1); # public network needs 3 sec?
+            select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
             if (vec($eout,fileno($sock),1) == 1) {
                 print "sock error\n";
                 next;
             } elsif (vec($rout,fileno($sock),1) == 1) {
                 $httpsiz = sysread ($sock, $httpbuf, $httpmax);
             } else {
-                print "sock timeout 1s\n";
+                print "sock timeout 1s\n", if ($debug >= 4);
                 $sock->close;
                 next;
             }
-            print "httpsiz $httpsiz\n", if ($debug >= 4);
+            print "httpsiz $httpsiz\n", if ($debug >= 5);
             if ($httpsiz <= 0) {
-                print "failed to read from socket. Abort\n", if ($debug >= 4);
+                &dlog (3, "\nfailed to read from socket. Abort\n");
                 $sock->close;
                 next;
             }
-            &dlog  ("client $client_ip ");
+            &dlog (2, "client $client_ip ");
             $postlen = -1;
             $httphdz = -1;
             if ($httpbuf =~ /^POST +/) {
@@ -831,11 +839,11 @@ while(1) {
                 if ($httphdz >= 0) {
                     $httphdz += 4;
                 }
-                print "postlen = $postlen $httpsiz $httphdz\n", if ($debug >= 3);
+                print "postlen = $postlen $httpsiz $httphdz\n", if ($debug >= 4);
                 while (($postlen == -1) || ($httphdz == -1) ||
                     ($httpsiz < ($httphdz + $postlen))) {
                     $tmp = sysread ($sock, $buf, $httpmax);
-                    print "httpsiz tmp $tmp\n", if ($debug >= 4);
+                    print "httpsiz tmp $tmp\n", if ($debug >= 5);
                     if ($tmp > 0) {
                         $httpbuf .= $buf;
                         $httpsiz += $tmp;
@@ -852,13 +860,13 @@ while(1) {
                     if ($httphdz >= 0) {
                         $httphdz += 4;
                     }
-                    print "postlen = $postlen $httpsiz $httphdz\n", if ($debug >= 3);
+                    print "postlen = $postlen $httpsiz $httphdz\n", if ($debug >= 4);
                 }
             } else {
                 $postlen = -1;
                 $httphdz = $httpsiz;
             }
-            print "httpsiz $httpsiz >>>$httpbuf<<<\n", if ($debug >= 4);
+            print "httpsiz $httpsiz >>>$httpbuf<<<\n", if ($debug >= 5);
 
 
             $httpmethod = '(unknown)';
@@ -882,9 +890,9 @@ while(1) {
                 }
                 # GET
                 $httphdr = $httpbuf;
-                print "GET?\n", if ($debug >= 3);
+                print "GET?\n", if ($debug >= 4);
             }
-            print "httpsiz $httpsiz httphdz $httphdz\n", if ($debug >= 3);
+            print "httpsiz $httpsiz httphdz $httphdz\n", if ($debug >= 4);
 
 
             # read in browser submission
@@ -924,7 +932,7 @@ while(1) {
                 }
             }
 
-            print "FORM urlparams:$urlparams\n", if ($debug >= 3);
+            print "FORM urlparams:$urlparams\n", if ($debug >= 4);
             $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
@@ -968,7 +976,7 @@ while(1) {
                 $modcalled = "ls";
                 $urlparams = "path=$1&raw=on";
             }
-            print "$ctrl{'now_string'}: $client_ip Auth>$idpw< /$modcalled\n", if ($debug >= 1);
+            print "$ctrl{'now_string'}: $client_ip Auth>$idpw< /$modcalled\n", if ($debug >= 4);
 
             $needpw = 1;
             if ($nopwtimeout =~ /:$modcalled:/) {
@@ -998,16 +1006,14 @@ while(1) {
                 $sock->close;
                 next;
             }
-            &dlog  ("url:: $urlparams ");
-            &dlog  ("$modcalled\n");
+            &dlog (2, "url:: $urlparams $modcalled\n");
             
             if ($postlen > 0) {
                 $urlparams = $httpbdy;
             }
-            print "FORM mod:$modcalled\n", if ($debug >= 3);
             if ($debug >= 3) {
                 $tmp = substr ($urlparams, 0, 160);
-                print "FORM urlget:$tmp\n";
+                &dlog (3, "FORM mod:$modcalled urlget:$tmp\n");
             }
 
             # prepare to extract form data
@@ -1051,7 +1057,7 @@ while(1) {
                         $param =~ tr/+/ /;
                         $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
                         $FORM{$name} = $param;
-                        if ($debug >= 3) {
+                        if ($debug >= 4) {
                             $tmp = substr ($FORM{$name}, 0, 160);
                             print "FORMDATA $name=$tmp\n";
                         }
@@ -1114,7 +1120,7 @@ while(1) {
                 $shutdown = 0;
                 # reload all modules
                 l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
-                print "Restart/reloading modules\n", if ($debug >= 2);
+                &dlog (2, "Restart/reloading modules\n");
                 &readl00httpdcfg;
                 &loadmods;
             }
@@ -1216,7 +1222,7 @@ while(1) {
                     print "Invoking $modcalled\n", if ($debug >= 5);
                     $retval = __PACKAGE__->$subname(\%ctrl);
                     print "Returned from $modcalled\n", if ($debug >= 5);
-                    &dlog  ($ctrl{'msglog'}."\n");
+                    &dlog (4, $ctrl{'msglog'}."\n");
                 }
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
@@ -1611,6 +1617,8 @@ while(1) {
                         print $sock "$cfgedit\n";
                     }
 
+                    # show log file
+                    print $sock "<br>View log file <a href=\"/view.htm?path=${plpath}l00httpd.log\">l00httpd.log</a>\n";
 
 
                     # dump all ctrl data
@@ -1640,7 +1648,7 @@ while(1) {
                             $subname = $modsinfo{"$mod:fn:perio"};
                             $retval = 60;
                             $retval = __PACKAGE__->$subname(\%ctrl);
-                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 4);
+                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 5);
                             print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>$retval secs</td></tr>\n";
                         }
                     }

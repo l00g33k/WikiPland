@@ -437,7 +437,7 @@ sub l00http_cron_perio {
                                         __PACKAGE__->$subname($ctrl);
 
                                         close ($socknul);
-                                        &dlog  ($ctrl->{'msglog'}."\n");
+                                        &dlog (3, $ctrl->{'msglog'}."\n");
 
                                         $ctrl->{'home'} = $savehome;
                                         $ctrl->{'httphead'} = $savehttphead;

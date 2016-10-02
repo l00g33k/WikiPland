@@ -171,6 +171,9 @@ sub l00http_reminder_proc {
 			    substr($timstr, 13, 2) = '00';
             }
 		}
+        if (defined ($form->{"msg"})) {
+            $formmsg = $form->{"msg"};
+        }
     }
     if (defined ($form->{"nowtime"})) {
         $form->{"starttime"} = $ctrl->{'now_string'};

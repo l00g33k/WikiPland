@@ -10,14 +10,14 @@ use l00backup;
 my %config = (proc => "l00http_edit_proc2",
               desc => "l00http_edit_desc2");
 my ($buffer, $editwd, $editht, $editsz);
-my ($contextln, $blklineno, $blkfname);
+my ($contextln, $blklineno, $blkfname, $lineeval);
 $editsz = 0;
 $editwd = 0;
 $editht = 0;
 $contextln = 1;
 $blklineno = 0;
 $blkfname = '';
-
+$lineeval = 's/a/a/g';
 
 sub l00http_edit_desc2 {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -258,6 +258,31 @@ sub l00http_edit_proc2 {
             $contextln = 1;
 			$blkfname = '';
         }
+    } elsif (defined ($form->{'lineproc'}) || defined ($form->{'linesave'})) {
+        # line processor
+        if (defined ($form->{'lineeval'}) && (length ($form->{'lineeval'}) > 0)) {
+            $lineeval = $form->{'lineeval'};
+        } else {
+            $lineeval = 's/a/a/g';
+        }
+        $buffer = '';
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            print $sock "Line processor running: '$lineeval'<p>\n<pre>\n";
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if ($lineeval ne '') {
+                    eval "$lineeval";
+                }
+                $buffer .= $_;
+            }
+            print $sock "</pre>\n";
+        }
+        if (defined ($form->{'linesave'})) {
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+        } else {
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://lineproc.txt');
+        }
+        &l00httpd::l00fwriteBuf($ctrl, $buffer);
+        &l00httpd::l00fwriteClose($ctrl);
     } elsif (defined ($form->{'tempsize'})) {
         $editsz = 1;
         $editwd = $form->{'editwd'};
@@ -407,6 +432,30 @@ sub l00http_edit_proc2 {
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
+
+    print $sock "<p>\n";
+    print $sock "<form action=\"/edit.htm\" method=\"post\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"lineproc\" value=\"Process\">\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"10\" name=\"lineeval\" value=\"$lineeval\">\n";
+    print $sock "</td></tr>\n";
+
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"linesave\" value=\"Process & Save\">\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+
+    print $sock "<tr><td>\n";
+    print $sock "&nbsp;";
+    print $sock "</td><td>\n";
+    print $sock "<a href=\"/diff.htm?compare=Compare&width=20&pathnew=l00%3A%2F%2Flineproc.txt&pathold=$form->{'path'}&maxline=4000\" target=\"newwin\">diff results</a>\n";
+    print $sock "</td></tr>\n";
+
+    print $sock "</table><br>\n";
+    print $sock "</form>\n";
 
     if (defined ($form->{'path'})) {
         my ($path, $fname);

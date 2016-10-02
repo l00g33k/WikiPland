@@ -228,7 +228,7 @@ sub l00http_mobizoom_mobilize {
 #    $wget =~ s/<\/*body.*?>//gs;
 
         # display tags in debug mode
-        if ($ctrl->{'debug'} >= 2) {
+        if ($ctrl->{'debug'} >= 4) {
             $wget =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
             $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
         }
@@ -386,7 +386,7 @@ sub l00http_mobizoom_mobilize {
 
 
         # display tags in debug mode
-        if ($ctrl->{'debug'} >= 2) {
+        if ($ctrl->{'debug'} >= 4) {
             # semi hide tags
             $wget =~ s/&lt;/<font size="1" style="color:gray;background-color:white">&lt;/gs;
             #$wget =~ s/&lt;/<font size=1">&lt;/gs;

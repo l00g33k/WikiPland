@@ -14,12 +14,12 @@ my ($telnetpath, $url);
 $url = "http://www.google.com";
 
 sub trans {
-    my ($_) = @_;
+    my ($line) = @_;
 
     # translate \\, \r, \n to \\, 0x0D, and 0x0A
-    tr/\\rn0/\\\r\n\x00/;
+    $line =~ tr/\\rn0/\\\r\n\x00/;
 
-    $_;
+    $line;
 }
 
 sub l00http_telnet_desc {

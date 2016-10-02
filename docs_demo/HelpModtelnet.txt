@@ -1,0 +1,4 @@
+* Poor man's TCP port scanner. It takes 1 second to scan each port.
+** This Perl one liner program produces the script for telnet.pl:
+    perl -e 'foreach $_ (1..254) {print "ADDR.1:192.168.97.$_:5900\nSEND:\\n\nEXPECT.0:login:\n";}'
+** To run, generate the script and save to a file and telnet execute the file
