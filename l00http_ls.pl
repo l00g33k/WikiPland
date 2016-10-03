@@ -338,7 +338,7 @@ sub l00http_ls_proc {
                             syswrite ($sock, $buf, $len);
                             select (undef, undef, undef, 0.001);    # 1 ms delay. Without it Android looses data
                         } until ($len < 0x10000);
-                        print "sent $ttlbytes\n", if ($ctrl->{'debug'} >= 2);
+                        print "sent $ttlbytes\n", if ($ctrl->{'debug'} >= 3);
                         $sock->close;
                         return;
 
@@ -606,7 +606,7 @@ sub l00http_ls_proc {
                     syswrite ($sock, $buf, $len);
                     select (undef, undef, undef, 0.001);    # 1 ms delay. Without it Android looses data
                 } until ($len < 0x10000);
-                print "sent $ttlbytes\n", if ($ctrl->{'debug'} >= 2);
+                print "sent $ttlbytes\n", if ($ctrl->{'debug'} >= 3);
                 close (FILE);
                 $sock->close;
                 return;

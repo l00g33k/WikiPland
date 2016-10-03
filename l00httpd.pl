@@ -1006,7 +1006,7 @@ while(1) {
                 $sock->close;
                 next;
             }
-            &dlog (2, "url:: $urlparams $modcalled\n");
+            &dlog (2, "($modcalled): $urlparams\n");
             
             if ($postlen > 0) {
                 $urlparams = $httpbdy;
