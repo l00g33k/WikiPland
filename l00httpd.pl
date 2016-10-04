@@ -508,14 +508,8 @@ if ($ctrl{'os'} eq 'win') {
 }
 
 # create a listening socket 
-$ctrl_lstn_sock = IO::Socket::INET->new (
-    LocalPort => $ctrl_port,
-    LocalAddr => $host_ip,
-    Listen => 5, 
-    ReuseAddr => $reuseflag  # Reuse => 1
-);
-if (!$ctrl_lstn_sock) {
-    $ctrl_port += 10;
+$tmp = 0;
+do {
     $ctrl_lstn_sock = IO::Socket::INET->new (
         LocalPort => $ctrl_port,
         LocalAddr => $host_ip,
@@ -523,15 +517,13 @@ if (!$ctrl_lstn_sock) {
         ReuseAddr => $reuseflag  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
-        $ctrl_port += 10;
-        $ctrl_lstn_sock = IO::Socket::INET->new (
-            LocalPort => $ctrl_port,
-            LocalAddr => $host_ip,
-            Listen => 5, 
-            ReuseAddr => #reuseflag  # Reuse => 1
-        );
+        if (++$tmp > 100) {
+            $tmp = -1;
+        } else {
+            $ctrl_port += 10;
+        }
     }
-}
+} while (!$ctrl_lstn_sock && ($tmp >= 0));
 die "Can't create socket for listening: $!" unless $ctrl_lstn_sock;
 print "ctrl_port is $ctrl_port\n";
 $ctrl{'ctrl_port_first'}  = $ctrl_port_first;
@@ -540,14 +532,8 @@ $ctrl{'ctrl_port'} = $ctrl_port;
 # load modules
 &loadmods;
 
-$cli_lstn_sock = IO::Socket::INET->new (
-    LocalPort => $cli_port,
-    LocalAddr => $host_ip,
-    Listen => 5, 
-    ReuseAddr => 0  # Reuse => 1
-);
-if (!$cli_lstn_sock) {
-    $cli_port += 10;
+$tmp = 0;
+do {
     $cli_lstn_sock = IO::Socket::INET->new (
         LocalPort => $cli_port,
         LocalAddr => $host_ip,
@@ -555,15 +541,13 @@ if (!$cli_lstn_sock) {
         ReuseAddr => 0  # Reuse => 1
     );
     if (!$cli_lstn_sock) {
-        $cli_port += 10;
-        $cli_lstn_sock = IO::Socket::INET->new (
-            LocalPort => $cli_port,
-            LocalAddr => $host_ip,
-            Listen => 5, 
-            ReuseAddr => 0  # Reuse => 1
-        );
+        if (++$tmp > 100) {
+            $tmp = -1;
+        } else {
+            $cli_port += 10;
+        }
     }
-}
+} while (!$cli_lstn_sock && ($tmp >= 0));
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
 print "ctrl_port is $ctrl_port\n";
 print "cli_port  is $cli_port\n";

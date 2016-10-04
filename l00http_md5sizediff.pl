@@ -520,11 +520,11 @@ sub l00http_md5sizediff_proc {
                     # not a directory
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     # is there more than one file name recorded?
+                    # count match
+                    $matchcnt = 0;
                     if ($#_ > 0) {
                         $matchlist = '';
                         if ($match ne '') {
-                            # count match
-                            $matchcnt = 0;
                             # find match
                             for ($ii = 0; $ii <= $#_; $ii++) {
                                 if ($_[$ii] =~ /$match/) {
