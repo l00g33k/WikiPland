@@ -658,12 +658,16 @@ sub l00http_md5sizediff_proc {
             foreach $_ (sort keys %{$listdirs{$sname}}) {
                 $cnt++;
             }
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} = "List of dirs ($cnt) (list appears below)\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} = "::toc:: List of dirs ($cnt) (list appears below)\n";
             $cnt = 0;
             foreach $_ (sort keys %{$dupdirs{$sname}}) {
                 $cnt++;
             }
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "List of duplicated dirs sets ($cnt)\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "::toc:: List of duplicated dirs sets ($cnt)\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "A: B (C D E ...)\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "    A: sequence number\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "    B: common files in these directories\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "    C,D,E...: total files in each of these directories\n";
             $cnt = 0;
             foreach $alldirs (sort keys %{$dupdirs{$sname}}) {
                 $cnt++;
@@ -680,7 +684,7 @@ sub l00http_md5sizediff_proc {
             foreach $_ (sort keys %{$listdirs{$sname}}) {
                 $cnt++;
             }
-            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "\nList of dirs ($cnt)\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "\n::toc:: List of dirs ($cnt)\n";
             $cnt = 0;
             foreach $_ (sort keys %{$listdirs{$sname}}) {
                 $cnt++;
