@@ -318,7 +318,7 @@ sub l00http_md5sizediff_proc {
     my (%cnt, $oname, %out, $idx, $md5sum1st, $ii);
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
-    my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum);
+    my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
 
     if (defined ($form->{'mode'})) {
         if ($form->{'mode'} eq 'dos') {
@@ -510,6 +510,9 @@ sub l00http_md5sizediff_proc {
             } else {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = '';
             }
+            # self dup dir count
+            undef $dupdirs{$sname};
+            undef $listdirs{$sname};
             # count $match
             $matchnone = 0;
             $matchone = 0;
@@ -555,11 +558,30 @@ sub l00http_md5sizediff_proc {
                             }
                         } else {
                             # no match regex, list all
+                            undef %alldirs;
                             for ($ii = 0; $ii <= $#_; $ii++) {
                                 if ($mode eq 'unix') {
                                     $matchlist .= "  \"$_[$ii]\"";
                                 } else {
                                     $matchlist .= "         \"$_[$ii]\"\n";
+                                }
+                                # count listdirs
+                                ($pname, $fname) = $_[$ii] =~ /^(.+[\\\/])([^\\\/]+)$/;
+                                if (defined($listdirs{$sname}{$pname})) {
+                                    $listdirs{$sname}{$pname}++;
+                                } else {
+                                    $listdirs{$sname}{$pname} = 1;
+                                }
+                                $alldirs{$pname} = 1;
+                            }
+                            # remember dup dirs
+                            $_ = join("::", sort(keys %alldirs));
+                            if (/::/) {
+                                # remember only if there are dups
+                                if (defined($dupdirs{$sname}{$_})) {
+                                    $dupdirs{$sname}{$_}++;
+                                } else {
+                                    $dupdirs{$sname}{$_} = 1;
                                 }
                             }
                         }
@@ -630,11 +652,47 @@ sub l00http_md5sizediff_proc {
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname self duplicated: $cnt{$sname} files\n\n";
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.self_dup.htm>%\n";
             print $sock "$sname self duplicated: $cnt{$sname} files\n";
+
+            # list dupdirs count
+            $cnt = 0;
+            foreach $_ (sort keys %{$listdirs{$sname}}) {
+                $cnt++;
+            }
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} = "List of dirs ($cnt) (list appears below)\n";
+            $cnt = 0;
+            foreach $_ (sort keys %{$dupdirs{$sname}}) {
+                $cnt++;
+            }
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "List of duplicated dirs sets ($cnt)\n";
+            $cnt = 0;
+            foreach $alldirs (sort keys %{$dupdirs{$sname}}) {
+                $cnt++;
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "$cnt: $dupdirs{$sname}{$alldirs} (";
+                foreach $pname (split("::", $alldirs)) {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= " $listdirs{$sname}{$pname}";
+                }
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= ") $alldirs\n";
+                foreach $_ (split("::", $alldirs)) {
+                    $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "                    $_\n";
+                }
+            }
+            $cnt = 0;
+            foreach $_ (sort keys %{$listdirs{$sname}}) {
+                $cnt++;
+            }
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "\nList of dirs ($cnt)\n";
+            $cnt = 0;
+            foreach $_ (sort keys %{$listdirs{$sname}}) {
+                $cnt++;
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup_dirs.htm"} .= "$cnt: $listdirs{$sname}{$_} $_\n";
+            }
         }
 
 
         # Files unique to each side
         # ----------------------------------------------------------------
+        $thisonly = 0;
+        $thatonly = 0;
         if ($thatpath ne '') {
             # generate this only and that only if only both files are provided
             foreach $sname (('THIS', 'THAT')) {
@@ -720,6 +778,7 @@ sub l00http_md5sizediff_proc {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "\n";
             }
         } else {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.THIS.only.htm"} = '';
             $ctrl->{'l00file'}->{"l00://md5sizediff.THAT.only.htm"} = '';
         }
 
@@ -940,6 +999,12 @@ sub l00http_md5sizediff_proc {
         }
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.self_dup_dirs.htm\">l00://md5sizediff.THIS.self_dup_dirs.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.self_dup_dirs.htm"});
+        @_ = keys %{$dupdirs{'THIS'}};
+        $_ = $#_ + 1;
+        print $sock "</td><td align=\"right\">$1\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup.htm\">l00://md5sizediff.THAT.self_dup.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.self_dup.htm"});
         print $sock "</td><td align=\"right\">$cnt{'THAT'}\n";
         if ($mode eq 'unix') {
@@ -949,6 +1014,12 @@ sub l00http_md5sizediff_proc {
                 print $sock "</td><td>&nbsp;\n";
             }
         }
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.self_dup_dirs.htm\">l00://md5sizediff.THAT.self_dup_dirs.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.self_dup_dirs.htm"});
+        @_ = keys %{$dupdirs{'THAT'}};
+        $_ = $#_ + 1;
+        print $sock "</td><td align=\"right\">$1\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.only.htm\">l00://md5sizediff.THIS.only.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.only.htm"});
