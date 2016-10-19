@@ -315,7 +315,7 @@ sub l00http_md5sizediff_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($jumper, %bymd5sum, %byname, %sizebymd5sum, $side, $sname, $files, $file, $cnt);
     my ($dummy, $size, $md5sum, $pfname, $pname, $fname, %treesize);
-    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting);
+    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting, $filter);
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
     my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
@@ -344,12 +344,18 @@ sub l00http_md5sizediff_proc {
             $thispath = $form->{'path'};
         }
     }
-    if (defined ($form->{'match'})) {
+    if (defined ($form->{'match'}) &&
+        (length($form->{'match'}) > 0)) {
         $match = $form->{'match'};
     } else {
         $match = '';
     }
-
+    if (defined ($form->{'filter'}) &&
+        (length($form->{'filter'}) > 0)) {
+        $filter = $form->{'filter'};
+    } else {
+        $filter = '.';
+    }
 
 
     # Send HTTP and HTML headers
@@ -451,6 +457,12 @@ sub l00http_md5sizediff_proc {
                             $size   =~ s/ *$//;
                             $md5sum =~ s/ *$//;
                             $pfname =~ s/ *$//;
+                            if ($filter ne '.') {
+                                # we are filtering input. Skip if matched
+                                if ($pfname !~ /$filter/) {
+                                    next;
+                                }
+                            }
                             ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
                             $fname = lc($fname);
                             $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
@@ -1105,6 +1117,7 @@ sub l00http_md5sizediff_proc {
 
     print $sock "<tr><td>\n";
     print $sock "Match: <input type=\"text\" size=\"16\" name=\"match\" value=\"$match\">\n";
+    print $sock "Input filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
