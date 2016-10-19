@@ -132,10 +132,10 @@ sub l00http_wget_proc (\%) {
                 }
                 if (($name ne '') || ($pw ne '')) {
                     ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
-#                   ($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url, "$name:$pw");
+                   #($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url, "$name:$pw");
                 } else {
                     ($hdr, $bdy) = &l00wget::wget ($url);
-#                   ($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url);
+                   #($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url);
                 }
                 if (&l00httpd::l00fwriteOpen($ctrl, 'l00://journal.txt')) {
                     &l00httpd::l00fwriteBuf($ctrl, "$journal");
@@ -146,8 +146,8 @@ sub l00http_wget_proc (\%) {
                 $moved = '';
                 foreach $_ (split("\n", $hdr)) {
                     s/\r//;
-                    if (($moved eq '') && (/^HTTP.* 301 /)) {
-                        print $sock " 301 moved, \n";
+                    if (($moved eq '') && (/^HTTP.* (30[123]) /)) {
+                        print $sock " $1 moved, \n";
                         $moved = 'moved';
                     }
                     if (($moved eq 'moved') && (/^location: +(.+)/i)) {

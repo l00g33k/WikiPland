@@ -30,15 +30,6 @@ sub l00http_scratch_proc {
         $notbare = 0;
     }
 
-    # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>scratch</title>" . $ctrl->{'htmlhead2'};
-    if ($notbare) {
-        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-        print $sock "<a href=\"#end\">Jump to end</a>. \n";
-        print $sock "Go to <a href=\"/clip.htm\">clip</a> - \n";
-        print $sock "<a href=\"/httpd.htm#ram\">RAM files</a><br>\n";
-    }
-
     if (defined ($form->{'eval'})) {
         $eval = $form->{'eval'};
     }
@@ -74,6 +65,18 @@ sub l00http_scratch_proc {
             }
         }
     }
+
+    # Send HTTP and HTML headers
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>scratch</title>" . $ctrl->{'htmlhead2'};
+    if ($notbare) {
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+        print $sock "<a href=\"#end\">Jump to end</a>. \n";
+        $tmp = &l00httpd::urlencode ($scratch);
+        print $sock "Go to <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">clip</a> - \n";
+        print $sock "<a href=\"/httpd.htm#ram\">RAM files</a><br>\n";
+    }
+
+
     $tmp = $scratch;
     if (defined ($form->{'2l00'})) {
         if ($notbare) {

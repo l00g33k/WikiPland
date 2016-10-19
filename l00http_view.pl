@@ -268,7 +268,9 @@ sub l00http_view_proc {
                                 }
                             }
 						    $tmptop = $tmpno - 20;
-						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>:$tmpln";
+						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>".
+                                " <a href=\"/view.htm?path=$pname$fname&hiliteln=$tmpno#line$tmpno\" target=\"newwin\">:</a>".
+                                "$tmpln";
 						}
 					    $tmp .= "$_\n";
                         if ($findskip >= 0) {

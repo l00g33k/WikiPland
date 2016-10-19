@@ -139,7 +139,7 @@ $ctrl{'lssize'}  = "launcher";
 $ctrl{'blogwd'}  = 64;
 $ctrl{'blogmaxln'}  = 50;
 $ctrl{'noclinav'}  = 1;
-$ctrl{'l00file'}->{'l00://ram'} = "A sample ram file.\nContent is lost when shutdown\nChange 'ram' for a separate ram file";
+$ctrl{'l00file'}->{'l00://_notes'} = "A sample ram file.\nContent is lost when shutdown\nChange 'ram' for a separate ram file";
 
 $nopwtimeout = 0;
 
@@ -508,14 +508,8 @@ if ($ctrl{'os'} eq 'win') {
 }
 
 # create a listening socket 
-$ctrl_lstn_sock = IO::Socket::INET->new (
-    LocalPort => $ctrl_port,
-    LocalAddr => $host_ip,
-    Listen => 5, 
-    ReuseAddr => $reuseflag  # Reuse => 1
-);
-if (!$ctrl_lstn_sock) {
-    $ctrl_port += 10;
+$tmp = 0;
+do {
     $ctrl_lstn_sock = IO::Socket::INET->new (
         LocalPort => $ctrl_port,
         LocalAddr => $host_ip,
@@ -523,15 +517,13 @@ if (!$ctrl_lstn_sock) {
         ReuseAddr => $reuseflag  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
-        $ctrl_port += 10;
-        $ctrl_lstn_sock = IO::Socket::INET->new (
-            LocalPort => $ctrl_port,
-            LocalAddr => $host_ip,
-            Listen => 5, 
-            ReuseAddr => #reuseflag  # Reuse => 1
-        );
+        if (++$tmp > 100) {
+            $tmp = -1;
+        } else {
+            $ctrl_port += 10;
+        }
     }
-}
+} while (!$ctrl_lstn_sock && ($tmp >= 0));
 die "Can't create socket for listening: $!" unless $ctrl_lstn_sock;
 print "ctrl_port is $ctrl_port\n";
 $ctrl{'ctrl_port_first'}  = $ctrl_port_first;
@@ -540,14 +532,8 @@ $ctrl{'ctrl_port'} = $ctrl_port;
 # load modules
 &loadmods;
 
-$cli_lstn_sock = IO::Socket::INET->new (
-    LocalPort => $cli_port,
-    LocalAddr => $host_ip,
-    Listen => 5, 
-    ReuseAddr => 0  # Reuse => 1
-);
-if (!$cli_lstn_sock) {
-    $cli_port += 10;
+$tmp = 0;
+do {
     $cli_lstn_sock = IO::Socket::INET->new (
         LocalPort => $cli_port,
         LocalAddr => $host_ip,
@@ -555,15 +541,13 @@ if (!$cli_lstn_sock) {
         ReuseAddr => 0  # Reuse => 1
     );
     if (!$cli_lstn_sock) {
-        $cli_port += 10;
-        $cli_lstn_sock = IO::Socket::INET->new (
-            LocalPort => $cli_port,
-            LocalAddr => $host_ip,
-            Listen => 5, 
-            ReuseAddr => 0  # Reuse => 1
-        );
+        if (++$tmp > 100) {
+            $tmp = -1;
+        } else {
+            $cli_port += 10;
+        }
     }
-}
+} while (!$cli_lstn_sock && ($tmp >= 0));
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
 print "ctrl_port is $ctrl_port\n";
 print "cli_port  is $cli_port\n";
@@ -1006,7 +990,7 @@ while(1) {
                 $sock->close;
                 next;
             }
-            &dlog (2, "url:: $urlparams $modcalled\n");
+            &dlog (2, "($modcalled): $urlparams\n");
             
             if ($postlen > 0) {
                 $urlparams = $httpbdy;
@@ -1682,7 +1666,7 @@ while(1) {
                     $tmp = $ctrl{'l00file'};
 
                     foreach $_ (sort keys %$tmp) {
-                        if (($_ eq 'l00://ram') ||
+                        if (($_ eq 'l00://_notes') ||
                            (defined($ctrl{'l00file'}->{$_}) &&
                             (length($ctrl{'l00file'}->{$_}) > 0))) {
                             my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
