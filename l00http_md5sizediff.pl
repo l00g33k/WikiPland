@@ -315,8 +315,8 @@ sub l00http_md5sizediff_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($jumper, %bymd5sum, %byname, %sizebymd5sum, $side, $sname, $files, $file, $cnt);
     my ($dummy, $size, $md5sum, $pfname, $pname, $fname, %treesize);
-    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting, $filter);
-    my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist);
+    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting, $filterthis, $filterthat);
+    my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist, $phase);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
     my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
 
@@ -350,11 +350,18 @@ sub l00http_md5sizediff_proc {
     } else {
         $match = '';
     }
-    if (defined ($form->{'filter'}) &&
-        (length($form->{'filter'}) > 0)) {
-        $filter = $form->{'filter'};
+
+    if (defined ($form->{'filterthis'}) &&
+        (length($form->{'filterthis'}) > 0)) {
+        $filterthis = $form->{'filterthis'};
     } else {
-        $filter = '.';
+        $filterthis = '.';
+    }
+    if (defined ($form->{'filterthat'}) &&
+        (length($form->{'filterthat'}) > 0)) {
+        $filterthat = $form->{'filterthat'};
+    } else {
+        $filterthat = '.';
     }
 
 
@@ -419,12 +426,14 @@ sub l00http_md5sizediff_proc {
         # file names only of input files
         $thisname = '';
         $thatname = '';
+        $phase = 0;
         foreach $side (($thispath, $thatpath)) {
-            if ($side eq $thispath) {
+            if ($phase == 0) {
                 $sname = 'THIS';
             } else {
                 $sname = 'THAT';
             }
+            $phase++;
             $files = 0;
             $orgdir{$sname} = '';
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname side: $side\n";
@@ -457,10 +466,19 @@ sub l00http_md5sizediff_proc {
                             $size   =~ s/ *$//;
                             $md5sum =~ s/ *$//;
                             $pfname =~ s/ *$//;
-                            if ($filter ne '.') {
-                                # we are filtering input. Skip if matched
-                                if ($pfname !~ /$filter/) {
-                                    next;
+                            if ($sname eq 'THIS') {
+                                if ($filterthis ne '.') {
+                                    # we are filtering input. Skip if matched
+                                    if ($pfname !~ /$filterthis/) {
+                                        next;
+                                    }
+                                }
+                            } else {
+                                if ($filterthat ne '.') {
+                                    # we are filtering input. Skip if matched
+                                    if ($pfname !~ /$filterthat/) {
+                                        next;
+                                    }
                                 }
                             }
                             ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
@@ -539,6 +557,8 @@ sub l00http_md5sizediff_proc {
                     $matchcnt = 0;
                     if ($#_ > 0) {
                         $matchlist = '';
+                        # count match
+                        $matchcnt = 0;
                         if ($match ne '') {
                             # find match
                             for ($ii = 0; $ii <= $#_; $ii++) {
@@ -1117,14 +1137,15 @@ sub l00http_md5sizediff_proc {
 
     print $sock "<tr><td>\n";
     print $sock "Match: <input type=\"text\" size=\"16\" name=\"match\" value=\"$match\">\n";
-    print $sock "Input filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "This:<br><textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
+    print $sock "This: (input filter: <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
+    print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "That:<br><textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thatpath</textarea>\n";
+    print $sock "That: (input filter: <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
+    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thatpath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ($ctrl->{'os'} eq 'and') {
