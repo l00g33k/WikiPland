@@ -37,13 +37,13 @@ sub l00http_screen_proc (\%) {
         } elsif (defined ($form->{'dec10'})) {
             $vol = $ctrl->{'droid'}->getScreenBrightness ();
             l00httpd::dbp($config{'desc'}, "'dec10' was $vol->{'result'} ");
-            $vol = $vol->{'result'} - 10;
+            $vol = $vol->{'result'} - 1;
             l00httpd::dbp($config{'desc'}, "new $vol\n");
             $ctrl->{'droid'}->setScreenBrightness ($vol);
         } elsif (defined ($form->{'inc10'})) {
             $vol = $ctrl->{'droid'}->getScreenBrightness ();
             l00httpd::dbp($config{'desc'}, "'inc10' was $vol->{'result'} ");
-            $vol = $vol->{'result'} + 10;
+            $vol = $vol->{'result'} + 1;
             l00httpd::dbp($config{'desc'}, "new $vol\n");
             $ctrl->{'droid'}->setScreenBrightness ($vol);
         } elsif (defined ($form->{'bright'})) {
@@ -77,8 +77,8 @@ sub l00http_screen_proc (\%) {
     print $sock "</table>\n";
     print $sock "</form><br>\n";
 
-    print $sock "<a href=\"/screen.htm?inc10=\">+</a> - \n";
-    print $sock "<a href=\"/screen.htm?dec10=\">-</a> - \n";
+    print $sock "<a href=\"/screen.htm?inc10=\">++</a> - \n";
+    print $sock "<a href=\"/screen.htm?dec10=\">--</a> - \n";
     for ($ii = 0; $ii < 255; $ii += 10) {
         print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
     }
