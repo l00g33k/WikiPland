@@ -473,12 +473,14 @@ $form->{'filter'} = 'not implemented';
     print $sock "</form><br>\n";
 
     my ($logname);
-    $logname = "m5_$ctrl->{'now_string'}\${DESC}.m5sz";
-    $logname =~ s/ /_/g;
+    $logname = "m5_\${DTSTAMP}\${DESC}.m5sz";
     print $sock "<pre>\n";
     print $sock "# md5sum computation can be accelerated by using bash commands as follow:\n";
     print $sock "cd <a href=\"/clip.htm?update=Copy+to+CB&clip=$form->{'path'}.txt\">$form->{'path'}</a>\n";
     print $sock "du -h\n";
+    $_ = $ctrl->{'now_string'};
+    s/ /_/g;
+    print $sock "DTSTAMP=$_\n";
     print $sock "OUTDIR=./\n";
     print $sock "DESC=_\n";
     print $sock "pwd > \${OUTDIR}$logname\n";

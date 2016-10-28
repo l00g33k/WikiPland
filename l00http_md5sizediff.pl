@@ -828,11 +828,13 @@ sub l00http_md5sizediff_proc {
                         #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
                         $cnt++;
                     } elsif ($mode eq 'dos') {
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
+                            sprintf ("   %03d: %s %d %s\n", $cnt, $pfname, $sizebymd5sum{$out{$pfname}}, $out{$pfname});
                         #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
                         $cnt++;
                     } else {
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= sprintf ("   %03d: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
+                            sprintf ("   %03d: %s %d %s\n", $cnt, $pfname, $sizebymd5sum{$out{$pfname}}, $out{$pfname});
                         #printf $sock ("   %03d: $pfname $out{$pfname}\n", $cnt);
                         $cnt++;
                     }
