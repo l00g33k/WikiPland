@@ -4,7 +4,17 @@ use Cwd;
 use strict;
 use warnings;
 
+my $hiresclock = 1;
+eval "use Time::HiRes qw( time )";
+if ( $@ ) {
+     $hiresclock = 0;
+}
+my ($hiresclockmsec);
+$hiresclockmsec = 0;
+
 my ($plpath);
+
+
 $plpath = cwd();
 $plpath =~ s/\r//g;
 $plpath =~ s/\n//g;
@@ -658,6 +668,9 @@ while(1) {
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
+        if ( $hiresclock && ($debug >= 3)) {
+            $hiresclockmsec = Time::HiRes::time();
+        }
         print "curr_socket = $curr_socket\n", if ($debug >= 5);
         if(($curr_socket == $ctrl_lstn_sock) ||
            ($curr_socket == $cli_lstn_sock)) {
@@ -688,6 +701,11 @@ while(1) {
                 }
             } else {
                 $ishost = 0;
+            }
+            if ( $hiresclock && ($debug >= 3)) {
+                $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
+                l00httpd::dbp("l00httpd", sprintf("%8.3f ms Socket connected --------------------\n", $hiresclockmsec * 1000));
+                $hiresclockmsec = Time::HiRes::time();
             }
             $ctrl{'ishost'} = $ishost;
             if ($ctrl{'os'} eq 'and') {
@@ -764,6 +782,11 @@ while(1) {
                 $connected{$client_ip} = 1;
             }
             $ttlconns++;
+            if ( $hiresclock && ($debug >= 3)) {
+                $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
+                l00httpd::dbp("l00httpd", sprintf("%8.3f ms Host identified\n", $hiresclockmsec * 1000));
+                $hiresclockmsec = Time::HiRes::time();
+            }
             if (($ctrl{'ipfil'} eq "yes") &&
                 (!defined ($ipallowed{$client_ip}))) {
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
@@ -875,6 +898,11 @@ while(1) {
                 # GET
                 $httphdr = $httpbuf;
                 print "GET?\n", if ($debug >= 4);
+            }
+            if ( $hiresclock && ($debug >= 3)) {
+                $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
+                l00httpd::dbp("l00httpd", sprintf("%8.3f ms HTTP requested data received\n", $hiresclockmsec * 1000));
+                $hiresclockmsec = Time::HiRes::time();
             }
             print "httpsiz $httpsiz httphdz $httphdz\n", if ($debug >= 4);
 
@@ -1097,6 +1125,11 @@ while(1) {
                 }
             }
 
+            if ( $hiresclock && ($debug >= 3)) {
+                $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
+                l00httpd::dbp("l00httpd", sprintf("%8.3f ms Ready to process request\n", $hiresclockmsec * 1000));
+                $hiresclockmsec = Time::HiRes::time();
+            }
             # handle URL
             print "Start handling URL\n", if ($debug >= 5);
             if ($modcalled eq "restart") {
@@ -1200,6 +1233,11 @@ while(1) {
                 }
 
                 # invoke module
+                if ( $hiresclock && ($debug >= 3)) {
+                    $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
+                    l00httpd::dbp("l00httpd", sprintf("%8.3f ms Ready to invoke module\n", $hiresclockmsec * 1000));
+                    $hiresclockmsec = Time::HiRes::time();
+                }
                 if (defined ($modsinfo{"$modcalled:fn:proc"})) {
                     $subname = $modsinfo{"$modcalled:fn:proc"};
                     $ctrl{'msglog'} = "";
@@ -1700,6 +1738,13 @@ while(1) {
                 # send HTML footer and ends
                 print $sock $ctrl{'htmlfoot'};
                 print "Completed host control page\n", if ($debug >= 5);
+            }
+            if ( $hiresclock && ($debug >= 3)) {
+                if ($hiresclockmsec > 0) {
+                    $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
+                    l00httpd::dbp("l00httpd", sprintf("%8.3f ms Request serviced\n", $hiresclockmsec * 1000));
+                }
+                $hiresclockmsec = Time::HiRes::time();
             }
             $sock->close;
         }

@@ -352,6 +352,7 @@ sub l00http_cron_perio {
             l00httpd::dbp($config{'desc'}, "Now $_ is later than next start time $starttime\n"), if ($ctrl->{'debug'} >= 4);
 
             # do task
+            $eventtime = 0x7fffffff;
             if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
 #               while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $crontab = &l00httpd::l00freadAll($ctrl);
