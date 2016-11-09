@@ -173,7 +173,11 @@ sub l00http_mobizoom_mobilize {
     }
 
 
-    if (!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) {
+    if ((!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) &&
+        (($wget =~ /<font/im))) {
+        # this is for backward compatibility
+        # content has no <html> or </html> tag
+        # and doesn't have <font>, i.e. not plain text
         &l00httpd::dbp($config{'desc'}, "Will not mobilize page\n"), 
                                         if ($ctrl->{'debug'} >= 3);
         # make paragraph jump table
