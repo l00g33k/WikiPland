@@ -10,7 +10,7 @@ my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
 my ($record1, $displen);
 $record1 = '^\d{8,8} \d{6,6} ';
-$displen = 30;
+$displen = 50;
 
 
 sub l00http_recedit_desc {
