@@ -238,9 +238,12 @@ sub l00http_recedit_proc (\%) {
                     next;
                 }
                 if (/$record1/) {
+                    # found start of new record
                     if ($found) {
+                        # record before the current record was a hit, print
                         print $sock "    <tr>\n";
                         if (defined ($form->{'reminder'})) {
+                            # print reminder specific checkboxes
                             print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
                             print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
                             print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
@@ -248,7 +251,6 @@ sub l00http_recedit_proc (\%) {
                         } else {
                             print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
                         }
-#                       print $sock "        <td><pre>";
                         print $sock "        <td><font face=\"Courier New\">";
                         $lf = '';
                         foreach $line (split("\n", $obuf)) {
@@ -326,7 +328,6 @@ sub l00http_recedit_proc (\%) {
                             print $sock "$lf$line";
                             $lf = "<br>\n";
                         }
-#                       print $sock "</pre></td>\n";
                         print $sock "</font></td>\n";
                         print $sock "    </tr>\n";
                         $id++;
@@ -335,7 +336,6 @@ sub l00http_recedit_proc (\%) {
                     $obuf = '';
                 }
                 if ($found) {
-                    #$obuf .= substr ($_, 0, 40);
                     $obuf .= $_;
                 }
             }
@@ -349,7 +349,6 @@ sub l00http_recedit_proc (\%) {
                 } else {
                     print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
                 }
-#               print $sock "        <td><pre>";
                 print $sock "        <td><font face=\"Courier New\">";
                 $lf = '';
                 foreach $line (split("\n", $obuf)) {
@@ -373,8 +372,7 @@ sub l00http_recedit_proc (\%) {
                         $disp = substr($line,0,$displen);
                         $disp =~ s/ /&nbsp;/g;
                         $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                    }
-                    if (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
+                    } elsif (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
                         # cal specific
                         $line = $tmp;
                         if (length ($line) < 1) {
@@ -428,7 +426,6 @@ sub l00http_recedit_proc (\%) {
                     print $sock "$lf$line";
                     $lf = "<br>\n";
                 }
-#               print $sock "</pre></td>\n";
                 print $sock "</font></td>\n";
                 print $sock "    </tr>\n";
             }
