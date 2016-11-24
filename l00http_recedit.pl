@@ -13,6 +13,102 @@ $record1 = '^\d{8,8} \d{6,6} ';
 $displen = 50;
 
 
+sub l00http_recedit_output_row {
+    my ($sock, $form, $line, $id, $obuf) = @_;
+    my ($tmp, $disp, $lf, $leading);
+
+    # record before the current record was a hit, print
+    print $sock "    <tr>\n";
+    if (defined ($form->{'reminder'})) {
+        # print reminder specific checkboxes
+        print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
+        print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
+        print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
+        $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
+    } else {
+        print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
+    }
+    print $sock "        <td><font face=\"Courier New\">";
+    $lf = '';
+    foreach $line (split("\n", $obuf)) {
+        $line =~ s/\r//;
+        $line =~ s/\n//;
+        # notify specific
+        if ($line =~ /^MSG:(.+)/) {
+            # make link to copy to clipboard
+            $line = $1;
+            if (length ($line) < 1) {
+                $line = '&nbsp;';
+            }
+            $tmp = $1;
+            $tmp =~ s/ /+/g;
+            $tmp =~ s/:/%3A/g;
+            $tmp =~ s/&/%26/g;
+            $tmp =~ s/=/%3D/g;
+            $tmp =~ s/"/%22/g;
+            $tmp =~ s/\//%2F/g;
+            $tmp =~ s/\|/%7C/g;
+            $disp = substr($line,0,$displen);
+            $disp =~ s/ /&nbsp;/g;
+            $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
+        } elsif (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
+            # cal specific
+            $line = $tmp;
+            if (length ($line) < 1) {
+                $line = '&nbsp;';
+            }
+            $tmp =~ s/ /+/g;
+            $tmp =~ s/:/%3A/g;
+            $tmp =~ s/&/%26/g;
+            $tmp =~ s/=/%3D/g;
+            $tmp =~ s/"/%22/g;
+            $tmp =~ s/\//%2F/g;
+            $tmp =~ s/\|/%7C/g;
+            $disp = substr($line,0,$displen);
+            $disp =~ s/ /&nbsp;/g;
+            $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
+        } elsif ($record1 eq '.') {
+            # drop leading date/time
+            $line =~ s/^\d{8,8} \d{6,6} //;
+            if (length ($line) < 1) {
+                $line = '&nbsp;';
+            }
+            # match any specific
+            $tmp = $line;
+            $tmp =~ s/ /+/g;
+            $tmp =~ s/:/%3A/g;
+            $tmp =~ s/&/%26/g;
+            $tmp =~ s/=/%3D/g;
+            $tmp =~ s/"/%22/g;
+            $tmp =~ s/\//%2F/g;
+            $tmp =~ s/\|/%7C/g;
+            $disp = substr($line,0,$displen);
+            $disp =~ s/ /&nbsp;/g;
+            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
+        } else {
+            if (length ($line) < 1) {
+                $line = '&nbsp;';
+            }
+            # match any specific
+            $tmp = $line;
+            $tmp =~ s/ /+/g;
+            $tmp =~ s/:/%3A/g;
+            $tmp =~ s/&/%26/g;
+            $tmp =~ s/=/%3D/g;
+            $tmp =~ s/"/%22/g;
+            $tmp =~ s/\//%2F/g;
+            $tmp =~ s/\|/%7C/g;
+            $disp = substr($line,0,$displen);
+            $disp =~ s/ /&nbsp;/g;
+            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
+        }
+        print $sock "$lf$line";
+        $lf = "<br>\n";
+    }
+    print $sock "</font></td>\n";
+    print $sock "    </tr>\n";
+}
+
 sub l00http_recedit_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -26,7 +122,7 @@ sub l00http_recedit_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted);
-    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $leading, $tmp2, $disp, $lf);
+    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -238,199 +334,20 @@ sub l00http_recedit_proc (\%) {
                     next;
                 }
                 if (/$record1/) {
+                    # found start of new record
                     if ($found) {
-                        print $sock "    <tr>\n";
-                        if (defined ($form->{'reminder'})) {
-                            print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
-                            print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
-                            print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
-                            $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
-                        } else {
-                            print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
-                        }
-#                       print $sock "        <td><pre>";
-                        print $sock "        <td><font face=\"Courier New\">";
-                        $lf = '';
-                        foreach $line (split("\n", $obuf)) {
-                            $line =~ s/\r//;
-                            $line =~ s/\n//;
-                            # notify specific
-                            if ($line =~ /^MSG:(.+)/) {
-                                # make link to copy to clipboard
-                                $line = $1;
-                                if (length ($line) < 1) {
-                                    $line = '&nbsp;';
-                                }
-                                $tmp = $1;
-                                $tmp =~ s/ /+/g;
-                                $tmp =~ s/:/%3A/g;
-                                $tmp =~ s/&/%26/g;
-                                $tmp =~ s/=/%3D/g;
-                                $tmp =~ s/"/%22/g;
-                                $tmp =~ s/\//%2F/g;
-                                $tmp =~ s/\|/%7C/g;
-                                $disp = substr($line,0,$displen);
-                                $disp =~ s/ /&nbsp;/g;
-                                $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                            } elsif (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
-                                # cal specific
-                                $line = $tmp;
-                                if (length ($line) < 1) {
-                                    $line = '&nbsp;';
-                                }
-                                $tmp =~ s/ /+/g;
-                                $tmp =~ s/:/%3A/g;
-                                $tmp =~ s/&/%26/g;
-                                $tmp =~ s/=/%3D/g;
-                                $tmp =~ s/"/%22/g;
-                                $tmp =~ s/\//%2F/g;
-                                $tmp =~ s/\|/%7C/g;
-                                $disp = substr($line,0,$displen);
-                                $disp =~ s/ /&nbsp;/g;
-                                $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                            } elsif ($record1 eq '.') {
-                                # drop leading date/time
-                                $line =~ s/^\d{8,8} \d{6,6} //;
-                                if (length ($line) < 1) {
-                                    $line = '&nbsp;';
-                                }
-                                # match any specific
-                                $tmp = $line;
-                                $tmp =~ s/ /+/g;
-                                $tmp =~ s/:/%3A/g;
-                                $tmp =~ s/&/%26/g;
-                                $tmp =~ s/=/%3D/g;
-                                $tmp =~ s/"/%22/g;
-                                $tmp =~ s/\//%2F/g;
-                                $tmp =~ s/\|/%7C/g;
-                                $disp = substr($line,0,$displen);
-                                $disp =~ s/ /&nbsp;/g;
-                                $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                            } else {
-                                if (length ($line) < 1) {
-                                    $line = '&nbsp;';
-                                }
-                                # match any specific
-                                $tmp = $line;
-                                $tmp =~ s/ /+/g;
-                                $tmp =~ s/:/%3A/g;
-                                $tmp =~ s/&/%26/g;
-                                $tmp =~ s/=/%3D/g;
-                                $tmp =~ s/"/%22/g;
-                                $tmp =~ s/\//%2F/g;
-                                $tmp =~ s/\|/%7C/g;
-                                $disp = substr($line,0,$displen);
-                                $disp =~ s/ /&nbsp;/g;
-                                $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                            }
-                            print $sock "$lf$line";
-                            $lf = "<br>\n";
-                        }
-#                       print $sock "</pre></td>\n";
-                        print $sock "</font></td>\n";
-                        print $sock "    </tr>\n";
+                        &l00http_recedit_output_row($sock, $form, $line, $id, $obuf);
                         $id++;
                     }
                     $found = 1;
                     $obuf = '';
                 }
                 if ($found) {
-                    #$obuf .= substr ($_, 0, 40);
                     $obuf .= $_;
                 }
             }
             if ($found) {
-                print $sock "    <tr>\n";
-                if (defined ($form->{'reminder'})) {
-                    print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
-                    print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
-                    print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
-                    $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
-                } else {
-                    print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
-                }
-#               print $sock "        <td><pre>";
-                print $sock "        <td><font face=\"Courier New\">";
-                $lf = '';
-                foreach $line (split("\n", $obuf)) {
-                    $line =~ s/\r//;
-                    $line =~ s/\n//;
-                    # notify specific
-                    if ($line =~ /^MSG:(.+)/) {
-                        # make link to copy to clipboard
-                        $line = $1;
-                        if (length ($line) < 1) {
-                            $line = '&nbsp;';
-                        }
-                        $tmp = $1;
-                        $tmp =~ s/ /+/g;
-                        $tmp =~ s/:/%3A/g;
-                        $tmp =~ s/&/%26/g;
-                        $tmp =~ s/=/%3D/g;
-                        $tmp =~ s/"/%22/g;
-                        $tmp =~ s/\//%2F/g;
-                        $tmp =~ s/\|/%7C/g;
-                        $disp = substr($line,0,$displen);
-                        $disp =~ s/ /&nbsp;/g;
-                        $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                    }
-                    if (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
-                        # cal specific
-                        $line = $tmp;
-                        if (length ($line) < 1) {
-                            $line = '&nbsp;';
-                        }
-                        $tmp =~ s/ /+/g;
-                        $tmp =~ s/:/%3A/g;
-                        $tmp =~ s/&/%26/g;
-                        $tmp =~ s/=/%3D/g;
-                        $tmp =~ s/"/%22/g;
-                        $tmp =~ s/\//%2F/g;
-                        $tmp =~ s/\|/%7C/g;
-                        $disp = substr($line,0,$displen);
-                        $disp =~ s/ /&nbsp;/g;
-                        $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                    } elsif ($record1 eq '.') {
-                        # drop leading date/time
-                        $line =~ s/^\d{8,8} \d{6,6} //;
-                        if (length ($line) < 1) {
-                            $line = '&nbsp;';
-                        }
-                        # match any specific
-                        $tmp = $line;
-                        $tmp =~ s/ /+/g;
-                        $tmp =~ s/:/%3A/g;
-                        $tmp =~ s/&/%26/g;
-                        $tmp =~ s/=/%3D/g;
-                        $tmp =~ s/"/%22/g;
-                        $tmp =~ s/\//%2F/g;
-                        $tmp =~ s/\|/%7C/g;
-                        $disp = substr($line,0,$displen);
-                        $disp =~ s/ /&nbsp;/g;
-                        $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                    } else {
-                        if (length ($line) < 1) {
-                            $line = '&nbsp;';
-                        }
-                        # match any specific
-                        $tmp = $line;
-                        $tmp =~ s/ /+/g;
-                        $tmp =~ s/:/%3A/g;
-                        $tmp =~ s/&/%26/g;
-                        $tmp =~ s/=/%3D/g;
-                        $tmp =~ s/"/%22/g;
-                        $tmp =~ s/\//%2F/g;
-                        $tmp =~ s/\|/%7C/g;
-                        $disp = substr($line,0,$displen);
-                        $disp =~ s/ /&nbsp;/g;
-                        $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
-                    }
-                    print $sock "$lf$line";
-                    $lf = "<br>\n";
-                }
-#               print $sock "</pre></td>\n";
-                print $sock "</font></td>\n";
-                print $sock "    </tr>\n";
+                &l00http_recedit_output_row($sock, $form, $line, $id, $obuf);
             }
             close (IN);
         }
