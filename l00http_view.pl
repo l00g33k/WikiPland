@@ -362,7 +362,8 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
-                        print $sock sprintf ("\" target=\"newclip\">%04d</a> : ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
+                        print $sock sprintf ("\" target=\"newclip\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$lineno&lineno=on&skip=%d&maxln=%d#line%d\">:</a> ", $lineno, $lineno - 20, 1000, $lineno) 
+                            . "$_</font>\n";
                     } else {
                         if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
                             if (/$form->{'hilitetext'}/) {
