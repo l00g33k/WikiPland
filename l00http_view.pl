@@ -207,7 +207,8 @@ sub l00http_view_proc {
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>\n";
+        print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>.\n";
+        print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$form->{'path'}&blklineno=$hilite\">single line edit mode</a>.\n";
     }
 
 
