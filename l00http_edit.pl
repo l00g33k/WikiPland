@@ -30,7 +30,7 @@ sub l00http_edit_proc2 {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf);
+    my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf, $st, $en);
 	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip, $diffurl);
 
     $diffurl  = '';
@@ -486,7 +486,29 @@ sub l00http_edit_proc2 {
     if ($blklineno > 0) {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
     }
-    foreach $line (@alllines) {
+    $st = 0;
+    $en = $#alllines;
+    # handling big file
+    if ($en > 5000) {
+        # arbitrary partial file handling for files longer than 5000 lines
+        if ($blklineno > 0) {
+            # block editing
+            $st = $blklineno - 20;
+            if ($st < 0) {
+                $st = 0;
+            }
+            $en = $blklineno + $contextln + 2000;
+            if ($en > $#alllines) {
+                $en = $#alllines;
+            }
+        } else {
+            # not block editing
+            # just list first 5000 lines
+            $en = 5000;
+        }
+    }
+    for ($lineno = $st; $lineno <= $en; $lineno++) {
+        $line = $alllines[$lineno];
         if ($blklineno != 0) {
             if (($lineno >= $blklineno) && ($lineno < ($blklineno + $contextln))) {
                 # also send selected lines to ram file
@@ -525,8 +547,13 @@ sub l00http_edit_proc2 {
                 print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>-%s: ", $lineno, $lineclip) . "$line\n";
             }
         }
-        $lineno++;
     }
+    if ($en < $#alllines) {
+        $en++;
+        $tmp = $#alllines + 1;
+        print $sock "Only $en lines of the total $tmp lines are displayed\n";
+    }
+
     if ($blklineno > 0) {
         &l00httpd::l00fwriteClose($ctrl);
     }
