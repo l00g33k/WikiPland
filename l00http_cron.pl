@@ -354,7 +354,6 @@ sub l00http_cron_perio {
             # do task
             $eventtime = 0x7fffffff;
             if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
-#               while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $crontab = &l00httpd::l00freadAll($ctrl);
                 foreach $_ (split("\n", $crontab)) {
                     s/\n//;
@@ -370,7 +369,7 @@ sub l00http_cron_perio {
                     if (/^#/) {
                         next;
                     }
-                    if (/^TIME:(\d+):/) {
+                    if (/^TIME:([.0-9]+):/) {
                         $eventtime = $1;
                     }
                     if (/^CMD:(.+)/) {
