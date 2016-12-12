@@ -127,7 +127,7 @@ sub wikihtml {
     $bookmarkkeyfound = 0;
     if (($flags & 1) == 0) {
         # not specified for BOOKMARK
-        # search %BOOKMARK% in first 4000 lines
+        # search %BOOKMARK% in first 8000 lines
         $tmp = 0;
         foreach $_  (split ("\n", $inbuf)) {
             # Erase tags for normal processing
@@ -136,7 +136,7 @@ sub wikihtml {
                 $bookmarkkeyfound = 1;
                 last;
             }
-            if ($tmp++ > 4000) {
+            if ($tmp++ > 8000) {
                 last;
             }
         }
@@ -569,6 +569,40 @@ if(1){
             $_ = '';
             next;
         }
+#gc11 - format %TXTDOPL.*%
+        # Print %TXTDOPL.*% in <pre>
+        if (/^\%TXTDOPL.*\%/) {
+            $tbuf = "$_\n";
+            $ahead = $cacheidx + 1;
+            # look forward
+            $loop = 1;
+            while ($loop) {
+                $tmp = $inputcache[$ahead];
+                if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
+                    $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
+                }
+                $tmp =~ s/&nbsp;/ /g;
+                $tbuf .= "$tmp\n";
+                if ($tmp =~ /^\%TXTDOPL.*\%/) {
+                    $loop = 0;
+                } else {
+                    $ahead++;
+                    $mdChanged2Tw = 1;
+                }
+            }
+            $tbuf =~ s/</&lt;/g;
+            $tbuf =~ s/>/&gt;/g;
+            $tbuf =~ s/&/&amp;/g;
+            $tbuf = "<pre>$tbuf</pre>";
+            $cacheidx = $ahead;
+            $oubuf .= $tbuf;
+            $_ = '';
+            next;
+        }
+#gc11 - format %TXTDOPL.*%
+
+
+
 		# blank line, add <p> or not
         if ($_ eq '') {
             if ($mode0unknown1twiki2markdown == 2) {
