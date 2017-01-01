@@ -416,7 +416,7 @@ sub l00http_mobizoom_mobilize {
         }
         $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
 
-
+        $_ = $title;
         $wget = "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
     }
 
@@ -461,6 +461,7 @@ sub l00http_mobizoom_part1 {
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"160\">160% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"176\">176% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"194\">194% ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\">240% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"300\">300% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400% ";
     print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500% ";
@@ -489,6 +490,9 @@ sub l00http_mobizoom_part1 {
     $tmp = &l00httpd::urlencode ("http://googleweblight.com/?lite_url=$url");
     print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\" target=\"newgwl\">Google web light</a>\n";
     print $sock " -- <a href=\"/ls.htm?path=l00://journal.txt\" target=\"newwin\">l00://journal.txt</a>\n";
+    $title =~ s/<\/*title>//g;
+    $tmp = &l00httpd::urlencode ($title);
+    print $sock "-- Title: <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">$title</a>";
     print $sock "<hr>\n";
 }
 
