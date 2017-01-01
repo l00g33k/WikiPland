@@ -63,14 +63,14 @@ sub l00http_txtdopl_proc (\%) {
 
     if ((defined ($form->{'path'})) && 
         (defined ($form->{'run'}) || defined ($form->{'runbare'}))) {
-        if (open (IN, "<$form->{'path'}")) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             $dopl = "$ctrl->{'plpath'}.l00_txtdopl.tmp";
             open (OU, ">$dopl");
             print OU "#$dopl: extracted from: $form->{'path'}\n";
             $dolncnt = -1;
             $oldfile = '';
             print "txtdopl: sel=>$sel<\n", if ($ctrl->{'debug'} >= 3);
-            while (<IN>) {
+            while ($_= &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 $oldfile .= $_;
                 if (/^\%TXTDOPL$sel\%/) {
@@ -86,7 +86,7 @@ sub l00http_txtdopl_proc (\%) {
                     }
                 } elsif (/^\%TXTDOPL.*\%/) {
                     # %TXTDOPLother% not selected
-                    while (<IN>) {
+                    while ($_= &l00httpd::l00freadLine($ctrl)) {
                         s/\r//;
                         $oldfile .= $_;
                         # skip not selected do lines
@@ -174,20 +174,6 @@ sub l00http_txtdopl_proc (\%) {
                 $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
                 close (TXTDOPLIN);
                 if ($newfile ne $oldfile) {
-#print $sock "<hr><hr><hr>\n";
-#print $sock "newfile is ".length($newfile) . " bytes\n";
-#print $sock "<hr><hr><hr><pre>";
-#foreach $_ (split("\n", $newfile)) {
-#    print $sock ">$_<\n";
-#}
-#print $sock "<hr><hr><hr>\n\n";
-#print $sock "oldfile is ".length($oldfile) . " bytes\n";
-#print $sock "<hr><hr><hr><pre>";
-#foreach $_ (split("\n", $oldfile)) {
-#    print $sock ">$_<\n";
-#}
-#print $sock "</pre><hr><hr><hr>\n\n";
-
                     # write new file only if changed
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
                     open (OU, ">$form->{'path'}");
@@ -200,9 +186,9 @@ sub l00http_txtdopl_proc (\%) {
     }
 
     if ((defined ($form->{'run'})) && (defined ($form->{'path'}))) {
-        if (open (IN, "<$form->{'path'}")) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             print $sock "<hr><pre>\n";
-            while (<IN>) {
+            while ($_= &l00httpd::l00freadLine($ctrl)) {
                 print $sock "$_";
             }
             print $sock "</pre>\n";
