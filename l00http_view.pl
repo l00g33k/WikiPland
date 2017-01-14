@@ -485,8 +485,22 @@ sub l00http_view_proc {
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a> - \n";
-	print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&path=$form->{'path'}\">Find in this file</a>\n";
-    print $sock "<p>Send $form->{'path'} to launcher\n";
+    print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&path=$form->{'path'}\">Find in this file</a>\n";
+
+    print $sock "<p>Jump to line: ";
+    print $sock "<a href=\"#top\">top</a> - \n";
+    $tmp = 200;
+    $tmpln = $skip + $tmp - 1;
+    $tmpln -= $tmpln % $tmp;
+    $tmpln++;
+    $tmptop = $skip + $maxln;
+    if ($tmptop > $lineno) {
+        $tmptop = $lineno;
+    }
+    while ($tmpln < $tmptop) {
+        print $sock "<a href=\"#line$tmpln\">$tmpln</a> - \n";
+        $tmpln += $tmp;
+    }
 
 
     # send HTML footer and ends
