@@ -31,7 +31,7 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf, $st, $en);
-	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip, $diffurl);
+	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip, $diffurl, $lineno1);
 
     $diffurl  = '';
 
@@ -536,15 +536,16 @@ sub l00http_edit_proc2 {
         $line =~ s/\n//g;
         $line =~ s/</&lt;/g;
         $line =~ s/>/&gt;/g;
+        $lineno1 = $lineno + 1;
         if ($blklineno == 0) {
-            print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>-%s: ", $lineno, $lineclip) . "$line\n";
+            print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno1\">%04d</a>-%s: ", $lineno1, $lineclip) . "$line\n";
         } else {
-            if (($lineno >= $blklineno) && ($lineno < ($blklineno + $contextln))) {
+            if (($lineno1 >= $blklineno) && ($lineno1 < ($blklineno + $contextln))) {
                 # selected lines
                 print $sock sprintf ("<font style=\"color:black;background-color:lime\">".
-                    "<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a></font>-%s: ", $lineno, $lineclip) . "$line\n";
+                    "<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno1\">%04d</a></font>-%s: ", $lineno1, $lineclip) . "$line\n";
             } else {
-                print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno\">%04d</a>-%s: ", $lineno, $lineclip) . "$line\n";
+                print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno1\">%04d</a>-%s: ", $lineno1, $lineclip) . "$line\n";
             }
         }
     }
