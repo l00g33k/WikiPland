@@ -76,7 +76,7 @@ sub l00http_clip_proc {
     print $sock "<a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>.<p>\n";
 
     print $sock "<p>\n";
-    print $sock &l00wikihtml::wikihtml ($ctrl, "", $clip."<p><p>", 0);
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $clip." <p><p>", 0);
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
