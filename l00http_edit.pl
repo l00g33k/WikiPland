@@ -351,7 +351,6 @@ sub l00http_edit_proc2 {
     } else{
         print $sock "<textarea name=\"buffer\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$buffer</textarea>\n";
     }
-    print $sock "<p>$diffurl\n";
 
     if ($blklineno > 0) {
         print $sock "In block editing mode: editing line ", 
@@ -360,7 +359,7 @@ sub l00http_edit_proc2 {
         print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
 
     }
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
     print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
@@ -425,6 +424,8 @@ sub l00http_edit_proc2 {
 
     print $sock "</table><br>\n";
     print $sock "</form>\n";
+
+    print $sock "<p>$diffurl\n";
 
 
     print $sock "<form action=\"/ls.htm\" method=\"get\">\n";

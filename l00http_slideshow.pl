@@ -145,12 +145,12 @@ sub l00http_slideshow_proc {
                 }
             }
         }
-        print $sock "<a href=\"/slideshow.htm?path=$last\">Last</a> \n";
-        print $sock "<a href=\"/slideshow.htm?path=$next\">Next</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
 
         print $sock $outbuf;
-        print $sock "<a href=\"/slideshow.htm?path=$last\">Last</a> \n";
-        print $sock "<a href=\"/slideshow.htm?path=$next\">Next</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
     }
 
     print $sock "<p>\n";
