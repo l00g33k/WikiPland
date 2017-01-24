@@ -278,8 +278,7 @@ sub l00http_mobizoom_mobilize {
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
         $wget =~ s/<h(\d).*?>/<\/span><h$1>/sg;
         $wget =~ s/<\/h(\d).*?>/<\/h$1><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<blockquote>/<\/span><blockquote><span style="font-size : $zoom%;">/sg;
-#       $wget =~ s/<blockquote>/<\/span><blockquote>/sg;
+        $wget =~ s/<blockquote(.*?)>/<\/span><blockquote><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<\/blockquote>/<\/span><\/blockquote><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<table.*?>/<\/span><table><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<\/table.*?>/<\/span><\/table><span style="font-size : $zoom%;">/sg;
