@@ -15,12 +15,13 @@ sub l00http_do_desc {
     "do: Perl 'do' the destination file";
 }
 
-my ($arg1, $arg2, $arg3, $doplpath, $doplpathset);
+my ($arg1, $arg2, $arg3, $doplpath, $doplpathset, $hide);
 $arg1 = '';
 $arg2 = '';
 $arg3 = '';
 $doplpath = '';
 $doplpathset = 0;
+$hide = 'unchecked';
 
 sub l00http_do_proc {
     my ($main);
@@ -53,6 +54,13 @@ sub l00http_do_proc {
     }
     if (defined ($form->{'arg3'})) {
         $arg3 = $form->{'arg3'};
+    }
+    $hide = 'unchecked';
+    if (defined ($form->{'hide'})) {
+        if ($form->{'hide'} eq 'on') {
+            $hide = 'checked';
+            $notbare = 0;
+        }
     }
 
     # push args
@@ -143,7 +151,8 @@ sub l00http_do_proc {
         print $sock "<form action=\"/do.htm\" method=\"get\">\n";
         print $sock "<input type=\"submit\" name=\"do\" value=\"Do more\">\n";
         print $sock "Path:<input type=\"text\" name=\"path\" size=\"6\" value=\"$mypath\"> \n";
-        print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec<br>\n";
+        print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec.\n";
+        print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide framework<br>\n";
         print $sock "Arg1: <input type=\"text\" name=\"arg1\" size=\"12\" value=\"$arg1\"> \n";
         print $sock "Arg2: <input type=\"text\" name=\"arg2\" size=\"12\" value=\"$arg2\"> \n";
         print $sock "Arg3: <input type=\"text\" name=\"arg3\" size=\"12\" value=\"$arg3\"> \n";
