@@ -193,7 +193,7 @@ if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
 $out .= "Found URL:<br><a href=\"$url\">$url</a><p><hr>Fetch it:<br>\n";
 
 # Fetch first URL
-($hdr, $bdy) = &l00wget::wget ($url);
+($hdr, $bdy) = &l00wget::wget ($ctrl, $url);
 &l00httpd::l00fwriteOpen($ctrl, 'l00://pod1');
 &l00httpd::l00fwriteBuf($ctrl, "$hdr\n\n$bdy");
 &l00httpd::l00fwriteClose($ctrl);
@@ -232,7 +232,7 @@ if (defined($bdy)) {
             $podname = $1;
             $out .= "podname: $1<p>\n";
         }
-        ($hdr, $bdy) = &l00wget::wget ($url);
+        ($hdr, $bdy) = &l00wget::wget ($ctrl, $url);
         &l00httpd::l00fwriteOpen($ctrl, 'l00://pod2');
         &l00httpd::l00fwriteBuf($ctrl, "$hdr\n\n$bdy");
         &l00httpd::l00fwriteClose($ctrl);
@@ -249,7 +249,7 @@ if (defined($bdy)) {
                 $out .= "<p>fname $fname<p>\n";
                 $out .= "mp3: $url<p>\n";
                 $out .= "mp3:<br><a href=\"$url\">$url</a><p>\n";
-                ($hdr, $bdy) = &l00wget::wget ($url);
+                ($hdr, $bdy) = &l00wget::wget ($ctrl, $url);
                 if (defined($bdy)) {
                     $out .= "hdr " . length($hdr) . " bdy " . length($bdy) . " $fname<p>\n";
                     if (open (OU, ">$fname")) {

@@ -48,6 +48,8 @@ sub wgetfollow2 {
         }
         $wgetjournal = '';
         if ($url =~ /https:\/\//) {
+            #rwgetshell^http://127.0.0.1:30443/shell.htm?exec=Exec&buffer=wget+-O+c%3A%2Fx%2Fram%2Frwget.htm+
+            #rwgetfetch^http://127.0.0.1:30443/ls.htm?path=c:/x/ram/rwget.htm&raw=on
             if (defined($ctrl->{'rwgetshell'}) &&
                 defined($ctrl->{'rwgetfetch'})) {
                 $wgetjournal .= "\n";
@@ -64,13 +66,13 @@ $rwgeturl =~ s/=/%3D/g;
 $rwgeturl =~ s/\?/%3F/g;
                 $rwgeturl = "$ctrl->{'rwgetshell'}$rwgeturl";
                 $wgetjournal .= "rwgetshell: <a href=\"$rwgeturl\">$rwgeturl</a>\n";
-                ($hdr, $bdy) = &l00wget::wget ($rwgeturl, undef, $opentimeout, $readtimeout, $debug);
+                ($hdr, $bdy) = &l00wget::wget ($ctrl, $rwgeturl, undef, $opentimeout, $readtimeout, $debug);
                 $wgetjournal .= sprintf("rwgetshell: HDR (%d B), BDY (%d B)\n", 
                     length($hdr), length($bdy));
                 # fetch rwget file
                 $rwgeturl = $ctrl->{'rwgetfetch'};
                 $wgetjournal .= "rwgetfetch: <a href=\"$rwgeturl\">$rwgeturl</a>\n";
-                ($hdr, $bdy) = &l00wget::wget ($rwgeturl, undef, $opentimeout, $readtimeout, $debug);
+                ($hdr, $bdy) = &l00wget::wget ($ctrl, $rwgeturl, undef, $opentimeout, $readtimeout, $debug);
                 $wgetjournal .= sprintf("rwgetfetch: HDR (%d B), BDY (%d B)\n", 
                     length($hdr), length($bdy));
             } else {
@@ -80,7 +82,7 @@ $rwgeturl =~ s/\?/%3F/g;
                 last;
             }
         } else {
-($hdr, $bdy) = &l00wget::wget ($url, $nmpw, $opentimeout, $readtimeout, $debug);
+($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
         }
         $journal .= sprintf("PASS #%d: HDR (%d B), BDY (%d B)\nURL: %s\n", 
             $followmoves, length($hdr), length($bdy), $url);

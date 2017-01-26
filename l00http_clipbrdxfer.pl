@@ -85,9 +85,9 @@ sub l00http_clipbrdxfer_proc (\%) {
             #print $sock "<br>Fetching '$geturl'<br>\n";
 
             if (($name ne '') || ($pw ne '')) {
-                ($hdr, $bdy) = &l00wget::wget ($geturl, "$name:$pw");
+                ($hdr, $bdy) = &l00wget::wget ($ctrl, $geturl, "$name:$pw");
             } else {
-                ($hdr, $bdy) = &l00wget::wget ($geturl);
+                ($hdr, $bdy) = &l00wget::wget ($ctrl, $geturl);
             }
 
             if (defined ($hdr)) {

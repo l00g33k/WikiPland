@@ -130,11 +130,12 @@ sub l00http_wget_proc (\%) {
                 if ($url =~ /http:\/\/([^\/]+?)\//) {
                     $domain = $1;
                 }
+                $journal = '';
                 if (($name ne '') || ($pw ne '')) {
-                    ($hdr, $bdy) = &l00wget::wget ($url, "$name:$pw");
+                    ($hdr, $bdy) = &l00wget::wget ($ctrl, $url, "$name:$pw");
                    #($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url, "$name:$pw");
                 } else {
-                    ($hdr, $bdy) = &l00wget::wget ($url);
+                    ($hdr, $bdy) = &l00wget::wget ($ctrl, $url);
                    #($hdr, $bdy, $journal) = &l00wget::wgetfollow ($url);
                 }
                 if (&l00httpd::l00fwriteOpen($ctrl, 'l00://journal.txt')) {

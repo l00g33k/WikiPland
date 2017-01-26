@@ -455,7 +455,7 @@ sub l00http_cron_perio {
                                 # 2) a normal HTTP. use l00http_wget.pl
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
                                 # http://wikipland-l00g33k.rhcloud.com/httpd.htm
-                                ($hdr, $bdy) = &l00wget::wget ($cmd);
+                                ($hdr, $bdy) = &l00wget::wget ($ctrl, $cmd);
                                 &l00httpd::l00fwriteOpen($ctrl, "l00://$l00name.wget.hdr");
                                 &l00httpd::l00fwriteBuf($ctrl, "shell >$cmd<; output:\n");
                                 &l00httpd::l00fwriteBuf($ctrl, "$hdr");

@@ -7,7 +7,7 @@ print $sock "Polling history: <a href=\"/view.htm?path=$rhc\">$rhc</a><p>\n";
 #--------------------------
 $url = "http://wikipland-l00g33k.rhcloud.com/httpd.htm&extra=$ctrl->{'machine'}";
 
-($hdr, $bdy) = &l00wget::wget ($url);
+($hdr, $bdy) = &l00wget::wget ($ctrl, $url);
 
 $out = '';
 if (&l00httpd::l00freadOpen($ctrl, $rhc)) {

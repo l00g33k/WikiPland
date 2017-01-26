@@ -20,7 +20,7 @@
 # 2) Retrieve URL into $url
 # 3) Split URL into page number and post number and remaining parts.
 # 4) Retrive the page using 
-#           ($hdr, $bdy) = &l00wget::wget ($a.$b.$c.$d);
+#           ($hdr, $bdy) = &l00wget::wget ($ctrl, $a.$b.$c.$d);
 # 5) Scan the HTML for the post anchor and display them
 # 6) If we don't find post numbers both greater and smaller that the bookmarked post number, we decrement the page number and try again.
 
@@ -42,7 +42,7 @@ if ($ctrl->{'os'} eq 'and') {
 			$loop--;
 			$gt = 0;
 			$lt = 1;
-            ($hdr, $bdy) = &l00wget::wget ($a.$b.$c.$d);
+            ($hdr, $bdy) = &l00wget::wget ($ctrl, $a.$b.$c.$d);
             if (length($bdy) == 0) {
 				$b--;
 			    next;

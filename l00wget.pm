@@ -9,15 +9,15 @@ package l00wget;
 
 #($hdr, $bdy) = &l00wget::wget ($url);
 sub wget {
-    my ($url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
+    my ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
     my ($hdr, $bdy);
     my ($buf, $proxy, $finalurl);
     my ($server_socket, $cnt, $hdrlen, $bdylen);
     my ($readable, $ready, $curr_socket, $ret, $mode);
-    my ($chunksz, $host, $port, $path, $contlen);
+    my ($chunksz, $host, $port, $path, $contlen, $cmd);
 
-    $hdr = undef;
-    $bdy = undef;
+    $hdr = '';
+    $bdy = '';
 
     $mode = '';
     if (!defined($readtimeout)) {
@@ -41,11 +41,11 @@ sub wget {
         #print "($host, $port, $path)\n";
     } else {
         $port = 80;
+        $host = undef;
         if ($url =~ m|https://|i) {
             if ($debug >= 4) {
                 l00httpd::dbp('l00wget.pm', "URL: is HTTPS\n");
             }
-            $host = undef;
         } elsif (($host, $path) = $url =~ m|http://(.+?)(/.*)|i) {
             if ($host =~ m|(.+?):(\d+)|) {
                 $host = $1;
@@ -159,6 +159,12 @@ sub wget {
 
             $server_socket->close;
         }
+    } else {
+        # https
+print "-->HTTPS: $url\n";
+print "-->HTTPS: $ctrl->{'plpath'}.wget.tmp\n";
+$cmd = "wget \"$url\" -O \"$ctrl->{'plpath'}.wget.tmp\"";
+print "-->HTTPS: $cmd\n";
     }
 
     ($hdr, $bdy);
@@ -166,7 +172,7 @@ sub wget {
 
 
 sub wgetfollow {
-    my ($url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
+    my ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
     my ($hdr, $bdy, $followmoves, $domain, $moved, $journal);
 
     $hdr = '';
