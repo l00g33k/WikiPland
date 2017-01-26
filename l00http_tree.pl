@@ -189,11 +189,6 @@ sub l00http_tree_proc {
     if (-f $form->{'path'}) {
         # path is a file
         if (open(IN, "<$form->{'path'}")) {
-            # get directory
-#           $dir = $form->{'path'};
-            # keep path only
-#           $dir =~ s/\/[^\/]+$/\//;
-
             #print $sock "<pre>\n";
             undef %sizeMd5sum;
             $cnt = 0;
@@ -223,6 +218,8 @@ sub l00http_tree_proc {
                     $md5sum = $1;
                     $fname = $2;
                     $sizeMd5sum{$fname} .= " $md5sum ||";
+                } elsif (!/^ *$/ && !/^\*/) {
+                    print $sock "Unidentified line '$_'<br>'\n";
                 }
             }
             close (IN);
