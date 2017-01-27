@@ -287,6 +287,8 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/blockquote>/<\/span><\/blockquote><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<table.*?>/<\/span><table><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<\/table.*?>/<\/span><\/table><span style="font-size : $zoom%;">/sg;
+        $wget =~ s/<footer(.*?)>/<\/span><footer><span style="font-size : $zoom%;">/sg;
+        $wget =~ s/<\/footer>/<\/span><\/footer><span style="font-size : $zoom%;">/sg;
 
 
         # make sure there is at most one <tag> per new line
