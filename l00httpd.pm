@@ -582,6 +582,8 @@ sub l00getCB {
         $buf = $clip->Get();
     } elsif ($ctrl->{'os'} eq 'cyg') {
         $buf = `cat /dev/clipboard`;
+    } elsif ($ctrl->{'os'} eq 'tmx') {
+        $buf = `termux-clipboard-get`;
     } else {
         &l00freadOpen($ctrl, 'l00://clipboard.txt');
         $buf = &l00freadAll($ctrl);
@@ -622,6 +624,14 @@ sub l00setCB {
         $buf =~ s/\)/\\\)/gm;
         $buf =~ s/'/\\'/gm;
         `echo "$buf" > /dev/clipboard`;
+    } elsif ($ctrl->{'os'} eq 'tmx') {
+        $buf =~ s/\\/\\\\/gm;
+        $buf =~ s/\//\\\//gm;
+#       $buf =~ s/|/\|/gm;
+        $buf =~ s/\(/\\\(/gm;
+        $buf =~ s/\)/\\\)/gm;
+        $buf =~ s/'/\\'/gm;
+        `termux-clipboard-set "$buf"`;
     }
 }
 
