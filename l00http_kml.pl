@@ -12,7 +12,7 @@ my %config = (proc => "l00http_kml_proc",
 my ($kmlheader1, $kmlheader2, $kmlfooter, $trackheight, $trackmark);
 my ($latoffset, $lonoffset, $applyoffset);
 
-$trackheight = 30;
+$trackheight = 0;
 $trackmark = 0;
 
 $latoffset = 0;
@@ -78,10 +78,12 @@ sub l00http_kml_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
-    my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $thisfile);
-    my ($toKmlCnt, $frKmlCnt);
+    my ($gpxtime, $fname, $curlatoffset, $curlonoffset);
+    my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow);
 
     $rawkml = 0;
+    $kmlheadernow = '';
+    $kmlfooternow = $kmlfooter;
 
     if (defined($form->{'cb2file'})) {
         $form->{'path'} = &l00httpd::l00getCB($ctrl);
@@ -131,25 +133,50 @@ sub l00http_kml_proc {
         if ($form->{'path'} =~ /\.kmz$/) {
             # .kmz
             if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-                $buffer = &l00httpd::l00freadAll($ctrl);
+                $kmlbuf = &l00httpd::l00freadAll($ctrl);
+                $kmlfooternow = '';
 
-                $size = length ($buffer);
                 $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-                $httphdr .= "Content-Length: $size\r\n";
-                $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-                print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                print $sock $buffer;
-                $sock->close;
                 $rawkml = 1;
             }
         } elsif (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-#$thisfile
-            my ($slash, $phase, $lonlat, $name);
+            my ($slash, $phase, $lonlat, $name, @infnames, $infname);
             $toKmlCnt = 0;
             $frKmlCnt = 0;
-            if (1) {
 
-                $buffer = &l00httpd::l00freadAll($ctrl);
+            # read input file. may be gps files or list of file from 
+            # http://127.0.0.1:20347/find.htm?fmatch=gps.*%5C.trk%24&content=&maxlines=4000&sortoffset=&submit=Submit&sendto=launcher&path=C:/g/l00bulky/gps/#end
+            # http://127.0.0.1:20347/view.htm?path=l00://findinfile.htm
+            #      4452 2016/05/06 20:52:52 C:/g/l00bulky/gps/gps_20141225.trk
+            #      3973 2016/05/06 20:52:52 C:/g/l00bulky/gps/gps_20141226.trk
+            #      3716 2016/05/06 20:52:52 C:/g/l00bulky/gps/gps_20141227.trk
+            $buffer = &l00httpd::l00freadAll($ctrl);
+            undef @infnames;
+            if ($buffer =~ /^ *\d+ \d+\/\d+\/\d+ \d+:\d+:\d+ (.+)/) {
+                # extract filenames
+                foreach $_ (split("\n", $buffer)) {
+                    if (/^ *\d+ \d+\/\d+\/\d+ \d+:\d+:\d+ (.+)/) {
+                        push(@infnames, $1);
+                    }
+                }
+            } else {
+                # special case where $buffer already has the content
+                $infnames[0] = '::buffer loaded::';
+            }
+
+            $kmlbuf = '';
+            foreach $infname (@infnames) {
+                if ($infname ne '::buffer loaded::') {
+                    #read $buffer;
+                    if (&l00httpd::l00freadOpen($ctrl, $infname)) {
+                        $buffer = &l00httpd::l00freadAll($ctrl);
+                    } else {
+                        $buffer = '';
+                    }
+                }
+                if ($buffer eq '') {
+                    next;
+                }
 
                 if ($applyoffset eq 'checked') {
                     $curlatoffset = $latoffset;
@@ -164,7 +191,7 @@ sub l00http_kml_proc {
                 $buffer =~ s/\r\n/\n/g;
                 $buffer =~ s/\r/\n/g;
                 $phase = 0;
-                if ($form->{'path'} =~ /\.gpx$/) {
+                if ($infname =~ /\.gpx$/) {
                     $toKmlCnt++;
                     my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
                     my ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $dtstamp);
@@ -173,7 +200,7 @@ sub l00http_kml_proc {
                     $debug = 1;
                     $trackno = 1;
                     # gps track, convert to .kml
-                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlheadernow = "$kmlheader1$fname$kmlheader2";
                     $trkmarks = '';
 
                     $lnno = 0;
@@ -210,7 +237,7 @@ sub l00http_kml_proc {
                                     "\t\t<Placemark><name>Track $gpxtime</name>\n" .
                                     "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
                                     "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-                                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                    "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                     "\t\t\t<coordinates>\n";
                                 $trackno++;
                             }
@@ -236,16 +263,10 @@ sub l00http_kml_proc {
                                     $trkmarks.
                                     "		</Folder>\n";
                     }
-                    $kmlbuf .= $kmlfooter;
+
                     #l00httpd::dbp($config{'desc'}, "kmlbuf: \n$kmlbuf\n");
 
-                    $size = length ($kmlbuf);
                     $httphdr = "Content-Type: application/gpx+xml\r\n";
-                    $httphdr .= "Content-Length: $size\r\n";
-                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                    print $sock $kmlbuf;
-                    $sock->close;
                     $rawkml = 1;
                 } elsif ($buffer =~ /^<\?xml/) {
                     $frKmlCnt++;
@@ -277,7 +298,7 @@ sub l00http_kml_proc {
                     }
                     &l00httpd::l00fwriteClose($ctrl);
                     print $sock "<\/pre>\n";
-                } elsif ($form->{'path'} =~ /\.csv$/) {
+                } elsif ($infname =~ /\.csv$/) {
                     $toKmlCnt++;
                     # The input file may have been concatnated.
                     # First line in each file is:
@@ -292,7 +313,7 @@ sub l00http_kml_proc {
                     $debug = 1;
                     $trackno = 1;
                     # gps track, convert to .kml
-                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlheadernow = "$kmlheader1$fname$kmlheader2";
                     $trkmarks = '';
 
                     $lastseg = -1;
@@ -335,7 +356,7 @@ sub l00http_kml_proc {
                                 "\t\t<Placemark><name>$trkname</name>\n" .
                                 "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
                                 "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-                                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                 "\t\t\t<coordinates>\n";
                             $trackno++;
                             $pointno = 0;
@@ -354,7 +375,7 @@ sub l00http_kml_proc {
                                     "\t\t<Placemark><name>$trkname</name>\n" .
                                     "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
                                     "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-                                    "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                    "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                     "\t\t\t<coordinates>\n";
                                 $trackno++;
                                 $pointno = 0;
@@ -385,15 +406,8 @@ sub l00http_kml_proc {
                                     $trkmarks.
                                     "		</Folder>\n";
                     }
-                    $kmlbuf .= $kmlfooter;
 
-                    $size = length ($kmlbuf);
                     $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-                    $httphdr .= "Content-Length: $size\r\n";
-                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                    print $sock $kmlbuf;
-                    $sock->close;
                     $rawkml = 1;
                 } elsif ($buffer =~ /^H  SOFTWARE NAME & VERSION/) {
                     $toKmlCnt++;
@@ -404,7 +418,7 @@ sub l00http_kml_proc {
                     $debug = 1;
                     $trackno = 1;
                     # gps track, convert to .kml
-                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlheadernow = "$kmlheader1$fname$kmlheader2";
                     $trkmarks = '';
 
                     $lnno = 0;
@@ -435,7 +449,7 @@ sub l00http_kml_proc {
                                 "\t\t<Placemark><name>$trkname</name>\n" .
                                 "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
                                 "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-                                "\t\t\t<altitudeMode>relativeToGround</altitudeMode>\n" .
+                                "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                 "\t\t\t<coordinates>\n";
                             $trackno++;
                         }
@@ -477,20 +491,13 @@ sub l00http_kml_proc {
                                     $trkmarks.
                                     "		</Folder>\n";
                     }
-                    $kmlbuf .= $kmlfooter;
 
-                    $size = length ($kmlbuf);
                     $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-                    $httphdr .= "Content-Length: $size\r\n";
-                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                    print $sock $kmlbuf;
-                    $sock->close;
                     $rawkml = 1;
                 } else {
                     $toKmlCnt++;
                     # reading long,lat,name file
-                    $kmlbuf = "$kmlheader1$fname$kmlheader2";
+                    $kmlheadernow = "$kmlheader1$fname$kmlheader2";
                     $starname = '';
                     foreach $_ (split ("\n", $buffer)) {
                         s/\r//g;
@@ -537,27 +544,29 @@ sub l00http_kml_proc {
                             "\t\t\t</Point>\n".
                             "\t\t</Placemark>\n";
                     }
-                    $kmlbuf .= $kmlfooter;
 
-                    $size = length ($kmlbuf);
                     $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-                    $httphdr .= "Content-Length: $size\r\n";
-                    $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
-                    print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                    print $sock $kmlbuf;
-                    $sock->close;
                     $rawkml = 1;
                 }
             }
             &l00httpd::l00fwriteOpen($ctrl, 'l00://kml.kml');
+            &l00httpd::l00fwriteBuf($ctrl, $kmlheadernow);
             &l00httpd::l00fwriteBuf($ctrl, $kmlbuf);
+            &l00httpd::l00fwriteBuf($ctrl, $kmlfooternow);
             &l00httpd::l00fwriteClose($ctrl);
         }
     }
     if (($rawkml == 0) && ($httphdr ne '')) {
         print $sock $httphdr;
+    } elsif ($rawkml == 1) {
+        $kmlbuf = "$kmlheadernow$kmlbuf$kmlfooternow";
+        $size = length ($kmlbuf);
+        $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+        $httphdr .= "Content-Length: $size\r\n";
+        print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
+        print $sock $kmlbuf;
+        $sock->close;
     }
-
 
     if ($rawkml == 0) {
         print $sock "<form action=\"/kml.htm/kml.kml\" method=\"get\">\n";
