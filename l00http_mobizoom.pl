@@ -48,6 +48,8 @@ sub wgetfollow2 {
         }
         $wgetjournal = '';
         if ($url =~ /https:\/\//) {
+            ($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
+if (0) {
             #rwgetshell^http://127.0.0.1:30443/shell.htm?exec=Exec&buffer=wget+-O+c%3A%2Fx%2Fram%2Frwget.htm+
             #rwgetfetch^http://127.0.0.1:30443/ls.htm?path=c:/x/ram/rwget.htm&raw=on
             if (defined($ctrl->{'rwgetshell'}) &&
@@ -81,8 +83,9 @@ $rwgeturl =~ s/\?/%3F/g;
                 $bdy = '';
                 last;
             }
+}
         } else {
-($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
+            ($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
         }
         $journal .= sprintf("PASS #%d: HDR (%d B), BDY (%d B)\nURL: %s\n", 
             $followmoves, length($hdr), length($bdy), $url);
@@ -284,6 +287,8 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/blockquote>/<\/span><\/blockquote><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<table.*?>/<\/span><table><span style="font-size : $zoom%;">/sg;
         $wget =~ s/<\/table.*?>/<\/span><\/table><span style="font-size : $zoom%;">/sg;
+        $wget =~ s/<footer(.*?)>/<\/span><footer><span style="font-size : $zoom%;">/sg;
+        $wget =~ s/<\/footer>/<\/span><\/footer><span style="font-size : $zoom%;">/sg;
 
 
         # make sure there is at most one <tag> per new line

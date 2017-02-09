@@ -1,0 +1,15 @@
+%TOC%
+=How to setup clipboard on Termux=
+* !WikiPland works well under Termux (https://termux.com/) on Android devices. The following instructions increase the utility by connecting !WikiPland to Android clipboard.
+* It is assumed that you are running !WikiPland using Perl under Termux. Otherwise these steps are not necessary.
+* Now that you have Termux, there are two steps to follow. More instructions are available from: https://termux.com/add-on-api.html
+** Install 'Termux:API' from Google Play
+** Install the termux-api apt package:
+    apt install termux-api
+* Verifing installation
+** Send something to the clipboard
+    termux-clipboard-set 'Hello world from Termux/WikiPland'
+** You can check the Android clipboard for it
+** Let's retrieve it inside Termux
+    termux-clipboard-get
+

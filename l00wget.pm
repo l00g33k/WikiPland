@@ -4,6 +4,8 @@ use strict;
 
 package l00wget;
 
+my ($shellwget);
+$shellwget = -1;
 
 #&l00httpd::dumphash ("gps", $buf);
 
@@ -161,10 +163,30 @@ sub wget {
         }
     } else {
         # https
-print "-->HTTPS: $url\n";
-print "-->HTTPS: $ctrl->{'plpath'}.wget.tmp\n";
-$cmd = "wget \"$url\" -O \"$ctrl->{'plpath'}.wget.tmp\"";
-print "-->HTTPS: $cmd\n";
+        if ($shellwget == -1) {
+            $ret = `wget --help`;
+            if ($ret =~ /Usage:/ms) {
+                # Found Usage: in output so we must have wget
+                $shellwget = 1;
+            } else {
+                $shellwget = 0;
+            }
+        }
+        if ($shellwget == 1) {
+            $cmd = "wget \"$url\" -O \"$ctrl->{'plpath'}.wget.tmp\"";
+            $hdr = `$cmd`;
+            local $/;
+            $/ = undef;
+            if (open (IN, "<$ctrl->{'plpath'}.wget.tmp")) {
+                $bdy = <IN>;
+                close (IN);
+            } else {
+                $bdy = '';
+            }
+        } else {
+            $hdr = 'wget utility is not available in the shell to fetch HTTPS';
+            $bdy = $hdr;
+        }
     }
 
     ($hdr, $bdy);
