@@ -31,20 +31,28 @@ sub l00http_shell_proc {
 
     $buffer = "";
     $out = "";
-    if ((defined ($form->{'exec'})) && (defined ($form->{'buffer'}))) {
+    if (defined ($form->{'buffer'})) {
         $buffer = $form->{'buffer'};
         $buffer =~ s/\r//g;
         $cnt = 1;
         foreach $cmd (split ("\n", $buffer)) {
             $out .= "$cnt&gt; $cmd\n";
+            $res = "";
             if (($cmdpart, $redirec, $file) = ($cmd =~ /^(.+) *(>+) *(.+)$/))  {
-                $res = `$cmdpart`;
-                open (OUT, "$redirec$file");
-                print OUT $res;
-                close (OUT);
-                $res = "";
+                if (defined ($form->{'exec'})) {
+                    $res = `$cmdpart`;
+                    open (OUT, "$redirec$file");
+                    print OUT $res;
+                    close (OUT);
+                } else {
+                    $res = "NOT EXECUTED: $cmdpart";
+                }
             } else {
-                $res = `$cmd`;
+                if (defined ($form->{'exec'})) {
+                    $res = `$cmd`;
+                } else {
+                    $res = "NOT EXECUTED: $cmdpart";
+                }
             }
             $res =~ s/\r//g;
             #$res =~ s/\n/<br>/g;
