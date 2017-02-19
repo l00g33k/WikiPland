@@ -27,7 +27,7 @@ sub l00http_blockfilter_proc {
     my ($blkdisplayed, $nonumblock, $blockendhits, $hitlines, $hitlinesthis);
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Android startActivity</title>" .$ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Block filter</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
     print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
