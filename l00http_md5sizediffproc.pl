@@ -31,6 +31,15 @@ sub l00http_md5sizediffproc_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
     print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
 
+    if (defined ($form->{'process'})) {
+        if (defined ($form->{'required'})) {
+            $required = $form->{'required'};
+        }
+        if (defined ($form->{'exclude'})) {
+            $exclude = $form->{'exclude'};
+        }
+    }
+
     print $sock "<form action=\"/md5sizediffproc.htm\" method=\"get\">\n";
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
@@ -55,15 +64,10 @@ sub l00http_md5sizediffproc_proc {
     print $sock "</table><br>\n";
     print $sock "</form>\n";
 
+
     if (defined ($form->{'process'}) &&
         defined ($form->{'path'}) &&
         (&l00httpd::l00freadOpen($ctrl, $form->{'path'}))) {
-        if (defined ($form->{'required'})) {
-            $required = $form->{'required'};
-        }
-        if (defined ($form->{'exclude'})) {
-            $exclude = $form->{'exclude'};
-        }
         &l00httpd::l00fwriteOpen($ctrl, 'l00://md5sizediffproc.txt');
 
         $cnt = 0;
