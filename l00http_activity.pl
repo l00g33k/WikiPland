@@ -52,6 +52,7 @@ sub l00http_activity_proc {
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste CB\">\n";
     print $sock "</form>\n";
 
+    print $sock $ctrl->{'htmlfoot'};
 }
 
 
