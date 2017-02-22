@@ -7,8 +7,8 @@ use warnings;
 
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
-my ($required, $exclude, $blockend);
-$required = '';
+my (@required, $exclude, $blockend);
+@required = undef;
 $exclude = '';
 $blockend = '';
 
@@ -24,19 +24,27 @@ sub l00http_blockfilter_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $requiredhits, $excludehits, $output, $thisblock, $condition);
-    my ($blkdisplayed, $nonumblock, $blockendhits, $hitlines, $hitlinesthis);
+    my ($blkdisplayed, $nonumblock, $blockendhits, $hitlines, $hitlinesthis, $tmp);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Block filter</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
-    print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+    print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
+    print $sock "<a href=\"/view.htm?path=$form->{'path'}\">view</a><br>\n";
 
     if (defined ($form->{'blockpaste'})) {
         $blockend = &l00httpd::l00getCB($ctrl);
     }
     if (defined ($form->{'requiredpaste'})) {
-        $required = &l00httpd::l00getCB($ctrl);
+        undef @required;
+        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
+            $condition =~ s/\n//g;
+            $condition =~ s/\r//g;
+            if (length($condition) > 0) {
+                push(@required, $condition);
+            }
+        }
     }
     if (defined ($form->{'excludepaste'})) {
         $exclude = &l00httpd::l00getCB($ctrl);
@@ -47,7 +55,14 @@ sub l00http_blockfilter_proc {
             $blockend = $form->{'blockend'};
         }
         if (defined ($form->{'required'})) {
-            $required = $form->{'required'};
+            undef @required;
+            foreach $condition (split("\n", $form->{'required'})) {
+                $condition =~ s/\n//g;
+                $condition =~ s/\r//g;
+                if (length($condition) > 0) {
+                    push(@required, $condition);
+                }
+            }
         }
         if (defined ($form->{'exclude'})) {
             $exclude = $form->{'exclude'};
@@ -65,21 +80,22 @@ sub l00http_blockfilter_proc {
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"blockpaste\" value=\"Block\">\n";
-    print $sock "ending (1 per line)\n";
+    print $sock "ending pattern (1 per line)\n";
     print $sock "</td><td>\n";
     print $sock "<textarea name=\"blockend\" cols=24 rows=7>$blockend</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"requiredpaste\" value=\"Required\">\n";
-    print $sock "condition (1 per line)\n";
+    print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
-    print $sock "<textarea name=\"required\" cols=24 rows=7>$required</textarea>\n";
+    $tmp = join("\n", @required);
+    print $sock "<textarea name=\"required\" cols=24 rows=7>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"excludepaste\" value=\"Exclude\">\n";
-    print $sock "condition (1 per line)\n";
+    print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
     print $sock "<textarea name=\"exclude\" cols=24 rows=7>$exclude</textarea>\n";
     print $sock "</td></tr>\n";
@@ -102,6 +118,20 @@ sub l00http_blockfilter_proc {
         $thisblock = '';
         $nonumblock = '';
         $hitlines = 0;
+
+        $output .= "Block ending pattern\n";
+        foreach $condition (split("\n", $blockend)) {
+            $output .= "    $condition\n";
+        }
+        $output .= "Required pattern\n";
+        foreach $condition (@required) {
+            $output .= length($condition)."    >$condition<\n";
+        }
+        $output .= "Exclude pattern\n";
+        foreach $condition (split("\n", $exclude)) {
+            $output .= "    $condition\n";
+        }
+
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             $cnt++;
             $thisblock .= sprintf ("%05d: %s", $cnt, $_);
@@ -118,7 +148,8 @@ sub l00http_blockfilter_proc {
             if ($blockendhits > 0) {
                 # blank line is end of block
                 # do we print?
-                if (($requiredhits > 0) &&
+#$output .= "$requiredhits > $#required && $excludehits\n";
+                if (($requiredhits > $#required) &&
                     ($excludehits == 0)) {
                     $blkdisplayed++;
                     $hitlines += $hitlinesthis;
@@ -131,21 +162,25 @@ sub l00http_blockfilter_proc {
                 $nonumblock = '';
                 $hitlinesthis = 0;
             } else {
-                foreach $condition (split("\n", $required)) {
+                foreach $condition (@required) {
                     if (/$condition/) {
+#$output .= "required $condition: $_\n";
                         $requiredhits++;
                     }
                 }
                 foreach $condition (split("\n", $exclude)) {
                     if (/$condition/) {
+#$output .= "exclude $condition: $_\n";
                         $excludehits++;
                     }
                 }
             }
         }
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "Displaying $blkdisplayed blocks and $hitlines lines. View ".
-            "<a href=\"/view.htm?path=l00://blockfilter.txt\">l00://blockfilter.txt</a><br>\n";
+        print $sock "Processed $cnt lines. ".
+            "Output $blkdisplayed blocks and $hitlines lines to ".
+            "<a href=\"/view.htm?path=l00://blockfilter.txt\">l00://blockfilter.txt</a> ".
+            "<br>\n";
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a>\n";
