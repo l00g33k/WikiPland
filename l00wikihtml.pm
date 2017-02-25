@@ -852,7 +852,13 @@ if(1){
 #d612                        $http = "/ls.htm/$tmp?path=".$pname.$http;
                         $http = "/ls.htm/$tmp.htm?path=".$pname.$http;
                     }
-                    $_ .= $tx . "<a href=\"$http\">$desc</a>";
+                    if (($url !~ /\|/) && 
+                        ($http =~ /(\.jpg|\.png|\.bmp|\.gif|\.svg|\.jpeg)/i)) {
+                        # make [[*.jpg]
+                        $_ .= $tx . "<img src=\"$http\">";
+                    } else {
+                        $_ .= $tx . "<a href=\"$http\">$desc</a>";
+                    }
                 }
             } else {
                 # just a bare line without [[wikilink]]
