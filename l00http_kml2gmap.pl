@@ -539,38 +539,19 @@ sub l00http_kml2gmap_proc {
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a><p>\n";
 
 
-    print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
-    print $sock "&nbsp;\n";
-    print $sock "</td></tr>\n";
-    print $sock "<tr><td>\n";
-    print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
-    print $sock "</td></tr>\n";
-    print $sock "<tr><td>\n";
-    print $sock "Width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
-    print $sock "</td></tr>\n";
-    print $sock "<tr><td>\n";
-    print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
-    print $sock "</td></tr>\n";
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"matched\">matched</td><td>select <input type=\"text\" name=\"selregex\" size=\"5\">\n";
-    print $sock "</td></tr>\n";
-
-    print $sock "</table>\n";
-    print $sock "</form>\n";
-
     if (defined ($form->{'path'})) {
         print $sock "<p><form action=\"/kml2gmap.htm\" method=\"post\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\"></td><td>\n";
         if (($ctrl->{'os'} eq 'and') ||
             ($ctrl->{'os'} eq 'cyg') ||
             ($ctrl->{'os'} eq 'win')) {
             print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"Paste Add\">\n";
+        } else {
+            print $sock "&nbsp;\n";
         }
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\">\n";
         print $sock "Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
@@ -597,6 +578,28 @@ sub l00http_kml2gmap_proc {
             }
         }
     }
+
+    print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
+    print $sock "&nbsp;\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Width:</td><td><input type=\"text\" name=\"width\" size=\"5\" value=\"$width\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"matched\">matched</td><td>select <input type=\"text\" name=\"selregex\" size=\"5\">\n";
+    print $sock "</td></tr>\n";
+
+    print $sock "</table>\n";
+    print $sock "</form>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
