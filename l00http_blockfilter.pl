@@ -7,10 +7,10 @@ use warnings;
 
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
-my (@required, $exclude, $blockend);
+my (@required, @exclude, @blockend);
 @required = undef;
-$exclude = '';
-$blockend = '';
+@exclude = undef;
+@blockend = undef;
 
 sub l00http_blockfilter_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -34,7 +34,14 @@ sub l00http_blockfilter_proc {
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">view</a><br>\n";
 
     if (defined ($form->{'blockpaste'})) {
-        $blockend = &l00httpd::l00getCB($ctrl);
+        undef @blockend;
+        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
+            $condition =~ s/\n//g;
+            $condition =~ s/\r//g;
+            if (length($condition) > 0) {
+                push(@blockend, $condition);
+            }
+        }
     }
     if (defined ($form->{'requiredpaste'})) {
         undef @required;
@@ -47,12 +54,26 @@ sub l00http_blockfilter_proc {
         }
     }
     if (defined ($form->{'excludepaste'})) {
-        $exclude = &l00httpd::l00getCB($ctrl);
+        undef @exclude;
+        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
+            $condition =~ s/\n//g;
+            $condition =~ s/\r//g;
+            if (length($condition) > 0) {
+                push(@exclude, $condition);
+            }
+        }
     }
 
     if (defined ($form->{'process'})) {
         if (defined ($form->{'blockend'})) {
-            $blockend = $form->{'blockend'};
+            undef @blockend;
+            foreach $condition (split("\n", $form->{'blockend'})) {
+                $condition =~ s/\n//g;
+                $condition =~ s/\r//g;
+                if (length($condition) > 0) {
+                    push(@blockend, $condition);
+                }
+            }
         }
         if (defined ($form->{'required'})) {
             undef @required;
@@ -65,7 +86,14 @@ sub l00http_blockfilter_proc {
             }
         }
         if (defined ($form->{'exclude'})) {
-            $exclude = $form->{'exclude'};
+            undef @exclude;
+            foreach $condition (split("\n", $form->{'exclude'})) {
+                $condition =~ s/\n//g;
+                $condition =~ s/\r//g;
+                if (length($condition) > 0) {
+                    push(@exclude, $condition);
+                }
+            }
         }
     }
 
@@ -82,7 +110,8 @@ sub l00http_blockfilter_proc {
     print $sock "<input type=\"submit\" name=\"blockpaste\" value=\"Block\">\n";
     print $sock "ending pattern (1 per line)\n";
     print $sock "</td><td>\n";
-    print $sock "<textarea name=\"blockend\" cols=24 rows=7>$blockend</textarea>\n";
+    $tmp = join("\n", @blockend);
+    print $sock "<textarea name=\"blockend\" cols=24 rows=7>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
@@ -97,7 +126,8 @@ sub l00http_blockfilter_proc {
     print $sock "<input type=\"submit\" name=\"excludepaste\" value=\"Exclude\">\n";
     print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
-    print $sock "<textarea name=\"exclude\" cols=24 rows=7>$exclude</textarea>\n";
+    $tmp = join("\n", @exclude);
+    print $sock "<textarea name=\"exclude\" cols=24 rows=7>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table><br>\n";
@@ -120,17 +150,18 @@ sub l00http_blockfilter_proc {
         $hitlines = 0;
 
         $output .= "Block ending pattern\n";
-        foreach $condition (split("\n", $blockend)) {
-            $output .= "    $condition\n";
+        foreach $condition (@blockend) {
+            $output .= "    >$condition<\n";
         }
         $output .= "Required pattern\n";
         foreach $condition (@required) {
-            $output .= length($condition)."    >$condition<\n";
+            $output .= "    >$condition<\n";
         }
         $output .= "Exclude pattern\n";
-        foreach $condition (split("\n", $exclude)) {
-            $output .= "    $condition\n";
+        foreach $condition (@exclude) {
+            $output .= "    >$condition<\n";
         }
+        $output .= "Filtered output:\n\n";
 
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             $cnt++;
@@ -139,16 +170,15 @@ sub l00http_blockfilter_proc {
             $nonumblock .= $_;
 
             $blockendhits = 0;
-            foreach $condition (split("\n", $blockend)) {
+            foreach $condition (@blockend) {
                 if (/$condition/) {
                     $blockendhits++;
                 }
             }
 
-            if ($blockendhits > 0) {
+            if ($blockendhits > $#blockend) {
                 # blank line is end of block
                 # do we print?
-#$output .= "$requiredhits > $#required && $excludehits\n";
                 if (($requiredhits > $#required) &&
                     ($excludehits == 0)) {
                     $blkdisplayed++;
@@ -164,13 +194,11 @@ sub l00http_blockfilter_proc {
             } else {
                 foreach $condition (@required) {
                     if (/$condition/) {
-#$output .= "required $condition: $_\n";
                         $requiredhits++;
                     }
                 }
-                foreach $condition (split("\n", $exclude)) {
+                foreach $condition (@exclude) {
                     if (/$condition/) {
-#$output .= "exclude $condition: $_\n";
                         $excludehits++;
                     }
                 }
