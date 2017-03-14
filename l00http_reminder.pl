@@ -181,7 +181,9 @@ sub l00http_reminder_proc {
     if (defined ($form->{"set"})) {
         if ($wake != 0) {
             $wake = 0;
-            $ctrl->{'droid'}->wakeLockRelease();
+            if ($ctrl->{'os'} eq 'and') {
+                $ctrl->{'droid'}->wakeLockRelease();
+            }
         }
         if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
             $interval = $form->{"interval"};
@@ -213,7 +215,9 @@ sub l00http_reminder_proc {
         $pause = 0;
         if ($wake != 0) {
             $wake = 0;
-            $ctrl->{'droid'}->wakeLockRelease();
+            if ($ctrl->{'os'} eq 'and') {
+                $ctrl->{'droid'}->wakeLockRelease();
+            }
         }
         # find earlest reminder
         &l00http_reminder_find ($ctrl);
@@ -224,7 +228,9 @@ sub l00http_reminder_proc {
         $lastcalled = 0;
         if ($wake != 0) {
             $wake = 0;
-            $ctrl->{'droid'}->wakeLockRelease();
+            if ($ctrl->{'os'} eq 'and') {
+                $ctrl->{'droid'}->wakeLockRelease();
+            }
         }
     }
 
@@ -412,7 +418,9 @@ sub l00http_reminder_perio {
                 $vibracnt = 1;
                 if ($wake == 0) {
                     $wake = 1;
-                    $ctrl->{'droid'}->wakeLockAcquirePartial();
+                    if ($ctrl->{'os'} eq 'and') {
+                        $ctrl->{'droid'}->wakeLockAcquirePartial();
+                    }
                 }
                 if ($ctrl->{'os'} eq 'and') {
                     $ctrl->{'droid'}->vibrate($vmsec);
