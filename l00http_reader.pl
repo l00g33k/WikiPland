@@ -29,8 +29,9 @@ sub l00http_reader_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $fname, $lnno, $lnno2, $tmp, $curr, $buf, $font0, $font1);
-	my ($cachepath, $cachename, $cachelink, $url, $morepage, $tmp2, %duplicate, $cnt);
+	my ($cachepath, $cachename, $cachenameonly, $cachelink, $url, $morepage, $tmp2, %duplicate, $cnt);
     my ($docaching, $noart, $nodownload);
+    my ($diskunread, $diskreaded, $diskcached, $diskcachedbytes, %disklinked);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>reader</title>" . $ctrl->{'htmlhead2'};
@@ -170,6 +171,15 @@ sub l00http_reader_proc (\%) {
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<input type=\"submit\" name=\"mobizoomzoom\" value=\"Mobizoom %\">\n";
+    print $sock "<input type=\"submit\" name=\"diskusage\" value=\"Disk Usage\">\n";
+    if (defined ($form->{'diskusage'})) {
+        $diskunread = 0;
+        $diskreaded = 0;
+        $diskcached = 0;
+        $diskcachedbytes = 0;
+        undef %disklinked;
+        print $sock "<a href=\"#diskusage\">Jump usage report</a>\n";
+    }
     print $sock "</form>\n";
 
     if ((defined ($form->{'path'})) && (defined ($form->{'download'}))) {
@@ -199,17 +209,32 @@ sub l00http_reader_proc (\%) {
                     $docaching = 0;
                     last;
                 }
+                # % is %TOC or %TXTDOPL and must not be present between 
+                # article entries. We stop here
+                if (/^%/) {
+                    last;
+                }
                 if (-f "$ctrl->{'workdir'}SigReaderDownloadStop.txt") {
                     # Existence of file signal stop downloading
                     unlink ("$ctrl->{'workdir'}SigReaderDownloadStop.txt");
                     $docaching = 0;
                 }
+				$cachelink = '';
+                if (/^ *$/) {
+                    # skip blank lines
+                    next;
+                }
                 if (/^(\d{8,8} \d{6,6}) /) {
+                    # date stamp (20170313 133301) in column 0 signifies
+                    # uncached entry
                     $noart++;
-                    if ($noart <= $maxlines) {
+                    if (($noart <= $maxlines) ||
+                        (defined ($form->{'diskusage'}))) {
                         # process up to $maxlines only
+                        # but do all if diskusage
 					    $cachename = $1;
 					    $cachename =~ s/ /_/;
+                        $cachenameonly = "$cachename.txt";
 					    $cachepath = "$form->{'path'}.cached/";
 					    if (!-d $cachepath) {
                             # mkdir if not exist
@@ -295,32 +320,40 @@ sub l00http_reader_proc (\%) {
 						    $_ = $tmp;
 						    $cnt++;
                         }
-					    if (-e $cachename) {
+                        if (defined ($form->{'diskusage'})) {
+                            $diskunread++;
+                        }
+ 					    if (-e $cachename) {
                             my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
                             $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                                 = stat($cachename);
                             $cachelink = sprintf("<a href=\"/view.htm?path=$cachename\">(%6d)</a> ", $size);;
                             $nodownload++;
-					    } else {
-					        $cachelink = '';
+                            if (defined ($form->{'diskusage'})) {
+                                $disklinked{$cachenameonly} = 1;
+                                $diskcached++;
+                                $diskcachedbytes += $size;
+                            }
 					    }
-                    } else {
-					    $cachelink = '';
                     }
-				} else {
-				    $cachelink = '';
 				}
                 if ($lnno == $readln) {
+                    # current line
                     print $sock sprintf("<a name=\"line\"><font style=\"color:black;background-color:lime\">%04d</font>: ", $lnno) . $cachelink . $_;
                 } else {
-                    if (/^#/) {
-                        # marked read
+                    if (/^#\d{8,8} \d{6,6} /) {
+                        # this entry already marked read
+                        if (defined ($form->{'diskusage'})) {
+                            $diskreaded++;
+                        }
                     } else {
                         print $sock sprintf("<a href=\"/reader.htm?path=$form->{'path'}&readln=$lnno\">%04d</a>: ", $lnno) . $cachelink . $_;
                     }
                 }
                 $lnno++;
-                if ($noart > $maxlines) {
+                if (($noart > $maxlines) &&
+                    (!defined ($form->{'diskusage'}))) {
+                    # stops at limit
                     print $sock "\nListed maximum number of $maxlines articles. There may be more articles not listed.\n\n";
                     last;
                 }
@@ -328,6 +361,50 @@ sub l00http_reader_proc (\%) {
             close(IN);
         }
         print $sock "<hr>\n";
+
+        # disk usage report output
+        if (defined ($form->{'diskusage'})) {
+            print $sock "<a name=\"diskusage\"></a>Disk usage report:\n";
+            printf $sock ("Total          articles:%10d\n", $lnno);
+            printf $sock ("Read           articles:%10d\n", $diskreaded);
+            printf $sock ("Unread         articles:%10d\n", $diskunread);
+            printf $sock ("Cached unread  articles:%10d\n", $diskcached);
+            printf $sock ("Cached    size in bytes:%10d\n", $diskcachedbytes);
+
+            if (opendir (DIR, $cachepath)) {
+                my ($listed, $unlisted, $listedbytes, $unlistedbytes);
+                $lnno = 0;
+                $listed = 0;
+                $unlisted = 0;
+                $listedbytes = 0;
+                $unlistedbytes = 0;
+                foreach $_ (sort readdir (DIR)) {
+                    $lnno++;
+                    if (/\.txt$/) {
+                        my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+                        $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+                            = stat("$cachepath$_");
+                        if (defined($disklinked{$_})) {
+                            #print $sock "listed $_\n";
+                            $listed++;
+                            $listedbytes += $size;
+                        } else {
+                            #print $sock "unlisted $_\n";
+                            $unlisted++;
+                            $unlistedbytes += $size;
+                        }
+                    }
+                }
+                print $sock "There are $lnno .txt in cached. $listed listed, unlisted $unlisted\n";
+                printf $sock ("Listed   cache in bytes:%10d\n", $listedbytes);
+                printf $sock ("Unlisted cache in bytes:%10d\n", $unlistedbytes);
+                closedir (DIR);
+            }
+
+            print $sock "\n";
+        }
+
+
         print $sock "<a name=\"end\"></a><a href=\"#top\">Jump to top</a>. Full file:\n";
         $_ = $noart - $nodownload;
         print $sock "There are $noart articles, $nodownload cached, $_ uncached (but only $maxlines lines are processed)\n";
