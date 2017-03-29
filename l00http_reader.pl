@@ -395,9 +395,15 @@ sub l00http_reader_proc (\%) {
                         }
                     }
                 }
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://listed.txt');
+                &l00httpd::l00fwriteBuf($ctrl, "l00://listed.txt");
+                &l00httpd::l00fwriteClose($ctrl);
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://unlisted.txt');
+                &l00httpd::l00fwriteBuf($ctrl, "l00://unlisted.txt");
+                &l00httpd::l00fwriteClose($ctrl);
                 print $sock "There are $lnno .txt in cached. $listed listed, unlisted $unlisted\n";
-                printf $sock ("Listed   cache in bytes:%10d\n", $listedbytes);
-                printf $sock ("Unlisted cache in bytes:%10d\n", $unlistedbytes);
+                printf $sock ("Listed   cache in bytes:%10d  <a href=\"/view.htm?path=l00://listed.txt\">l00://listed.txt</a>\n", $listedbytes);
+                printf $sock ("Unlisted cache in bytes:%10d  <a href=\"/view.htm?path=l00://unlisted.txt\">l00://unlisted.txt</a>\n", $unlistedbytes);
                 closedir (DIR);
             }
 
