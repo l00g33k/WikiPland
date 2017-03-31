@@ -245,7 +245,7 @@ sub l00http_tree_proc {
             print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm&path2=$form->{'path'}.txt\">filemgt tree.htm</a><p>\n";
             print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
         }
-    } else {
+    } elsif (defined($form->{'submit'})) {
         # path is a directory
         undef @list;
 	    $lvl = 0;
@@ -446,7 +446,7 @@ sub l00http_tree_proc {
 
 
     print $sock "<form action=\"/tree.htm\" method=\"get\"><hr>\n";
-    print $sock "<input type=\"submit\" name=\"submit\" value=\"Path\">\n";
+    print $sock "<input type=\"submit\" name=\"submit\" value=\"Scan\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
 $form->{'filter'} = 'not implemented';
