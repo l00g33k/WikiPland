@@ -39,7 +39,9 @@ sub l00http_clip_proc {
     } elsif (defined ($form->{'clip'})) {
         $clip = $form->{'clip'};
         if (defined ($form->{'update'})) {
-            print $sock "<br>Also copied to <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a><p>\n";
+            print $sock "<br>Also copied to <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>. \n";
+            $tmp = &l00httpd::urlencode ($clip);
+            print $sock "Send to server <a href=\"http://127.0.0.1:20337/clip.htm?update=update&clip=$tmp\" target=\"newwin\">20337</a><p>\n";
             &l00httpd::l00setCB($ctrl, $clip);
         } elsif (defined ($form->{'link'})) {
             # send text [[/clip.pl?...|show text]] to clipboard
