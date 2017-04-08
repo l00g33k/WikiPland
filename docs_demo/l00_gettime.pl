@@ -16,15 +16,15 @@ if (defined($server_socket)) {
         $readbytes = sysread ($curr_socket, $buf, 4);
     }
     $server_socket->close;
-    print $sock "Read $readbytes bytes<p>\n";
+    print $sock "Read $readbytes bytes from time.nist.gov<p>\n";
     if ($readbytes == 4) {
         $time = unpack("N", $buf);
         # -2208988800 to convert to unix epoch
         ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime ($time - 2208988800);
         $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
-        print $sock "It is now $now_string<p>\n";
+        print $sock "It is now Unix time $time or $now_string<p>\n";
         if (defined($last)) {
-            print $sock "Previous read of time.nistgov:37 was ", $time - $last, " sec ago<p>\n";
+            print $sock "Previous read of time.nist.gov:37 was ", $time - $last, " sec ago<p>\n";
         }
         $last = $time;
     }
