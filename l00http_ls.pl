@@ -739,7 +739,11 @@ sub l00http_ls_proc {
                             s/path=\$/path=$path/g;
 
                             # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-                            s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                            if (/%L00HTTP<(.+?)>%/) {
+                                if (defined($ctrl->{$1})) {
+                                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                                }
+                            }
 
                             # implement %SHOWLINENO%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
                             if (/^%SHOWLINENO%/) {
