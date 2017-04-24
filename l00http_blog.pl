@@ -156,6 +156,12 @@ sub l00http_blog_proc {
     }
 
 
+    if (defined ($form->{'newtime'})) {
+        # new time
+        $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr);
+        $form->{'buffer'} .= $buffer;
+    }
     if (defined ($form->{'timesave'})) {
         # update time and save form buffer
         $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
@@ -302,7 +308,7 @@ sub l00http_blog_proc {
     }
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
-    print $sock "<input type=\"submit\" name=\"cancel\" value=\"NewTime\">\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"NewTime\">\n";
     # display button to switch style
 
     print $sock "<input type=\"hidden\" name=\"stylecurr\" value=\"$stylenew\">\n";
