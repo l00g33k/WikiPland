@@ -8,6 +8,8 @@ $svght = 16;
 <<notperlcode;
 #sample input file
 fnamewidth:36
+ttlght:20
+svght:16
 
 file:fileA
 length:50
@@ -97,7 +99,7 @@ sub filecoverage {
     &l00httpd::l00fwriteBuf($ctrl, "</svg>\n");
     &l00httpd::l00fwriteClose($ctrl);
 
-    printf $sock ("%${fnamewidth}s <img src=\"/ls.htm?path=l00://$fname.svg\">\n", $fname);
+    printf $sock ("%${fnamewidth}s <a href=\"/$fname\"><img src=\"/ls.htm?path=l00://$fname.svg\"></a>\n", $fname);
 }
 
 
@@ -130,6 +132,12 @@ if (defined($ctrl->{'FORM'}->{'arg1'})) {
             }
             if (/^fnamewidth:(-*\d+)/) {
                 $fnamewidth = $1;
+            }
+            if (/^svght:(\d+)/) {
+                $svght = $1;
+            }
+            if (/^ttlght:(\d+)/) {
+                $ttlght = $1;
             }
         }
     }
