@@ -462,19 +462,19 @@ sub l00http_mobizoom_part1 {
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
     }
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"100\">100% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"110\">110% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"133\">133% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"160\">160% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"176\">176% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"194\">194% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\">240% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"300\">300% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500% ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"600\">600% ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"100\">100 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"110\">110 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"133\">133 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"160\">160 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"176\">176 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"194\">194 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\">240 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"300\">300 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"600\">600 ";
     print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size\n";
     print $sock "</form>\n";
 
