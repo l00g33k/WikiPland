@@ -50,7 +50,11 @@ sub l00http_reader_proc (\%) {
         $readln--;
     }
     if (defined ($form->{'mobizoomzoom'})) {
-        $zoom = $form->{'zoom'};
+        if (defined ($form->{'zoomradio'})) {
+            $zoom = $form->{'zoomradio'};
+        } else {
+            $zoom = $form->{'zoom'};
+        }
     }
     if (defined ($form->{'setmaxlines'}) && defined ($form->{'maxlines'})) {
         # parse max number of lines to display
@@ -169,9 +173,13 @@ sub l00http_reader_proc (\%) {
     print $sock "<input type=\"submit\" name=\"download\" value=\"Download All\">\n";
     print $sock "max #:<input type=\"text\" size=\"3\" name=\"maxarts\" value=\"$maxarts\">\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\">\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"187\">187 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\">240 ";
     print $sock "<input type=\"submit\" name=\"mobizoomzoom\" value=\"Mobizoom %\">\n";
     print $sock "<input type=\"submit\" name=\"diskusage\" value=\"Disk Usage\">\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     if (defined ($form->{'diskusage'})) {
         $diskunread = 0;
         $diskreaded = 0;
