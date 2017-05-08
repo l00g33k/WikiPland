@@ -815,14 +815,14 @@ while(1) {
             # 3) Parse client HTTP submission and identify module plugin name
             $rin = '';
             vec($rin,fileno($sock),1) = 1;
-            select ($rout = $rin, undef, $eout = $rin, 1); # public network needs 3 sec?
+            select ($rout = $rin, undef, $eout = $rin, 0.01); # public network needs 3 sec?
             if (vec($eout,fileno($sock),1) == 1) {
                 print "sock error\n";
                 next;
             } elsif (vec($rout,fileno($sock),1) == 1) {
                 $httpsiz = sysread ($sock, $httpbuf, $httpmax);
             } else {
-                print "sock timeout 1s\n", if ($debug >= 4);
+                print "sock timeout 0.01s\n", if ($debug >= 4);
                 $sock->close;
                 next;
             }
