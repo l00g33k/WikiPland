@@ -490,7 +490,7 @@ sub l00http_kml2gmap_proc {
             $zoom = 1;
             if ($span > 1e-9) {
                 while (1) {
-                    if ($span * 2 ** $zoom > 400) {
+                    if ($span * 2 ** $zoom > 200) {
                         last;
                     }
                     $zoom++;
