@@ -79,7 +79,7 @@ sub l00http_kml_proc {
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
     my ($gpxtime, $fname, $curlatoffset, $curlonoffset);
-    my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow);
+    my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow, $newbuf, $pathbase);
 
     $rawkml = 0;
     $kmlheadernow = '';
@@ -168,15 +168,21 @@ sub l00http_kml_proc {
             foreach $infname (@infnames) {
                 if ($infname ne '::buffer loaded::') {
                     #read $buffer;
+                    $pathbase = $infname;
                     if (&l00httpd::l00freadOpen($ctrl, $infname)) {
                         $buffer = &l00httpd::l00freadAll($ctrl);
                     } else {
                         $buffer = '';
                     }
+                } else {
+                    $pathbase = $form->{'path'};
                 }
+
                 if ($buffer eq '') {
                     next;
                 }
+                # find base dir of input file
+                $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
 
                 if ($applyoffset eq 'checked') {
                     $curlatoffset = $latoffset;
@@ -185,6 +191,21 @@ sub l00http_kml_proc {
                     $curlatoffset = 0;
                     $curlonoffset = 0;
                 }
+
+                # handle %INCLLUDE<>%
+                $newbuf = '';
+                foreach $_ (split ("\n", $buffer)) {
+                    #%INCLUDE<./london.way>%
+                    if (/^%INCLUDE<\.[\\\/](.+?)>%/) {
+                        $newbuf .= "%INCLUDE&lt;$pathbase$1&gt;\n";
+                        if (&l00httpd::l00freadOpen($ctrl, "$pathbase$1")) {
+                            $newbuf .= &l00httpd::l00freadAll($ctrl);
+                        }
+                    } else {
+                        $newbuf .= "$_\n";
+                    }
+                }
+                $buffer = $newbuf;
 
                 # Maverick has only \r as line endings. So convert DOS \r\n to Unix \n
                 # then convert Maverick's \r to Unix \n

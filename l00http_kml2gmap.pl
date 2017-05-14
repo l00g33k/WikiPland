@@ -216,7 +216,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
-    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly);
+    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -323,6 +323,23 @@ sub l00http_kml2gmap_proc {
     $htmlout = '';
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $buffer = &l00httpd::l00freadAll($ctrl);
+        if (!($form->{'path'} =~ /l00:\/\//)) {
+            $pathbase = $form->{'path'};
+            $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
+            $newbuf = '';
+            foreach $_ (split ("\n", $buffer)) {
+                #%INCLUDE<./london.way>%
+                if (/^%INCLUDE<\.[\\\/](.+?)>%/) {
+                    $newbuf .= "%INCLUDE&lt;$pathbase$1&gt;\n";
+                    if (&l00httpd::l00freadOpen($ctrl, "$pathbase$1")) {
+                        $newbuf .= &l00httpd::l00freadAll($ctrl);
+                    }
+                } else {
+                    $newbuf .= "$_\n";
+                }
+            }
+            $buffer = $newbuf;
+        }
         $buffer =~ s/\r\n/\n/g;
         $buffer =~ s/\r/\n/g;
         $myCenters = '';
@@ -536,7 +553,8 @@ sub l00http_kml2gmap_proc {
     print $sock "<a href=\"#__toc__\">TOC</a> - \n";
     print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
-    print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a><p>\n";
+    print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a> - \n";
+    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a><p>\n";
 
 
     if (defined ($form->{'path'})) {
