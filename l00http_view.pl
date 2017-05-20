@@ -413,16 +413,11 @@ sub l00http_view_proc {
     print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
 
     # skip backward $maxln
-    $tmp = $lineno - 10;
-    print $sock "View last: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=10&path=$form->{'path'}#end\">10</a>,\n";
-    $tmp = $lineno - 200;
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=200&path=$form->{'path'}#end\">200</a>,\n";
-    $tmp = $lineno - 500;
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=500&path=$form->{'path'}#end\">500</a>,\n";
-    $tmp = $lineno - 1000;
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=1000&path=$form->{'path'}#end\">1000</a> lines,\n";
-    $tmp = $lineno - 10000;
-    print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=10000&path=$form->{'path'}#end\">10000</a> lines.<p>\n";
+    print $sock "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$form->{'path'}#end\">10</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$form->{'path'}#end\">200</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$form->{'path'}#end\">500</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$form->{'path'}#end\">1000</a> lines,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$form->{'path'}#end\">10000</a> lines.<p>\n";
 
     # view first X lines
     print $sock "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$form->{'path'}#top\">10</a>,\n";
