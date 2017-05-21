@@ -29,7 +29,7 @@ my ($el, $file, $fullpath, $gid, $hits, $hour, $htmlend, $ii);
 my ($ino, $intbl, $isdst, $editable, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
-my ($wday, $yday, $year, @cols, @el, @els);
+my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date);
 my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
 
@@ -43,6 +43,7 @@ $block = ".";
 $prefmt = 'checked';
 $sortfind = '';
 $showpage = 'checked';
+$sortkey1name2date = 1;
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -197,6 +198,13 @@ sub l00http_ls_proc {
             $target = $ctrl->{'lsset'}; 
         } else {
             $target = "blog";
+        }
+    }
+    if ((defined ($form->{'submit'})) && ($form->{'submit'} eq 'Submit')) {
+        if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
+            $sortkey1name2date = 2;
+        } else {
+            $sortkey1name2date = 1;
         }
     }
 
@@ -1070,7 +1078,8 @@ print;
         $fileout = '';
         $clipfile = '';
         $clipdir = '';
-        if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
+        #if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) 
+        if ($sortkey1name2date == 2) {
             # sort by reverse time
             $llspath = $path;
             @dirs = sort llsfn readdir (DIR);
@@ -1261,7 +1270,7 @@ print;
     #       print $sock "        <td>&nbsp;</td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
 
-            if ($wikihtmlflags == 2) {
+            if ($sortkey1name2date == 2) {
                 $buf = "checked";
             } else {
                 $buf = "";
