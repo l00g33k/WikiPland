@@ -7,7 +7,7 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($lastcalled, $interval, $starttime, $msgtoast, $vibra, $vibracnt, 
+my ($lastcalled, $interval, $starttime, $lifestart, $msgtoast, $vibra, $vibracnt, 
     $utcoffsec, $wake, $vmsec, $pause, $filetime);
 my %config = (proc => "l00http_reminder_proc",
               desc => "l00http_reminder_desc",
@@ -211,6 +211,7 @@ sub l00http_reminder_proc {
     if (defined ($form->{"reload"})) {
         $interval = 0;
         $starttime = 0x7fffffff;
+        $lifestart = time - $utcoffsec;
         $lastcalled = 0;
         $pause = 0;
         if ($wake != 0) {
@@ -408,9 +409,13 @@ sub l00http_reminder_perio {
 
             if ((!($msgtoast =~ /^ *$/)) &&
                 ($ctrl->{'bannermute'} <= time)) {
-                $life = sprintf ("%d.%02d:", 
-                    int (((time - $utcoffsec) - $starttime) / 60),
-                    ((time - $utcoffsec) - $starttime) % 60);
+                $_ = $starttime;
+                if ($_ < $lifestart) {
+                    $_ = $lifestart;
+                }
+                $life = sprintf ("%d:%02d:", 
+                    int (((time - $utcoffsec) - $_) / 60),
+                    ((time - $utcoffsec) - $_) % 60);
                 &l00httpd::l00PopMsg($ctrl, "$life $msgtoast");
             }
 
