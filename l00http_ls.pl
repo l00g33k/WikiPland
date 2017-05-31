@@ -287,7 +287,9 @@ sub l00http_ls_proc {
     $editable = 0;
     $htmlend = 1;
     # try to open as a directory
+    print "ls: try open as directory >$path<\n", if ($ctrl->{'debug'} >= 5);
     if (!opendir (DIR, $path)) {
+        print "ls: it is not a directory >$path<\n", if ($ctrl->{'debug'} >= 5);
 
         # 2) If the path is not a directory:
 
@@ -442,6 +444,12 @@ sub l00http_ls_proc {
                                             if (/^#/) {
                                                 # skip ^#
                                                 next;
+                                            }
+                                            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+                                            if (/%L00HTTP<(.+?)>%/) {
+                                                if (defined($ctrl->{$1})) {
+                                                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                                                }
                                             }
                                             $buf .= $_;
                                         }
@@ -884,6 +892,12 @@ print;
                                             # skip ^#
                                             next;
                                         }
+                                        # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+                                        if (/%L00HTTP<(.+?)>%/) {
+                                            if (defined($ctrl->{$1})) {
+                                                s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                                            }
+                                        }
                                         $buf .= $_;
                                     }
                                 }
@@ -1036,6 +1050,7 @@ print;
     } else {
         #.dir
         # yes, it is a directory, read files in the directory
+        print "ls: it is a directory >$path<\n", if ($ctrl->{'debug'} >= 5);
 
         if ((defined ($form->{'showbak'})) && ($form->{'showbak'} eq 'on')) {
             $showbak = 1;
