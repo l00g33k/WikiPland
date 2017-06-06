@@ -82,6 +82,8 @@ sub l00http_slideshow_proc {
                         push (@allpics, $file);
                     } elsif ($file =~ /\.png$/i) {
                         push (@allpics, $file);
+                    } elsif ($file =~ /\.wmf$/i) {
+                        push (@allpics, $file);
                     }
                 }
                 closedir (DIR);
@@ -128,9 +130,9 @@ sub l00http_slideshow_proc {
                         $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:<br>\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
 
 #                       if (($width =~ /^\d/) && ($height =~ /^\d/)) {
-                            $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                            $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
 #                       } else {
-#                           $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\"><a/>\n";
+#                           $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\"><a/>\n";
 #                       }
                         $phase++;
                     }
