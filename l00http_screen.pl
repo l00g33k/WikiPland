@@ -79,7 +79,7 @@ sub l00http_screen_proc (\%) {
 
     print $sock "<a href=\"/screen.htm?inc10=\">++</a> - \n";
     print $sock "<a href=\"/screen.htm?dec10=\">--</a> - \n";
-    for ($ii = 0; $ii < 255; $ii += 10) {
+    for ($ii = 0; $ii < 255; $ii += 5) {
         print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
     }
     print $sock "<p><hr><p>\n";

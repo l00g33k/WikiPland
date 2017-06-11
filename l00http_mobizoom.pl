@@ -20,11 +20,12 @@ use l00wget;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here, $prolog, $freeimgsize);
+my ($url, $zoom, $para, $here, $prolog, $freeimgsize, $backurl);
 $url = '';
 $zoom = 150;
 $para = 1;
 $freeimgsize = 'checked';
+$backurl = '';
 
 sub wgetfollow2 {
     my ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
@@ -502,6 +503,8 @@ sub l00http_mobizoom_part1 {
     $title =~ s/<\/*title>//g;
     $tmp = &l00httpd::urlencode ($title);
     print $sock "-- Title: <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">$title</a>";
+    print $sock "-- <a href=\"/mobizoom.htm?fetch=Fetch&url=$backurl\">Back</a>\n";
+    $backurl = $url;
     print $sock "<hr>\n";
 }
 

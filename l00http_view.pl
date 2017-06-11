@@ -209,6 +209,12 @@ sub l00http_view_proc {
         }
         print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>.\n";
         print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$form->{'path'}&blklineno=$hilite\">single line edit mode</a>.\n";
+        print $sock "Expand ";
+        print $sock sprintf ("<a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $hilite - 200, 600, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $hilite - 500, 2000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $hilite - 1000, 3000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $hilite - 2000, 5000, $hilite);
+        print $sock " lines of context.";
     }
 
 
@@ -416,14 +422,18 @@ sub l00http_view_proc {
     print $sock "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$form->{'path'}#end\">10</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$form->{'path'}#end\">200</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$form->{'path'}#end\">500</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$form->{'path'}#end\">1000</a> lines,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$form->{'path'}#end\">1000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=2000&path=$form->{'path'}#end\">2000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=5000&path=$form->{'path'}#end\">5000</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$form->{'path'}#end\">10000</a> lines.<p>\n";
 
     # view first X lines
     print $sock "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$form->{'path'}#top\">10</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$form->{'path'}#top\">200</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$form->{'path'}#top\">500</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$form->{'path'}#top\">1000</a> lines,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$form->{'path'}#top\">1000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=2000&path=$form->{'path'}#top\">2000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$form->{'path'}#top\">5000</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$form->{'path'}#top\">10000</a> lines.<p>\n";
 
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
