@@ -32,6 +32,7 @@ sub l00http_edit_proc2 {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf, $st, $en);
 	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip, $diffurl, $lineno1);
+    my ($thischlvl, $lastchlvl, @chlvls, @el, $ii);
 
     $diffurl  = '';
 
@@ -296,6 +297,71 @@ sub l00http_edit_proc2 {
         &l00httpd::l00setCB($ctrl, $buffer);
     } elsif (defined ($form->{'cbtoedit'})) {
         $buffer = &l00httpd::l00getCB($ctrl);
+    } elsif (defined ($form->{'delchno'})) {
+        @alllines = split ("\n", $buffer);
+        $buffer = '';
+        foreach $line (@alllines) {
+            $line =~ s/\n//g;
+            if ($line =~ /^(=+)(\d+[0-9.]*\. )(.+)$/) {
+                $line = "$1$3";
+            }
+            $buffer .= "$line\n";
+        }
+    } elsif (defined ($form->{'addchno'})) {
+        @alllines = split ("\n", $buffer);
+        $buffer = '';
+        undef $lastchlvl;
+        foreach $line (@alllines) {
+            $line =~ s/\n//g;
+            if (@el = $line =~ /^(=+)([^=]+?)(=+)(.*)$/) {
+                if ($el[0] eq $el[2]) {
+                    $thischlvl = length($el[0]);
+                    if (defined ($lastchlvl)) {
+                        # increment current chapter level
+                        if ($lastchlvl == $thischlvl) {
+                            # increment current level
+                            if (!defined ($chlvls[$thischlvl])) {
+                                # 1 if non existent
+                                $chlvls[$thischlvl] = 1;
+                            } else {
+                                # else increment
+                                $chlvls[$thischlvl]++;
+                            }
+                            # create if non existence
+                            for ($ii = 1; $ii < $thischlvl; $ii++) {
+                                if (!defined ($chlvls[$ii])) {
+                                    # 1 if non existent
+                                    $chlvls[$ii] = 1;
+                                }
+                            }
+                        } elsif ($lastchlvl > $thischlvl) {
+                            # increment higher level
+                            $chlvls[$thischlvl]++;
+                        } else { # ($lastchlvl < $thischlvl)
+                            # increment lower level
+                            for ($ii = $lastchlvl + 1; $ii <= $thischlvl; $ii++) {
+                                $chlvls[$ii] = 1;
+                            }
+                        }
+                    } else {
+                        # this is the first time ever.  Everything starts at 1.1.
+                        for ($ii = 1; $ii <= $thischlvl; $ii++) {
+                            $chlvls[$ii] = 1;
+                        }
+                    }
+                    $tmp = '';
+                    for ($ii = 1; $ii <= $thischlvl; $ii++) {
+                        $tmp .= "$chlvls[$ii].";
+                    }
+                    $lastchlvl = $thischlvl;
+                    # no line number in chapter title # $el[1] = "$tmp $el[1] ($lnno)";
+                    if ($line =~ /^(=+)(.+)$/) {
+                        $line = "$1$tmp $2";
+                    }
+                }
+            }
+            $buffer .= "$line\n";
+        }
     } elsif (defined ($form->{'edittotxt'})) {
         $buffer = &l00httpd::l00getCB($ctrl);
         if (defined ($form->{'buffer'})) {
@@ -395,7 +461,8 @@ sub l00http_edit_proc2 {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"appbookmark\" value=\"Add BKMK\">\n";
     print $sock "</td><td>\n";
-    print $sock "&nbsp;\n";
+    print $sock "<input type=\"submit\" name=\"addchno\" value=\"Add #ch prefix\">\n";
+    print $sock "<input type=\"submit\" name=\"delchno\" value=\"Del\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
