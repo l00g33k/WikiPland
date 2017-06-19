@@ -488,12 +488,20 @@ sub l00http_kml2gmap_proc {
         } else {
             $_ = 'ROADMAP';
         }
-        $ctrlon = ($lonmax + $lonmin) / 2;
+        if (defined($lonmax) && defined($lonmin) &&
+            defined($latmax) && defined($latmin)) {
         $ctrlat = ($latmax + $latmin) / 2;
+            $ctrlon = ($lonmax + $lonmin) / 2;
         $span = sqrt (($lonmax - $lonmin) ** 2 + 
                       (($latmax - $latmin) * 
                       cos (($latmax + $latmin) / 2 / 180 
                         * 3.141592653589793)) ** 2);
+        } else {
+            $ctrlat = 0;
+            $ctrlon = 0;
+            $span = 180;
+        }
+
         if ($nomarkers == 1) {
             # if only one marker or
             $zoom = 11;
