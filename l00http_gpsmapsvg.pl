@@ -66,7 +66,7 @@ my %config = (proc => "l00http_gpsmapsvg_proc",
               desc => "l00http_gpsmapsvg_desc");
 
 
-
+# converts lon/lat to screen x/y coordinate
 sub ll2xysvg {
     my ($lonhtm, $lathtm) = @_;
     my ($pixx, $pixy, $notclip);
@@ -91,6 +91,7 @@ sub ll2xysvg {
     ($pixx, $pixy, $notclip);
 }
 
+# converts screen x/y coordinate to lon/lat
 sub xy2llsvg {
     my ($pixx, $pixy) = @_;
     my ($lonhtm, $lathtm);
