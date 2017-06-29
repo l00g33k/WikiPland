@@ -9,6 +9,9 @@ use l00wikihtml;
 my %config = (proc => "l00http_clip_proc",
               desc => "l00http_clip_desc");
 
+my ($url);
+$url = '';
+
 sub l00http_clip_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -43,6 +46,10 @@ sub l00http_clip_proc {
             $tmp = &l00httpd::urlencode ($clip);
             print $sock "Send to server <a href=\"http://127.0.0.1:20337/clip.htm?update=update&clip=$tmp\" target=\"newwin\">20337</a><p>\n";
             &l00httpd::l00setCB($ctrl, $clip);
+                if (defined ($form->{'url'})) {
+                    # clears
+                    $url = $form->{'url'};
+                }
         } elsif (defined ($form->{'link'})) {
             # send text [[/clip.pl?...|show text]] to clipboard
             if ($clip =~ /^\s*(\S+ +\S+)/)  {
@@ -72,10 +79,15 @@ sub l00http_clip_proc {
         print $sock "<br>\n";
     }
     print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\">$clip</textarea>\n";
+    print $sock "<br>Jump URL: <input type=\"text\" size=\"10\" name=\"url\" value=\"$url\">\n";
     print $sock "</form>\n";
 
     print $sock "View <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>, \n";
-    print $sock "<a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>.<p>\n";
+    print $sock "<a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>.\n";
+    if ($url ne '') {
+        print $sock "<br>Jump URL: <a href=\"$url\">$url</a>.\n";
+    }
+    print $sock "<p>\n";
 
     print $sock "<p>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $clip." <p><p>", 0);
