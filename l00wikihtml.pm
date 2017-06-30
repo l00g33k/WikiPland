@@ -806,11 +806,12 @@ if(1){
         # make http links
         s/\n//g;
         s/\r//g;
+        # Make [[[http://...jpg]]] <img src...>
+        s/\[\[\[(https*:\/\/[^ ]+\.)(jpg|png|bmp|gif|svg|jpeg)\]\]\]/<img src=\"$1$2\">/g;
         # Makes http links a [[wikilink]]
         # For http(s) not preceeded by [|" becomes whatever [[http...]]
         s|([^\[\|"])(https*://[^ ]+)|$1\[\[$2\]\]|g;
         # make it work on column 0 too
-#c518        s|^(https*://[^ ]+)|\[\[$1\]\]|;
         s|^(https*://[^ ]+)| \[\[$1\]\]|;
         # process multiple [[ ]] on the line
         @els = split (']]', $_);
@@ -819,7 +820,6 @@ if(1){
             if (($tx,$url) = $el =~ /^(.+)\[\[(.+)$/) {
                 # now have a line ending in only one pair of [[wikilink]]
                 # i.e. $tx[[$url]]
-#               ($tx,$url) = split ("]]", $el);
 
                 if (($url =~ /^#/) && !($url =~ /\|/)) {
                     # local anchor
@@ -853,13 +853,16 @@ if(1){
 #d612                        $http = "/ls.htm/$tmp?path=".$pname.$http;
                         $http = "/ls.htm/$tmp.htm?path=".$pname.$http;
                     }
-                    if (($url !~ /\|/) && 
-                        ($http =~ /(\.jpg|\.png|\.bmp|\.gif|\.svg|\.jpeg)/i)) {
-                        # make [[*.jpg]
-                        $_ .= $tx . "<img src=\"$http\">";
-                    } else {
-                        $_ .= $tx . "<a href=\"$http\">$desc</a>";
-                    }
+                    # no longer automatically make links to image embedded
+                    # as it bloats the page
+                    $_ .= $tx . "<a href=\"$http\">$desc</a>";
+#                   if (($url !~ /\|/) && 
+#                       ($http =~ /(\.jpg|\.png|\.bmp|\.gif|\.svg|\.jpeg)/i)) {
+#                       # make [[*.jpg]
+#                       $_ .= $tx . "<img src=\"$http\">";
+#                   } else {
+#                       $_ .= $tx . "<a href=\"$http\">$desc</a>";
+#                   }
                 }
             } else {
                 # just a bare line without [[wikilink]]

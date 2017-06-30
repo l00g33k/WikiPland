@@ -282,7 +282,7 @@ sub l00http_cron_desc {
     $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "* cron.htm log file:\n\n";
 
 
-    "cron: A cron task dispatcher. Add task in <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_cron.txt\">l00_cron.txt</a>";
+    " B: cron: A cron task dispatcher. Add task in <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_cron.txt\">l00_cron.txt</a>";
 }
 
 sub l00http_cron_proc {

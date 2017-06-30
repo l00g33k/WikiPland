@@ -66,7 +66,7 @@ my %config = (proc => "l00http_gpsmapsvg_proc",
               desc => "l00http_gpsmapsvg_desc");
 
 
-
+# converts lon/lat to screen x/y coordinate
 sub ll2xysvg {
     my ($lonhtm, $lathtm) = @_;
     my ($pixx, $pixy, $notclip);
@@ -91,6 +91,7 @@ sub ll2xysvg {
     ($pixx, $pixy, $notclip);
 }
 
+# converts screen x/y coordinate to lon/lat
 sub xy2llsvg {
     my ($pixx, $pixy) = @_;
     my ($lonhtm, $lathtm);
@@ -202,10 +203,10 @@ sub l00http_gpsmapsvg_proc (\%) {
         if (defined ($form->{'waycolor'})) {
             $waycolor = $form->{'waycolor'};
         }
-#fitfit        $fitmapphase = 0;
-#fitfit        if (defined ($form->{'fittrack'}) && ($form->{'fittrack'} eq 'on')) {
-#fitfit            $fitmapphase = 1;
-#fitfit        }
+        $fitmapphase = 0;
+        if (defined ($form->{'fittrack'}) && ($form->{'fittrack'} eq 'on')) {
+            $fitmapphase = 1;
+        }
     }
     # mark point
     if (defined ($form->{'marktrack'}) &&
@@ -426,20 +427,20 @@ sub l00http_gpsmapsvg_proc (\%) {
                     if ($1 eq 'S') {
                         $plat = -$plat;
                     }
-#fitfit                    if ($fitmapphase > 0) {
-#fitfit                        if ($fitmapphase == 1) {
-#fitfit                            $fitmapmaxlon = $plon;
-#fitfit                            $fitmapminlon = $plon;
-#fitfit                            $fitmapmaxlat = $plat;
-#fitfit                            $fitmapminlat = $plat;
-#fitfit                            $fitmapphase = 2;
-#fitfit                        } else {
-#fitfit                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
-#fitfit                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
-#fitfit                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
-#fitfit                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
-#fitfit                        }
-#fitfit                    }
+                    if ($fitmapphase > 0) {
+                        if ($fitmapphase == 1) {
+                            $fitmapmaxlon = $plon;
+                            $fitmapminlon = $plon;
+                            $fitmapmaxlat = $plat;
+                            $fitmapminlat = $plat;
+                            $fitmapphase = 2;
+                        } else {
+                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
+                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
+                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
+                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
+                        }
+                    }
                     ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
                     l00httpd::dbp($config{'desc'}, "(pixx $pixx, pixy $pixy, notclip $notclip) = &ll2xysvg (plon $plon, plat$plat)\n");
                     if ($notclip) {
@@ -511,20 +512,20 @@ sub l00http_gpsmapsvg_proc (\%) {
                 if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
                     ##long,lat,name
                     #121.386309,31.171295,Huana
-#fitfit                    if ($fitmapphase > 0) {
-#fitfit                        if ($fitmapphase == 1) {
-#fitfit                            $fitmapmaxlon = $plon;
-#fitfit                            $fitmapminlon = $plon;
-#fitfit                            $fitmapmaxlat = $plat;
-#fitfit                            $fitmapminlat = $plat;
-#fitfit                            $fitmapphase = 2;
-#fitfit                        } else {
-#fitfit                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
-#fitfit                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
-#fitfit                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
-#fitfit                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
-#fitfit                        }
-#fitfit                    }
+                    if ($fitmapphase > 0) {
+                        if ($fitmapphase == 1) {
+                            $fitmapmaxlon = $plon;
+                            $fitmapminlon = $plon;
+                            $fitmapmaxlat = $plat;
+                            $fitmapminlat = $plat;
+                            $fitmapphase = 2;
+                        } else {
+                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
+                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
+                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
+                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
+                        }
+                    }
                     ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
                     if ($notclip) {
                         print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
@@ -533,19 +534,19 @@ sub l00http_gpsmapsvg_proc (\%) {
                 }
             }
             close (WAY);
-#fitfit            if ($fitmapphase == 2) {
-#fitfit                $maptllon = $fitmapminlon;
-#fitfit                $maptllat = $fitmapmaxlat;
-#fitfit                $mapbrlon = $fitmapmaxlon;
-#fitfit                $mapbrlat = $fitmapminlat;
-#fitfit
-#fitfit                $maptllon -= ($fitmapmaxlon - $fitmapminlon) / 10;
-#fitfit                $maptllat += ($fitmapmaxlat - $fitmapminlat) / 10;
-#fitfit                $mapbrlon += ($fitmapmaxlon - $fitmapminlon) / 10;
-#fitfit                $mapbrlat -= ($fitmapmaxlat - $fitmapminlat) / 10;
-#fitfit
-#fitfit                $fitmapphase = -1;
-#fitfit            }
+            if ($fitmapphase == 2) {
+                $maptllon = $fitmapminlon;
+                $maptllat = $fitmapmaxlat;
+                $mapbrlon = $fitmapmaxlon;
+                $mapbrlat = $fitmapminlat;
+
+                $maptllon -= ($fitmapmaxlon - $fitmapminlon) / 10;
+                $maptllat += ($fitmapmaxlat - $fitmapminlat) / 10;
+                $mapbrlon += ($fitmapmaxlon - $fitmapminlon) / 10;
+                $mapbrlat -= ($fitmapmaxlat - $fitmapminlat) / 10;
+
+                $fitmapphase = -1;
+            }
 
             if ($tracknpts ne '') {
                 $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
@@ -767,13 +768,13 @@ sub l00http_gpsmapsvg_proc (\%) {
             print $sock "$_";
         }
 
-#fitfit        if ($fitmapphase != 0) {
-#fitfit            print $sock "\nOverwritten by fitmapphase $fitmapphase\n";
-#fitfit            print $sock "maptllon $maptllon = fitmapminlon $fitmapminlon;\n";
-#fitfit            print $sock "maptllat $maptllat = fitmapmaxlat $fitmapmaxlat;\n";
-#fitfit            print $sock "mapbrlon $mapbrlon = fitmapmaxlon $fitmapmaxlon;\n";
-#fitfit            print $sock "mapbrlat $mapbrlat = fitmapminlat $fitmapminlat;\n";
-#fitfit        }
+        if ($fitmapphase != 0) {
+            print $sock "\nOverwritten by fitmapphase $fitmapphase\n";
+            print $sock "maptllon $maptllon = fitmapminlon $fitmapminlon;\n";
+            print $sock "maptllat $maptllat = fitmapmaxlat $fitmapmaxlat;\n";
+            print $sock "mapbrlon $mapbrlon = fitmapmaxlon $fitmapmaxlon;\n";
+            print $sock "mapbrlat $mapbrlat = fitmapminlat $fitmapminlat;\n";
+        }
 
         print $sock "</pre>\n";
     }

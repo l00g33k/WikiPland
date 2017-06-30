@@ -131,6 +131,9 @@ sub l00http_reader_proc (\%) {
 #   $tmp =~ s/\//%2F/g;
 #   $tmp =~ s/\|/%7C/g;
     $tmp = &l00httpd::urlencode ($curr);
+    if (defined($ctrl->{'readerjumpurl'})) {
+        $tmp .= "&url=$ctrl->{'readerjumpurl'}";
+    }
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">clipboard</a>\n";
     print $sock "<input type=\"submit\" name=\"markread\" value=\"Mark read\">\n";
     print $sock "<input type=\"hidden\" name=\"readln\" value=\"$readln\">\n";

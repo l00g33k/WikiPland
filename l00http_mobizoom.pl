@@ -463,19 +463,9 @@ sub l00http_mobizoom_part1 {
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
     }
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"100\">100 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"110\">110 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"133\">133 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"160\">160 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"176\">176 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"194\">194 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\">240 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"300\">300 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"400\">400 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"500\">500 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"600\">600 ";
+    foreach $_ ((100, 110, 121, 133, 146, 160, 176, 194, 240, 300, 400, 500, 600)) {
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=Fetch&url=$url&zoomradio=$_\">$_</a> ";
+    }
     print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size\n";
     print $sock "</form>\n";
 
@@ -493,6 +483,7 @@ sub l00http_mobizoom_part1 {
     $tmp =~ s/\|/%7C/g;
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
     print $sock "<a href=\"$orgurl\">original</a> \n";
+    print $sock "<a href=\"/launcher.htm?path=$orgurl\" target=\"orgurl\">launcher</a> - \n";
     print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
     print $sock "View: <a href=\"/view.htm?path=l00://mobizoom_wget.htm\">l00://mobizoom_wget.htm</a> -\n";
     print $sock "<a href=\"/view.htm?path=l00://mobizoom_mblz.htm\">l00://mobizoom_mblz.htm</a> -\n";
