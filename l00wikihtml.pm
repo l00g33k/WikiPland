@@ -515,16 +515,17 @@ if(1){
         # This is an [example link](http://example.com/).
         s/\[(.+?)\]\((.+?)\)/<a href="$2">$1<\/a>/g;
         # mutiple line paragraphs
-        if ($mode0unknown1twiki2markdown == 2) {
-            # if line start with word, then it must be 
-            # normal paragraph. Don't put <br> at the end
-            if (/^ *$/) {
-                # blank line in markdown is end of paragraph
-                $markdownparanobr = 1;
-            } else {
-                $markdownparanobr = /^\w/;
-            }
+#h630        if ($mode0unknown1twiki2markdown == 2) {
+        # if line start with word, then it must be 
+        # normal paragraph. Don't put <br> at the end
+        # Do this for non markdown too. h630
+        if (/^ *$/) {
+            # blank line in markdown is end of paragraph
+            $markdownparanobr = 1;
+        } else {
+            $markdownparanobr = /^\w/;
         }
+#h630        }
 
         # was in a table but not any more, close table
         if (!(/^\|\|/) && ($intbl == 1)) {
