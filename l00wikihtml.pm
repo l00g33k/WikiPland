@@ -523,7 +523,8 @@ if(1){
             # blank line in markdown is end of paragraph
             $markdownparanobr = 1;
         } else {
-            $markdownparanobr = /^\w/;
+#            $markdownparanobr = /^\w/;
+            $markdownparanobr = /^[^ ]/;
         }
 #h630        }
 
