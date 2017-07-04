@@ -165,11 +165,11 @@ sub l00http_mobizoom_mobilize {
     }
 
     # remote various HTML tags
-    $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
+    $wget =~ s/<head.*?>.*?<\/head.*?>//gsi;
     $wget =~ s/<\/*body.*?>//gs;
 
     # form
-    $wget =~ s/<form.+?<\/form *\n*\r*>//sg;
+    $wget =~ s/<form.+?<\/form *\n*\r*>//gsi;
 
     # free size image
     if ($freeimgsize eq 'checked') {
@@ -243,28 +243,28 @@ sub l00http_mobizoom_mobilize {
             $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
         }
 
-        $wget =~ s/<\/*span.*?>//gs;
-        $wget =~ s/<\/*div.*?>//gs;
-        $wget =~ s/<\/*aside.*?>//gs;
-        $wget =~ s/<\/*figure.*?>//gs;
-        $wget =~ s/<\/*article.*?>//gs;
-        $wget =~ s/<\/*section.*?>//gs;
-        $wget =~ s/<\/*main.*?>//gs;
-        $wget =~ s/<\/*nav.*?>//gs;
-        $wget =~ s/<hr.*?>//gs;
+        $wget =~ s/<\/*span.*?>//gsi;
+        $wget =~ s/<\/*div.*?>//gsi;
+        $wget =~ s/<\/*aside.*?>//gsi;
+        $wget =~ s/<\/*figure.*?>//gsi;
+        $wget =~ s/<\/*article.*?>//gsi;
+        $wget =~ s/<\/*section.*?>//gsi;
+        $wget =~ s/<\/*main.*?>//gsi;
+        $wget =~ s/<\/*nav.*?>//gsi;
+        $wget =~ s/<hr.*?>//gsi;
 
         $wget =~ s/<!.+?>//gs;
-        $wget =~ s/<script.+?<\/script *\n*\r*>//sg;
-        $wget =~ s/<iframe.+?<\/iframe>//sg;
-        $wget =~ s/<style.+?<\/style>//sg;
-        $wget =~ s/<figcaption.+?<\/figcaption>//sg;
+        $wget =~ s/<script.+?<\/script *\n*\r*>//gsi;
+        $wget =~ s/<iframe.+?<\/iframe>//gsi;
+        $wget =~ s/<style.+?<\/style>//gsi;
+        $wget =~ s/<figcaption.+?<\/figcaption>//gsi;
 
         # slashdot special: eliminate list
-        $wget =~ s/<li.*?>/<br>&sect;&nbsp;&nbsp;&nbsp;/sg;
-        $wget =~ s/<\/li.*?>//sg;
-        $wget =~ s/<\/*ul.*?>//sg;
+        $wget =~ s/<li.*?>/<br>&sect;&nbsp;&nbsp;&nbsp;/gsi;
+        $wget =~ s/<\/li.*?>//gsi;
+        $wget =~ s/<\/*ul.*?>//gsi;
 
-        $wget =~ s/<p.*?>/<br>/sgi;
+        $wget =~ s/<p.*?>/<br>/gsi;
         $wget =~ s/<\/p>//sgi;
 
 #        $wget =~ s/\r//g;
@@ -275,21 +275,21 @@ sub l00http_mobizoom_mobilize {
 #        $wget =~ s/<\/wml.*$>\n//g;
 
         if ($freeimgsize eq 'checked') {
-            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/sg;
+            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/gsi;
         } else {
-            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/sg;
+            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/gsi;
         }
 
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
-        $wget =~ s/<h(\d).*?>/<\/span><h$1>/sg;
-        $wget =~ s/<\/h(\d).*?>/<\/h$1><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<blockquote(.*?)>/<\/span><blockquote><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<\/blockquote>/<\/span><\/blockquote><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<table.*?>/<\/span><table><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<\/table.*?>/<\/span><\/table><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<footer(.*?)>/<\/span><footer><span style="font-size : $zoom%;">/sg;
-        $wget =~ s/<\/footer>/<\/span><\/footer><span style="font-size : $zoom%;">/sg;
+        $wget =~ s/<h(\d).*?>/<\/span><h$1>/gsi;
+        $wget =~ s/<\/h(\d).*?>/<\/h$1><span style="font-size : $zoom%;">/gsi;
+        $wget =~ s/<blockquote(.*?)>/<\/span><blockquote><span style="font-size : $zoom%;">/gsi;
+        $wget =~ s/<\/blockquote>/<\/span><\/blockquote><span style="font-size : $zoom%;">/gsi;
+        $wget =~ s/<table.*?>/<\/span><table><span style="font-size : $zoom%;">/gsi;
+        $wget =~ s/<\/table.*?>/<\/span><\/table><span style="font-size : $zoom%;">/gsi;
+        $wget =~ s/<footer(.*?)>/<\/span><footer><span style="font-size : $zoom%;">/gsi;
+        $wget =~ s/<\/footer>/<\/span><\/footer><span style="font-size : $zoom%;">/gsi;
 
 
         # make sure there is at most one <tag> per new line
