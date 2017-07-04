@@ -313,6 +313,11 @@ sub l00http_edit_proc2 {
         undef $lastchlvl;
         foreach $line (@alllines) {
             $line =~ s/\n//g;
+            # first remove prefix, if any
+            if ($line =~ /^(=+)(\d+[0-9.]*\. )(.+)$/) {
+                $line = "$1$3";
+            }
+            # then add prefix
             if (@el = $line =~ /^(=+)([^=]+?)(=+)(.*)$/) {
                 if ($el[0] eq $el[2]) {
                     $thischlvl = length($el[0]);
