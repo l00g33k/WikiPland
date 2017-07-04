@@ -8,12 +8,13 @@ use l00wikihtml;
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
 my ($width, $height, $apikey, $satellite);
-my ($new);
+my ($new, $selregex);
 
 $new = 1;
 $myCenters = '';
 $myMarkers = '';
 $mySetMap = '';
+$selregex = '';
 
 $width = 500;
 $height = 380;
@@ -294,10 +295,14 @@ sub l00http_kml2gmap_proc {
             &l00httpd::l00fwriteBuf($ctrl, $buffer);
             &l00httpd::l00fwriteClose($ctrl);
         }
-    }
-
+    } 
 
     undef %labelsort;
+    if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+        $selregex = $form->{'selregex'};
+    } else {
+        $selregex = '';
+    }
     if (defined ($form->{'mkridx'})) {
         if ($form->{'mkridx'} < 26) {
             $_ = chr(65 + $form->{'mkridx'});
@@ -306,8 +311,7 @@ sub l00http_kml2gmap_proc {
         }
         $_ = " Centered on marker '$_'";
     } elsif (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
-        $_ = $form->{'selregex'};
-        $_ = " Centered by matching pattern '$_'";
+        $_ = " Centered by matching pattern '$selregex'";
     } else {
         $_ = "";
     }
@@ -396,6 +400,13 @@ sub l00http_kml2gmap_proc {
                     # select all matching
                     if (!($name =~ /$form->{'selregex'}/i)) {
                         # name not matching, skip
+                        next;
+                    }
+                } elsif (defined($form->{'exclude'}) && 
+                    ($form->{'exclude'} eq 'on')) {
+                    # exclude all matching
+                    if ($name =~ /$form->{'selregex'}/i) {
+                        # name matched, skip
                         next;
                     }
                 } else {
@@ -559,6 +570,7 @@ sub l00http_kml2gmap_proc {
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "<a href=\"#__toc__\">TOC</a> - \n";
+    print $sock "<a href=\"#__end__\">end</a> - \n";
     print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a> - \n";
@@ -621,13 +633,14 @@ sub l00http_kml2gmap_proc {
     print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"matched\">matched</td><td>select <input type=\"text\" name=\"selregex\" size=\"5\">\n";
+    print $sock "<input type=\"checkbox\" name=\"matched\">matched <br><input type=\"checkbox\" name=\"exclude\">exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table>\n";
     print $sock "</form>\n";
 
     # send HTML footer and ends
+    print $sock "<a name=\"__end__\"></a>\n";
     print $sock $ctrl->{'htmlfoot'};
 }
 
