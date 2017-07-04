@@ -115,7 +115,7 @@ sub wikihtml {
     my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $tag, $bareclip);
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
-    my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx);
+    my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx, $seenEqualStar);
     my ($mode0unknown1twiki2markdown, $mdChanged2Tw, $markdownparanobr, $loop);
 
     undef @chlvls;
@@ -351,6 +351,7 @@ if(1){
     $mode0unknown1twiki2markdown = 0;
     $markdownparanobr = 0;
     @inputcache = split ("\n", $inbuf); # allows look forward
+    $seenEqualStar = 0;
     for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
         $_ = $inputcache[$cacheidx];
         if (/%l00httpd:lnno:([0-9,]+)%/) {
@@ -523,8 +524,16 @@ if(1){
             # blank line in markdown is end of paragraph
             $markdownparanobr = 1;
         } else {
+            # this is a non-blank line
 #            $markdownparanobr = /^\w/;
-            $markdownparanobr = /^[^ ]/;
+            if ($seenEqualStar == 0) {
+                # if we haven't seen ^* or ^=, then newline is <br>
+                $markdownparanobr = 0;
+            } else {
+                # if we have seen ^* or ^=, then do not 
+                # add <br> if this line starts with non-blank
+                $markdownparanobr = /^[^ ]/;
+            }
         }
 #h630        }
 
@@ -684,6 +693,7 @@ if(1){
 
         # process headings
         if (@el = /^(=+)([^=]+?)(=+)(.*)$/) {
+            $seenEqualStar = 1;
             if ($el[0] eq $el[2]) {
                 # is this ==twiki== heading original or from markdown?
                 if ($mdChanged2Tw == 0) {
@@ -971,6 +981,7 @@ if(1){
             $_ = "$lv $tx";
         }
         if (($lv,$tx) = /^(\*+) (.*)$/) {
+            $seenEqualStar = 1;
             if ($mode0unknown1twiki2markdown == 2) {
                 # markdown multiple line bullet support
                 #print "0)>$_<(\n";
