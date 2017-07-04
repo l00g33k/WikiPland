@@ -16,7 +16,7 @@ sub l00http_uploadfile_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "uploadfile: Upload file to the server";
+    " B: uploadfile: Upload file to the server";
 }
 
 sub l00http_uploadfile_proc {
