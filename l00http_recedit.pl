@@ -15,20 +15,22 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($sock, $form, $line, $id, $obuf) = @_;
-    my ($tmp, $disp, $lf, $leading);
+    my ($tmp, $disp, $lf, $leading, $html);
+
+    $html = '';
 
     # record before the current record was a hit, print
-    print $sock "    <tr>\n";
+    $html .= "    <tr>\n";
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
-        print $sock "        <td><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
-        print $sock "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
-        print $sock "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
+        $html .= "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
+        $html .= "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
         $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
-        print $sock "        <td><input type=\"checkbox\" name=\"id$id\">del</td>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\">del</td>\n";
     }
-    print $sock "        <td><font face=\"Courier New\">";
+    $html .= "        <td><font face=\"Courier New\">";
     $lf = '';
     foreach $line (split("\n", $obuf)) {
         $line =~ s/\r//;
@@ -102,11 +104,13 @@ sub l00http_recedit_output_row {
             $disp =~ s/ /&nbsp;/g;
             $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">$disp</a>";
         }
-        print $sock "$lf$line";
+        $html .= "$lf$line";
         $lf = "<br>\n";
     }
-    print $sock "</font></td>\n";
-    print $sock "    </tr>\n";
+    $html .= "</font></td>\n";
+    $html .= "    </tr>\n";
+
+    $html;
 }
 
 sub l00http_recedit_desc {
@@ -122,7 +126,7 @@ sub l00http_recedit_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted);
-    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2);
+    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -322,6 +326,7 @@ sub l00http_recedit_proc (\%) {
     print $sock "    </tr>\n";
 
     if (length($record1) > 0) {
+        undef @table;
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $obuf = '';
             $found = 0;
@@ -336,7 +341,7 @@ sub l00http_recedit_proc (\%) {
                 if (/$record1/) {
                     # found start of new record
                     if ($found) {
-                        &l00http_recedit_output_row($sock, $form, $line, $id, $obuf);
+                        push (@table, &l00http_recedit_output_row($sock, $form, $line, $id, $obuf));
                         $id++;
                     }
                     $found = 1;
@@ -347,15 +352,20 @@ sub l00http_recedit_proc (\%) {
                 }
             }
             if ($found) {
-                &l00http_recedit_output_row($sock, $form, $line, $id, $obuf);
+                push (@table, &l00http_recedit_output_row($sock, $form, $line, $id, $obuf));
             }
             close (IN);
+        }
+        # put an anchor at the last row of the table
+        $ii = $#table + 1;
+        foreach $_ (@table) {
+            s/__end${ii}__/end/;
+            print $sock $_;
         }
     }
 
     print $sock "</table>\n";
     print $sock "</form>\n";
-    print $sock "<a name=\"end\"></a><p>\n";
 
 
     if (&l00httpd::l00freadOpen($ctrl, $path)) {
