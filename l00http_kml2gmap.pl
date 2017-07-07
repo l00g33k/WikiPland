@@ -218,6 +218,7 @@ sub l00http_kml2gmap_proc {
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
+    my ($sortothers, %sortentires, $sortphase, $matched, $exclude);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -239,6 +240,13 @@ sub l00http_kml2gmap_proc {
         $satellite = 0;
     }
 
+    $matched = '';
+    $exclude = '';
+    if (defined($form->{'exclude'}) && ($form->{'exclude'} eq 'on')) {
+        $exclude = 'checked';
+    } elsif (defined($form->{'matched'}) && ($form->{'matched'} eq 'on')) {
+        $matched = 'checked';
+    }
 
     # delete waypoint
     if (defined ($form->{'path'}) && 
@@ -255,6 +263,51 @@ sub l00http_kml2gmap_proc {
                 }
                 $buffer .= $_;
             }
+
+            # update file
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteBuf($ctrl, $buffer);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    }
+
+
+    # sort waypoint
+    if (defined ($form->{'path'}) && 
+        defined ($form->{'sort'})) {
+        $buffer = '';
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            # back up
+            &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            $lnno = 0;
+            $sortphase = 0;
+            $sortothers = '';
+            undef %sortentires;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                $lnno++;
+                if (/^[%=]/) {
+                    # stop at =chapter= or %TOC%
+                    $sortphase = 1;
+                }
+                if ($sortphase > 0) {
+                    $sortothers .= $_;
+                } else {
+                    if (/^\* +(.+)/) {
+                        # of the form:
+                        # * name
+                        # https://www.google.com/maps/@31.1956864,121.3522793,15z
+                        $starname = $1;
+                        $sortentires{$starname} = $_;
+                    } else {
+                        $sortentires{$starname} .= $_;
+                    }
+                }
+            }
+            $buffer = '';
+            foreach $_ (sort keys %sortentires) {
+                $buffer .= $sortentires{$_};
+            }
+            $buffer .= $sortothers;
 
             # update file
             &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
@@ -298,10 +351,12 @@ sub l00http_kml2gmap_proc {
     } 
 
     undef %labelsort;
-    if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
-        $selregex = $form->{'selregex'};
-    } else {
-        $selregex = '';
+    if (defined($form->{'selregex'})) {
+        if (length($form->{'selregex'}) > 0) {
+            $selregex = $form->{'selregex'};
+        } else {
+            $selregex = '';
+        }
     }
     if (defined ($form->{'mkridx'})) {
         if ($form->{'mkridx'} < 26) {
@@ -310,14 +365,24 @@ sub l00http_kml2gmap_proc {
             $_ = chr(97 + $form->{'mkridx'} - 26);
         }
         $_ = " Centered on marker '$_'";
-    } elsif (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+    } elsif (defined($selregex) && (length($selregex) > 0)) {
         $_ = " Centered by matching pattern '$selregex'";
     } else {
         $_ = "";
     }
+    # matched and exclude options:
+    $tmp = '';
+    if ($matched eq 'checked') {
+        $tmp .= '&matched=on';
+    }
+    if ($exclude eq 'checked') {
+        $tmp .= '&exclude=on';
+    }
     $labeltable = "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
     $labeltable .= "Description: latitude,longitude ";
-    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height\">reload</a>).$_\n<pre>";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
+    $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&selregex=\">all</a>. ";
+    $labeltable .= "<a href=\"#__end__\">end</a>).$_\n<pre>";
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
@@ -389,29 +454,29 @@ sub l00http_kml2gmap_proc {
                 $starname = $1;
                 next;
             } else {
-                $starname = '';
+                #$starname = '';
                 next;
             }
 
             # select marker by regex
-            if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+            if (defined($selregex) && (length($selregex) > 0)) {
                 if (defined($form->{'matched'}) && 
                     ($form->{'matched'} eq 'on')) {
                     # select all matching
-                    if (!($name =~ /$form->{'selregex'}/i)) {
+                    if (!($name =~ /$selregex/i)) {
                         # name not matching, skip
                         next;
                     }
                 } elsif (defined($form->{'exclude'}) && 
                     ($form->{'exclude'} eq 'on')) {
                     # exclude all matching
-                    if ($name =~ /$form->{'selregex'}/i) {
+                    if ($name =~ /$selregex/i) {
                         # name matched, skip
                         next;
                     }
                 } else {
                     # center one matched
-                    if ($name =~ /$form->{'selregex'}/i) {
+                    if ($name =~ /$selregex/i) {
                         # fake mkridx corresponding to $nomarkers
                         $form->{'mkridx'} = $nomarkers;
                     }
@@ -586,7 +651,7 @@ sub l00http_kml2gmap_proc {
             ($ctrl->{'os'} eq 'win')) {
             print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"Paste Add\">\n";
         } else {
-            print $sock "&nbsp;\n";
+            print $sock "No clipboard\n";
         }
         print $sock "</td><td>\n";
         print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\">\n";
@@ -603,6 +668,9 @@ sub l00http_kml2gmap_proc {
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\">\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "</form>\n";
@@ -621,7 +689,7 @@ sub l00http_kml2gmap_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"makemap\" value=\"Update\"></td><td>\n";
-    print $sock "&nbsp;\n";
+    print $sock "<input type=\"submit\" name=\"sort\" value=\"Sort\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
@@ -633,7 +701,7 @@ sub l00http_kml2gmap_proc {
     print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"matched\">matched <br><input type=\"checkbox\" name=\"exclude\">exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
+    print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table>\n";

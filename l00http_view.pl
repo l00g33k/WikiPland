@@ -359,7 +359,7 @@ sub l00http_view_proc {
                         print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
                         if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
-                            s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                            s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/gi;
                         }
                         print $sock "$_\n";
                     }
@@ -374,7 +374,7 @@ sub l00http_view_proc {
                     } else {
                         if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
                             if (/$form->{'hilitetext'}/) {
-                                s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                                s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/gi;
                                 print $sock "<a name=\"hilitetext_$hilitetextidx\"></a>";
                                 $tmp = $hilitetextidx - 1;
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
