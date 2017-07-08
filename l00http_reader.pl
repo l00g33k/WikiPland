@@ -176,10 +176,10 @@ sub l00http_reader_proc (\%) {
     print $sock "<input type=\"submit\" name=\"download\" value=\"Download All\">\n";
     print $sock "max #:<input type=\"text\" size=\"3\" name=\"maxarts\" value=\"$maxarts\">\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\">\n";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\">121 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\">146 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"187\">187 ";
-    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\">240 ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"121\"><a href=\"/reader.pl?path=$form->{'path'}&zoomradio=121&mobizoomzoom=Mobizoom\">121</a> ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"146\"><a href=\"/reader.pl?path=$form->{'path'}&zoomradio=146&mobizoomzoom=Mobizoom\">146</a> ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"187\"><a href=\"/reader.pl?path=$form->{'path'}&zoomradio=187&mobizoomzoom=Mobizoom\">187</a> ";
+    print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"240\"><a href=\"/reader.pl?path=$form->{'path'}&zoomradio=240&mobizoomzoom=Mobizoom\">240</a> ";
     print $sock "<input type=\"submit\" name=\"mobizoomzoom\" value=\"Mobizoom %\">\n";
     print $sock "<input type=\"submit\" name=\"diskusage\" value=\"Disk Usage\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
