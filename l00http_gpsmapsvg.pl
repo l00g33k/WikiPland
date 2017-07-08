@@ -718,7 +718,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     } else {
         $_ = 'checked';
     }
-    print $sock "        <td><input type=\"checkbox\" name=\"fittrack\" $_>Force map to fit track</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"fittrack\" $_>Force map to fit track (run twice)</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
