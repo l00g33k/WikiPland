@@ -30,7 +30,7 @@ sub l00http_svg_proc {
 
     if (defined ($form->{'view'})) {
         # Send HTTP and HTML headers
-        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>svg</title>" . $ctrl->{'htmlhead2'};
         $graphname = 'demo';
         if (defined ($form->{'graph'})) {
             $graphname = $form->{'graph'};

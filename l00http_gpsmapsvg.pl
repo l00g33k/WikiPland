@@ -14,7 +14,7 @@ my $marker = 'X';
 my $color = 'ff0000';
 my $movestep = 10;
 my $waypts = '';
-my $waycolor = '0000ff';
+my $waycolor = '00ff00';
 my $lastpath = '';
 my $lastgps = 0;
 my $lastres = '';
@@ -123,7 +123,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state, $lnno);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
     my ($fitmapmaxlon, $fitmapminlon, $fitmapmaxlat, $fitmapminlat);
-    my ($plon, $plat);
+    my ($plon, $plat, $needredraw);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -336,7 +336,6 @@ sub l00http_gpsmapsvg_proc (\%) {
             #print "extent: tl lat,lon: $mapextend_tllat, $mapextend_tllon\n";
             #print "extent: br lat,lon: $mapextend_brlat, $mapextend_brlon\n";
 
-            l00httpd::dbp($config{'desc'}, "mapwd $mapwd mapht $mapht\n");
         } else {
             # .map file doesn't exist, create it.
             if (&l00httpd::l00fwriteOpen($ctrl, $map)) {
@@ -387,164 +386,208 @@ sub l00http_gpsmapsvg_proc (\%) {
             $pixx0 = -1;
             $trackmarkcnt = 0;
             $lnno = 0;
-            while (<WAY>) {
-                $lnno++;
-                s/\n//g;
-                s/\r//g;
-                #H LATITUDE LONGITUDE D 
-                #T N3349.55432 W11802.27042 16-Aug-10 07:11:57 -9
-                #my $pcx5mk = 'a';
-                if (/^H +LATITUDE +LONGITUDE /) {
-                    $pcx5mk++;
-                    $nogpstrks++;
-                    if ($tracknpts ne '') {
-                        $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
-                    }
-                    $tracknpts .= sprintf("Track %3d: ", $nogpstrks);;
-                    $nowyptthistrack = 0;
-                }
-                if (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
-                    # 0=nothing, 1=in track, 2=track ends
-                    if ($state == 2) {
-                        # more than one track
-                        $svg .= '::';
-                    }
-                    if ($state != 1) {
-                        $state = 1;
-                    }
-                    # count track points in track
-                    $nowyptthistrack++;
-                    if ($nowyptthistrack == 1) {
-                        $firstptsintrack = $_;
-                    }
 
-                    #print "$1 $2 $3 $4 $5 $6  ";
-                    $plon = $5 + $6 / 60;
-                    $plat = $2 + $3 / 60;
-                    if ($4 eq 'W') {
-                        $plon = -$plon;
-                    }
-                    if ($1 eq 'S') {
-                        $plat = -$plat;
-                    }
-                    if ($fitmapphase > 0) {
-                        if ($fitmapphase == 1) {
-                            $fitmapmaxlon = $plon;
-                            $fitmapminlon = $plon;
-                            $fitmapmaxlat = $plat;
-                            $fitmapminlat = $plat;
-                            $fitmapphase = 2;
-                        } else {
-                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
-                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
-                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
-                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
+            # if map extend is extended, redraw
+            $needredraw = 0;
+
+            while (1) {
+                if ($ctrl->{'debug'} >= 3) {
+                    l00httpd::dbp($config{'desc'}, "mapwd $mapwd mapht $mapht\n");
+                    l00httpd::dbp($config{'desc'}, "scale : tl lat,lon: $maptllat, $maptllon\n");
+                    l00httpd::dbp($config{'desc'}, "scale : br lat,lon: $mapbrlat, $mapbrlon\n");
+                    l00httpd::dbp($config{'desc'}, "extent: tl lat,lon: $mapextend_tllat, $mapextend_tllon\n");
+                    l00httpd::dbp($config{'desc'}, "extent: br lat,lon: $mapextend_brlat, $mapextend_brlon\n");
+                }
+                while (<WAY>) {
+                    $lnno++;
+                    s/\n//g;
+                    s/\r//g;
+                    #H LATITUDE LONGITUDE D 
+                    #T N3349.55432 W11802.27042 16-Aug-10 07:11:57 -9
+                    #my $pcx5mk = 'a';
+                    if (/^H +LATITUDE +LONGITUDE /) {
+                        $pcx5mk++;
+                        $nogpstrks++;
+                        if ($tracknpts ne '') {
+                            $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
                         }
+                        $tracknpts .= sprintf("Track %3d: ", $nogpstrks);;
+                        $nowyptthistrack = 0;
                     }
-                    ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
-                    l00httpd::dbp($config{'desc'}, "(pixx $pixx, pixy $pixy, notclip $notclip) = &ll2xysvg (plon $plon, plat$plat)\n");
-                    if ($notclip) {
-                        $displaypt = 0; # default to not displaying
-                        if ($nogpstrks == $starttrack) {
-                            # starting track
-                            if ($nowyptthistrack >= $startpoint) {
-                                if ($nowyptthistrack == ($startpoint + 1)) {
-                                    $rawstartstop = sprintf("Start track %3d point %4d: %s\n", $nogpstrks, $nowyptthistrack, $_);
+                    if (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
+                        # 0=nothing, 1=in track, 2=track ends
+                        if ($state == 2) {
+                            # more than one track
+                            $svg .= '::';
+                        }
+                        if ($state != 1) {
+                            $state = 1;
+                        }
+                        # count track points in track
+                        $nowyptthistrack++;
+                        if ($nowyptthistrack == 1) {
+                            $firstptsintrack = $_;
+                        }
+
+                        #print "$1 $2 $3 $4 $5 $6  ";
+                        $plon = $5 + $6 / 60;
+                        $plat = $2 + $3 / 60;
+                        if ($4 eq 'W') {
+                            $plon = -$plon;
+                        }
+                        if ($1 eq 'S') {
+                            $plat = -$plat;
+                        }
+                        if ($fitmapphase > 0) {
+                            if ($fitmapphase == 1) {
+                                $fitmapmaxlon = $plon;
+                                $fitmapminlon = $plon;
+                                $fitmapmaxlat = $plat;
+                                $fitmapminlat = $plat;
+                                $fitmapphase = 2;
+                            } else {
+                                if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon; $needredraw = 1; }
+                                if ($fitmapminlon > $plon) {  $fitmapminlon = $plon; $needredraw = 1; }
+                                if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat; $needredraw = 1; }
+                                if ($fitmapminlat > $plat) {  $fitmapminlat = $plat; $needredraw = 1; }
+                            }
+                        }
+                        ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
+                        if ($ctrl->{'debug'} >= 5) {
+                            l00httpd::dbp($config{'desc'}, "(pixx $pixx, pixy $pixy, notclip $notclip) = &ll2xysvg (plon $plon, plat $plat)\n");
+                        }
+                        if ($notclip) {
+                            $displaypt = 0; # default to not displaying
+                            if ($nogpstrks == $starttrack) {
+                                # starting track
+                                if ($nowyptthistrack >= $startpoint) {
+                                    if ($nowyptthistrack == ($startpoint + 1)) {
+                                        $rawstartstop = sprintf("Start track %3d point %4d: %s\n", $nogpstrks, $nowyptthistrack, $_);
+                                    }
+                                    # yes
+                                    $displaypt = 1;
                                 }
-                                # yes
+                            } elsif ($nogpstrks > $starttrack) {
+                                # beyond starting track
                                 $displaypt = 1;
                             }
-                        } elsif ($nogpstrks > $starttrack) {
-                            # beyond starting track
-                            $displaypt = 1;
-                        }
-                        # check ending
-                        if ($nogpstrks == $stoptrack) {
-                            # ending track
-                            if ($nowyptthistrack >= $stoppoint) {
-                                if ($nowyptthistrack == $stoppoint) {
-                                    $rawstartstop .= sprintf("Stop  track %3d point %4d: %s\n", $nogpstrks, $nowyptthistrack, $_);
+                            # check ending
+                            if ($nogpstrks == $stoptrack) {
+                                # ending track
+                                if ($nowyptthistrack >= $stoppoint) {
+                                    if ($nowyptthistrack == $stoppoint) {
+                                        $rawstartstop .= sprintf("Stop  track %3d point %4d: %s\n", $nogpstrks, $nowyptthistrack, $_);
+                                    }
+                                    # yes
+                                    $displaypt = 0;
                                 }
-                                # yes
+                            } elsif ($nogpstrks > $stoptrack) {
+                                # beyond ending track
                                 $displaypt = 0;
                             }
-                        } elsif ($nogpstrks > $stoptrack) {
-                            # beyond ending track
-                            $displaypt = 0;
-                        }
-                        if (defined ($form->{'markpointdo'})) {
-                            if (($nogpstrks == $marktrack) &&
-                                ($nowyptthistrack == $markpoint)) {
-                                $lon = $plon;
-                                $lat = $plat;
-                            }
-                            if (($nogpstrks == $marktrack) &&
-                                ($nowyptthistrack >= $markpoint) &&
-                                $notclip) {
-                                # have we moved enough?
-                                if (($pixx0 < 0) ||
-                                    (sqrt(($pixx0 - $pixx) ** 2 + ($pixy0 - $pixy) ** 2) > 20)) {
-                                    # first time or moved more than 20 pixels
-                                    print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-                                    $trackmark = chr($trackmarkcnt + 0x30);
-                                    $trackmarkcnt++;
-                                    print $sock "<font color=\"magenta\">$trackmark</font></div>\n";
-                                    $rawstartstop .= sprintf("   %s: <a href=\"/view.htm?path=$waypts&hiliteln=$lnno&lineno=on#line%d\">track</a> %3d point %4d: %s\n", $trackmark, $lnno - 5, $nogpstrks, $nowyptthistrack, $_);
-                                    # last position
-                                    $pixx0 = $pixx;
-                                    $pixy0 = $pixy;
+                            if (defined ($form->{'markpointdo'})) {
+                                if (($nogpstrks == $marktrack) &&
+                                    ($nowyptthistrack == $markpoint)) {
+                                    $lon = $plon;
+                                    $lat = $plat;
+                                }
+                                if (($nogpstrks == $marktrack) &&
+                                    ($nowyptthistrack >= $markpoint) &&
+                                    $notclip) {
+                                    # have we moved enough?
+                                    if (($pixx0 < 0) ||
+                                        (sqrt(($pixx0 - $pixx) ** 2 + ($pixy0 - $pixy) ** 2) > 20)) {
+                                        # first time or moved more than 20 pixels
+                                        print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+                                        $trackmark = chr($trackmarkcnt + 0x30);
+                                        $trackmarkcnt++;
+                                        print $sock "<font color=\"magenta\">$trackmark</font></div>\n";
+                                        $rawstartstop .= sprintf("   %s: <a href=\"/view.htm?path=$waypts&hiliteln=$lnno&lineno=on#line%d\">track</a> %3d point %4d: %s\n", $trackmark, $lnno - 5, $nogpstrks, $nowyptthistrack, $_);
+                                        # last position
+                                        $pixx0 = $pixx;
+                                        $pixy0 = $pixy;
+                                    }
                                 }
                             }
+
+
+                            if ($displaypt) {
+                                $pixy = $mapht - $pixy;     # y axis inverted
+                                $svg .= "$pixx,$pixy ";
+                            }
                         }
-
-
-                        if ($displaypt) {
-                            $pixy = $mapht - $pixy;     # y axis inverted
-                            $svg .= "$pixx,$pixy ";
+                    } else {
+                        if ($state == 1) {
+                            # track ends
+                            $state = 2;
                         }
                     }
-                } else {
-                    if ($state == 1) {
-                        # track ends
-                        $state = 2;
+                    if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
+                        ##long,lat,name
+                        #121.386309,31.171295,Huana
+                        if ($fitmapphase > 0) {
+                            if ($fitmapphase == 1) {
+                                $fitmapmaxlon = $plon;
+                                $fitmapminlon = $plon;
+                                $fitmapmaxlat = $plat;
+                                $fitmapminlat = $plat;
+                                $fitmapphase = 2;
+                            } else {
+                                if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon; $needredraw = 1; }
+                                if ($fitmapminlon > $plon) {  $fitmapminlon = $plon; $needredraw = 1; }
+                                if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat; $needredraw = 1; }
+                                if ($fitmapminlat > $plat) {  $fitmapminlat = $plat; $needredraw = 1; }
+                            }
+                        }
+                        ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
+                        if ($notclip) {
+                            print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+                            print $sock "<font color=\"$waycolor\">$3</font></div>\n";
+                        }
                     }
                 }
-                if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
-                    ##long,lat,name
-                    #121.386309,31.171295,Huana
-                    if ($fitmapphase > 0) {
-                        if ($fitmapphase == 1) {
-                            $fitmapmaxlon = $plon;
-                            $fitmapminlon = $plon;
-                            $fitmapmaxlat = $plat;
-                            $fitmapminlat = $plat;
-                            $fitmapphase = 2;
-                        } else {
-                            if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon;  }
-                            if ($fitmapminlon > $plon) {  $fitmapminlon = $plon;  }
-                            if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat;  }
-                            if ($fitmapminlat > $plat) {  $fitmapminlat = $plat;  }
-                        }
-                    }
-                    ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
-                    if ($notclip) {
-                        print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-                        print $sock "<font color=\"$waycolor\">$3</font></div>\n";
-                    }
+                close (WAY);
+
+                if ($fitmapphase == 2) {
+                    $maptllon = $fitmapminlon;
+                    $maptllat = $fitmapmaxlat;
+                    $mapbrlon = $fitmapmaxlon;
+                    $mapbrlat = $fitmapminlat;
+
+                    $maptllon -= ($fitmapmaxlon - $fitmapminlon) / 10;
+                    $maptllat += ($fitmapmaxlat - $fitmapminlat) / 10;
+                    $mapbrlon += ($fitmapmaxlon - $fitmapminlon) / 10;
+                    $mapbrlat -= ($fitmapmaxlat - $fitmapminlat) / 10;
+
+                    $mapextend_tllon = $maptllon - ($maptlx)              / ($mapbrx - $maptlx) * ($mapbrlon - $maptllon);
+                    $mapextend_tllat = $maptllat + ($maptly)              / ($mapbry - $maptly) * ($maptllat - $mapbrlat);
+                    $mapextend_brlon = $mapbrlon + ($mapwd - 1 - $mapbrx) / ($mapbrx - $maptlx) * ($mapbrlon - $maptllon);
+                    $mapextend_brlat = $mapbrlat - ($mapht - 1 - $mapbry) / ($mapbry - $maptly) * ($maptllat - $mapbrlat);
+                }
+
+                if ($needredraw) {
+                    l00httpd::dbp($config{'desc'}, "'Force map to fit track' causes map extend to change so must regenerate\n");
+
+                    open (WAY, "<$waypts");
+                    $pcx5mk = 'a';
+                    $nogpstrks = 0;
+                    $tracknpts = '';
+                    $nowyptthistrack = 0;
+                    $rawstartstop = '';
+                    $firstptsintrack = 0;
+                    $pixx0 = -1;
+                    $trackmarkcnt = 0;
+                    $lnno = 0;
+
+                    # if map extend is extended, redraw
+                    $needredraw = 0;
+                } else {
+                    last;
                 }
             }
-            close (WAY);
+
+
             if ($fitmapphase == 2) {
-                $maptllon = $fitmapminlon;
-                $maptllat = $fitmapmaxlat;
-                $mapbrlon = $fitmapmaxlon;
-                $mapbrlat = $fitmapminlat;
-
-                $maptllon -= ($fitmapmaxlon - $fitmapminlon) / 10;
-                $maptllat += ($fitmapmaxlat - $fitmapminlat) / 10;
-                $mapbrlon += ($fitmapmaxlon - $fitmapminlon) / 10;
-                $mapbrlat -= ($fitmapmaxlat - $fitmapminlat) / 10;
-
                 $fitmapphase = -1;
             }
 
@@ -552,15 +595,31 @@ sub l00http_gpsmapsvg_proc (\%) {
                 $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
             }
 
-            &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path);
+            if ($ctrl->{'debug'} >= 3) {
+                l00httpd::dbp($config{'desc'}, "Create svg of track(s) from x,y/long,lat above: <a href=\"/svg.htm?view=&graph=$fname\">$fname</a>\n");
+            }
+            &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
             $svgout = '';
             $svgout .= "<svg  x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\"xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $mapwd $mapht\" preserveAspectRatio=\"xMidYMid meet\">";
             $svgout .= "<g id=\"bitmap\" style=\"display:online\"> ";
             $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm$path?path=$path\" /> ";
             $svgout .= "</g> ";
-            $svgout .= "<g id=\"$fname\" style=\"display:online\"> <g transform=\"translate(0 0)\"> <g transform=\"scale(1.0)\"> <image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/svg.htm?graph=$fname\"/> </g> </g> </g>";
+            $svgout .= "<g id=\"$fname\" style=\"display:online\"> ";
+            $svgout .= "    <g transform=\"translate(0 0)\"> ";
+            $svgout .= "        <g transform=\"scale(1.0)\"> ";
+            $svgout .= "            <image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/svg.htm?graph=$fname\"/> ";
+            $svgout .= "        </g> ";
+            $svgout .= "    </g> ";
+            $svgout .= "</g>";
             $svgout .= "</svg>\n";
             print $sock "$svgout<br>\n";
+            if ($ctrl->{'debug'} >= 3) {
+                l00httpd::dbp($config{'desc'}, "Create svg of background map: <a href=\"/ls.htm$path?path=$path\">$path</a>\n");
+                l00httpd::dbp($config{'desc'}, "and foreground track: <a href=\"/svg.htm?graph=$fname\">$fname</a>\n");
+                $svgout =~ s/</&lt;/g;
+                $svgout =~ s/>/&gt;/g;
+                l00httpd::dbp($config{'desc'}, "\n$svgout\n");
+            }
             # the following doesn't work (see l00svg.pm)
             #print $sock "<img src=\"/svg.htm/svg.svg?graph=${fname}.ovly.svg\"><br>\n";
         } else {
@@ -657,7 +716,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                                 
     print $sock "        <tr>\n";
     print $sock "            <td>Color:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"color\" value=\"$color\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"color\" value=\"$color\">0xrrggbb</td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
@@ -718,7 +777,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     } else {
         $_ = 'checked';
     }
-    print $sock "        <td><input type=\"checkbox\" name=\"fittrack\" $_>Force map to fit track (run twice)</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"fittrack\" $_>Force map to fit track</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
