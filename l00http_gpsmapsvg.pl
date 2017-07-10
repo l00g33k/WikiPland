@@ -72,21 +72,13 @@ sub ll2xysvg {
     my ($pixx, $pixy, $notclip);
     $notclip = 1;
 
-    #print ",,,($lonhtm > $mapbrlon) { $lonhtm = $mapbrlon; \n";
-    #print ",,,($lonhtm < $maptllon) { $lonhtm = $maptllon; \n";
-    #print ",,,($lathtm > $maptllat) { $lathtm = $maptllat; \n";
-    #print ",,,($lathtm < $mapbrlat) { $lathtm = $mapbrlat; \n";
-
-
-    if ($lonhtm > $mapextend_brlon) { $lonhtm = $mapextend_brlon; $notclip = 0; print "point beyond the right\n";}
-    if ($lonhtm < $mapextend_tllon) { $lonhtm = $mapextend_tllon; $notclip = 0; print "point beyond the left\n";}
-    if ($lathtm > $mapextend_tllat) { $lathtm = $mapextend_tllat; $notclip = 0; print "point beyond the top\n";}
-    if ($lathtm < $mapextend_brlat) { $lathtm = $mapextend_brlat; $notclip = 0; print "point beyond the bottom\n";}
+    if ($lonhtm > $mapextend_brlon) { $lonhtm = $mapextend_brlon; $notclip = 0; }
+    if ($lonhtm < $mapextend_tllon) { $lonhtm = $mapextend_tllon; $notclip = 0; }
+    if ($lathtm > $mapextend_tllat) { $lathtm = $mapextend_tllat; $notclip = 0; }
+    if ($lathtm < $mapextend_brlat) { $lathtm = $mapextend_brlat; $notclip = 0; }
     $pixx = $maptlx + int (($lonhtm - $maptllon) / ($mapbrlon - $maptllon) * ($mapbrx - $maptlx) * $scale / 100);
     $pixy = int ($mapbry * $scale / 100) 
                     - int (($lathtm - $mapbrlat) / ($maptllat - $mapbrlat) * ($mapbry - $maptly) * $scale / 100);
-
-    #print "lat,long ($lathtm, $lonhtm) -> x,y ($pixx, $pixy)\n";
 
     ($pixx, $pixy, $notclip);
 }
@@ -212,10 +204,32 @@ sub l00http_gpsmapsvg_proc (\%) {
     if (defined ($form->{'marktrack'}) &&
         ($form->{'marktrack'} =~ /(\d+)/)) {
         $marktrack = $1;
+        $form->{'markpointdo'} = 'simulated';
     }
     if (defined ($form->{'markpoint'}) &&
         ($form->{'markpoint'} =~ /(\d+)/)) {
         $markpoint = $1;
+        $form->{'markpointdo'} = 'simulated';
+    }
+    if (defined ($form->{'markleftleft'})) {
+        $markpoint -= 500;
+        if ($markpoint < 0) {
+            $markpoint = 0;
+        }
+        $form->{'markpointdo'} = 'simulated';
+    }
+    if (defined ($form->{'markleft'})) {
+        $markpoint -= 1;
+        if ($markpoint < 0) {
+            $markpoint = 0;
+        }
+        $form->{'markpointdo'} = 'simulated';
+    }
+    if (defined ($form->{'markright'})) {
+        $markpoint += 1;
+    }
+    if (defined ($form->{'markrightright'})) {
+        $markpoint += 500;
     }
 
     if (defined ($form->{'cb2wfile'})) {
@@ -376,7 +390,7 @@ sub l00http_gpsmapsvg_proc (\%) {
 
         $svg = '';
         $state = 0; # 0=nothing, 1=in track, 2=track ends
-        if (open (WAY, "<$waypts")) {
+        if (&l00httpd::l00freadOpen($ctrl, $waypts)) {
             $pcx5mk = 'a';
             $nogpstrks = 0;
             $tracknpts = '';
@@ -398,7 +412,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                     l00httpd::dbp($config{'desc'}, "extent: tl lat,lon: $mapextend_tllat, $mapextend_tllon\n");
                     l00httpd::dbp($config{'desc'}, "extent: br lat,lon: $mapextend_brlat, $mapextend_brlon\n");
                 }
-                while (<WAY>) {
+                while ($_ = &l00httpd::l00freadLine($ctrl)) {
                     $lnno++;
                     s/\n//g;
                     s/\r//g;
@@ -502,7 +516,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                         $trackmark = chr($trackmarkcnt + 0x30);
                                         $trackmarkcnt++;
                                         print $sock "<font color=\"magenta\">$trackmark</font></div>\n";
-                                        $rawstartstop .= sprintf("   %s: <a href=\"/view.htm?path=$waypts&hiliteln=$lnno&lineno=on#line%d\">track</a> %3d point %4d: %s\n", $trackmark, $lnno - 5, $nogpstrks, $nowyptthistrack, $_);
+                                        $rawstartstop .= sprintf("   <a href=\"/view.htm?path=$waypts&hiliteln=$lnno&lineno=on#line%d\">%s:</a> track %3d point %4d: %s\n", $lnno - 5, $trackmark, $nogpstrks, $nowyptthistrack, $_);
                                         # last position
                                         $pixx0 = $pixx;
                                         $pixy0 = $pixy;
@@ -546,7 +560,6 @@ sub l00http_gpsmapsvg_proc (\%) {
                         }
                     }
                 }
-                close (WAY);
 
                 if ($fitmapphase == 2) {
                     $maptllon = $fitmapminlon;
@@ -568,7 +581,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                 if ($needredraw) {
                     l00httpd::dbp($config{'desc'}, "'Force map to fit track' causes map extend to change so must regenerate\n");
 
-                    open (WAY, "<$waypts");
+                    &l00httpd::l00freadOpen($ctrl, $waypts);
                     $pcx5mk = 'a';
                     $nogpstrks = 0;
                     $tracknpts = '';
@@ -629,6 +642,9 @@ sub l00http_gpsmapsvg_proc (\%) {
 
         print $sock "<hr>";
         print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
+        if ($waypts ne '') {
+            print $sock "<a href=\"#tracklist\">Jump to list of tracks</a>.  \n";
+        }
         print $sock "Click map below to move cursor:<br>\n";
         print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
         print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
@@ -771,7 +787,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td>Load again if no tracks</td>\n";
     if ($fitmapphase == 0) {
         $_ = '';
     } else {
@@ -799,15 +815,21 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        </td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "    <tr>\n";
+    print $sock "        <td>20 pixels interval</td>\n";
+    print $sock "        <td>Move 1 point/100 points</td>\n";
+    print $sock "    </tr>\n";
+
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
     print $sock "</form>\n";
 
     if ($waypts ne '') {
-        print $sock "There are $nogpstrks GPS tracks<br>\n";
+        print $sock "<a name=\"tracklist\"></a>There are $nogpstrks GPS tracks<br>\n";
         print $sock "<pre>\n$rawstartstop</pre>\n";
         print $sock "<pre>\n$tracknpts</pre>\n";
-        print $sock "View waypoint/track file: <a href=\"/view.htm?path=$waypts\">$waypts</a><p>\n";
+        print $sock "View waypoint/track file: <a href=\"/view.htm?path=$waypts\">$waypts</a>. \n";
+        print $sock "Copy waypoint/track file to : <a href=\"/filemgt.htm?copy=Copy&path=$waypts&path2=l00%3A%2F%2Fwaypoints.trk\" target=\"newwin\">l00://waypoints.trk</a><p>\n";
     }
 
     if (&l00httpd::l00freadOpen($ctrl, $map)) {
