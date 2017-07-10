@@ -1156,7 +1156,7 @@ if(1){
 
     if ($toccol ne '') {
         $toccol = join ("\n", sort (split ("\n", $toccol)));
-        $toccol = "<a name=\"::INDEX::\"></a><b><i>INDEX:</i></b>" . $toccol;
+        $toccol = "<a name=\"::INDEX::\"></a><b><i>INDEX:</i></b><br>" . $toccol;
 #        $oubuf = "<a href=\"#::INDEX::\">jump to ::INDEX::</a><br>" . $oubuf;
         $tmp = '';
         foreach $_  (split ("\n", $oubuf)) {
