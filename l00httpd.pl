@@ -235,6 +235,7 @@ sub readl00httpdcfg {
             $tmp = $plpath; # first time, find in l00httpd script directory
         } elsif ($cnt == 1) {
             $conf = "l00httpd.cfg.local";
+            $tmp = $plpath; # second time, find in l00httpd script directory
         } elsif ($cnt == 2) {
             $conf = "l00httpd.cfg";
             $tmp = $ctrl{'workdir'}; # third time, find in workdir directory
