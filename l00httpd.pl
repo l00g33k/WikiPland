@@ -234,12 +234,13 @@ sub readl00httpdcfg {
         if ($cnt == 0) {
             $tmp = $plpath; # first time, find in l00httpd script directory
         } elsif ($cnt == 1) {
-            $conf = "l00httpd.cfg.local";
-            $tmp = $plpath; # second time, find in l00httpd script directory
+            # may be the same a $plpath
+            $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
         } elsif ($cnt == 2) {
-            $conf = "l00httpd.cfg";
-            $tmp = $ctrl{'workdir'}; # third time, find in workdir directory
+            $conf = "l00httpd.cfg.local";
+            $tmp = $plpath; # third time, find in l00httpd script directory
 	    } else {
+            $conf = "l00httpd.cfg";
             if (defined($ctrl{'altcfg'})) {
                 $tmp = $ctrl{'altcfg'};
 		    } else {
