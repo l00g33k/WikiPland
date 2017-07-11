@@ -230,11 +230,14 @@ sub readl00httpdcfg {
     # 2: $ctrl{'workdir'}l00httpd.cfg
     # 3: $ctrl{'altcfg'}l00httpd.cfg
     $cfgedit = '';
-    for ($cnt = 0; $cnt < 3; $cnt++) {
+    for ($cnt = 0; $cnt <= 3; $cnt++) {
         if ($cnt == 0) {
             $tmp = $plpath; # first time, find in l00httpd script directory
         } elsif ($cnt == 1) {
-            $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+            $conf = "l00httpd.cfg.local";
+        } elsif ($cnt == 2) {
+            $conf = "l00httpd.cfg";
+            $tmp = $ctrl{'workdir'}; # third time, find in workdir directory
 	    } else {
             if (defined($ctrl{'altcfg'})) {
                 $tmp = $ctrl{'altcfg'};

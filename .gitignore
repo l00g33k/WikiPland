@@ -3,6 +3,7 @@
 .*.swp
 .*.persist
 *.bak
+*.local
 l00httpd.log
 *.tmp
 NtDirNotes.txt
