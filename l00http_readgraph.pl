@@ -10,13 +10,7 @@ use l00svg;
 
 my %config = (proc => "l00http_readgraph_proc",
               desc => "l00http_readgraph_desc");
-my ($lastx, $lasty, $lastoff, $lastpath, $xoff, $yoff);
 
-$lastx = undef;
-$lasty = undef;
-$lastpath = undef;
-$xoff = 4;
-$yoff = 2;
 
 sub l00http_readgraph_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -29,40 +23,155 @@ sub l00http_readgraph_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($xpix, $ypix, $pname, $fname, $dx, $dy);
+    my ($pname, $fname, $dx, $dy);
 
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
 
+    if (!defined ($form->{'readtlx'})) {
+        $form->{'readtlx'} = 0;
+    }
+    if (!defined ($form->{'readtly'})) {
+        $form->{'readtly'} = 0;
+    }
+    if (!defined ($form->{'readbrx'})) {
+        $form->{'readbrx'} = 1;
+    }
+    if (!defined ($form->{'readbry'})) {
+        $form->{'readbry'} = 1;
+    }
+    if (!defined ($form->{'screentlx'})) {
+        $form->{'screentlx'} = 0;
+    }
+    if (!defined ($form->{'screently'})) {
+        $form->{'screently'} = 0;
+    }
+    if (!defined ($form->{'screenbrx'})) {
+        $form->{'screenbrx'} = 1;
+    }
+    if (!defined ($form->{'screenbry'})) {
+        $form->{'screenbry'} = 1;
+    }
+    if (!defined ($form->{'lastx'})) {
+        $form->{'lastx'} = 0;
+    }
+    if (!defined ($form->{'lasty'})) {
+        $form->{'lasty'} = 0;
+    }
+    if (!defined ($form->{'x'})) {
+        $form->{'x'} = 0;
+    }
+    if (!defined ($form->{'y'})) {
+        $form->{'y'} = 0;
+    }
+
     if (defined ($form->{'path'}) &&
         (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/)) {
         print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$pname$fname\">\n";
-        print $sock "<input type=image style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><br>\n";
-        if (defined ($form->{'x'})) {
-            $xpix = $form->{'x'} + $xoff;
-            $ypix = $form->{'y'} + $yoff;
-            print $sock "<div style=\"position: absolute; left:$xpix"."px; top:$ypix"."px;\">\n";
-            print $sock "<font color=\"red\">+</font></div>\n";
+        print $sock "<input type=image style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><p>\n";
+        if (defined ($form->{'settl'})) {
+            $form->{'screentlx'} = $form->{'lastx'};
+            $form->{'screently'} = $form->{'lasty'};
         }
+        if (defined ($form->{'setbr'})) {
+            $form->{'screenbrx'} = $form->{'lastx'};
+            $form->{'screenbry'} = $form->{'lasty'};
+        }
+
+        if (defined ($form->{'x'})) {
+            print $sock "<div style=\"position: absolute; left:$form->{'x'}"."px; top:$form->{'y'}"."px;\">\n";
+            print $sock "<font color=\"red\">+</font></div>\n";
+
+            print $sock "Clicked: ($form->{'x'} , $form->{'y'}) -&gt; \n";
+            printf $sock ("%f , ", 
+                ($form->{'readbrx'} - $form->{'readtlx'}) * ($form->{'x'} - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                + $form->{'readtlx'}
+            );
+            printf $sock ("%f", 
+                ($form->{'readbry'} - $form->{'readtly'}) * ($form->{'y'} - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                + $form->{'readtly'}
+            );
+            print $sock "<br>\n";
+            if (defined ($form->{'lastx'})) {
+                $dx = $form->{'x'} - $form->{'lastx'};
+                $dy = $form->{'y'} - $form->{'lasty'};
+                print $sock "Delta: ($dx , $dy) -&gt; ";
+                printf $sock ("%f , ", 
+                    ($form->{'readbrx'} - $form->{'readtlx'}) * (($form->{'x'} - $form->{'lastx'}) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                    + $form->{'readtlx'}
+                );
+                printf $sock ("%f", 
+                    ($form->{'readbry'} - $form->{'readtly'}) * (($form->{'y'} - $form->{'lasty'}) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                    + $form->{'readtly'}
+                );
+                print $sock "<br>\n";
+            }
+        }
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+        print $sock "<tr>\n";
+        print $sock "<td>\n";
+        print $sock "Corners</td>\n";
+        print $sock "<td>\n";
+        print $sock "Screen X</td>\n";
+        print $sock "<td>\n";
+        print $sock "Screen Y</td>\n";
+        print $sock "<td>\n";
+        print $sock "Reading X</td>\n";
+        print $sock "<td>\n";
+        print $sock "Reading Y</td>\n";
+        print $sock "<td>\n";
+        print $sock "Set cursor as</td>\n";
+        print $sock "</tr>\n";
+
+        print $sock "<tr>\n";
+        print $sock "<td>\n";
+        print $sock "Top left</td>\n";
+        print $sock "<td>\n";
+        print $sock "$form->{'screentlx'}</td>\n";
+        print $sock "<td>\n";
+        print $sock "$form->{'screently'}</td>\n";
+        print $sock "<td>\n";
+        print $sock "<input type=\"text\" size=\"6\" name=\"readtlx\" value=\"$form->{'readtlx'}\"></td>\n";
+        print $sock "<td>\n";
+        print $sock "<input type=\"text\" size=\"6\" name=\"readtly\" value=\"$form->{'readtly'}\"></td>\n";
+        print $sock "<td>\n";
+        print $sock "<input type=\"submit\" name=\"settl\" value=\"Set TL\"></td>\n";
+        print $sock "</tr>\n";
+
+        print $sock "<tr>\n";
+        print $sock "<td>\n";
+        print $sock "Bottom right</td>\n";
+        print $sock "<td>\n";
+        print $sock "$form->{'screenbrx'}</td>\n";
+        print $sock "<td>\n";
+        print $sock "$form->{'screenbry'}</td>\n";
+        print $sock "<td>\n";
+        print $sock "<input type=\"text\" size=\"6\" name=\"readbrx\" value=\"$form->{'readbrx'}\"></td>\n";
+        print $sock "<td>\n";
+        print $sock "<input type=\"text\" size=\"6\" name=\"readbry\" value=\"$form->{'readbry'}\"></td>\n";
+        print $sock "<td>\n";
+        print $sock "<input type=\"submit\" name=\"setbr\" value=\"Set BR\"></td>\n";
+
+        if (defined ($form->{'x'})) {
+            print $sock "<input type=\"hidden\" name=\"lastx\" value=\"$form->{'x'}\">\n";
+            print $sock "<input type=\"hidden\" name=\"lasty\" value=\"$form->{'y'}\">\n";
+        }
+        print $sock "<input type=\"hidden\" name=\"screentlx\" value=\"$form->{'screentlx'}\">\n";
+        print $sock "<input type=\"hidden\" name=\"screently\" value=\"$form->{'screently'}\">\n";
+        print $sock "<input type=\"hidden\" name=\"screenbrx\" value=\"$form->{'screenbrx'}\">\n";
+        print $sock "<input type=\"hidden\" name=\"screenbry\" value=\"$form->{'screenbry'}\">\n";
+
+        print $sock "</tr>\n";
+        print $sock "</table>\n";
+
         print $sock "</form>\n";
     }
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
-    print $sock "Click graph above.\n";
-    if (defined ($form->{'path'}) && (defined ($form->{'x'}))) {
-        print $sock "You clicked: ($form->{'x'},$form->{'y'})<br>\n";
-        if ($lastpath ne undef) {
-            $dx = $xpix - $lastx;
-            $dy = $ypix - $lasty;
-            print $sock "Delta: ($dx, $dy)<br>\n";
-        }
-        $lastx = $xpix;
-        $lasty = $ypix;
-        $lastpath = $form->{'path'};
-    }
+    print $sock "Click graph above.<br>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
