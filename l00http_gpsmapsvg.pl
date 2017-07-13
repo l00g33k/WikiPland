@@ -412,7 +412,7 @@ sub l00http_gpsmapsvg_proc (\%) {
             $wayptsbuf = &l00httpd::l00freadAll($ctrl);
 
             if (($waypts eq $lsttrkname) &&
-                ($wayptsbuf == $lsttrksize)) {
+                (length($wayptsbuf) == $lsttrksize)) {
                 $svg = $lsttrksvg;
                 $tracknpts = $lsttracknpts;
             } else {
@@ -616,7 +616,7 @@ sub l00http_gpsmapsvg_proc (\%) {
 
 
                 $lsttrkname = $waypts;
-                $lsttrksize = $wayptsbuf;
+                $lsttrksize = length($wayptsbuf);
                 $lsttrksvg = $svg;
                 $lsttracknpts = $tracknpts;
             }
