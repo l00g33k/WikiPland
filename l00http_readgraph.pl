@@ -27,7 +27,7 @@ sub l00http_readgraph_proc {
 
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>readgraph</title>" . $ctrl->{'htmlhead2'};
 
     if (!defined ($form->{'readtlx'})) {
         $form->{'readtlx'} = 0;
@@ -74,12 +74,19 @@ sub l00http_readgraph_proc {
     if (defined ($form->{'clearclicks'})) {
         undef $form->{'clicks'};
     }
+    if (defined ($form->{'setbrcorner'})) {
+       $form->{'brcornerx'} = $form->{'lastx'};
+       $form->{'brcornery'} = $form->{'lasty'};
+    }
 
     if (defined ($form->{'path'}) &&
         (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/)) {
         print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$pname$fname\">\n";
-        print $sock "<input type=image style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><p>\n";
+        print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><p>\n";
+        #print $sock "<input type=\"image\" style=\"float:none\" src=\"/svg.htm?graph=demo\"><p>\n";
+        #print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/svg2.svg?path=%2fsdcard%2fz%2fsvg3.svg\"><p>\n";
+        #print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/svg2.svg?path=%2fsdcard%2fz%2fsvg4.svg\"><p>\n";
         if (defined ($form->{'settl'})) {
             $form->{'screentlx'} = $form->{'lastx'};
             $form->{'screently'} = $form->{'lasty'};
@@ -102,11 +109,10 @@ sub l00http_readgraph_proc {
                 ($form->{'readbry'} - $form->{'readtly'}) * ($form->{'y'} - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
                 + $form->{'readtly'}
             );
-            print $sock "<br>\n";
             if (defined ($form->{'lastx'})) {
                 $dx = $form->{'x'} - $form->{'lastx'};
                 $dy = $form->{'y'} - $form->{'lasty'};
-                print $sock "Delta: ($dx , $dy) -&gt; ";
+                print $sock " --- Delta: ($dx , $dy) -&gt; ";
                 printf $sock ("%f , ", 
                     ($form->{'readbrx'} - $form->{'readtlx'}) * (($form->{'x'} - $form->{'lastx'}) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
                     + $form->{'readtlx'}
@@ -115,8 +121,8 @@ sub l00http_readgraph_proc {
                     ($form->{'readbry'} - $form->{'readtly'}) * (($form->{'y'} - $form->{'lasty'}) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
                     + $form->{'readtly'}
                 );
-                print $sock "<br>\n";
             }
+            print $sock "<p>\n";
         }
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr>\n";
@@ -178,13 +184,25 @@ sub l00http_readgraph_proc {
 
         print $sock "<tr>\n";
         print $sock "<td>\n";
-        print $sock "&nbsp;</td>\n";
+        print $sock "BR corner</td>\n";
         print $sock "<td>\n";
-        print $sock "&nbsp;</td>\n";
+        if (defined ($form->{'brcornerx'})) {
+           $_ = $form->{'brcornerx'};
+           print $sock "<input type=\"hidden\" name=\"brcornerx\" value=\"$form->{'brcornerx'}\">\n";
+        } else {
+           $_ = '&nbsp;';
+        }
+        print $sock "$_</td>\n";
         print $sock "<td>\n";
-        print $sock "&nbsp;</td>\n";
+        if (defined ($form->{'brcornery'})) {
+           $_ = $form->{'brcornery'};
+           print $sock "<input type=\"hidden\" name=\"brcornery\" value=\"$form->{'brcornery'}\">\n";
+        } else {
+           $_ = '&nbsp;';
+        }
+        print $sock "$_</td>\n";
         print $sock "<td>\n";
-        print $sock "&nbsp;</td>\n";
+        print $sock "<input type=\"submit\" name=\"setbrcorner\" value=\"Set BR corner\"></td>\n";
         print $sock "<td>\n";
         print $sock "&nbsp;</td>\n";
         print $sock "<td>\n";
@@ -193,11 +211,14 @@ sub l00http_readgraph_proc {
 
         print $sock "</table>\n";
 
-        print $sock "</form>\n";
+        print $sock "</form><br>\n";
     }
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
+    if (defined ($form->{'path'})) {
+        print $sock "Launcher: <a href=\"launcher.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
+    }
     print $sock "Click graph above.<br>\n";
 
     if (defined ($form->{'clicks'})) {
