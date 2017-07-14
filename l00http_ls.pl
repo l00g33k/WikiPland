@@ -555,7 +555,7 @@ sub l00http_ls_proc {
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
                  = stat($path);
 
-                $httphdr = &l00http_ls_conttype($path);
+                ($httphdr, $urlraw) = &l00http_ls_conttype($path);
 #                if (($path =~ /\.zip$/i) ||
 #                    ($path =~ /\.kmz$/i)) {
 #                    $httphdr = "Content-Type: application/x-zip\r\n";
