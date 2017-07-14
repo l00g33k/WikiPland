@@ -23,7 +23,7 @@ sub l00http_readgraph_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($pname, $fname, $dx, $dy, $idx, $lastx, $lasty);
+    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y);
 
 
     # Send HTTP and HTML headers
@@ -63,9 +63,9 @@ sub l00http_readgraph_proc {
         $form->{'x'} = 0;
     } else {
         if (defined ($form->{'clicks'})) {
-            $form->{'clicks'} .= ":$form->{'x'},$form->{'x'}";
+            $form->{'clicks'} .= ":$form->{'x'},$form->{'y'}";
         } else {
-            $form->{'clicks'} = "$form->{'x'},$form->{'x'}";
+            $form->{'clicks'} = "$form->{'x'},$form->{'y'}";
         }
     }
     if (!defined ($form->{'y'})) {
@@ -75,8 +75,15 @@ sub l00http_readgraph_proc {
         undef $form->{'clicks'};
     }
     if (defined ($form->{'setbrcorner'})) {
-       $form->{'brcornerx'} = $form->{'lastx'};
-       $form->{'brcornery'} = $form->{'lasty'};
+        $form->{'brcornerx'} = $form->{'lastx'};
+        $form->{'brcornery'} = $form->{'lasty'};
+        if ($form->{'clicks'} =~ /:/) {
+            # more than one point, clear last point
+            $form->{'clicks'} =~ s/:[^:]+$//;
+        } else {
+            # only one point, just clear it
+            $form->{'clicks'} = '';
+        }
     }
 
     if (defined ($form->{'path'}) &&
@@ -90,10 +97,24 @@ sub l00http_readgraph_proc {
         if (defined ($form->{'settl'})) {
             $form->{'screentlx'} = $form->{'lastx'};
             $form->{'screently'} = $form->{'lasty'};
+            if ($form->{'clicks'} =~ /:/) {
+                # more than one point, clear last point
+                $form->{'clicks'} =~ s/:[^:]+$//;
+            } else {
+                # only one point, just clear it
+                $form->{'clicks'} = '';
+            }
         }
         if (defined ($form->{'setbr'})) {
             $form->{'screenbrx'} = $form->{'lastx'};
             $form->{'screenbry'} = $form->{'lasty'};
+            if ($form->{'clicks'} =~ /:/) {
+                # more than one point, clear last point
+                $form->{'clicks'} =~ s/:[^:]+$//;
+            } else {
+                # only one point, just clear it
+                $form->{'clicks'} = '';
+            }
         }
 
         if (defined ($form->{'x'})) {
@@ -217,44 +238,63 @@ sub l00http_readgraph_proc {
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     if (defined ($form->{'path'})) {
+        print $sock "<a href=\"readgraph.htm?path=$form->{'path'}\">Reset</a> - \n";
         print $sock "Launcher: <a href=\"launcher.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     }
     print $sock "Click graph above.<br>\n";
 
-    if (defined ($form->{'clicks'})) {
+    if (defined ($form->{'clicks'}) && defined ($form->{'lastx'})) {
         $idx = 1;
+        $svg = '';
+        $ttlpx = 0;
+        $ttlrd = 0;
         print $sock "<pre>\n";
         foreach $_ (split(":", $form->{'clicks'})) {
             if (/(.+),(.+)/) {
                 print $sock "$idx: Clicked: ($1 , $2) -&gt; ";
-                printf $sock ("%f , ", 
-                    ($form->{'readbrx'} - $form->{'readtlx'}) * ($1 - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
-                    + $form->{'readtlx'}
-                );
-                printf $sock ("%f", 
-                    ($form->{'readbry'} - $form->{'readtly'}) * ($2 - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
-                    + $form->{'readtly'}
-                );
+                $x = ($form->{'readbrx'} - $form->{'readtlx'}) * ($1 - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                    + $form->{'readtlx'};
+                printf $sock ("%f , ", $x);
+                $y = ($form->{'readbry'} - $form->{'readtly'}) * ($2 - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                    + $form->{'readtly'};
+                printf $sock ("%f", $y);
                 if ($idx > 1) {
-                    $dx = $1 - $lastx;
-                    $dy = $2 - $lasty;
-                    print $sock " Delta: ($dx , $dy) -&gt; ";
-                    printf $sock ("%f , ", 
-                        ($form->{'readbrx'} - $form->{'readtlx'}) * (($1 - $lastx) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
-                        + $form->{'readtlx'}
-                    );
-                    printf $sock ("%f", 
-                        ($form->{'readbry'} - $form->{'readtly'}) * (($2 - $lasty) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
-                        + $form->{'readtly'}
-                    );
+                    $dx = $1 - $form->{'lastx'};
+                    $dy = $2 - $form->{'lasty'};
+                    print $sock " --- Delta: ($dx , $dy) -&gt; ";
+                    $x = ($form->{'readbrx'} - $form->{'readtlx'}) * (($1 - $form->{'lastx'}) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                        + $form->{'readtlx'};
+                    printf $sock ("%f , ", $x);
+                    $y = ($form->{'readbry'} - $form->{'readtly'}) * (($2 - $form->{'lasty'}) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                        + $form->{'readtly'};
+                    printf $sock ("%f", $y);
+                    $ttlpx += sqrt ($dx * $dx + $dy * $dy);
+                    $ttlrd += sqrt ($x * $x + $y * $y);
+                    printf $sock (" --- Total: (%f) -&gt; %f", $ttlpx, $ttlrd);
+                    if (defined($form->{'brcornerx'})) {
+                        if ($idx == 2) {
+                            $svg  = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>';
+                            $svg .= '<svg  x="0" y="0" width="875" height="532" xmlns="http://www.w3.org/2000/svg" >';
+                            $svg .= '<image x="0" y="0" width="';
+                            $svg .= $form->{'brcornerx'}+1;
+                            $svg .= '" height=';
+                            $svg .= $form->{'brcornery'}+1;
+                            $svg .= " href=\"/ls.htm?path=$form->{'path'}\" />";
+                            $svg .= "<polyline fill=\"none\" stroke=\"#ff0000\" stroke-width=\"2\" points=\"$form->{'lastx'},$form->{'lasty'} ";
+                        }
+                        $svg .= "$1,$2 ";
+                    }
                 }
                 print $sock "\n";
-                $lastx = $1;
-                $lasty = $2;
+                $form->{'lastx'} = $1;
+                $form->{'lasty'} = $2;
                 $idx++;
             }
         }
-        print $sock "</pre>\n";
+        if ((defined($form->{'brcornerx'})) && ($idx > 1)) {
+            $svg .= "\" /> </svg>\n";
+        }
+        print $sock "</pre><p>$svg<p>\n";
     }
 
     # send HTML footer and ends
