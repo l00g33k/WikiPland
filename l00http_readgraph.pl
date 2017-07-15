@@ -272,9 +272,11 @@ sub l00http_readgraph_proc {
                     $ttlrd += sqrt ($x * $x + $y * $y);
                     printf $sock (" --- Total: (%f) -&gt; %f", $ttlpx, $ttlrd);
                     if (defined($form->{'brcornerx'})) {
+                        $x = $form->{'brcornerx'};
+                        $y = $form->{'brcornery'};
                         if ($idx == 2) {
                             $svg  = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>';
-                            $svg .= '<svg  x="0" y="0" width="875" height="532" xmlns="http://www.w3.org/2000/svg" >';
+                            $svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" >";
                             $svg .= '<image x="0" y="0" width="';
                             $svg .= $form->{'brcornerx'}+1;
                             $svg .= '" height=';

@@ -723,10 +723,12 @@ sub l00http_gpsmapsvg_proc (\%) {
 
 
 
-
+    $xx = $mapwd - 1;
+    $yy = $mapht - 1;
     print $sock "<p>$ctrl->{'home'} \n";
     print $sock "$ctrl->{'HOME'} \n";
     print $sock "<a href=\"/gpsmapsvg.htm?path=$path\">Refresh</a> - \n";
+    print $sock "<a href=\"/readgraph.htm?path=$path&readtlx=$maptllon&readtly=$maptllat&readbrx=$mapbrlon&readbry=$mapbrlat&clicks=&screentlx=$maptlx&screently=$maptly&screenbrx=$mapbrx&screenbry=$mapbry&brcornerx=$xx&brcornery=$yy\">readgraph</a> - \n";
     print $sock "<a href=\"/view.htm?path=$map\">$map</a>\n";
     print $sock "<a name=\"ctrl\"></a><p>\n";
 
