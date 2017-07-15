@@ -23,7 +23,7 @@ sub l00http_readgraph_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y);
+    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y, $ptx, $pty);
 
 
     # Send HTTP and HTML headers
@@ -239,6 +239,7 @@ sub l00http_readgraph_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"readgraph.htm?path=$form->{'path'}\">Reset</a> - \n";
+        print $sock "<a href=\"/readgraph.htm?path=$form->{'path'}&readtlx=$form->{'readtlx'}&readtly=$form->{'readtly'}&readbrx=$form->{'readbrx'}&readbry=$form->{'readbry'}&clicks=$form->{'clicks'}&screentlx=$form->{'screentlx'}&screently=$form->{'screently'}&screenbrx=$form->{'screenbrx'}&screenbry=$form->{'screenbry'}&brcornerx=$form->{'brcornerx'}&brcornery=$form->{'brcornery'}\">Refresh</a> - \n";
         print $sock "Launcher: <a href=\"launcher.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     }
     print $sock "Click graph above.<br>\n";
@@ -250,22 +251,26 @@ sub l00http_readgraph_proc {
         $ttlrd = 0;
         print $sock "<pre>\n";
         foreach $_ (split(":", $form->{'clicks'})) {
-            if (/(.+),(.+)/) {
-                print $sock "$idx: Clicked: ($1 , $2) -&gt; ";
-                $x = ($form->{'readbrx'} - $form->{'readtlx'}) * ($1 - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+            if (($ptx, $pty) = /(.+),(.+)/) {
+                print $sock "$idx: Clicked: ($ptx , $pty) -&gt; ";
+                $x = ($form->{'readbrx'} - $form->{'readtlx'}) * ($ptx - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
                     + $form->{'readtlx'};
                 printf $sock ("%f , ", $x);
-                $y = ($form->{'readbry'} - $form->{'readtly'}) * ($2 - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                $y = ($form->{'readbry'} - $form->{'readtly'}) * ($pty - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
                     + $form->{'readtly'};
                 printf $sock ("%f", $y);
                 if ($idx > 1) {
-                    $dx = $1 - $form->{'lastx'};
-                    $dy = $2 - $form->{'lasty'};
+                    $dx = $ptx - $form->{'lastx'};
+                    $dy = $pty - $form->{'lasty'};
                     print $sock " --- Delta: ($dx , $dy) -&gt; ";
-                    $x = ($form->{'readbrx'} - $form->{'readtlx'}) * (($1 - $form->{'lastx'}) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                    $x = ($form->{'readbrx'} - $form->{'readtlx'}) * 
+                        ($ptx - $form->{'lastx'}) / 
+                        ($form->{'screenbrx'} - $form->{'screentlx'}) 
                         + $form->{'readtlx'};
                     printf $sock ("%f , ", $x);
-                    $y = ($form->{'readbry'} - $form->{'readtly'}) * (($2 - $form->{'lasty'}) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                    $y = ($form->{'readbry'} - $form->{'readtly'}) * 
+                        ($pty - $form->{'lasty'}) / 
+                        ($form->{'screenbry'} - $form->{'screently'}) 
                         + $form->{'readtly'};
                     printf $sock ("%f", $y);
                     $ttlpx += sqrt ($dx * $dx + $dy * $dy);
@@ -284,12 +289,12 @@ sub l00http_readgraph_proc {
                             $svg .= " href=\"/ls.htm?path=$form->{'path'}\" />";
                             $svg .= "<polyline fill=\"none\" stroke=\"#ff0000\" stroke-width=\"2\" points=\"$form->{'lastx'},$form->{'lasty'} ";
                         }
-                        $svg .= "$1,$2 ";
+                        $svg .= "$ptx,$pty ";
                     }
                 }
                 print $sock "\n";
-                $form->{'lastx'} = $1;
-                $form->{'lasty'} = $2;
+                $form->{'lastx'} = $ptx;
+                $form->{'lasty'} = $pty;
                 $idx++;
             }
         }

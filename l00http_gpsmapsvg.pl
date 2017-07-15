@@ -683,7 +683,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     $xx = abs ($lon - $marklon) * cos (($lat + $marklat) / 2 / 180 * 3.141592653589793) / 360 * 40000;
     $yy = abs ($lat - $marklat) / 360 * 40000;
     $dist = sqrt ($xx * $xx + $yy * $yy);
-    print $sock "Distance (km): $dist<br>\n";
+    print $sock "Distance to Marker (km): $dist<br>\n";
 
     print $sock "Map: $map\n";
     if (defined ($form->{'x'})) {
@@ -723,12 +723,16 @@ sub l00http_gpsmapsvg_proc (\%) {
 
 
 
-    $xx = $mapwd - 1;
-    $yy = $mapht - 1;
     print $sock "<p>$ctrl->{'home'} \n";
     print $sock "$ctrl->{'HOME'} \n";
     print $sock "<a href=\"/gpsmapsvg.htm?path=$path\">Refresh</a> - \n";
-    print $sock "<a href=\"/readgraph.htm?path=$path&readtlx=$maptllon&readtly=$maptllat&readbrx=$mapbrlon&readbry=$mapbrlat&clicks=&screentlx=$maptlx&screently=$maptly&screenbrx=$mapbrx&screenbry=$mapbry&brcornerx=$xx&brcornery=$yy\">readgraph</a> - \n";
+    $xx = ($mapbrlon - $maptllon) / 360 * 40000 * cos (($maptllat + $mapbrlat) / 2);
+    $yy = ($mapbrlat - $maptllat) / 360 * 40000;
+    print $sock "<a href=\"/readgraph.htm?path=$path&readtlx=0&readtly=0&readbrx=$xx&readbry=$yy&clicks=&screentlx=$maptlx&screently=$maptly&screenbrx=$mapbrx&screenbry=$mapbry&";
+    $xx = $mapwd - 1;
+    $yy = $mapht - 1;
+    print $sock "brcornerx=$xx&brcornery=$yy\">(readgraph km </a> - \n";
+    print $sock "<a href=\"/readgraph.htm?path=$path&readtlx=$maptllon&readtly=$maptllat&readbrx=$mapbrlon&readbry=$mapbrlat&clicks=&screentlx=$maptlx&screently=$maptly&screenbrx=$mapbrx&screenbry=$mapbry&brcornerx=$xx&brcornery=$yy\">lon/lat)</a> - \n";
     print $sock "<a href=\"/view.htm?path=$map\">$map</a>\n";
     print $sock "<a name=\"ctrl\"></a><p>\n";
 
