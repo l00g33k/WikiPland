@@ -157,6 +157,9 @@ $conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.k
     } elsif ($path =~ /\.svg$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/svg+xml\r\n";
+    } elsif ($path =~ /\.js$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: application/javascript\r\n";
     } elsif ($path =~ /\.png$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/png\r\n";
@@ -541,6 +544,7 @@ sub l00http_ls_proc {
                     !($path =~ /\.pm$/i) &&
                     !($path =~ /\.h$/i) &&
                     !($path =~ /\.c$/i) &&
+                    !($path =~ /\.js$/i) &&
                     !($path =~ /\.cpp$/i) &&
                     !($path =~ /\.htm$/i) &&
                     !($path =~ /\.html$/i)) {
