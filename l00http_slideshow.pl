@@ -8,10 +8,11 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_slideshow_proc",
               desc => "l00http_slideshow_desc");
-my ($width, $height, $llspath, $picsperpage);
+my ($width, $height, $llspath, $picsperpage, $nonewline);
 $width = '100%';
 $height = '';
 $picsperpage = 6;
+$nonewline = '';
 
 sub llsfn2 {
     my ($rst);
@@ -53,7 +54,7 @@ sub l00http_slideshow_proc {
     my ($path, $file, @allpics, $last, $next, $phase, $outbuf, $ii, $tmp);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
-    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
@@ -69,11 +70,22 @@ sub l00http_slideshow_proc {
         if (defined ($form->{'picsperpage'})) {
             $picsperpage = $form->{'picsperpage'};
         }
+        if ((defined ($form->{'nonewline'})) && ($form->{'nonewline'} eq 'on')) {
+            $nonewline = 'checked';
+        } else {
+            $nonewline = '';
+        }
     }
 
 
     if (defined ($form->{'path'})) {
         $outbuf = '';
+        if ($nonewline eq 'checked') {
+            $newline = ' ';
+            print $sock "<p>\n";
+        } else {
+            $newline = '<br>';
+        }
         if (($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/) {
             if (opendir (DIR, $path)) {
                 undef @allpics;
@@ -126,8 +138,10 @@ sub l00http_slideshow_proc {
                             = stat($path . $file);
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
-                        $outbuf .= "<br>\n";
-                        $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:<br>\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                        $outbuf .= "$newline\n";
+                        if ($nonewline ne 'checked') {
+                            $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:$newline\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                        }
 
 #                       if (($width =~ /^\d/) && ($height =~ /^\d/)) {
                             $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
@@ -147,10 +161,18 @@ sub l00http_slideshow_proc {
                 }
             }
         }
+
         print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
+        if ($nonewline eq 'checked') {
+            print $sock "<p>\n";
+        }
 
         print $sock $outbuf;
+
+        if ($nonewline eq 'checked') {
+            print $sock "<p>\n";
+        }
         print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
     }
@@ -176,6 +198,9 @@ sub l00http_slideshow_proc {
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Pic per page: <input type=\"text\" size=\"3\" name=\"picsperpage\" value=\"$picsperpage\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"nonewline\" $nonewline>No newline\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
