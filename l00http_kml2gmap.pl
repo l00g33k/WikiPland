@@ -28,8 +28,8 @@ $gmapscript0 = "<script\n";
 $gmapscript1 = <<ENDOFSCRIPT1;
 </script>
 
-var grid;
 <script>
+var grid;
 ENDOFSCRIPT1
 #var  myCenter=new google.maps.LatLng(0,0);
 
@@ -698,6 +698,9 @@ sub l00http_kml2gmap_proc {
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"Update\">\n";
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
+        print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";
+        print $sock "<input type=\"hidden\" name=\"height\" value=\"$height\">\n";
         print $sock "</form>\n";
 
         if ($htmlout ne '') {
@@ -727,6 +730,9 @@ sub l00http_kml2gmap_proc {
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>&nosp;\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table>\n";
