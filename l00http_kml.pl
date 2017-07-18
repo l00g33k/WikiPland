@@ -10,7 +10,7 @@ my %config = (proc => "l00http_kml_proc",
               desc => "l00http_kml_desc");
 
 my ($kmlheader1, $kmlheader2, $kmlfooter, $trackheight, $trackmark);
-my ($latoffset, $lonoffset, $applyoffset);
+my ($latoffset, $lonoffset, $applyoffset, $color);
 
 $trackheight = 0;
 $trackmark = 0;
@@ -18,6 +18,7 @@ $trackmark = 0;
 $latoffset = 0;
 $lonoffset = 0;
 $applyoffset = '';
+$color = 'ff0000ff';
 
 $kmlheader1 = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".
@@ -29,7 +30,7 @@ $kmlheader2 = "</name>\n".
     "	<open>1</open>\n".
     "   <Style id=\"sh_donut\">\n".
     "       <IconStyle>\n".
-    "           <color>ff0000ff</color>\n".
+    "           <color>$color</color>\n".
     "           <scale>1.4</scale>\n".
     "           <Icon>\n".
     "               <href>http://maps.google.com/mapfiles/kml/shapes/donut.png</href>\n".
@@ -40,7 +41,7 @@ $kmlheader2 = "</name>\n".
     "   </Style>\n".
     "   <Style id=\"sn_donut\">\n".
     "       <IconStyle>\n".
-    "           <color>ff0000ff</color>\n".
+    "           <color>$color</color>\n".
     "           <scale>1.2</scale>\n".
     "           <Icon>\n".
     "               <href>http://maps.google.com/mapfiles/kml/shapes/donut.png</href>\n".
@@ -118,6 +119,9 @@ sub l00http_kml_proc {
         if (defined ($form->{'lonoffset'}) && 
             ($form->{'lonoffset'} =~ /([0-9.+-]+)/)) {
             $lonoffset = $1;
+        }
+        if (defined ($form->{'color'})) {
+            $color = $form->{'color'};
         }
         if (defined ($form->{'applyoffset'}) && 
             ($form->{'applyoffset'} eq 'on')) {
@@ -256,7 +260,7 @@ sub l00http_kml_proc {
                                 }
                                 $tracks = $tracks . 
                                     "\t\t<Placemark><name>Track $gpxtime</name>\n" .
-                                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                    "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
                                     "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
                                     "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                     "\t\t\t<coordinates>\n";
@@ -375,7 +379,7 @@ sub l00http_kml_proc {
                             $trkname = "Track $stamp";
                             $tracks = $tracks . 
                                 "\t\t<Placemark><name>$trkname</name>\n" .
-                                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
                                 "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
                                 "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                 "\t\t\t<coordinates>\n";
@@ -394,7 +398,7 @@ sub l00http_kml_proc {
                                 $trkname = "Track $stamp";
                                 $tracks = $tracks . 
                                     "\t\t<Placemark><name>$trkname</name>\n" .
-                                    "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                    "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
                                     "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
                                     "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                     "\t\t\t<coordinates>\n";
@@ -468,7 +472,7 @@ sub l00http_kml_proc {
                             }
                             $tracks = $tracks . 
                                 "\t\t<Placemark><name>$trkname</name>\n" .
-                                "\t\t\t<Style id=\"lc\"><LineStyle><color>ffffff00</color><width>4</width></LineStyle></Style>\n" .
+                                "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
                                 "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
                                 "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                 "\t\t\t<coordinates>\n";
@@ -639,6 +643,12 @@ sub l00http_kml_proc {
         print $sock "Longitude offset:\n";
         print $sock "</td><td>\n";
         print $sock "<input type=\"text\" name=\"lonoffset\" value=\"$lonoffset\">\n";
+        print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "Line color\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" name=\"color\" value=\"$color\"> aabbggrr\n";
         print $sock "</td></tr>\n";
 
         print $sock "</table>\n";
