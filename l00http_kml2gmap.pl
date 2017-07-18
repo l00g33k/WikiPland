@@ -5,16 +5,17 @@ use l00wikihtml;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
-my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, 
+my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
 my ($width, $height, $apikey, $satellite);
-my ($new, $selregex);
+my ($new, $selregex, $drawgrid);
 
 $new = 1;
 $myCenters = '';
 $myMarkers = '';
 $mySetMap = '';
 $selregex = '';
+$drawgrid = '';
 
 $width = 500;
 $height = 380;
@@ -28,6 +29,7 @@ $gmapscript1 = <<ENDOFSCRIPT1;
 </script>
 
 <script>
+var grid;
 ENDOFSCRIPT1
 #var  myCenter=new google.maps.LatLng(0,0);
 
@@ -103,6 +105,9 @@ $gmapscript2a = <<ENDOFSCRIPT2a;
 
 map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
 
+ENDOFSCRIPT2a
+$gmapscript2b = <<ENDOFSCRIPT2b;
+
 map.addListener('click', function(e) {
     placeMarkerAndPanTo(e.latLng, map);
 });
@@ -171,7 +176,7 @@ searchBox.addListener('places_changed', function() {
 });
 
 
-ENDOFSCRIPT2a
+ENDOFSCRIPT2b
 
 #var marker =new google.maps.Marker({ position:myCenter , });
 #var marker2=new google.maps.Marker({ position:myCenter2, });
@@ -218,7 +223,7 @@ sub l00http_kml2gmap_proc {
     my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
-    my ($sortothers, %sortentires, $sortphase, $matched, $exclude);
+    my ($sortothers, %sortentires, $sortphase, $matched, $exclude, $drawgriddo, $drawgriddo2);
 
 
     if (defined($ctrl->{'googleapikey'})) {
@@ -240,12 +245,18 @@ sub l00http_kml2gmap_proc {
         $satellite = 0;
     }
 
+
     $matched = '';
     $exclude = '';
     if (defined($form->{'exclude'}) && ($form->{'exclude'} eq 'on')) {
         $exclude = 'checked';
     } elsif (defined($form->{'matched'}) && ($form->{'matched'} eq 'on')) {
         $matched = 'checked';
+    }
+    if (defined($form->{'drawgrid'}) && ($form->{'drawgrid'} eq 'on')) {
+        $drawgrid = 'checked';
+    } else {
+        $drawgrid = '';
     }
 
     # delete waypoint
@@ -602,9 +613,18 @@ sub l00http_kml2gmap_proc {
             }
         }
 
+        if ($drawgrid eq 'checked') {
+            $drawgriddo = "</script><script type=\"text/javascript\" src=\"$ctrl->{'plpath'}v3_ll_grat.js\">\n";
+            $drawgriddo2 = "grid = new Graticule(map, false);\n";
+        } else {
+            $drawgriddo = "\n";
+            $drawgriddo2 = "\n";
+        }
+
         print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . 
             $gmapscript0 .
             "src=\"http://maps.googleapis.com/maps/api/js?key=$apikey&libraries=places\">\n" .
+            $drawgriddo .
             $gmapscript1 .
             "var  myCenter=new google.maps.LatLng($ctrlat,$ctrlon);\n" .
             $myCenters .
@@ -613,6 +633,8 @@ sub l00http_kml2gmap_proc {
             "  scaleControl: true,\n" .
             "  mapTypeId:google.maps.MapTypeId.$_\n" .
             $gmapscript2a .
+            $drawgriddo2 .
+            $gmapscript2b .
             $myMarkers .
             $mySetMap .
             $gmapscript3 .
@@ -643,7 +665,7 @@ sub l00http_kml2gmap_proc {
 
 
     if (defined ($form->{'path'})) {
-        print $sock "<p><form action=\"/kml2gmap.htm\" method=\"post\">\n";
+        print $sock "<p><form action=\"/kml2gmap.htm\" method=\"get\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
         if (($ctrl->{'os'} eq 'and') ||
@@ -672,7 +694,13 @@ sub l00http_kml2gmap_proc {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
         print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"Update\">\n";
+        print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
+        print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";
+        print $sock "<input type=\"hidden\" name=\"height\" value=\"$height\">\n";
         print $sock "</form>\n";
 
         if ($htmlout ne '') {
@@ -702,6 +730,9 @@ sub l00http_kml2gmap_proc {
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>&nosp;\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table>\n";

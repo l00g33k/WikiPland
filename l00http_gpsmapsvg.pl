@@ -14,7 +14,8 @@ my $marker = 'X';
 my $color = 'ff0000';
 my $movestep = 10;
 my $waypts = '';
-my $waycolor = '00ff00';
+my $waycolor = 'ff0000';
+my $markcolor = 'ff0000';
 my $lastpath = '';
 my $lastgps = 0;
 my $lastres = '';
@@ -30,6 +31,7 @@ my $stoptrack = 9999;
 my $stoppoint = 99999;
 my $marktrack = 1;
 my $markpoint = 1;
+my $marklen = 500;
 
 # long/lat to screen X/Y conversion parameters
 # There are read from .map file
@@ -54,7 +56,7 @@ my $mapextend_brlat = -1;
 
 my $setlatlonvals = '';
 
-my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lsttrksize, $lsttrksvg, $lsttracknpts);
+my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lsttrksize, $lsttrksvg, $lsttrkmkr, $lsttracknpts);
 
 $fitmapphase = 0;
 # 0: normal
@@ -69,6 +71,7 @@ $lsttrkname = '';
 $lsttrksize = 0;
 $lsttrksvg = '';
 $lsttracknpts = '';
+$lsttrkmkr = '';
 
 # converts lon/lat to screen x/y coordinate
 sub ll2xysvg {
@@ -116,7 +119,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
     my ($lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
-    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $state, $lnno);
+    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $trkmkr, $state, $lnno);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
     my ($fitmapmaxlon, $fitmapminlon, $fitmapmaxlat, $fitmapminlat);
     my ($plon, $plat, $needredraw, $wayptsbuf);
@@ -215,8 +218,12 @@ sub l00http_gpsmapsvg_proc (\%) {
         $markpoint = $1;
         $form->{'markpointdo'} = 'simulated';
     }
+    if (defined ($form->{'marklen'}) &&
+        ($form->{'marklen'} =~ /(\d+)/)) {
+        $marklen = $1;
+    }
     if (defined ($form->{'markleftleft'})) {
-        $markpoint -= 500;
+        $markpoint -= $marklen;
         if ($markpoint < 0) {
             $markpoint = 0;
         }
@@ -233,7 +240,7 @@ sub l00http_gpsmapsvg_proc (\%) {
         $markpoint += 1;
     }
     if (defined ($form->{'markrightright'})) {
-        $markpoint += 500;
+        $markpoint += $marklen;
     }
 
     if (defined ($form->{'cb2wfile'})) {
@@ -404,6 +411,7 @@ sub l00http_gpsmapsvg_proc (\%) {
             $lnno = 0;
 
             $svg = '';
+            $trkmkr = '';
             $state = 0; # 0=nothing, 1=in track, 2=track ends
 
             # if map extend is extended, redraw
@@ -412,9 +420,15 @@ sub l00http_gpsmapsvg_proc (\%) {
             $wayptsbuf = &l00httpd::l00freadAll($ctrl);
 
             if (($waypts eq $lsttrkname) &&
-                (length($wayptsbuf) == $lsttrksize)) {
+                (length($wayptsbuf) == $lsttrksize) &&
+                !defined($form->{'markleftleft'}) &&
+                !defined($form->{'markleft'}) &&
+                !defined($form->{'markright'}) &&
+                !defined($form->{'markrightright'}) &&
+                !defined($form->{'markpointdo'})) {
                 $svg = $lsttrksvg;
                 $tracknpts = $lsttracknpts;
+                $trkmkr = $lsttrkmkr;
             } else {
                 while (1) {
                     if ($ctrl->{'debug'} >= 3) {
@@ -425,7 +439,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                         l00httpd::dbp($config{'desc'}, "extent: br lat,lon: $mapextend_brlat, $mapextend_brlon\n");
                     }
                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                        if (($lnno % 10000) == 0) {
+                        if (($lnno % 10000) == 9999) {
                             print "gpsmapsvg: ", $lnno / 10000, "0,000\n";
                         }
                         $lnno++;
@@ -522,15 +536,16 @@ sub l00http_gpsmapsvg_proc (\%) {
                                     }
                                     if (($nogpstrks == $marktrack) &&
                                         ($nowyptthistrack >= $markpoint) &&
+                                        ($nowyptthistrack <= $markpoint + $marklen) &&
                                         $notclip) {
                                         # have we moved enough?
                                         if (($pixx0 < 0) ||
-                                            (sqrt(($pixx0 - $pixx) ** 2 + ($pixy0 - $pixy) ** 2) > 20)) {
+                                            (sqrt(($pixx0 - $pixx) ** 2 + ($pixy0 - $pixy) ** 2) > 12)) {
                                             # first time or moved more than 20 pixels
-                                            print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+                                            $trkmkr .= "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
                                             $trackmark = chr($trackmarkcnt + 0x30);
                                             $trackmarkcnt++;
-                                            print $sock "<font color=\"magenta\">$trackmark</font></div>\n";
+                                            $trkmkr .= "<font color=\"$markcolor\">$trackmark</font></div>\n";
                                             $rawstartstop .= sprintf("   <a href=\"/view.htm?path=$waypts&hiliteln=$lnno&lineno=on#line%d\">%s:</a> track %3d point %4d: %s\n", $lnno - 5, $trackmark, $nogpstrks, $nowyptthistrack, $_);
                                             # last position
                                             $pixx0 = $pixx;
@@ -544,6 +559,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                     $pixy = $mapht - $pixy;     # y axis inverted
                                     $svg .= "$pixx,$pixy ";
                                 }
+                            } else {
                             }
                         } else {
                             if ($state == 1) {
@@ -570,8 +586,8 @@ sub l00http_gpsmapsvg_proc (\%) {
                             }
                             ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
                             if ($notclip) {
-                                print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-                                print $sock "<font color=\"$waycolor\">$3</font></div>\n";
+                                $trkmkr .= "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+                                $trkmkr .= "<font color=\"$waycolor\">$3</font></div>\n";
                             }
                         }
                     }
@@ -619,6 +635,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                 $lsttrksize = length($wayptsbuf);
                 $lsttrksvg = $svg;
                 $lsttracknpts = $tracknpts;
+                $lsttrkmkr = $trkmkr;
             }
 
 
@@ -635,7 +652,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                 l00httpd::dbp($config{'desc'}, "Create svg of track(s) from x,y/long,lat above: <a href=\"/svg.htm?view=&graph=$fname\">$fname</a>\n");
             }
             &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
-            $svgout = '';
+            $svgout = $trkmkr;
             $svgout .= "<svg  x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\"xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $mapwd $mapht\" preserveAspectRatio=\"xMidYMid meet\">";
             $svgout .= "<g id=\"bitmap\" style=\"display:online\"> ";
             $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm$path?path=$path\" /> ";
@@ -683,7 +700,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     $xx = abs ($lon - $marklon) * cos (($lat + $marklat) / 2 / 180 * 3.141592653589793) / 360 * 40000;
     $yy = abs ($lat - $marklat) / 360 * 40000;
     $dist = sqrt ($xx * $xx + $yy * $yy);
-    print $sock "Distance (km): $dist<br>\n";
+    print $sock "Distance to Marker (km): $dist<br>\n";
 
     print $sock "Map: $map\n";
     if (defined ($form->{'x'})) {
@@ -723,10 +740,16 @@ sub l00http_gpsmapsvg_proc (\%) {
 
 
 
-
     print $sock "<p>$ctrl->{'home'} \n";
     print $sock "$ctrl->{'HOME'} \n";
     print $sock "<a href=\"/gpsmapsvg.htm?path=$path\">Refresh</a> - \n";
+    $xx = ($mapbrlon - $maptllon) / 360 * 40000 * cos (($maptllat + $mapbrlat) / 2);
+    $yy = ($mapbrlat - $maptllat) / 360 * 40000;
+    print $sock "<a href=\"/readgraph.htm?path=$path&readtlx=0&readtly=0&readbrx=$xx&readbry=$yy&clicks=&screentlx=$maptlx&screently=$maptly&screenbrx=$mapbrx&screenbry=$mapbry&";
+    $xx = $mapwd - 1;
+    $yy = $mapht - 1;
+    print $sock "brcornerx=$xx&brcornery=$yy\">(readgraph km </a> - \n";
+    print $sock "<a href=\"/readgraph.htm?path=$path&readtlx=$maptllon&readtly=$maptllat&readbrx=$mapbrlon&readbry=$mapbrlat&clicks=&screentlx=$maptlx&screently=$maptly&screenbrx=$mapbrx&screenbry=$mapbry&brcornerx=$xx&brcornery=$yy\">lon/lat)</a> - \n";
     print $sock "<a href=\"/view.htm?path=$map\">$map</a>\n";
     print $sock "<a name=\"ctrl\"></a><p>\n";
 
@@ -827,9 +850,13 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "            <td>at # point:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"markpoint\" value=\"$markpoint\"></td>\n";
     print $sock "        </tr>\n";
+    print $sock "        <tr>\n";
+    print $sock "            <td>Length:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"marklen\" value=\"$marklen\"></td>\n";
+    print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"markpointdo\" value=\"Mark Track Pt\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"markpointdo\" value=\"Mark Track Pts\"></td>\n";
     print $sock "        <td>\n";
     print $sock "        <input type=\"submit\" name=\"markleftleft\" value=\"<<\">\n";
     print $sock "        <input type=\"submit\" name=\"markleft\" value=\"<\">\n";
@@ -838,9 +865,14 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        </td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "        <tr>\n";
+    print $sock "            <td>Color:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"markcolor\" value=\"$markcolor\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
     print $sock "    <tr>\n";
-    print $sock "        <td>20 pixels interval</td>\n";
-    print $sock "        <td>Move 1 point/100 points</td>\n";
+    print $sock "        <td>12 pixels interval</td>\n";
+    print $sock "        <td>Move 1 point/$marklen points</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
