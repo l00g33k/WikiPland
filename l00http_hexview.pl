@@ -27,7 +27,7 @@ sub l00http_hexview_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $buffer2, $cryptex, $rethash, $line, $ii, $len);
     my ($blklen, $tmp, $iiend, $hex, $ascii, $binview, $jj);
-	my ($pname, $fname);
+	my ($pname, $fname, $decaddr);
 
     $sock = $ctrl->{'sock'};     # dereference network socket
 
@@ -40,6 +40,11 @@ sub l00http_hexview_proc {
         $binary = 'checked';
     } else {
         $binary = '';
+    }
+    if (defined ($form->{'decaddr'}) && ($form->{'decaddr'} eq 'on')) {
+        $decaddr = 'checked';
+    } else {
+        $decaddr = '';
     }
     if (defined ($form->{'offset'})) {
         $offset = hex ($form->{'offset'});
@@ -57,8 +62,10 @@ sub l00http_hexview_proc {
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
-        print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a><p>\n";
+        print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
+
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a><p>\n";
+
     } else {
         print $sock "Path: <a href=\"/ls.htm?path=$ctrl->{'workdir'}\">Select solver equation file</a> and 'Set' to 'solver'<p>\n";
         # send HTML footer and ends
@@ -91,7 +98,11 @@ sub l00http_hexview_proc {
                 $tmp =~ s/</&lt;/g;
                 $tmp =~ s/>/&gt;/g;
                 printf $sock ($tmp);
-                $hex = sprintf ("%06x", $ii + $offset);
+                if ($decaddr eq 'checked') {
+                    $hex = sprintf ("%8d %06x", $ii + $offset, $ii + $offset);
+                } else {
+                    $hex = sprintf ("%06x", $ii + $offset);
+                }
                 $ascii = '';
                 $binview = '';
             }
@@ -157,9 +168,14 @@ sub l00http_hexview_proc {
     print $sock "<input type=\"text\" name=\"group\" size=8 value=\"$group\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "Views\n";
+    print $sock "Show\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"binary\" $binary>binary output\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Show\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"decaddr\" $decaddr>decimal address\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form><p>\n";
