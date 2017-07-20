@@ -7,8 +7,9 @@ use warnings;
 
 my %config = (proc => "l00http_scratch_proc",
               desc => "l00http_scratch_desc");
-my ($scratch, $scratchhtml, $tmp, $eval);
+my ($scratch, $scratchhtml, $tmp, $eval, $newwin);
 $eval = '';
+$newwin = '';
 
 sub l00http_scratch_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -50,6 +51,11 @@ sub l00http_scratch_proc {
             $scratch = $form->{'scratchbuf'};
         } else {
             $scratch = "";
+        }
+        if ((defined ($form->{'newwin'})) && ($form->{'newwin'} eq 'on')) {
+            $newwin = 'target="newwin"';
+        } else {
+            $newwin = '';
         }
     } elsif (defined ($form->{'clear'})) {
         $scratch = "";
@@ -108,6 +114,12 @@ sub l00http_scratch_proc {
 
         print $sock "<br><input type=\"text\" size=\"10\" name=\"eval\" value=\"$eval\">\n";
         print $sock "The whole content of the scratch buffer is put in \$_ and then this string is \"eval'ed\", e.g. 'print \$sock \$_' prints the content to this HTML page\n";
+        if ($newwin eq '') {
+            $_ = '';
+        } else {
+            $_ = 'checked';
+        }
+        print $sock "<br><input type=\"checkbox\" name=\"newwin\" $_>Open links in new windows\n";
         print $sock "</form>\n";
 
         print $sock "<form action=\"/scratch.htm\" method=\"get\">\n";
@@ -165,6 +177,7 @@ sub l00http_scratch_proc {
         }
     }
 
+    $scratchhtml =~ s/<a href/<a $newwin href/g;
     print $sock "$scratchhtml\n";
 
     if ($notbare) {
