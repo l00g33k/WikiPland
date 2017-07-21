@@ -1,7 +1,7 @@
 package l00wikihtml;
 
 use l00httpd;
-my (@toclist, $java);
+my (@toclist, $java, $showalljava);
 
 
 # collapsible Javascript tree: http://webpageworkshop.co.uk/main/article11
@@ -15,6 +15,24 @@ $java = "\n".
 "        (document.getElementById(a).style.display=='none') ? 'block':'none';\n".
 "}\n".
 "</script>\n\n";
+
+$showalljava = "\n".
+"<script type=\"text/javascript\">\n".
+"var dge=document.getElementById;\n".
+"function cl_showall(){\n".
+"    if(!dge)return;\n".
+"    var hidx = 1;\n".
+"    var doc;\n".
+"    while (doc = document.getElementById('hide'+hidx)) {\n".
+"        doc.style.display = \n".
+"            (doc.style.display=='none') ? 'block':'none';\n".
+"        hidx++;\n".
+"    }\n".
+"    document.getElementById(a).style.display = \n".
+"        (document.getElementById(a).style.display=='none') ? 'block':'none';\n".
+"}\n".
+"</script>\n\n";
+
 
 my (%colorlu);
 $colorlu{'r'} = 'red';
@@ -1134,6 +1152,9 @@ if(1){
     # The next statement overwrites the old style TOC with 
     # collapsible Java TOC.  Uncomment to restore old style TOC
     $toc = &makejavatoc ();
+    if ($hideBlkId > 0) {
+        $toc .= "<br>$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a>\n";
+    }
 #print $toc;
     if ($flaged ne '') {
         $flaged = "<b><i>BOOKMARKS:</i></b><br>$flaged<hr>\n";
