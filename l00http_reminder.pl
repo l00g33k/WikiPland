@@ -121,6 +121,8 @@ sub l00http_reminder_desc {
 
     &l00http_reminder_find ($ctrl);
 
+    $lifestart = time;
+
     "reminder: A reminder task demo.  Click and change 'Run interval' to non zero";
 }
 
