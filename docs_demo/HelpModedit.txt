@@ -32,6 +32,22 @@
 ** __underline__
 ** {{fix}}
 ** **//__all__//**
+==Hidden block==
+* Often time one wishes to hide a block to reduce clutters but doesn't 
+wish to delete it or move it else where as it logically belong together.
+The """" feature can help. Blocks within two lines containing only """" 
+will be hidden by default. Click [show] to display the content. The 
+first """" should be placed immediately after a heading line, and the 
+second """" should be placed immediately before a heading line and 
+preceeded by a blank line. For example:
+===Hidden details===
+""""
+* This section normally would not be shown until the [show] button has been clicked.
+====Lower level heading====
+* Higher level heading is also possible but is less meaningful.
+* Note that if there are """" mismatch, normal text will end up being hidden.
+
+""""
 =Wiki %BOOKMARK% Shorthand=
 * To make a high density bookmark page to put as much links onto the small screen on the Androids devices requires one to make lots of hyper links.  Even though the [[URL|desc]] shorthand helps, another link management friendly and even simpler shorthand is available
 * The special section is declared by placing the keyword %BOOKMARK% alone on a line and is terminated by the keyword %END%.  For example see:
