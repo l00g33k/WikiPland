@@ -117,9 +117,13 @@ sub wikihtml {
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
     my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx, $seenEqualStar);
     my ($mode0unknown1twiki2markdown, $mdChanged2Tw, $markdownparanobr, $loop);
+    my ($hideBlkActive, $hideBlkId);
 
     undef @chlvls;
     undef $lastchlvl;
+
+    $hideBlkActive = 0;
+    $hideBlkId = 0;
 
     if (!defined($fname)) {
         $fname = '(undef)';
@@ -500,6 +504,25 @@ if(1){
             $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"newwin\">%s</a>", $clip, $2);
             $_ .= " ($tmp)";
         }
+
+        #"""" alone in a line brackets a block to be hidden by
+        # default and to be shown when clicked.
+        # The first """" should be after a paragraph heading
+        # The second """" should be before a paragraph heading
+        if (/^""""$/) {
+            if ($hideBlkActive) {
+                $hideBlkActive = 0;
+                $oubuf .= "</div>\n";
+            } else {
+                $hideBlkActive = 1;
+                $hideBlkId++;
+                $oubuf .= "<a href=\"javascript:cl_expcol('hide$hideBlkId');\">[show]</a>\n";
+                $oubuf .= "<div id=\"hide$hideBlkId\" style=\"display:none\">\n";
+            }
+            next;
+        }
+
+
 
         # ## headings
         if (($mode0unknown1twiki2markdown == 2) && (/^(#+) (\S.*)$/)) {
