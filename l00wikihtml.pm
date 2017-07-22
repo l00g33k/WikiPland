@@ -719,6 +719,13 @@ if(1){
                   " <a href=\"#__toc__\">toc</a>";
         }
 
+        if ($hideBlkActive && /=(.+)=$/) {
+            # gray out chapter hidden by """"
+            # '=' interferes with heading shorthand, global replace ____EqSg____ = later
+            s/^(=+)([^=]+)(=+)$/$1<font style____EqSg____"color:black;background-color:silver">$2<\/font>$3/g;
+        }
+
+
         # lines ending in !!! gets a Highlight link before TOC
         if (/^(.*)!!!$/) {
             $tmp = $1;
@@ -1149,17 +1156,25 @@ if(1){
     }
 
 
-    if ($hideBlkId > 0) {
-        $oubuf = "$showalljava$oubuf";
-        if ($hideBlkActive) {
-            $oubuf .= "</div>There are odd number of \"\"\"\" block hide controls. Some text may be hidden unexpectedly.\n";
-        }
-    }
 
     # The next statement overwrites the old style TOC with 
     # collapsible Java TOC.  Uncomment to restore old style TOC
     $toc = &makejavatoc ();
 #print $toc;
+
+    if ($hideBlkId > 0) {
+        if ($oubuf =~ /%TOC%/) {
+            $toc .= "<br>$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a>\n";
+            $oubuf = "$showalljava$oubuf";
+        } else {
+            $oubuf = "$showalljava<br>$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a>$oubuf";
+        }
+        if ($hideBlkActive) {
+            $oubuf .= "</div>There are odd number of \"\"\"\" block hide controls. Some text may be hidden unexpectedly.\n";
+        }
+    }
+
+
     if ($flaged ne '') {
         $flaged = "<b><i>BOOKMARKS:</i></b><br>$flaged<hr>\n";
     }
