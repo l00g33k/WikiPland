@@ -436,7 +436,12 @@ sub l00http_edit_proc2 {
     print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
     # create shell script for vi
     if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
-        print OUT "vim $form->{'path'}\n";
+        if ($blklineno > 0) {
+            $_ = "+$blklineno";
+        } else {
+            $_ = '';
+        }
+        print OUT "vim $_ $form->{'path'}\n";
         close (OUT);
     }
     print $sock "</td><td>\n";
