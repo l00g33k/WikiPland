@@ -22,6 +22,7 @@ $wake = 0;
 $vmsec = 60;
 $pause = 0;
 $filetime = 0;
+$lifestart = 0;
 
 sub l00http_reminder_date2j {
 # convert from date to seconds
@@ -120,8 +121,6 @@ sub l00http_reminder_desc {
     # at http://localhost:20337/
 
     &l00http_reminder_find ($ctrl);
-
-    $lifestart = time;
 
     "reminder: A reminder task demo.  Click and change 'Run interval' to non zero";
 }

@@ -25,11 +25,9 @@ $showalljava = "\n".
 "    var doc;\n".
 "    while (doc = document.getElementById('hide'+hidx)) {\n".
 "        doc.style.display = \n".
-"            (doc.style.display=='none') ? 'block':'none';\n".
+"            (doc.style.display=='none') ? 'block':'block';\n".
 "        hidx++;\n".
 "    }\n".
-"    document.getElementById(a).style.display = \n".
-"        (document.getElementById(a).style.display=='none') ? 'block':'none';\n".
 "}\n".
 "</script>\n\n";
 
@@ -534,6 +532,9 @@ if(1){
             } else {
                 $hideBlkActive = 1;
                 $hideBlkId++;
+                if ($hideBlkId == 1) {
+                    $oubuf .= "$java";
+                }
                 $oubuf .= "<a href=\"javascript:cl_expcol('hide$hideBlkId');\">[show]</a>\n";
                 $oubuf .= "<div id=\"hide$hideBlkId\" style=\"display:none\">\n";
             }
@@ -1148,13 +1149,16 @@ if(1){
     }
 
 
+    if ($hideBlkId > 0) {
+        $oubuf = "$showalljava$oubuf";
+        if ($hideBlkActive) {
+            $oubuf .= "</div>There are odd number of \"\"\"\" block hide controls. Some text may be hidden unexpectedly.\n";
+        }
+    }
 
     # The next statement overwrites the old style TOC with 
     # collapsible Java TOC.  Uncomment to restore old style TOC
     $toc = &makejavatoc ();
-    if ($hideBlkId > 0) {
-        $toc .= "<br>$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a>\n";
-    }
 #print $toc;
     if ($flaged ne '') {
         $flaged = "<b><i>BOOKMARKS:</i></b><br>$flaged<hr>\n";
