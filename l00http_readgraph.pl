@@ -301,7 +301,7 @@ sub l00http_readgraph_proc {
         if ((defined($form->{'brcornerx'})) && ($idx > 1)) {
             $svg .= "\" /> </svg>\n";
         }
-        print $sock "</pre><p>$svg<p>\n";
+        print $sock "</pre><p>If the overlay graph is not displayed, try a different browser.<p>$svg<p>\n";
     }
 
     # send HTML footer and ends
