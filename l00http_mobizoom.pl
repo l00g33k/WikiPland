@@ -377,9 +377,11 @@ sub l00http_mobizoom_mobilize {
             $sectprelog = 
                 "<a href=\"\/clip.htm?update=Copy+to+CB&clip=$clip\" target=\"clip\"> : <\/a> &nbsp; <a name=\"p$para\"><\/a><small>".
                 "<a href=\"#__end__\">V<\/a> &nbsp; ".
-                "<a href=\"#p$para\">$para<\/a> &nbsp; ".
-                "<a href=\"/edit.htm?path=$urlgiven&editline=on&blklineno=$lnno&context=on&contextln=10\">ed<\/a> &nbsp; ".
-                "<\/small>";
+                "<a href=\"#p$para\">$para<\/a> &nbsp; ";
+            if (($urlgiven =~ /l00:\/\//) || (-f $urlgiven)) {
+                $sectprelog .= "<a href=\"/edit.htm?path=$urlgiven&editline=on&blklineno=$lnno&context=on&contextln=10\">ed<\/a> &nbsp; ";
+            }
+            $sectprelog .= "<\/small>";
 
             if (/<br>/i) {
                 $clip = &l00httpd::urlencode ($clip);
