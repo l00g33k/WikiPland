@@ -93,7 +93,6 @@ sub l00http_hexview_proc {
         for ($ii = 0; $ii < $iiend; $ii++) {
             if ((($ii) % $width) == 0) {
                 $tmp = "$hex $ascii $binview\n";
-                $tmp =~ s/\\/\\\\/g;
                 $tmp =~ s/%/%%/g;
                 $tmp =~ s/</&lt;/g;
                 $tmp =~ s/>/&gt;/g;
@@ -114,7 +113,7 @@ sub l00http_hexview_proc {
                 unpack ("C", substr ($buffer, $ii, 1)));
             $tmp = substr ($buffer, $ii, 1);
             $tmp =~ s/([^a-zA-Z0-9])/((ord($1)<32)||(ord($1)>95))?'.':$1/ge;
-            $ascii .= "$tmp";
+            $ascii .= $tmp;
 
             # binary view
             if ($binary eq 'checked') {
@@ -128,7 +127,11 @@ sub l00http_hexview_proc {
                 $binview .= ' ';
             }
         }
-        printf $sock ("$hex $ascii $binview\n");
+        $tmp = "$hex $ascii $binview\n";
+        $tmp =~ s/%/%%/g;
+        $tmp =~ s/</&lt;/g;
+        $tmp =~ s/>/&gt;/g;
+        printf $sock ($tmp);
         print $sock "</pre>\n";
     } else {
         print $sock "Failed to open '$form->{'path'}'\n";
