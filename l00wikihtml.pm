@@ -1164,7 +1164,7 @@ if(1){
 
     if ($hideBlkId > 0) {
         if ($oubuf =~ /%TOC%/) {
-            $toc .= "<br>$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a>\n";
+            $toc = "$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a><br>$toc";
             $oubuf = "$showalljava$oubuf";
         } else {
             $oubuf = "$showalljava<br>$showalljava<a href=\"javascript:cl_showall();\">[show all hidden text]</a>$oubuf";

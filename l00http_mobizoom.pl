@@ -494,9 +494,7 @@ sub l00http_mobizoom_part1 {
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL</a>";
     print $sock ":<input type=\"text\" size=\"16\" name=\"url\" value=\"$url\"></td>\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\"></td>\n";
-    if ($ctrl->{'os'} eq 'and') {
-        print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
-    }
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
     foreach $_ ((100, 110, 121, 133, 146, 160, 176, 194, 240, 300, 400, 500, 600)) {
         print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=Fetch&url=$url&zoomradio=$_\">$_</a> ";
     }

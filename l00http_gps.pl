@@ -199,6 +199,7 @@ sub l00http_gps_proc {
                     } else {
                         $fname = 'gps.trk';
                     }
+                    $ctrl->{'gpsfname'} = $fname;
                     if (-f "$ctrl->{'gpsdir'}$fname") {
                         # exist
                         open (OUT, ">>$ctrl->{'gpsdir'}$fname");
@@ -239,6 +240,7 @@ sub l00http_gps_proc {
     } else {
         $fname = 'gps.trk';
     }
+    $ctrl->{'gpsfname'} = $fname;
 
 
     # Send HTTP and HTML headers
