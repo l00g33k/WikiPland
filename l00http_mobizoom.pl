@@ -139,10 +139,11 @@ $rwgeturl =~ s/\?/%3F/g;
 
 
 sub l00http_mobizoom_mobilize {
-    my ($ctrl, $url, $zoom, $wget) = @_;
-    my ($on_slashdot_org, $wget2, $domain);
-    my ($clip, $tmp, $last);
-    my ($threads, $endanchor, $title, $freetag);
+    my ($ctrl, $url, $zoom, $wget, $saveinternal) = @_;
+    my ($on_slashdot_org, $urlgiven, $wget2, $domain, $wgettmp);
+    my ($clip, $tmp, $last, $lnno);
+    my ($threads, $endanchor, $title, $freetag, $sectprelog);
+
 
     # This trivial mobilizer will process in two different mode:
     # Processed mode: the original cached file has the HTML tags 
@@ -151,6 +152,8 @@ sub l00http_mobizoom_mobilize {
     # Raw mode: the new cache file format is identical to the 
     #   result of wget, i.e. complete HTML file, and in addition 
     #   the original URL is prepended as <!-- ::mobizoom::orgurl::http... -->
+
+    $urlgiven = $url;
 
     if ($wget =~ /<!-- ::mobizoom::orgurl::(.+?) -->/s) {
         # recover URL from cached file
@@ -297,14 +300,36 @@ sub l00http_mobizoom_mobilize {
         $wget2 =~ s/</\n</g;
         $wget2 =~ s/>/>\n/g;
 
-        $wget = '';
-        $last = '';
-        $clip = '';
+        $wgettmp = '';
         foreach $_ (split ("\n", $wget2)) {
             chomp;
             if (/^ *$/) {
                 next;
             }
+            $wgettmp .= "$_\n";
+        }
+        $wget2 = $wgettmp;
+
+        if (defined($saveinternal) && ($saveinternal)) {
+            &l00httpd::l00fwriteOpen($ctrl, "$urlgiven.internal.txt");
+            &l00httpd::l00fwriteBuf($ctrl, $wget2);
+            &l00httpd::l00fwriteClose($ctrl);
+
+            open(WGET2, ">$urlgiven.internal.txt");
+            print WGET2 $wget2;
+            close (WGET2);
+        }
+
+        $wget = '';
+        $last = '';
+        $clip = '';
+        $lnno = 0;
+        foreach $_ (split ("\n", $wget2)) {
+            chomp;
+            if (/^ *$/) {
+                next;
+            }
+            $lnno++;
 
             $tmp = $_;
             $tmp =~ s/<.+?>//g;    # drop all HTML tags
@@ -349,24 +374,31 @@ sub l00http_mobizoom_mobilize {
             s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
             s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag>/g;
 
+            $sectprelog = 
+                "<a href=\"\/clip.htm?update=Copy+to+CB&clip=$clip\" target=\"clip\"> : <\/a> &nbsp; <a name=\"p$para\"><\/a><small>".
+                "<a href=\"#__end__\">V<\/a> &nbsp; ".
+                "<a href=\"#p$para\">$para<\/a> &nbsp; ".
+                "<a href=\"/edit.htm?path=$urlgiven&editline=on&blklineno=$lnno&context=on&contextln=10\">ed<\/a> &nbsp; ".
+                "<\/small>";
+
             if (/<br>/i) {
                 $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");
-                s/<br>/<br><a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <\/small> /i;
+                s/<br>/<br>$sectprelog /i;
                 # increase paragraph count/index
                 $para++;
                 $clip = '';
             } elsif (/<h\d.*?>/i) {
                 $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
-                s/<(h\d.*?)>/<a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <\/small><$1>/i;
+                s/<(h\d.*?)>/$sectprelog<$1>/i;
                 # increase paragraph count/index
                 $para++;
                 $clip = '';
             } elsif (/<p>/i) {
                 $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
-                s/<p>/<br><a href="\/clip.htm?update=Copy+to+CB&clip=$clip" target="clip"> : <\/a> &nbsp; <a name="p$para"><\/a><small><a href="#__end__">V<\/a> &nbsp; <a href="#p$para">$para<\/a> &nbsp; <\/small> /i;
+                s/<p>/<br>$sectprelog /i;
                 # increase paragraph count/index
                 $para++;
                 $clip = '';
@@ -467,6 +499,11 @@ sub l00http_mobizoom_part1 {
         print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=Fetch&url=$url&zoomradio=$_\">$_</a> ";
     }
     print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size\n";
+    if (-f $url) {
+        # if we have a cached file
+        print $sock "(<input type=\"checkbox\" name=\"saveinternal\">Save int.buf. \n";
+        print $sock "<a href=\"/view.htm?path=$url.internal.txt\">view</a>)\n";
+    }
     print $sock "</form>\n";
 
     # web page interactive mode, render web page
@@ -648,7 +685,8 @@ sub l00http_mobizoom_proc {
 
         if ($mode1online2offline4download == 2) {
             # mobilize page
-            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
+            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget,
+                ((defined ($form->{'saveinternal'})) && ($form->{'saveinternal'} eq 'on')));
             print $sock $wget;
         } else {
             # $mode1online2offline4download != 2
@@ -668,7 +706,8 @@ sub l00http_mobizoom_proc {
                 &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$wget");
                 &l00httpd::l00fwriteClose($ctrl);
             }
-            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget);
+            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget,
+                ((defined ($form->{'saveinternal'})) && ($form->{'saveinternal'} eq 'on')));
 
             if ($mode1online2offline4download & 3) {
                 # web page interactive mode, render web page
