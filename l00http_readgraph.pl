@@ -91,9 +91,7 @@ sub l00http_readgraph_proc {
         print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$pname$fname\">\n";
         print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><p>\n";
-        #print $sock "<input type=\"image\" style=\"float:none\" src=\"/svg.htm?graph=demo\"><p>\n";
-        #print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/svg2.svg?path=%2fsdcard%2fz%2fsvg3.svg\"><p>\n";
-        #print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/svg2.svg?path=%2fsdcard%2fz%2fsvg4.svg\"><p>\n";
+       #print $sock "<input type=\"image\" style=\"float:none\" src=\"/svg.htm?graph=demo\"><p>\n";
         if (defined ($form->{'settl'})) {
             $form->{'screentlx'} = $form->{'lastx'};
             $form->{'screently'} = $form->{'lasty'};
@@ -281,12 +279,15 @@ sub l00http_readgraph_proc {
                         $y = $form->{'brcornery'};
                         if ($idx == 2) {
                             $svg  = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>';
-                            $svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" >";
+                           #$svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" >";
+                           #some browsers don't yet support SVG 2.0 and don't need xmlns:xlink
+                            $svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" >";
                             $svg .= '<image x="0" y="0" width="';
                             $svg .= $form->{'brcornerx'}+1;
                             $svg .= '" height=';
                             $svg .= $form->{'brcornery'}+1;
-                            $svg .= " href=\"/ls.htm?path=$form->{'path'}\" />";
+                           #$svg .= " href=\"/ls.htm?path=$form->{'path'}\" />";
+                            $svg .= " xlink:href=\"/ls.htm?path=$form->{'path'}\" />";
                             $svg .= "<polyline fill=\"none\" stroke=\"#ff0000\" stroke-width=\"2\" points=\"$form->{'lastx'},$form->{'lasty'} ";
                         }
                         $svg .= "$ptx,$pty ";
