@@ -283,6 +283,14 @@ sub getsvg {
     $svggraphs{$name};
 }
 
+sub setsvg {
+    my ($name, $data) = @_;
+
+    $svggraphs{$name} = $data;
+
+    1;
+}
+
 sub plotsvgmapoverlay {
     my ($name, $data, $wd, $ht, $path, $waycolor) = @_;
     my ($svg, $div, $ii, $svg_xy2, $color, $date, $x1, $x2, $y1, $y2);

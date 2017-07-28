@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use l00wikihtml;
 use l00svg;
+use l00base64;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -10,6 +11,11 @@ use l00svg;
 
 my %config = (proc => "l00http_readgraph_proc",
               desc => "l00http_readgraph_desc");
+
+
+my($base64fname, $base64data);
+$base64fname = '';
+$base64data = '';
 
 
 sub l00http_readgraph_desc {
@@ -23,7 +29,7 @@ sub l00http_readgraph_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y, $ptx, $pty);
+    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y, $ptx, $pty, $ext, $track, $svgmade);
 
 
     # Send HTTP and HTML headers
@@ -71,27 +77,118 @@ sub l00http_readgraph_proc {
     if (!defined ($form->{'y'})) {
         $form->{'y'} = 0;
     }
-    if (defined ($form->{'clearclicks'})) {
-        undef $form->{'clicks'};
-    }
     if (defined ($form->{'setbrcorner'})) {
         $form->{'brcornerx'} = $form->{'lastx'};
         $form->{'brcornery'} = $form->{'lasty'};
-        if ($form->{'clicks'} =~ /:/) {
-            # more than one point, clear last point
-            $form->{'clicks'} =~ s/:[^:]+$//;
-        } else {
-            # only one point, just clear it
-            $form->{'clicks'} = '';
-        }
+        undef $form->{'clicks'};
+        undef $form->{'x'};
+        undef $form->{'y'};
+        undef $form->{'lastx'};
+        undef $form->{'lasty'};
     }
+    if (defined ($form->{'clearclicks'})) {
+        undef $form->{'clicks'};
+        undef $form->{'x'};
+        undef $form->{'y'};
+        undef $form->{'lastx'};
+        undef $form->{'lasty'};
+    }
+
+    $track = '';
 
     if (defined ($form->{'path'}) &&
         (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/)) {
+
         print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$pname$fname\">\n";
-        print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><p>\n";
-       #print $sock "<input type=\"image\" style=\"float:none\" src=\"/svg.htm?graph=demo\"><p>\n";
+
+        # make trace svg if there were clicks on graph
+        $svgmade = 0;
+        if (defined ($form->{'clicks'}) && defined ($form->{'lastx'})) {
+            $idx = 1;
+            $svg = '';
+            $ttlpx = 0;
+            $ttlrd = 0;
+            $track .= "<pre>\n";
+            foreach $_ (split(":", $form->{'clicks'})) {
+                if (($ptx, $pty) = /(.+),(.+)/) {
+                    $track .= "$idx: Clicked: ($ptx , $pty) -&gt; ";
+                    $x = ($form->{'readbrx'} - $form->{'readtlx'}) * ($ptx - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                        + $form->{'readtlx'};
+                    $y = ($form->{'readbry'} - $form->{'readtly'}) * ($pty - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                        + $form->{'readtly'};
+                    if ($idx > 1) {
+                        $dx = $ptx - $form->{'lastx'};
+                        $dy = $pty - $form->{'lasty'};
+                        $track .= " --- Delta: ($dx , $dy) -&gt; ";
+                        $x = ($form->{'readbrx'} - $form->{'readtlx'}) * 
+                            ($ptx - $form->{'lastx'}) / 
+                            ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                            + $form->{'readtlx'};
+                        $y = ($form->{'readbry'} - $form->{'readtly'}) * 
+                            ($pty - $form->{'lasty'}) / 
+                            ($form->{'screenbry'} - $form->{'screently'}) 
+                            + $form->{'readtly'};
+                        $ttlpx += sqrt ($dx * $dx + $dy * $dy);
+                        $ttlrd += sqrt ($x * $x + $y * $y);
+                        $track .= sprintf (" --- Total: (%f) -&gt; %f", $ttlpx, $ttlrd);
+                        if (defined($form->{'brcornerx'})) {
+                            $x = $form->{'brcornerx'};
+                            $y = $form->{'brcornery'};
+                            if ($idx == 2) {
+                                $svg  = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>';
+                               #$svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" >";
+                               #some browsers don't yet support SVG 2.0 and don't need xmlns:xlink
+                                $svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" >";
+                                $svg .= '<image x="0" y="0" width="';
+                                $svg .= $form->{'brcornerx'}+1 .'"';
+                                $svg .= ' height="';
+                                $svg .= $form->{'brcornery'}+1 .'"';
+                               #$svg .= " href=\"/ls.htm?path=$form->{'path'}\" />";
+                               #$svg .= " xlink:href=\"/ls.htm?path=$form->{'path'}\" />";
+                                if ($form->{'path'} ne $base64fname) {
+                                    $base64fname = $form->{'path'};
+                                    $ext = '';
+                                    if (open(IN,"<$base64fname")){
+                                        if ($base64fname =~ /\.(.+?$)/) {
+                                            $ext = $1;
+                                        }
+                                        binmode(IN);
+                                        local ($/);
+                                        undef $/;
+                                        $base64data = <IN>;
+                                        close(IN);
+                                        $base64data = l00base64::b64encode($base64data);
+                                        $base64data = "data:image/$ext;base64,$base64data";
+                                    } else {
+                                        # Can't open $base64fname
+                                        $base64data = "/ls.htm?path=$form->{'path'}";
+                                    }
+                                }
+                                $svg .= " xlink:href=\"$base64data\" />";
+                                $svg .= "<polyline fill=\"none\" stroke=\"#ff0000\" stroke-width=\"2\" points=\"$form->{'lastx'},$form->{'lasty'} ";
+                            }
+                            $svg .= "$ptx,$pty ";
+                        }
+                    }
+                    $track .= "\n";
+                    $form->{'lastx'} = $ptx;
+                    $form->{'lasty'} = $pty;
+                    $idx++;
+                }
+            }
+            if ((defined($form->{'brcornerx'})) && ($idx > 2)) {
+                $svg .= "\" /> </svg>\n";
+                l00svg::setsvg($base64fname, $svg);
+                $svgmade = 1;
+            }
+        }
+        if (($svgmade) && ($form->{'path'} eq $base64fname)) {
+            print $sock "<input type=\"image\" style=\"float:none\" src=\"/svg.htm?graph=$base64fname\"><p>\n";
+        } else {
+            print $sock "<input type=\"image\" style=\"float:none\" src=\"/ls.htm/$fname?path=$pname$fname\"><p>\n";
+        }
+
         if (defined ($form->{'settl'})) {
             $form->{'screentlx'} = $form->{'lastx'};
             $form->{'screently'} = $form->{'lasty'};
@@ -240,70 +337,8 @@ sub l00http_readgraph_proc {
         print $sock "<a href=\"/readgraph.htm?path=$form->{'path'}&readtlx=$form->{'readtlx'}&readtly=$form->{'readtly'}&readbrx=$form->{'readbrx'}&readbry=$form->{'readbry'}&clicks=$form->{'clicks'}&screentlx=$form->{'screentlx'}&screently=$form->{'screently'}&screenbrx=$form->{'screenbrx'}&screenbry=$form->{'screenbry'}&brcornerx=$form->{'brcornerx'}&brcornery=$form->{'brcornery'}\">Refresh</a> - \n";
         print $sock "Launcher: <a href=\"launcher.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     }
-    print $sock "Click graph above.<br>\n";
+    print $sock "Click graph above.<br>\n$track\n";
 
-    if (defined ($form->{'clicks'}) && defined ($form->{'lastx'})) {
-        $idx = 1;
-        $svg = '';
-        $ttlpx = 0;
-        $ttlrd = 0;
-        print $sock "<pre>\n";
-        foreach $_ (split(":", $form->{'clicks'})) {
-            if (($ptx, $pty) = /(.+),(.+)/) {
-                print $sock "$idx: Clicked: ($ptx , $pty) -&gt; ";
-                $x = ($form->{'readbrx'} - $form->{'readtlx'}) * ($ptx - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
-                    + $form->{'readtlx'};
-                printf $sock ("%f , ", $x);
-                $y = ($form->{'readbry'} - $form->{'readtly'}) * ($pty - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
-                    + $form->{'readtly'};
-                printf $sock ("%f", $y);
-                if ($idx > 1) {
-                    $dx = $ptx - $form->{'lastx'};
-                    $dy = $pty - $form->{'lasty'};
-                    print $sock " --- Delta: ($dx , $dy) -&gt; ";
-                    $x = ($form->{'readbrx'} - $form->{'readtlx'}) * 
-                        ($ptx - $form->{'lastx'}) / 
-                        ($form->{'screenbrx'} - $form->{'screentlx'}) 
-                        + $form->{'readtlx'};
-                    printf $sock ("%f , ", $x);
-                    $y = ($form->{'readbry'} - $form->{'readtly'}) * 
-                        ($pty - $form->{'lasty'}) / 
-                        ($form->{'screenbry'} - $form->{'screently'}) 
-                        + $form->{'readtly'};
-                    printf $sock ("%f", $y);
-                    $ttlpx += sqrt ($dx * $dx + $dy * $dy);
-                    $ttlrd += sqrt ($x * $x + $y * $y);
-                    printf $sock (" --- Total: (%f) -&gt; %f", $ttlpx, $ttlrd);
-                    if (defined($form->{'brcornerx'})) {
-                        $x = $form->{'brcornerx'};
-                        $y = $form->{'brcornery'};
-                        if ($idx == 2) {
-                            $svg  = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>';
-                           #$svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" >";
-                           #some browsers don't yet support SVG 2.0 and don't need xmlns:xlink
-                            $svg .= "<svg  x=\"0\" y=\"0\" width=\"$x\" height=\"$y\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" >";
-                            $svg .= '<image x="0" y="0" width="';
-                            $svg .= $form->{'brcornerx'}+1;
-                            $svg .= '" height=';
-                            $svg .= $form->{'brcornery'}+1;
-                           #$svg .= " href=\"/ls.htm?path=$form->{'path'}\" />";
-                            $svg .= " xlink:href=\"/ls.htm?path=$form->{'path'}\" />";
-                            $svg .= "<polyline fill=\"none\" stroke=\"#ff0000\" stroke-width=\"2\" points=\"$form->{'lastx'},$form->{'lasty'} ";
-                        }
-                        $svg .= "$ptx,$pty ";
-                    }
-                }
-                print $sock "\n";
-                $form->{'lastx'} = $ptx;
-                $form->{'lasty'} = $pty;
-                $idx++;
-            }
-        }
-        if ((defined($form->{'brcornerx'})) && ($idx > 1)) {
-            $svg .= "\" /> </svg>\n";
-        }
-        print $sock "</pre><p>If the overlay graph is not displayed, try a different browser.<p>$svg<p>\n";
-    }
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
