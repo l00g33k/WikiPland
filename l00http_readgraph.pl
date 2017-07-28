@@ -29,7 +29,8 @@ sub l00http_readgraph_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y, $ptx, $pty, $ext, $track, $svgmade);
+    my ($pname, $fname, $dx, $dy, $idx, $svg, $ttlpx, $ttlrd, $x, $y, $ptx, $pty);
+    my ($ext, $track, $svgmade, $deltax, $deltay, $formlastx, $formlasty);
 
 
     # Send HTTP and HTML headers
@@ -98,6 +99,9 @@ sub l00http_readgraph_proc {
 
     if (defined ($form->{'path'}) &&
         (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/)) {
+
+        $formlastx = $form->{'lastx'};
+        $formlasty = $form->{'lasty'};
 
         print $sock "<form action=\"/readgraph.htm\" method=\"get\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$pname$fname\">\n";
@@ -226,15 +230,15 @@ sub l00http_readgraph_proc {
                 + $form->{'readtly'}
             );
             if (defined ($form->{'lastx'})) {
-                $dx = $form->{'x'} - $form->{'lastx'};
-                $dy = $form->{'y'} - $form->{'lasty'};
-                print $sock " --- Delta: ($dx , $dy) -&gt; ";
+                $deltax = $form->{'x'} - $formlastx;
+                $deltay = $form->{'y'} - $formlasty;
+                print $sock " --- Delta: ($deltax , $deltay) -&gt; ";
                 printf $sock ("%f , ", 
-                    ($form->{'readbrx'} - $form->{'readtlx'}) * (($form->{'x'} - $form->{'lastx'}) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
+                    ($form->{'readbrx'} - $form->{'readtlx'}) * (($deltax) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
                     + $form->{'readtlx'}
                 );
                 printf $sock ("%f", 
-                    ($form->{'readbry'} - $form->{'readtly'}) * (($form->{'y'} - $form->{'lasty'}) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
+                    ($form->{'readbry'} - $form->{'readtly'}) * (($deltay) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
                     + $form->{'readtly'}
                 );
             }
