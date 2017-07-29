@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00svg;
+use l00base64;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -57,6 +58,9 @@ my $mapextend_brlat = -1;
 my $setlatlonvals = '';
 
 my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lsttrksize, $lsttrksvg, $lsttrkmkr, $lsttracknpts);
+my($base64fname, $base64data);
+$base64fname = '';
+$base64data = '';
 
 $fitmapphase = 0;
 # 0: normal
@@ -119,10 +123,10 @@ sub l00http_gpsmapsvg_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $dist, $xx, $yy);
     my ($lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
-    my ($notclip, $coor, $tmp, $nogpstrks, $svgout, $svg, $trkmkr, $state, $lnno);
+    my ($notclip, $coor, $tmp, $nogpstrks, $svg, $trkmkr, $state, $lnno);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
     my ($fitmapmaxlon, $fitmapminlon, $fitmapmaxlat, $fitmapminlat);
-    my ($plon, $plat, $needredraw, $wayptsbuf);
+    my ($plon, $plat, $needredraw, $wayptsbuf, $overlaymap, $ext, $mapurl);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -345,15 +349,20 @@ sub l00http_gpsmapsvg_proc (\%) {
             $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbry) = / *([^ ]+) */;
             $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbrlon) = / *([^ ]+) */;
             $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//; ($mapbrlat) = / *([^ ]+) */;
-            $_ = &l00httpd::l00freadLine($ctrl); s/\n//; s/\r//;
-            if (/^IMG_WD_HT/) {
-                ($mapwd, $mapht) = /^IMG_WD_HT=(\d+),(\d+)/;
-                $mapwd = int ($mapwd * $scale / 100);
-                $mapht = int ($mapht * $scale / 100);
-		    } else {
-                $mapwd = int (($mapbrx + 1) * $scale / 100);
-                $mapht = int (($mapbry + 1) * $scale / 100);
-		    }
+
+            # default
+            $mapwd = int (($mapbrx + 1) * $scale / 100);
+            $mapht = int (($mapbry + 1) * $scale / 100);
+            $_ = &l00httpd::l00freadLine($ctrl); 
+            if (defined($_)) {
+                s/\n//; s/\r//;
+                if (/^IMG_WD_HT/) {
+                    ($mapwd, $mapht) = /^IMG_WD_HT=(\d+),(\d+)/;
+                    $mapwd = int ($mapwd * $scale / 100);
+                    $mapht = int ($mapht * $scale / 100);
+		        }
+            }
+
             # compute map extends
             $mapextend_tllon = $maptllon - ($maptlx)              / ($mapbrx - $maptlx) * ($mapbrlon - $maptllon);
             $mapextend_tllat = $maptllat + ($maptly)              / ($mapbry - $maptly) * ($maptllat - $mapbrlat);
@@ -655,45 +664,44 @@ sub l00http_gpsmapsvg_proc (\%) {
             if ($ctrl->{'debug'} >= 3) {
                 l00httpd::dbp($config{'desc'}, "Create svg of track(s) from x,y/long,lat above: <a href=\"/svg.htm?view=&graph=$fname\">$fname</a>\n");
             }
-            &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
-            $svgout = $trkmkr;
-            $svgout .= "<svg  x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\"xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xml:space=\"preserve\" viewBox=\"0 0 $mapwd $mapht\" preserveAspectRatio=\"xMidYMid meet\">";
-            $svgout .= "<g id=\"bitmap\" style=\"display:online\"> ";
-            $svgout .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/ls.htm$path?path=$path\" /> ";
-            $svgout .= "</g> ";
-            $svgout .= "<g id=\"$fname\" style=\"display:online\"> ";
-            $svgout .= "    <g transform=\"translate(0 0)\"> ";
-            $svgout .= "        <g transform=\"scale(1.0)\"> ";
-            $svgout .= "            <image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" xlink:href=\"/svg.htm?graph=$fname\"/> ";
-            $svgout .= "        </g> ";
-            $svgout .= "    </g> ";
-            $svgout .= "</g>";
-            $svgout .= "</svg>\n";
-            print $sock "$svgout<br>\n";
-            if ($ctrl->{'debug'} >= 3) {
-                l00httpd::dbp($config{'desc'}, "Create svg of background map: <a href=\"/ls.htm$path?path=$path\">$path</a>\n");
-                l00httpd::dbp($config{'desc'}, "and foreground track: <a href=\"/svg.htm?graph=$fname\">$fname</a>\n");
-                $svgout =~ s/</&lt;/g;
-                $svgout =~ s/>/&gt;/g;
-                l00httpd::dbp($config{'desc'}, "\n$svgout\n");
+
+            $overlaymap  = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+            $overlaymap .= "<svg width=\"$mapwd"."px\" height=\"$mapht"."px\" viewBox=\"0 0 $mapwd $mapht\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"> \n";
+            $overlaymap .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" ";
+            if ($path ne $base64fname) {
+                $base64fname = $path;
+                $ext = '';
+                if (open(IN,"<$base64fname")){
+                    if ($base64fname =~ /\.(.+?$)/) {
+                        $ext = $1;
+                    }
+                    binmode(IN);
+                    local ($/);
+                    undef $/;
+                    $base64data = <IN>;
+                    close(IN);
+                    $base64data = l00base64::b64encode($base64data);
+                    $base64data = "data:image/$ext;base64,$base64data";
+                } else {
+                    # Can't open $base64fname
+                    $base64data = "/ls.htm?path=$path";
+                }
             }
-            # the following doesn't work (see l00svg.pm)
-            #print $sock "<img src=\"/svg.htm/svg.svg?graph=${fname}.ovly.svg\"><br>\n";
+            $overlaymap .= " xlink:href=\"$base64data\" />\n";
+            $overlaymap .= &l00svg::makesvgoverlaymap ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
+            $overlaymap .= "\n";
+            $overlaymap .= "</svg>";
+            l00svg::setsvg("$fname.overlay", $overlaymap);
+
+            &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
+            $mapurl = "/svg.htm?graph=$fname.overlay";
         } else {
             # no overlaid track. .png will do
-            print $sock "<img src=\"/ls.htm$path?path=$path".'&'."raw=on\"><br>\n";
+            $mapurl = "/ls.htm$path?path=$path&raw=on";
         }
 
-        print $sock "<hr>";
-        print $sock "<a href=\"#ctrl\">Jump to control</a>.  \n";
-        if ($waypts ne '') {
-            print $sock "<a href=\"#tracklist\">Jump to list of tracks</a>.  \n";
-        }
-        print $sock "Click map below to move cursor:<br>\n";
         print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
-        print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path".'&'."raw=on\">\n";
-        # the following doesn't work (see l00svg.pm)
-        #print $sock "<input type=image width=$mapwd height=$mapht src=\"/svg.htm/svg.svg?graph=singapore.png.ovly.svg\">\n";
+        print $sock "<input type=image width=$mapwd height=$mapht src=\"$mapurl\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
         print $sock "</form>\n";
     }
@@ -906,6 +914,8 @@ sub l00http_gpsmapsvg_proc (\%) {
         print $sock "mapbry $mapbry\n";
         print $sock "mapbrlon $mapbrlon\n";
         print $sock "mapbrlat $mapbrlat\n";
+        print $sock "mapwd $mapwd\n";
+        print $sock "mapht $mapht\n";
 
         print $sock "(dumping $map)\n";
 

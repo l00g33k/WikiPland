@@ -337,4 +337,29 @@ sub plotsvgmapoverlay {
 }
 
 
+sub makesvgoverlaymap {
+    my ($name, $data, $wd, $ht, $path, $waycolor) = @_;
+    my ($svg, $div, $ii, $svg_xy2, $color, $date, $x1, $x2, $y1, $y2);
+    my ($se,$mi,$hr,$da,$mo,$yr,$dummy);
+    my (@tracks);
+
+    # overwrite with no plot margin
+    ($mgl, $mgr, $mgt, $mgb) = (0, 0, 0, 0);
+
+    $svg = '';
+
+    @tracks = split("::", $data);
+    foreach $data (@tracks) {
+        $svg_xy2 = &svg_convert_xy_mapoverlay ($name, $data, 0, $wd, $ht);
+        if ($svg_xy2 ne '') {
+            $svg .= "<polyline fill=\"none\" stroke=\"#$waycolor\" stroke-width=\"2\" points=\"$svg_xy2\" />";
+        }
+    }
+
+    # restore plot margin
+    ($mgl, $mgr, $mgt, $mgb) = (70, 10, 10, 60);
+
+    $svg;
+}
+
 1;
