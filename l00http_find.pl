@@ -329,6 +329,12 @@ sub l00http_find_proc {
     if (defined ($form->{'fmatch'})) {
         $fmatches = $form->{'fmatch'};
     }
+    if (defined ($form->{'cbclrname'})) {
+        $fmatches = '';
+    }
+    if (defined ($form->{'cb2name'})) {
+        $fmatches = &l00httpd::l00getCB($ctrl);
+    }
     if (defined ($form->{'content'})) {
         $content = $form->{'content'};
     } else {
@@ -462,7 +468,7 @@ sub l00http_find_proc {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"cb2name\" value=\"CB2name\"> <input type=\"submit\" name=\"cbclrname\" value=\"Clr\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"filenameonly\" $filenameonly>Filename only</td>\n";
     print $sock "    </tr>\n";
 

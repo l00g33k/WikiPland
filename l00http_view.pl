@@ -58,6 +58,11 @@ sub l00http_view_proc {
         $nohdr = '';
     }
 
+    if (defined ($form->{'clr'})) {
+        undef $form->{'findtext'};
+        $findtext = '';
+    }
+
     if (defined ($form->{'update'})) {
         if (defined ($form->{'refresh'})) {
             $refresh = '';
@@ -290,7 +295,7 @@ sub l00http_view_proc {
                             }
                         }
 					}
-					$foundfullrst = "<pre>\n$tmp\n</pre>\n";
+                    $foundfullrst = "<pre>\n$tmp\n</pre>\n";
                     $found .= "</pre>\n";
                 } else {
                     $foundcnt = 0;
@@ -460,7 +465,7 @@ sub l00http_view_proc {
     print $sock "Find in this file\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "RegEx:\n";
+    print $sock "RegEx: <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\">\n";
     print $sock "</td></tr>\n";
