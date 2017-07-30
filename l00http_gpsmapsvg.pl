@@ -929,7 +929,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"dispwaypts\" value=\"Display waypoints\"></td>\n";
     print $sock "        <td>\n";
-    print $sock "            <input type=\"submit\" name=\"cb2wfile\" value=\"CB to filename\">\n";
+    print $sock "            <input type=\"submit\" name=\"cb2wfile\" value=\"CB 2 file\">\n";
     if (defined($ctrl->{'gpsfname'})) {
         print $sock "            <input type=\"submit\" name=\"currtrk\" value=\"curr trk\">\n";
     }
