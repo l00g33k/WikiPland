@@ -58,9 +58,10 @@ my $mapextend_brlat = -1;
 my $setlatlonvals = '';
 
 my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lsttrksize, $lsttrksvg, $lsttrkmkr, $lsttracknpts);
-my($base64fname, $base64data);
+my($base64fname, $base64data, $showgrid);
 $base64fname = '';
 $base64data = '';
+$showgrid = 0;
 
 $fitmapphase = 0;
 # 0: normal
@@ -107,6 +108,72 @@ sub xy2llsvg {
     #print "x,y ($pixx, $pixy) -> lat,long ($lathtm, $lonhtm)\n";
 
     ($lonhtm, $lathtm);
+}
+
+sub gridInterval {
+    my ($max, $min, $steps) = @_;
+    my (@vals, $delta, $power, $size, $val);
+
+    undef @vals;
+
+    # max step size for $steps grid
+    $delta = ($max - $min) / $steps;
+
+    # find rounded step size that will result in approximately $steps steps
+    $power = 3;
+    $delta /= 1000;         # $delta is < 1
+    while ($delta < 1) {    # stop when > 1 or ran wild
+        $delta *= 10;
+        $power--;
+        if ($power < -20) {
+            last;
+        }
+    }
+
+    # should we use 1, 2, or 5 step size
+    if ($delta >= 5) {
+        $size = 5;
+    } elsif ($delta >= 2) {
+        $size = 2;
+    } else {
+        $size = 1;
+    }
+    # compute real step size
+    $size *= 10 ** $power;
+
+    # start from smallest step
+    $val = $min - $size;
+    $val = int($val / $size) * $size;
+
+    # compute all steps
+    while ($val < $max) {
+        push (@vals, $val);
+        $val += $size;
+    }
+
+    @vals;
+}
+
+sub addgraticules {
+    my ($steps) = @_;
+    my ($lines, $pixx1, $pixy1, $pixx2, $pixy2, $notclip, $lon, $lat);
+
+    $lines = '';
+
+    foreach $_ (&gridInterval($mapextend_brlon, $mapextend_tllon, $steps)) {
+        ($pixx1, $pixy1, $notclip) = &ll2xysvg ($_, $mapextend_tllat);
+        ($pixx2, $pixy2, $notclip) = &ll2xysvg ($_, $mapextend_brlat);
+        $lines .= "<polyline fill=\"none\" stroke=\"#000000\" stroke-width=\"1\" points=\"$pixx1,$pixy1 $pixx2,$pixy2\" />\n";
+    }
+
+    foreach $_ (&gridInterval($mapextend_tllat, $mapextend_brlat, $steps)) {
+        ($pixx1, $pixy1, $notclip) = &ll2xysvg ($mapextend_tllon, $_);
+        ($pixx2, $pixy2, $notclip) = &ll2xysvg ($mapextend_brlon, $_);
+        $lines .= "<polyline fill=\"none\" stroke=\"#000000\" stroke-width=\"1\" points=\"$pixx1,$pixy1 $pixx2,$pixy2\" />\n";
+    }
+
+
+    $lines;
 }
 
 sub l00http_gpsmapsvg_desc {
@@ -266,6 +333,9 @@ sub l00http_gpsmapsvg_proc (\%) {
         }
         if (defined ($form->{'color'})) {
             $color = $form->{'color'};
+        }
+        if (defined ($form->{'showgrid'})) {
+            $showgrid = $form->{'showgrid'};
         }
     }
     if (defined ($form->{'submit'})) {
@@ -453,7 +523,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                     }
                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
                         if (($lnno % 10000) == 9999) {
-                            print "gpsmapsvg: ", $lnno / 10000, "0,000\n";
+                            print "gpsmapsvg trk: ", $lnno / 10000, "0,000\n";
                         }
                         $lnno++;
                         s/\n//g;
@@ -690,10 +760,13 @@ sub l00http_gpsmapsvg_proc (\%) {
             $overlaymap .= " xlink:href=\"$base64data\" />\n";
             $overlaymap .= &l00svg::makesvgoverlaymap ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
             $overlaymap .= "\n";
+            if ($showgrid) {
+                # show grids
+                $overlaymap .= &addgraticules(4);
+            }
             $overlaymap .= "</svg>";
             l00svg::setsvg("$fname.overlay", $overlaymap);
 
-            &l00svg::plotsvgmapoverlay ($fname, $svg, $mapwd, $mapht, $path, $waycolor);
             $mapurl = "/svg.htm?graph=$fname.overlay";
         } else {
             # no overlaid track. .png will do
@@ -796,6 +869,16 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        <tr>\n";
     print $sock "            <td>Scale:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"scale\" value=\"$scale\"></td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>&nbsp;</td>\n";
+    if ($showgrid == 0) {
+        $_ = '';
+    } else {
+        $_ = 'checked';
+    }
+    print $sock "            <td><input type=\"checkbox\" name=\"showgrid\" $_>Display grid lines</td>\n";
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
