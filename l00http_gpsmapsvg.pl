@@ -334,8 +334,10 @@ sub l00http_gpsmapsvg_proc (\%) {
         if (defined ($form->{'color'})) {
             $color = $form->{'color'};
         }
-        if (defined ($form->{'showgrid'})) {
-            $showgrid = $form->{'showgrid'};
+        if ((defined ($form->{'showgrid'})) && ($form->{'showgrid'} eq 'on')) {
+            $showgrid = 1;
+        } else {
+            $showgrid = 0;
         }
     }
     if (defined ($form->{'submit'})) {
