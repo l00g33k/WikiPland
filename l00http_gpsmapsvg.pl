@@ -164,12 +164,14 @@ sub addgraticules {
         ($pixx1, $pixy1, $notclip) = &ll2xysvg ($_, $mapextend_tllat);
         ($pixx2, $pixy2, $notclip) = &ll2xysvg ($_, $mapextend_brlat);
         $lines .= "<polyline fill=\"none\" stroke=\"#000000\" stroke-width=\"1\" points=\"$pixx1,$pixy1 $pixx2,$pixy2\" />\n";
+        $lines .= "<text x=\"$pixx2\" y=\"$pixy2\" font-size=\"14\" fill=\"#000000\">$_</text>";
     }
 
     foreach $_ (&gridInterval($mapextend_tllat, $mapextend_brlat, $steps)) {
         ($pixx1, $pixy1, $notclip) = &ll2xysvg ($mapextend_tllon, $_);
         ($pixx2, $pixy2, $notclip) = &ll2xysvg ($mapextend_brlon, $_);
         $lines .= "<polyline fill=\"none\" stroke=\"#000000\" stroke-width=\"1\" points=\"$pixx1,$pixy1 $pixx2,$pixy2\" />\n";
+        $lines .= "<text x=\"$pixx1\" y=\"$pixy1\" font-size=\"14\" fill=\"#000000\">$_</text>";
     }
 
 
