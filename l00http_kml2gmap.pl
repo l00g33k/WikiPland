@@ -614,7 +614,7 @@ sub l00http_kml2gmap_proc {
         }
 
         if ($drawgrid eq 'checked') {
-            $drawgriddo = "</script><script type=\"text/javascript\" src=\"$ctrl->{'plpath'}v3_ll_grat.js\">\n";
+            $drawgriddo = "</script><script type=\"text/javascript\" src=\"ls.htm?raw=on&path=$ctrl->{'plpath'}v3_ll_grat.js\">\n";
             $drawgriddo2 = "grid = new Graticule(map, false);\n";
         } else {
             $drawgriddo = "\n";
