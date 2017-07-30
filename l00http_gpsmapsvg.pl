@@ -981,6 +981,11 @@ sub l00http_gpsmapsvg_proc (\%) {
 
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+    if ($showgrid == 0) {
+        print $sock "<input type=\"hidden\" name=\"showgrid\" value=\"off\">\n";
+    } else {
+        print $sock "<input type=\"hidden\" name=\"showgrid\" value=\"on\">\n";
+    }
     print $sock "</form>\n";
 
     if ($waypts ne '') {
