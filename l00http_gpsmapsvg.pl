@@ -527,7 +527,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                     }
                     while ($_ = &l00httpd::l00freadLine($ctrl)) {
                         if (($lnno % 10000) == 9999) {
-                            print "gpsmapsvg trk: ", $lnno / 10000, "0,000\n";
+                            print "gpsmapsvg trk: ", int($lnno / 10000), "0,000\n";
                         }
                         $lnno++;
                         s/\n//g;
