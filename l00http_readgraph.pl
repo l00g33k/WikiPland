@@ -121,18 +121,18 @@ sub l00http_readgraph_proc {
                         + $form->{'readtlx'};
                     $y = ($form->{'readbry'} - $form->{'readtly'}) * ($pty - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
                         + $form->{'readtly'};
+                    $track .= sprintf ("%f , %f", $x, $y);
                     if ($idx > 1) {
                         $dx = $ptx - $form->{'lastx'};
                         $dy = $pty - $form->{'lasty'};
                         $track .= " --- Delta: ($dx , $dy) -&gt; ";
                         $x = ($form->{'readbrx'} - $form->{'readtlx'}) * 
-                            ($ptx - $form->{'lastx'}) / 
-                            ($form->{'screenbrx'} - $form->{'screentlx'}) 
-                            + $form->{'readtlx'};
+                            $dx / 
+                            ($form->{'screenbrx'} - $form->{'screentlx'});
                         $y = ($form->{'readbry'} - $form->{'readtly'}) * 
-                            ($pty - $form->{'lasty'}) / 
-                            ($form->{'screenbry'} - $form->{'screently'}) 
-                            + $form->{'readtly'};
+                            $dy / 
+                            ($form->{'screenbry'} - $form->{'screently'});
+                        $track .= sprintf ("%f , %f ", $x, $y);
                         $ttlpx += sqrt ($dx * $dx + $dy * $dy);
                         $ttlrd += sqrt ($x * $x + $y * $y);
                         $track .= sprintf (" --- Total: (%f) -&gt; %f", $ttlpx, $ttlrd);
@@ -234,12 +234,14 @@ sub l00http_readgraph_proc {
                 $deltay = $form->{'y'} - $formlasty;
                 print $sock " --- Delta: ($deltax , $deltay) -&gt; ";
                 printf $sock ("%f , ", 
-                    ($form->{'readbrx'} - $form->{'readtlx'}) * (($deltax) - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
-                    + $form->{'readtlx'}
+                    ($form->{'readbrx'} - $form->{'readtlx'}) * 
+                    $deltax / 
+                    ($form->{'screenbrx'} - $form->{'screentlx'})
                 );
                 printf $sock ("%f", 
-                    ($form->{'readbry'} - $form->{'readtly'}) * (($deltay) - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
-                    + $form->{'readtly'}
+                    ($form->{'readbry'} - $form->{'readtly'}) * 
+                    $deltay / 
+                    ($form->{'screenbry'} - $form->{'screently'})
                 );
             }
             print $sock "<p>\n";
@@ -338,7 +340,13 @@ sub l00http_readgraph_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"readgraph.htm?path=$form->{'path'}\">Reset</a> - \n";
-        print $sock "<a href=\"/readgraph.htm?path=$form->{'path'}&readtlx=$form->{'readtlx'}&readtly=$form->{'readtly'}&readbrx=$form->{'readbrx'}&readbry=$form->{'readbry'}&clicks=$form->{'clicks'}&screentlx=$form->{'screentlx'}&screently=$form->{'screently'}&screenbrx=$form->{'screenbrx'}&screenbry=$form->{'screenbry'}&brcornerx=$form->{'brcornerx'}&brcornery=$form->{'brcornery'}\">Refresh</a> - \n";
+        if (defined ($form->{'clicks'})) {
+            $_ = $form->{'clicks'};
+        } else {
+            $_ = '';
+        }
+
+        print $sock "<a href=\"/readgraph.htm?path=$form->{'path'}&readtlx=$form->{'readtlx'}&readtly=$form->{'readtly'}&readbrx=$form->{'readbrx'}&readbry=$form->{'readbry'}&clicks=$_&screentlx=$form->{'screentlx'}&screently=$form->{'screently'}&screenbrx=$form->{'screenbrx'}&screenbry=$form->{'screenbry'}&brcornerx=$form->{'brcornerx'}&brcornery=$form->{'brcornery'}\">Refresh</a> - \n";
         print $sock "Launcher: <a href=\"launcher.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     }
     print $sock "Click graph above.<br>\n$track\n";
