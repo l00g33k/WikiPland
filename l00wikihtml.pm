@@ -525,7 +525,7 @@ if(1){
         # default and to be shown when clicked.
         # The first """" should be after a paragraph heading
         # The second """" should be before a paragraph heading
-        if (/^""""$/) {
+        if (/^""""[v^]*$/) {
             if ($hideBlkActive) {
                 $hideBlkActive = 0;
                 $oubuf .= "</div>\n";
