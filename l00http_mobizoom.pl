@@ -333,7 +333,7 @@ sub l00http_mobizoom_mobilize {
 
             $tmp = $_;
             $tmp =~ s/<.+?>//g;    # drop all HTML tags
-            $clip .= "$tmp ";
+            $clip .= &l00httpd::urlencode ("$tmp ");
 
             # insert navigation and clip links 
             ## change this:
@@ -384,21 +384,18 @@ sub l00http_mobizoom_mobilize {
             $sectprelog .= "<\/small>";
 
             if (/<br>/i) {
-                $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");
                 s/<br>/<br>$sectprelog /i;
                 # increase paragraph count/index
                 $para++;
                 $clip = '';
             } elsif (/<h\d.*?>/i) {
-                $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
                 s/<(h\d.*?)>/$sectprelog<$1>/i;
                 # increase paragraph count/index
                 $para++;
                 $clip = '';
             } elsif (/<p>/i) {
-                $clip = &l00httpd::urlencode ($clip);
                 #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
                 s/<p>/<br>$sectprelog /i;
                 # increase paragraph count/index
