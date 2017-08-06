@@ -55,6 +55,7 @@ sub l00http_slideshow_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
+    my ($idx0, $idx1);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
@@ -86,6 +87,8 @@ sub l00http_slideshow_proc {
         } else {
             $newline = '<br>';
         }
+        $idx0 = 0;
+        $idx1 = 0;
         if (($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/) {
             if (opendir (DIR, $path)) {
                 undef @allpics;
@@ -112,6 +115,7 @@ sub l00http_slideshow_proc {
                     if ($path . $file eq $form->{'path'}) {
                         # found 'this', don't update $last
                         $phase = 1;
+                        $idx0 = $ii + 1;
                     }
                     if ($phase == 0) {
                         # remember the one that comes before 'this'. Because
@@ -151,6 +155,7 @@ sub l00http_slideshow_proc {
                         $phase++;
                     }
                 }
+                $idx1 = $ii;
                 if ($last eq '') {
                     # if we never found $last, use given path=
                     $last = $form->{'path'};
@@ -162,8 +167,9 @@ sub l00http_slideshow_proc {
             }
         }
 
-        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
+        print $sock "$idx0..$idx1 of ", $#allpics + 1, "\n";
         if ($nonewline eq 'checked') {
             print $sock "<p>\n";
         }
@@ -173,8 +179,9 @@ sub l00http_slideshow_proc {
         if ($nonewline eq 'checked') {
             print $sock "<p>\n";
         }
-        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
+        print $sock "$idx0..$idx1 of ", $#allpics + 1, "\n";
     }
 
     print $sock "<p>\n";
