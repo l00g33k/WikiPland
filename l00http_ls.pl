@@ -105,6 +105,9 @@ sub llsfn  {
 sub l00http_ls_conttype {
     my ($path) = @_;
     my ($conttype, $urlraw);
+    my ($pname, $fname);
+
+    ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
 
     $urlraw = 0;
 
@@ -120,7 +123,7 @@ sub l00http_ls_conttype {
 #Cache-Control: must-revalidate
 #Expires:
 #$conttype .= "Content-Disposition: inline; size=\"$size\"\r\n";
-$conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
+# h807: $conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
 #X-Whom: s5-x
 #Content-Length: 23215
 #Etag: "947077edb066e7c363df5cc2a40311e5"
@@ -173,6 +176,8 @@ $conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.k
     } else {
         $conttype = "Content-Type: application/octet-octet-stream\r\n";
     }
+
+    $conttype .= "Content-Disposition: inline; filename=\"$fname\"; size=\"$size\"\r\n";
 
     ($conttype, $urlraw);
 }

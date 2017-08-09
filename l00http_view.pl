@@ -465,9 +465,9 @@ sub l00http_view_proc {
     print $sock "Find in this file\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "RegEx: <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
+    print $sock "RegEx:\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\">\n";
+    print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\"> <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Block mark:\n";
