@@ -57,7 +57,7 @@ my $mapextend_brlat = -1;
 
 my $setlatlonvals = '';
 
-my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lsttrksize, $lsttrksvg, $lsttrkmkr, $lsttracknpts);
+my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lastscale, $lsttrksize, $lsttrksvg, $lsttrkmkr, $lsttracknpts);
 my($base64fname, $base64data, $showgrid);
 $base64fname = '';
 $base64data = '';
@@ -73,6 +73,7 @@ my %config = (proc => "l00http_gpsmapsvg_proc",
               desc => "l00http_gpsmapsvg_desc");
 
 $lsttrkname = '';
+$lastscale = 100;
 $lsttrksize = 0;
 $lsttrksvg = '';
 $lsttracknpts = '';
@@ -320,6 +321,10 @@ sub l00http_gpsmapsvg_proc (\%) {
     if (defined ($form->{'cb2wfile'})) {
         $waypts = &l00httpd::l00getCB($ctrl);
     }
+    if (defined ($form->{'clrwaypts'})) {
+        $waypts = '';
+    }
+
     if (defined ($form->{'currtrk'}) && 
         defined ($ctrl->{'gpsfname'})) {
         $waypts = "$ctrl->{'gpsdir'}$ctrl->{'gpsfname'}";
@@ -508,6 +513,7 @@ sub l00http_gpsmapsvg_proc (\%) {
             $wayptsbuf = &l00httpd::l00freadAll($ctrl);
 
             if (($waypts eq $lsttrkname) &&
+                ($scale == $lastscale) &&
                 (length($wayptsbuf) == $lsttrksize) &&
                 !defined($form->{'markleftleft'}) &&
                 !defined($form->{'markleft'}) &&
@@ -723,6 +729,7 @@ sub l00http_gpsmapsvg_proc (\%) {
 
 
                 $lsttrkname = $waypts;
+                $lastscale = $scale;
                 $lsttrksize = length($wayptsbuf);
                 $lsttrksvg = $svg;
                 $lsttracknpts = $tracknpts;
@@ -938,6 +945,7 @@ sub l00http_gpsmapsvg_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"dispwaypts\" value=\"Display waypoints\"></td>\n";
     print $sock "        <td>\n";
     print $sock "            <input type=\"submit\" name=\"cb2wfile\" value=\"CB 2 file\">\n";
+    print $sock "            <input type=\"submit\" name=\"clrwaypts\" value=\"Clr\">\n";
     if (defined($ctrl->{'gpsfname'})) {
         print $sock "            <input type=\"submit\" name=\"currtrk\" value=\"curr trk\">\n";
     }
