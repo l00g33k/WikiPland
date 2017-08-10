@@ -84,6 +84,7 @@ sub ll2xysvg {
     my ($pixx, $pixy, $notclip);
     $notclip = 1;
 
+
     if ($lonhtm > $mapextend_brlon) { $lonhtm = $mapextend_brlon; $notclip = 0; }
     if ($lonhtm < $mapextend_tllon) { $lonhtm = $mapextend_tllon; $notclip = 0; }
     if ($lathtm > $mapextend_tllat) { $lathtm = $mapextend_tllat; $notclip = 0; }
@@ -654,7 +655,10 @@ sub l00http_gpsmapsvg_proc (\%) {
                                 $state = 2;
                             }
                         }
-                        if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
+                        #if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) 
+                        # Hmm, was it long,lat before? OK, since kml2gmap.pl uses
+                        # lat,long so we switch to it now
+                        if (($plat, $plon) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
                             ##long,lat,name
                             #121.386309,31.171295,Huana
                             if ($fitmapphase > 0) {
@@ -777,6 +781,10 @@ sub l00http_gpsmapsvg_proc (\%) {
             $mapurl = "/ls.htm$path?path=$path&raw=on";
         }
 
+        if (defined($trkmkr) && ($trkmkr ne '')) {
+            print $sock $trkmkr;
+        }
+#print "$trkmkr <- trkmkr\n";
         print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
         print $sock "<input type=image width=$mapwd height=$mapht src=\"$mapurl\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
