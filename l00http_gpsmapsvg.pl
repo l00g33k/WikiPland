@@ -58,10 +58,11 @@ my $mapextend_brlat = -1;
 my $setlatlonvals = '';
 
 my ($fname, $mapwd, $mapht, $fitmapphase, $lsttrkname, $lastscale, $lsttrksize, $lsttrksvg, $lsttrkmkr, $lsttracknpts);
-my($base64fname, $base64data, $showgrid);
+my($base64fname, $base64data, $showgrid, $linkwaypts);
 $base64fname = '';
 $base64data = '';
 $showgrid = 0;
+$linkwaypts = 0;
 
 $fitmapphase = 0;
 # 0: normal
@@ -282,6 +283,12 @@ sub l00http_gpsmapsvg_proc (\%) {
             $fitmapphase = 1;
         }
     }
+
+    $linkwaypts = 0;
+    if (defined ($form->{'linkwaypts'}) && ($form->{'linkwaypts'} eq 'on')) {
+        $linkwaypts = 1;
+    }
+
     # mark point
     if (defined ($form->{'marktrack'}) &&
         ($form->{'marktrack'} =~ /(\d+)/)) {
@@ -548,10 +555,59 @@ sub l00http_gpsmapsvg_proc (\%) {
                             if ($tracknpts ne '') {
                                 $tracknpts .= sprintf("%4d track points: $firstptsintrack\n", $nowyptthistrack);
                             }
-                            $tracknpts .= sprintf("Track %3d: ", $nogpstrks);;
+                            $tracknpts .= sprintf("Track %3d: ", $nogpstrks);
                             $nowyptthistrack = 0;
                         }
+
+
+                        undef $plon;    # when $plon is defined, we have GPS to process
+
+                        #if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) 
+                        # Hmm, was it long,lat before? OK, since kml2gmap.pl uses
+                        # lat,long so we switch to it now
+                        if (($plat, $plon) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
+                            if ($linkwaypts && ($nogpstrks == 0)) {
+                                $pcx5mk++;
+                                $nogpstrks = 1;
+                                $tracknpts = "Track   1: ";
+                                $nowyptthistrack = 0;
+                            }
+
+                            ##long,lat,name
+                            #121.386309,31.171295,Huana
+                            if ($fitmapphase > 0) {
+                                if ($fitmapphase == 1) {
+                                    $fitmapmaxlon = $plon;
+                                    $fitmapminlon = $plon;
+                                    $fitmapmaxlat = $plat;
+                                    $fitmapminlat = $plat;
+                                    $fitmapphase = 2;
+                                } else {
+                                    if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon; $needredraw = 1; }
+                                    if ($fitmapminlon > $plon) {  $fitmapminlon = $plon; $needredraw = 1; }
+                                    if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat; $needredraw = 1; }
+                                    if ($fitmapminlat > $plat) {  $fitmapminlat = $plat; $needredraw = 1; }
+                                }
+                            }
+                            ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
+                            if ($notclip) {
+                                $trkmkr .= "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+                                $trkmkr .= "<font color=\"$waycolor\">$3</font></div>\n";
+                            }
+                        }
                         if (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
+                            #print "$1 $2 $3 $4 $5 $6  ";
+                            $plon = $5 + $6 / 60;
+                            $plat = $2 + $3 / 60;
+                            if ($4 eq 'W') {
+                                $plon = -$plon;
+                            }
+                            if ($1 eq 'S') {
+                                $plat = -$plat;
+                            }
+                        }
+                        if (defined($plon)) {
+                            # we have long/lat to process
                             # 0=nothing, 1=in track, 2=track ends
                             if ($state == 2) {
                                 # more than one track
@@ -566,15 +622,6 @@ sub l00http_gpsmapsvg_proc (\%) {
                                 $firstptsintrack = $_;
                             }
 
-                            #print "$1 $2 $3 $4 $5 $6  ";
-                            $plon = $5 + $6 / 60;
-                            $plat = $2 + $3 / 60;
-                            if ($4 eq 'W') {
-                                $plon = -$plon;
-                            }
-                            if ($1 eq 'S') {
-                                $plat = -$plat;
-                            }
                             if ($fitmapphase > 0) {
                                 if ($fitmapphase == 1) {
                                     $fitmapmaxlon = $plon;
@@ -655,36 +702,11 @@ sub l00http_gpsmapsvg_proc (\%) {
                                 }
                             } else {
                             }
-                        } else {
+                        } elsif ($linkwaypts == 0) {
+                            # track doesn't end if linking way points
                             if ($state == 1) {
                                 # track ends
                                 $state = 2;
-                            }
-                        }
-                        #if (($plon, $plat) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) 
-                        # Hmm, was it long,lat before? OK, since kml2gmap.pl uses
-                        # lat,long so we switch to it now
-                        if (($plat, $plon) = /^([0-9.\-]+),([0-9.\-]+)[ ,]+([^ ].*)$/) {
-                            ##long,lat,name
-                            #121.386309,31.171295,Huana
-                            if ($fitmapphase > 0) {
-                                if ($fitmapphase == 1) {
-                                    $fitmapmaxlon = $plon;
-                                    $fitmapminlon = $plon;
-                                    $fitmapmaxlat = $plat;
-                                    $fitmapminlat = $plat;
-                                    $fitmapphase = 2;
-                                } else {
-                                    if ($fitmapmaxlon < $plon) {  $fitmapmaxlon = $plon; $needredraw = 1; }
-                                    if ($fitmapminlon > $plon) {  $fitmapminlon = $plon; $needredraw = 1; }
-                                    if ($fitmapmaxlat < $plat) {  $fitmapmaxlat = $plat; $needredraw = 1; }
-                                    if ($fitmapminlat > $plat) {  $fitmapminlat = $plat; $needredraw = 1; }
-                                }
-                            }
-                            ($pixx, $pixy, $notclip) = &ll2xysvg ($plon, $plat);
-                            if ($notclip) {
-                                $trkmkr .= "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-                                $trkmkr .= "<font color=\"$waycolor\">$3</font></div>\n";
                             }
                         }
                     }
@@ -960,6 +982,16 @@ sub l00http_gpsmapsvg_proc (\%) {
         $_ = 'checked';
     }
     print $sock "        <td><input type=\"checkbox\" name=\"fittrack\" $_>Force map to fit track</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td>&nbsp;</td>\n";
+    if ($linkwaypts == 0) {
+        $_ = '';
+    } else {
+        $_ = 'checked';
+    }
+    print $sock "        <td><input type=\"checkbox\" name=\"linkwaypts\" $_>Connect waypts</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
