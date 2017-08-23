@@ -417,15 +417,15 @@ sub l00http_periobattery_proc {
             print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
             print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
         }
-        if ($svgblife ne '') {
-            &l00svg::plotsvg ('battlife', $svgblife, $graphwd, $graphht);
-            $tmp = $svgblifeIntv / 60;
-            print $sock "<p>%/hour (over $tmp hours span):<br><a href=\"/svg.htm?graph=battlife&view=\"><img src=\"/svg.htm?graph=battlife\" alt=\"level % over time\"></a>\n";
-        }
         if ($svgsleep ne '') {
             &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
             $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
             print $sock "<p>Interval:<br><a href=\"/svg.htm?graph=battsleep&view=\"><img src=\"/svg.htm?graph=battsleep\" alt=\"Interval between batt readings\"></a>\n";
+        }
+        if ($svgblife ne '') {
+            &l00svg::plotsvg ('battlife', $svgblife, $graphwd, $graphht);
+            $tmp = $svgblifeIntv / 60;
+            print $sock "<p>%/hour (over $tmp hours span):<br><a href=\"/svg.htm?graph=battlife&view=\"><img src=\"/svg.htm?graph=battlife\" alt=\"level % over time\"></a>\n";
         }
         if ($svgvolt ne '') {
             &l00svg::plotsvg ('battvolt', $svgvolt, $graphwd, $graphht);
