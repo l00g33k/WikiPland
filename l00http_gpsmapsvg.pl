@@ -675,6 +675,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                         $lon = $plon;
                                         $lat = $plat;
                                     }
+print "$lnno ($nogpstrks == $marktrack) ($nowyptthistrack >= $markpoint) ($nowyptthistrack <= $markpoint + $marklen) $notclip\n";
                                     if (($nogpstrks == $marktrack) &&
                                         ($nowyptthistrack >= $markpoint) &&
                                         ($nowyptthistrack <= $markpoint + $marklen) &&
