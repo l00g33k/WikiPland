@@ -197,8 +197,11 @@ sub l00http_gpsmapsvg_proc (\%) {
     my ($lond, $lonm, $lonc, $latd, $latm, $latc, $trackmark, $trackmarkcnt);
     my ($notclip, $coor, $tmp, $nogpstrks, $svg, $trkmkr, $state, $lnno);
     my ($tracknpts, $nowyptthistrack, $displaypt, $rawstartstop, $firstptsintrack);
-    my ($fitmapmaxlon, $fitmapminlon, $fitmapmaxlat, $fitmapminlat);
+    my ($fitmapmaxlon, $fitmapminlon, $fitmapmaxlat, $fitmapminlat, $trkptsshown);
     my ($plon, $plat, $needredraw, $wayptsbuf, $overlaymap, $ext, $mapurl);
+    my ($firstVisibleTrkPts, $firstVisibleTrkPtsRpt);
+
+    $rawstartstop = '';
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -504,11 +507,12 @@ sub l00http_gpsmapsvg_proc (\%) {
             $nogpstrks = 0;
             $tracknpts = '';
             $nowyptthistrack = 0;
-            $rawstartstop = '';
             $firstptsintrack = 0;
             $pixx0 = -1;
             $trackmarkcnt = 0;
             $lnno = 0;
+            $trkptsshown = 0;
+            $firstVisibleTrkPts = -1;
 
             $svg = '';
             $trkmkr = '';
@@ -557,6 +561,8 @@ sub l00http_gpsmapsvg_proc (\%) {
                             }
                             $tracknpts .= sprintf("Track %3d: ", $nogpstrks);
                             $nowyptthistrack = 0;
+                            $firstVisibleTrkPtsRpt = $firstVisibleTrkPts;
+                            $firstVisibleTrkPts = -1;
                         }
 
 
@@ -641,6 +647,9 @@ sub l00http_gpsmapsvg_proc (\%) {
                                 l00httpd::dbp($config{'desc'}, "(pixx $pixx, pixy $pixy, notclip $notclip) = &ll2xysvg (plon $plon, plat $plat)\n");
                             }
                             if ($notclip) {
+                                if ($firstVisibleTrkPts < 0) {
+                                    $firstVisibleTrkPts = $nowyptthistrack;
+                                }
                                 $displaypt = 0; # default to not displaying
                                 if ($nogpstrks == $starttrack) {
                                     # starting track
@@ -675,7 +684,7 @@ sub l00http_gpsmapsvg_proc (\%) {
                                         $lon = $plon;
                                         $lat = $plat;
                                     }
-print "$lnno ($nogpstrks == $marktrack) ($nowyptthistrack >= $markpoint) ($nowyptthistrack <= $markpoint + $marklen) $notclip\n";
+
                                     if (($nogpstrks == $marktrack) &&
                                         ($nowyptthistrack >= $markpoint) &&
                                         ($nowyptthistrack <= $markpoint + $marklen) &&
@@ -700,6 +709,7 @@ print "$lnno ($nogpstrks == $marktrack) ($nowyptthistrack >= $markpoint) ($nowyp
                                 if ($displaypt) {
                                     $pixy = $mapht - $pixy;     # y axis inverted
                                     $svg .= "$pixx,$pixy ";
+                                    $trkptsshown++;
                                 }
                             } else {
                             }
@@ -806,6 +816,13 @@ print "$lnno ($nogpstrks == $marktrack) ($nowyptthistrack >= $markpoint) ($nowyp
             l00svg::setsvg("$fname.overlay", $overlaymap);
 
             $mapurl = "/svg.htm?graph=$fname.overlay";
+
+            if ($rawstartstop eq '') {
+                $rawstartstop = 'No track points marked. May be they are out of bound?';
+            }
+            $rawstartstop .= "\n\nFirst visible track point is $firstVisibleTrkPtsRpt";
+            $rawstartstop .= "\n\n$trkptsshown track points shown\n";
+
         } else {
             # no overlaid track. .png will do
             $mapurl = "/ls.htm$path?path=$path&raw=on";
@@ -814,7 +831,6 @@ print "$lnno ($nogpstrks == $marktrack) ($nowyptthistrack >= $markpoint) ($nowyp
         if (defined($trkmkr) && ($trkmkr ne '')) {
             print $sock $trkmkr;
         }
-#print "$trkmkr <- trkmkr\n";
         print $sock "<form action=\"/gpsmapsvg.htm\" method=\"get\">\n";
         print $sock "<input type=image width=$mapwd height=$mapht src=\"$mapurl\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
