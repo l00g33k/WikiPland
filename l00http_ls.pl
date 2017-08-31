@@ -115,6 +115,7 @@ sub l00http_ls_conttype {
         ($path =~ /\.kmz$/i)) {
         $urlraw = 1;
         $conttype = "Content-Type: application/x-zip\r\n";
+        $conttype .= "Content-Disposition: inline; filename=\"$fname\"; size=\"$size\"\r\n";
 #HTTP/1.1 200 OK
 #Server: nginx/0.7.65
 #Date: Sat, 08 May 2010 00:45:04 GMT
@@ -123,7 +124,6 @@ sub l00http_ls_conttype {
 #Cache-Control: must-revalidate
 #Expires:
 #$conttype .= "Content-Disposition: inline; size=\"$size\"\r\n";
-# h807: $conttype .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
 #X-Whom: s5-x
 #Content-Length: 23215
 #Etag: "947077edb066e7c363df5cc2a40311e5"

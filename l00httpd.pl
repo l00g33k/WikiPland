@@ -149,7 +149,7 @@ $ctrl{'lssize'}  = "launcher";
 $ctrl{'blogwd'}  = 64;
 $ctrl{'blogmaxln'}  = 50;
 $ctrl{'noclinav'}  = 1;
-$ctrl{'l00file'}->{'l00://_notes'} = "A sample ram file.\nContent is lost when shutdown\nChange 'ram' for a separate ram file";
+$ctrl{'l00file'}->{'l00://_notes.txt'} = "A sample ram file.\nContent is lost when shutdown\nChange 'ram' for a separate ram file";
 
 $nopwtimeout = 0;
 
@@ -1713,7 +1713,7 @@ while(1) {
                     $tmp = $ctrl{'l00file'};
 
                     foreach $_ (sort keys %$tmp) {
-                        if (($_ eq 'l00://_notes') ||
+                        if (($_ eq 'l00://_notes.txt') ||
                            (defined($ctrl{'l00file'}->{$_}) &&
                             (length($ctrl{'l00file'}->{$_}) > 0))) {
                             my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
