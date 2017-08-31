@@ -422,6 +422,7 @@ sub l00http_gps_perio {
                         } else {
                             $fname = 'gps.trk';
                         }
+                        $ctrl->{'gpsfname'} = $fname;
                         if (-f "$ctrl->{'gpsdir'}$fname") {
                             # exist
                             open (OUT, ">>$ctrl->{'gpsdir'}$fname");
