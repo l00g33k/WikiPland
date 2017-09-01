@@ -8,11 +8,40 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_slideshow_proc",
               desc => "l00http_slideshow_desc");
-my ($width, $height, $llspath, $picsperpage, $nonewline);
+my ($width, $height, $llspath, $picsperpage, $nonewline, $gpstrk, $gpstrk0, %locs);
 $width = '100%';
 $height = '';
 $picsperpage = 6;
 $nonewline = '';
+$gpstrk0 = '.';
+$gpstrk = '';
+
+sub l00http_slideshow_j2date {
+    my ($datetimestr) = @_;
+    my ($se,$mi,$hr,$da,$mo,$yr,$tmp);
+
+    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($datetimestr);
+
+    sprintf ("%04d%02d%02d %02d%02d%02d", 
+        $yr + 1900, $mo + 1, $da, $hr, $mi, $se);
+}
+
+sub l00http_slideshow_date2j {
+# convert from date to seconds
+    my $temp = pop;
+    my $secs = 0;
+    my ($yr, $mo, $da, $hr, $mi, $se);
+
+    $temp =~ s/ //g;
+    $temp =~ s/_//g;
+    if (($yr, $mo, $da, $hr, $mi, $se) = ($temp =~ /(....)(..)(..)(..)(..)(..)/)) {
+        $yr -= 1900;
+        $mo--;
+        $secs = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+    }
+    
+    $secs;
+}
 
 sub llsfn2 {
     my ($rst);
@@ -55,11 +84,11 @@ sub l00http_slideshow_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
-    my ($idx0, $idx1);
+    my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
-    print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a>\n";
+    print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a> -- \n";
 
     if (defined ($form->{'set'})) {
         if (defined ($form->{'width'})) {
@@ -76,6 +105,10 @@ sub l00http_slideshow_proc {
         } else {
             $nonewline = '';
         }
+        if (defined ($form->{'gpstrk'}) &&
+            (length($form->{'gpstrk'}) > 0)) {
+            $gpstrk = $form->{'gpstrk'};
+        }
     }
 
 
@@ -83,13 +116,39 @@ sub l00http_slideshow_proc {
         $outbuf = '';
         if ($nonewline eq 'checked') {
             $newline = ' ';
-            print $sock "<p>\n";
         } else {
             $newline = '<br>';
         }
         $idx0 = 0;
         $idx1 = 0;
         if (($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/) {
+            if (($gpstrk0 ne $gpstrk) ||
+                ((defined ($form->{'reloadgps'})) && ($form->{'reloadgps'} eq 'on'))) {
+                $gpstrk0 = $gpstrk;
+                if (&l00httpd::l00freadOpen($ctrl, $gpstrk)) {
+                    undef %locs;
+                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                        s/[\r\n]//;
+                        if (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+).* ; gps (\d{8,8} \d{6,6})/) {
+                            #print "$1 $2 $3 $4 $5 $6  ";
+                            $plon = $5 + $6 / 60;
+                            $plat = $2 + $3 / 60;
+                            if ($4 eq 'W') {
+                                $plon = -$plon;
+                            }
+                            if ($1 eq 'S') {
+                                $plat = -$plat;
+                            }
+                            $datetime = &l00http_slideshow_date2j($7);
+                            $locs{$datetime} = "$plat,$plon";
+                        }
+#    if(/20170811/) {
+#    print "$datetime $locs{$datetime}\n";
+#    }
+                    }
+                }
+            }
+
             if (opendir (DIR, $path)) {
                 undef @allpics;
                 foreach $file (readdir (DIR)) {
@@ -112,7 +171,7 @@ sub l00http_slideshow_proc {
                 $phase = 0; # search for 1 pic match
                 for ($ii = 0; $ii <= $#allpics; $ii++) {
                     $file = $allpics[$ii];
-                    if ($path . $file eq $form->{'path'}) {
+                    if ("$path$file" eq $form->{'path'}) {
                         # found 'this', don't update $last
                         $phase = 1;
                         $idx0 = $ii + 1;
@@ -145,13 +204,23 @@ sub l00http_slideshow_proc {
                         $outbuf .= "$newline\n";
                         if ($nonewline ne 'checked') {
                             $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:$newline\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                            if ($gpstrk ne '') {
+if ($file =~ /(\d{8,8}_\d{6,6})/) {
+$datetime0 = &l00http_slideshow_date2j($1);
+$tmp = &l00http_slideshow_j2date($datetime0);
+$outbuf .= "$file $datetime0($tmp) \n";
+foreach $datetime (sort {$a <=> $b} keys %locs) {
+    if ($datetime >= $datetime0) {
+$tmp = &l00http_slideshow_j2date($datetime);
+$outbuf .= "at $datetime($tmp) $locs{$datetime}\n";
+        last;
+    }
+}
+}
+                            }
                         }
 
-#                       if (($width =~ /^\d/) && ($height =~ /^\d/)) {
-                            $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
-#                       } else {
-#                           $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\"><a/>\n";
-#                       }
+                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
                         $phase++;
                     }
                 }
@@ -165,6 +234,13 @@ sub l00http_slideshow_proc {
                     $next = $form->{'path'};
                 }
             }
+        }
+
+        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[0]\">Newest</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[$#allpics]\">Oldest</a> \n";
+
+        if ($nonewline eq 'checked') {
+            print $sock "<p>\n";
         }
 
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
@@ -208,6 +284,10 @@ sub l00http_slideshow_proc {
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"nonewline\" $nonewline>No newline\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "GPS trk: <input type=\"text\" size=\"6\" name=\"gpstrk\" value=\"$gpstrk\">\n";
+    print $sock "<input type=\"checkbox\" name=\"reloadgps\">Reload\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
