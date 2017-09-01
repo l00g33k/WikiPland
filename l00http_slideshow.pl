@@ -84,7 +84,7 @@ sub l00http_slideshow_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
-    my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0);
+    my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
@@ -121,6 +121,8 @@ sub l00http_slideshow_proc {
         }
         $idx0 = 0;
         $idx1 = 0;
+        $waypts = '';
+        $mkridx = 0;
         if (($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/) {
             if (($gpstrk0 ne $gpstrk) ||
                 ((defined ($form->{'reloadgps'})) && ($form->{'reloadgps'} eq 'on'))) {
@@ -201,24 +203,28 @@ sub l00http_slideshow_proc {
                             = stat($path . $file);
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
-                        $outbuf .= "$newline\n";
                         if ($nonewline ne 'checked') {
-                            $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:$newline\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                            $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             if ($gpstrk ne '') {
-if ($file =~ /(\d{8,8}_\d{6,6})/) {
-$datetime0 = &l00http_slideshow_date2j($1);
-$tmp = &l00http_slideshow_j2date($datetime0);
-$outbuf .= "$file $datetime0($tmp) \n";
-foreach $datetime (sort {$a <=> $b} keys %locs) {
-    if ($datetime >= $datetime0) {
-$tmp = &l00http_slideshow_j2date($datetime);
-$outbuf .= "at $datetime($tmp) $locs{$datetime}\n";
-        last;
-    }
-}
-}
+                                #::now::#1
+                                if ($file =~ /(\d{8,8}_\d{6,6})/) {
+                                    $datetime0 = &l00http_slideshow_date2j($1);
+                                    $tmp = &l00http_slideshow_j2date($datetime0);
+                                    $waypts .= "* From filename: $file $datetime0($tmp)\n";
+                                    foreach $datetime (sort {$a <=> $b} keys %locs) {
+                                        if ($datetime >= $datetime0) {
+                                            $tmp = &l00http_slideshow_j2date($datetime);
+                                            $outbuf .= "<a href=\"/kml2gmap.htm?path=l00://slideshow_waypts.way&mkridx=$mkridx\">kml2gmap#$mkridx</a>";
+                                            $mkridx++;
+                                            $waypts .= "$locs{$datetime} XX\n";
+                                            $waypts .= "** From GPS track: $datetime($tmp) $locs{$datetime}\n\n";
+                                            last;
+                                        }
+                                    }
+                                }
                             }
                         }
+                        $outbuf .= "$newline\n";
 
                         $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
                         $phase++;
@@ -236,6 +242,7 @@ $outbuf .= "at $datetime($tmp) $locs{$datetime}\n";
             }
         }
 
+
         print $sock "<a href=\"/slideshow.htm?path=$path$allpics[0]\">Newest</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$path$allpics[$#allpics]\">Oldest</a> \n";
 
@@ -245,7 +252,7 @@ $outbuf .= "at $datetime($tmp) $locs{$datetime}\n";
 
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
-        print $sock "$idx0..$idx1 of ", $#allpics + 1, "\n";
+        print $sock "$idx0..$idx1 of ", $#allpics + 1, ".\n";
         if ($nonewline eq 'checked') {
             print $sock "<p>\n";
         }
@@ -255,9 +262,22 @@ $outbuf .= "at $datetime($tmp) $locs{$datetime}\n";
         if ($nonewline eq 'checked') {
             print $sock "<p>\n";
         }
+
         print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
         print $sock "$idx0..$idx1 of ", $#allpics + 1, "\n";
+
+        if ($nonewline ne 'checked') {
+#::now::#2
+            if ($gpstrk ne '') {
+                # create l00://slideshow_waypts.way consist of waypoints.
+                &l00httpd::l00fwriteOpen($ctrl, "l00://slideshow_waypts.way");
+                &l00httpd::l00fwriteBuf($ctrl, $waypts);
+                &l00httpd::l00fwriteClose($ctrl);
+
+                print $sock "<p>kml2gmap: <a href=\"/kml2gmap.htm?path=l00://slideshow_waypts.way\">l00://slideshow_waypts.way</a> \n";
+            }
+        }
     }
 
     print $sock "<p>\n";
