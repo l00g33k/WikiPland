@@ -67,7 +67,7 @@ sub l00http_hexview_proc {
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a><p>\n";
 
     } else {
-        print $sock "Path: <a href=\"/ls.htm?path=$ctrl->{'workdir'}\">Select solver equation file</a> and 'Set' to 'solver'<p>\n";
+        print $sock "Path: <a href=\"/launcher.htm?path=$ctrl->{'workdir'}\">Select solver equation file</a> and 'Set' to 'solver'<p>\n";
         # send HTML footer and ends
         print $sock $ctrl->{'htmlfoot'};
         return;
