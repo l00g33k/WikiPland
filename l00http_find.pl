@@ -488,8 +488,10 @@ sub l00http_find_proc {
 
     if ($content ne '!!') {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://findinfile.htm');
-        foreach $thispath (split ('\|\|\|', $path)) {
-            &l00http_find_search ($thispath, $ctrl);
+        if (defined ($form->{'submit'})) {
+            foreach $thispath (split ('\|\|\|', $path)) {
+                &l00http_find_search ($thispath, $ctrl);
+            }
         }
         &l00httpd::l00fwriteClose($ctrl);
     }
