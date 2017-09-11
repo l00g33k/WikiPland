@@ -271,6 +271,20 @@ sub l00http_slideshow_proc {
 #::now::#2
             if ($gpstrk ne '') {
                 # create l00://slideshow_waypts.way consist of waypoints.
+$waypts .= <<aassdd;
+=Rendering waypoints=
+* Using Gogole Maps API on Google Map
+** [[/kml2gmap.htm?path=\$&width=400&height=500|400 x 500]]
+** [[/kml2gmap.htm?path=\$&width=600&height=300|600 x 300]]
+** [[/kml2gmap.htm?path=\$&width=700&height=400|700 x 400]]
+** [[/kml2gmap.htm?path=\$&width=800&height=600|800 x 600]]
+** [[/kml2gmap.htm?path=\$&width=900&height=500|900 x 500]]
+** [[/kml2gmap.htm?path=\$&width=1200&height=600|1200 x 600]]
+** [[/kml2gmap.htm?path=\$&width=1400&height=700|1400 x 700]]
+** [[/kml2gmap.htm?path=\$&width=1600&height=800|1600 x 800]]
+* Download [[/kml2gmap.htm?path=\$|kml]] file
+aassdd
+
                 &l00httpd::l00fwriteOpen($ctrl, "l00://slideshow_waypts.way");
                 &l00httpd::l00fwriteBuf($ctrl, $waypts);
                 &l00httpd::l00fwriteClose($ctrl);

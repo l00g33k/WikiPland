@@ -13,7 +13,7 @@ sub l00http_activity_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "activity: Android startActivity";
+    " A: activity: Android startActivity";
 }
 
 sub l00http_activity_proc {

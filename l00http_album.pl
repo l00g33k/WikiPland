@@ -8,10 +8,9 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_album_proc",
               desc => "l00http_album_desc");
-my ($width, $height, $llspath, $picsperpage);
-$width = '100%';
+my ($width, $height, $llspath);
+$width = '50%';
 $height = '';
-$picsperpage = 6;
 
 
 sub l00http_album_desc {
@@ -27,13 +26,18 @@ sub l00http_album_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $file, @allpics, $last, $next, $phase, $outbuf, $ii, $tmp);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $file, $target, 
-        %pics, %notes,
+        %pics, %notes, @srcdir, $srcfile, %allpics, $dir, $regex, $output, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
+
+
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a>\n";
+    if (defined ($form->{'path'})) {
+        print $sock " - <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+    }
 
     if (defined ($form->{'set'})) {
         if (defined ($form->{'width'})) {
@@ -42,9 +46,6 @@ sub l00http_album_proc {
         if (defined ($form->{'height'})) {
             $height = $form->{'height'};
         }
-        if (defined ($form->{'picsperpage'})) {
-            $picsperpage = $form->{'picsperpage'};
-        }
     }
 
 
@@ -52,100 +53,60 @@ sub l00http_album_proc {
         ($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/;
 
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-            print $sock "<pre>\n";
             undef %pics;
             undef %notes;
-            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            undef @srcdir;
+
+            # read srcdir
+            $srcfile = &l00httpd::l00freadAll($ctrl);
+            foreach $_ (split("\n", $srcfile)) {
                 s/\n//;
                 s/\r//;
-                if (($file) = /^\* (.+)/) {
-                    $target = "not found $file";
-                    if (-f $file) {
-                        $target = $file;
-                    } elsif (-f "$path$file") {
-                        $target = "$path$file";
-                    }
-                    $pics{$file} = $target;
-                    $pics{$file} = 'notes';
-                    print $sock "$target\n";
+                if (/^DIR:(.+)/) {
+                    push(@srcdir, $1);
                 }
             }
-            print $sock "</pre>\n";
-        }
 
-        $outbuf = '';
-        if (($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/) {
-            if (opendir (DIR, $path)) {
-                undef @allpics;
-                foreach $file (readdir (DIR)) {
-                    if ($file =~ /\.jpg$/i) {
-                        push (@allpics, $file);
-                    } elsif ($file =~ /\.png$/i) {
-                        push (@allpics, $file);
-                    }
-                }
-                closedir (DIR);
-
-                # sort by reverse time, so 'next' come first
-                $llspath = $path;
-
-                $last = '';
-                $next = '';
-                $phase = 0; # search for 1 pic match
-                for ($ii = 0; $ii <= $#allpics; $ii++) {
-                    $file = $allpics[$ii];
-                    if ($path . $file eq $form->{'path'}) {
-                        # found 'this', don't update $last
-                        $phase = 1;
-                    }
-                    if ($phase == 0) {
-                        # remember the one that comes before 'this'. Because
-                        # we are in reverse order, what's before 'this' is next
-                        $tmp = $ii - $picsperpage + 1;
-                        if ($tmp < 0) {
-                            $tmp = 0;
+            # scan for all pictures
+            undef %allpics;
+            foreach $dir (@srcdir) {
+                if (opendir (DIR, $dir)) {
+                    print $sock "Searching: <a href=\"/ls.htm?path=$dir\">$dir</a><br>\n";
+                    foreach $file (readdir (DIR)) {
+                        if (($file =~ /\.jpg/i)) {
+                            $allpics{$file} = $dir;
                         }
-                        $next = $path . $allpics[$tmp];
                     }
-                    if ($phase == ($picsperpage + 1)) {
-                        # we have found the number of pictures to display
-                        $tmp = $ii + $picsperpage;
-                        if ($tmp > $#allpics) {
-                            $tmp = $#allpics;
-                        }
-                        $last = $path . $allpics[$tmp];
-
-                        last;   # done searching
-                    }
-                    if ($phase) {
-                        ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
-                            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-                            = stat($path . $file);
-                        ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
-                            = localtime($ctime);
-                        $outbuf .= "<br>\n";
-                        $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:<br>\n", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
-
-                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
-                        $phase++;
-                    }
-                }
-                if ($last eq '') {
-                    # if we never found $last, use given path=
-                    $last = $form->{'path'};
-                }
-                if ($next eq '') {
-                    # if we never found $next, use given path=
-                    $next = $form->{'path'};
+                    closedir (DIR);
                 }
             }
-        }
-        print $sock "<a href=\"/album.htm?path=$last\">Older</a> \n";
-        print $sock "<a href=\"/album.htm?path=$next\">Newer</a> \n";
 
-        print $sock $outbuf;
-        print $sock "<a href=\"/album.htm?path=$last\">Older</a> \n";
-        print $sock "<a href=\"/album.htm?path=$next\">Newer</a> \n";
+            # generate web view
+            $output = '';
+            foreach $_ (split("\n", $srcfile)) {
+                s/\n//;
+                s/\r//;
+                if (/^DIR:(.+)/) {
+                    next;
+                }
+                if (/^PIC:(.+)/) {
+                    $regex = $1;
+                    foreach $file (keys %allpics) {
+                        if ($file =~ /$regex/i) {
+                            $tmp = $allpics{"$file"}.$file;
+                            $output .= "\n<a href=\"/ls.htm?path=$tmp\">".
+                                "<img src=\"/ls.htm/$file?path=$tmp\" width=\"$width\" height=\"$height\"></a>".
+                                "<br><small>$file</small>".
+                                "\n";
+                        }
+                    }
+                    next;
+                }
+                $output .= "$_\n";
+            }
+            print $sock &l00wikihtml::wikihtml ($ctrl, "", $output, 0);;
+
+        }
     }
 
     print $sock "<p>\n";
@@ -166,9 +127,6 @@ sub l00http_album_proc {
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Height: <input type=\"text\" size=\"4\" name=\"height\" value=\"$height\">\n";
-    print $sock "</td></tr>\n";
-    print $sock "<tr><td>\n";
-    print $sock "Pic per page: <input type=\"text\" size=\"3\" name=\"picsperpage\" value=\"$picsperpage\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";

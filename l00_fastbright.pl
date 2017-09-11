@@ -7,13 +7,8 @@ if (defined($ctrl)) {
 }
 
 if ($a->getScreenBrightness ()->{'result'} == 255) {
-    $a->setScreenBrightness (50);
+    $a->setScreenBrightness (20);
 } else {
     $a->setScreenBrightness (255);
 }
 
-#           $vol = $ctrl->{'droid'}->getScreenBrightness ();
-#           l00httpd::dbp($config{'desc'}, "'dec10' was $vol->{'result'} ");
-#           $vol = $vol->{'result'} - 10;
-#           l00httpd::dbp($config{'desc'}, "new $vol\n");
-#           $ctrl->{'droid'}->setScreenBrightness ($vol);
