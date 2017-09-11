@@ -7,12 +7,7 @@ use warnings;
 
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
-my (@required, @exclude, @blockend, @skipto, @skiptail);
-@required = undef;
-@exclude = undef;
-@blockend = undef;
-@skipto = undef;
-@skiptail = undef;
+my (@skipto, @skiptail, @fileexclude, @blkstart, @blkstop, @required, @exclude, @color, @subst, @blockend);
 
 sub l00http_blockfilter_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -52,16 +47,6 @@ sub l00http_blockfilter_proc {
             $condition =~ s/\r//g;
             if (length($condition) > 0) {
                 push(@skiptail, $condition);
-            }
-        }
-    }
-    if (defined ($form->{'blockpaste'})) {
-        undef @blockend;
-        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
-            $condition =~ s/\n//g;
-            $condition =~ s/\r//g;
-            if (length($condition) > 0) {
-                push(@blockend, $condition);
             }
         }
     }
@@ -107,16 +92,6 @@ sub l00http_blockfilter_proc {
                 }
             }
         }
-        if (defined ($form->{'blockend'})) {
-            undef @blockend;
-            foreach $condition (split("\n", $form->{'blockend'})) {
-                $condition =~ s/\n//g;
-                $condition =~ s/\r//g;
-                if (length($condition) > 0) {
-                    push(@blockend, $condition);
-                }
-            }
-        }
         if (defined ($form->{'required'})) {
             undef @required;
             foreach $condition (split("\n", $form->{'required'})) {
@@ -153,15 +128,7 @@ sub l00http_blockfilter_proc {
     print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
     $tmp = join("\n", @skipto);
-    print $sock "<textarea name=\"skipto\" cols=24 rows=7>$tmp</textarea>\n";
-    print $sock "</td></tr>\n";
-
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"blockpaste\" value=\"Block\">\n";
-    print $sock "ending pattern (1 per line)\n";
-    print $sock "</td><td>\n";
-    $tmp = join("\n", @blockend);
-    print $sock "<textarea name=\"blockend\" cols=24 rows=7>$tmp</textarea>\n";
+    print $sock "<textarea name=\"skipto\" cols=24 rows=4>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
@@ -169,7 +136,7 @@ sub l00http_blockfilter_proc {
     print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
     $tmp = join("\n", @required);
-    print $sock "<textarea name=\"required\" cols=24 rows=7>$tmp</textarea>\n";
+    print $sock "<textarea name=\"required\" cols=24 rows=4>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
@@ -177,7 +144,7 @@ sub l00http_blockfilter_proc {
     print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
     $tmp = join("\n", @exclude);
-    print $sock "<textarea name=\"exclude\" cols=24 rows=7>$tmp</textarea>\n";
+    print $sock "<textarea name=\"exclude\" cols=24 rows=4>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
@@ -185,7 +152,7 @@ sub l00http_blockfilter_proc {
     print $sock "pattern (1 per line)\n";
     print $sock "</td><td>\n";
     $tmp = join("\n", @skiptail);
-    print $sock "<textarea name=\"skiptail\" cols=24 rows=7>$tmp</textarea>\n";
+    print $sock "<textarea name=\"skiptail\" cols=24 rows=4>$tmp</textarea>\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table><br>\n";
@@ -211,10 +178,6 @@ sub l00http_blockfilter_proc {
 
         $output .= "Skip to pattern\n";
         foreach $condition (@skipto) {
-            $output .= "    >$condition<\n";
-        }
-        $output .= "Block ending pattern\n";
-        foreach $condition (@blockend) {
             $output .= "    >$condition<\n";
         }
         $output .= "Required pattern\n";
