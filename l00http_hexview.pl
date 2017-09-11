@@ -27,7 +27,7 @@ sub l00http_hexview_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $buffer2, $cryptex, $rethash, $line, $ii, $len);
     my ($blklen, $tmp, $iiend, $hex, $ascii, $binview, $jj);
-	my ($pname, $fname, $decaddr);
+	my ($pname, $fname, $decaddr, $swap32, $byteidx);
 
     $sock = $ctrl->{'sock'};     # dereference network socket
 
@@ -45,6 +45,11 @@ sub l00http_hexview_proc {
         $decaddr = 'checked';
     } else {
         $decaddr = '';
+    }
+    if (defined ($form->{'swap32'}) && ($form->{'swap32'} eq 'on')) {
+        $swap32 = 'checked';
+    } else {
+        $swap32 = '';
     }
     if (defined ($form->{'offset'})) {
         $offset = hex ($form->{'offset'});
@@ -109,16 +114,21 @@ sub l00http_hexview_proc {
                 $hex .= ' ';
                 $binview .= ' ';
             }
+            if ($swap32 eq '') {
+                $byteidx = $ii;
+            } else {
+                $byteidx = ($ii & ~3) + (3 - ($ii & 3));
+            }
             $hex .= sprintf (" %02x",
-                unpack ("C", substr ($buffer, $ii, 1)));
-            $tmp = substr ($buffer, $ii, 1);
+                unpack ("C", substr ($buffer, $byteidx, 1)));
+            $tmp = substr ($buffer, $byteidx, 1);
             $tmp =~ s/([^a-zA-Z0-9])/((ord($1)<32)||(ord($1)>95))?'.':$1/ge;
             $ascii .= $tmp;
 
             # binary view
             if ($binary eq 'checked') {
                 for ($jj = 7; $jj >= 0; $jj--) {
-                    if ((1 << $jj) & unpack ("C", substr ($buffer, $ii, 1))) {
+                    if ((1 << $jj) & unpack ("C", substr ($buffer, $byteidx, 1))) {
                         $binview .= '1';
                     } else {
                         $binview .= '0';
@@ -179,6 +189,11 @@ sub l00http_hexview_proc {
     print $sock "Show\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"decaddr\" $decaddr>decimal address\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Show\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"swap32\" $swap32>32-bit byte swap\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form><p>\n";
