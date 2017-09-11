@@ -231,7 +231,11 @@ sub l00http_blockfilter_proc {
             $output .= "    >$condition<\n";
         }
 
-        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+        while (1) {
+            $_ = &l00httpd::l00freadLine($ctrl);
+            if (!defined($_)) {
+                last;
+            }
             $cnt++;
 
             if ($findskipto) {
@@ -255,7 +259,7 @@ sub l00http_blockfilter_proc {
                 }
             }
             if ($ending) {
-last;
+                last;
             }
 
 
