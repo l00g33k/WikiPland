@@ -66,7 +66,7 @@ sub l00http_blockfilter_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $requiredhits, $excludehits, $output, $thisblock, $condition, $ending);
     my ($blkdisplayed, $nonumblock, $blockendhits, $hitlines, $hitlinesthis, $tmp, $skip0scan1);
-    my ($inblk, $blkendfound, $found);
+    my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound);
 
 
     # Send HTTP and HTML headers
@@ -137,6 +137,8 @@ sub l00http_blockfilter_proc {
         $inblk = 0;
         $skip0scan1 = 0;    # skip to/scan to toggle
         $ending = 0;
+        $header = '';
+        $noblkfound = 0;
 
         while (1) {
             $_ = &l00httpd::l00freadLine($ctrl);
@@ -196,16 +198,21 @@ sub l00http_blockfilter_proc {
             &l00httpd::l00fwriteBuf($ctrl, "$_");
 
             $blkendfound = 0;
-            if ($inblk == 0) {
-                # search for block start
-                foreach $condition (@blkstart) {
-                    if (/$condition/) {
-                        # found
-                        $inblk = 1;
-                        last;
-                    }
+            $blkstartfound = 0;
+            $found = 0;
+
+            # search for block start
+            foreach $condition (@blkstart) {
+                if (/$condition/) {
+                    # found
+                    $found = 1;
+                    $inblk = 1;
+                    $blkstartfound = 1;
+                    last;
                 }
-            } else {
+            }
+
+            if ($found != 0) {
                 # search for block end
                 foreach $condition (@blkstop) {
                     if (/$condition/) {
@@ -217,9 +224,8 @@ sub l00http_blockfilter_proc {
                 }
             }
 
-            if ($blkendfound) {
-                $blkendfound = 0;
 
+            if ($blkendfound) {
                 print $sock "$thisblock";
             }
 
@@ -227,6 +233,13 @@ sub l00http_blockfilter_proc {
                 $thisblock .= sprintf ("%05d: %s", $cnt, $_);
                 $hitlinesthis++;
                 $nonumblock .= $_;
+                if ($blkstartfound) {
+                    $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
+                    $noblkfound++;
+                    $output .= "\n<a name=\"blk$noblkfound\"></a><font style=\"color:black;background-color:silver\">$thisblock</font>";
+                } else {
+                    $output .= $thisblock;
+                }
             }
 
 
@@ -272,6 +285,7 @@ sub l00http_blockfilter_proc {
             "Output $blkdisplayed blocks and $hitlines lines to ".
             "<a href=\"/view.htm?path=l00://blockfilter.txt\">l00://blockfilter.txt</a> ".
             "<br>\n";
+        print $sock "$header<br>\n";
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a>\n";
