@@ -7,7 +7,51 @@ use warnings;
 
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
-my (@skipto, @skiptail, @fileexclude, @blkstart, @blkstop, @required, @exclude, @color, @subst, @blockend);
+my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, @blkrequired, @color, @subst, @blockend);
+
+
+#  &l00http_blockfilter_paste($form, 'skipto', \@skipto);
+sub l00http_blockfilter_paste {
+    my ($ctrl, $form, $name, $array) = @_;
+    my ($condition);
+
+    if (defined ($form->{"${name}paste"})) {
+        undef @$array;
+        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
+            $condition =~ s/\n//g;
+            $condition =~ s/\r//g;
+            if (length($condition) > 0) {
+                push(@$array, $condition);
+            }
+        }
+    }
+
+    if (defined ($form->{$name})) {
+        undef @$array;
+        foreach $condition (split("\n", $form->{$name})) {
+            $condition =~ s/\n//g;
+            $condition =~ s/\r//g;
+            if (length($condition) > 0) {
+                push(@$array, $condition);
+            }
+        }
+    }
+
+}
+
+sub l00http_blockfilter_form {
+    my ($sock, $form, $name, $label, $array) = @_;
+    my ($tmp);
+
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"${name}paste\" value=\"$label\">\n";
+    print $sock "pattern (1 per line)\n";
+    print $sock "</td><td>\n";
+    $tmp = join("\n", @$array);
+    print $sock "<textarea name=\"${name}\" cols=24 rows=2>$tmp</textarea>\n";
+    print $sock "</td></tr>\n";
+
+}
 
 sub l00http_blockfilter_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -21,7 +65,9 @@ sub l00http_blockfilter_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $requiredhits, $excludehits, $output, $thisblock, $condition, $ending);
-    my ($blkdisplayed, $nonumblock, $blockendhits, $hitlines, $hitlinesthis, $tmp, $findskipto);
+    my ($blkdisplayed, $nonumblock, $blockendhits, $hitlines, $hitlinesthis, $tmp, $skip0scan1);
+    my ($inblk, $blkendfound, $found);
+
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Block filter</title>" .$ctrl->{'htmlhead2'};
@@ -30,88 +76,24 @@ sub l00http_blockfilter_proc {
     print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">view</a><br>\n";
 
-    if (defined ($form->{'skiptopaste'})) {
-        undef @skipto;
-        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
-            $condition =~ s/\n//g;
-            $condition =~ s/\r//g;
-            if (length($condition) > 0) {
-                push(@skipto, $condition);
-            }
-        }
-    }
-    if (defined ($form->{'skiptailpaste'})) {
-        undef @skiptail;
-        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
-            $condition =~ s/\n//g;
-            $condition =~ s/\r//g;
-            if (length($condition) > 0) {
-                push(@skiptail, $condition);
-            }
-        }
-    }
-    if (defined ($form->{'requiredpaste'})) {
-        undef @required;
-        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
-            $condition =~ s/\n//g;
-            $condition =~ s/\r//g;
-            if (length($condition) > 0) {
-                push(@required, $condition);
-            }
-        }
-    }
-    if (defined ($form->{'excludepaste'})) {
-        undef @exclude;
-        foreach $condition (split("\n", &l00httpd::l00getCB($ctrl))) {
-            $condition =~ s/\n//g;
-            $condition =~ s/\r//g;
-            if (length($condition) > 0) {
-                push(@exclude, $condition);
-            }
-        }
-    }
+    &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
+    &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
+    &l00http_blockfilter_paste($ctrl, $form, 'fileexclude', \@fileexclude);
+    &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
+    &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
+    &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
+    &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
+    &l00http_blockfilter_paste($ctrl, $form, 'subst',       \@subst);
 
     if (defined ($form->{'process'})) {
-        if (defined ($form->{'skipto'})) {
-            undef @skipto;
-            foreach $condition (split("\n", $form->{'skipto'})) {
-                $condition =~ s/\n//g;
-                $condition =~ s/\r//g;
-                if (length($condition) > 0) {
-                    push(@skipto, $condition);
-                }
-            }
-        }
-        if (defined ($form->{'skiptail'})) {
-            undef @skiptail;
-            foreach $condition (split("\n", $form->{'skiptail'})) {
-                $condition =~ s/\n//g;
-                $condition =~ s/\r//g;
-                if (length($condition) > 0) {
-                    push(@skiptail, $condition);
-                }
-            }
-        }
-        if (defined ($form->{'required'})) {
-            undef @required;
-            foreach $condition (split("\n", $form->{'required'})) {
-                $condition =~ s/\n//g;
-                $condition =~ s/\r//g;
-                if (length($condition) > 0) {
-                    push(@required, $condition);
-                }
-            }
-        }
-        if (defined ($form->{'exclude'})) {
-            undef @exclude;
-            foreach $condition (split("\n", $form->{'exclude'})) {
-                $condition =~ s/\n//g;
-                $condition =~ s/\r//g;
-                if (length($condition) > 0) {
-                    push(@exclude, $condition);
-                }
-            }
-        }
+        &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
+        &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
+        &l00http_blockfilter_paste($ctrl, $form, 'fileexclude', \@fileexclude);
+        &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
+        &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
+        &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
+        &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
+        &l00http_blockfilter_paste($ctrl, $form, 'subst',       \@subst);
     }
 
     print $sock "<form action=\"/blockfilter.htm\" method=\"get\">\n";
@@ -120,40 +102,18 @@ sub l00http_blockfilter_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"process\" value=\"Process\">\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
+    print $sock "<input type=\"text\" size=\"24\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
     print $sock "</td></tr>\n";
 
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"skiptopaste\" value=\"Skip to\">\n";
-    print $sock "pattern (1 per line)\n";
-    print $sock "</td><td>\n";
-    $tmp = join("\n", @skipto);
-    print $sock "<textarea name=\"skipto\" cols=24 rows=4>$tmp</textarea>\n";
-    print $sock "</td></tr>\n";
 
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"requiredpaste\" value=\"Required\">\n";
-    print $sock "pattern (1 per line)\n";
-    print $sock "</td><td>\n";
-    $tmp = join("\n", @required);
-    print $sock "<textarea name=\"required\" cols=24 rows=4>$tmp</textarea>\n";
-    print $sock "</td></tr>\n";
-
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"excludepaste\" value=\"Exclude\">\n";
-    print $sock "pattern (1 per line)\n";
-    print $sock "</td><td>\n";
-    $tmp = join("\n", @exclude);
-    print $sock "<textarea name=\"exclude\" cols=24 rows=4>$tmp</textarea>\n";
-    print $sock "</td></tr>\n";
-
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"skiptailpaste\" value=\"Ending\">\n";
-    print $sock "pattern (1 per line)\n";
-    print $sock "</td><td>\n";
-    $tmp = join("\n", @skiptail);
-    print $sock "<textarea name=\"skiptail\" cols=24 rows=4>$tmp</textarea>\n";
-    print $sock "</td></tr>\n";
+    &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
+    &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan to',           \@scanto);
+    &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude line (!!)', \@fileexclude);
+    &l00http_blockfilter_form($sock, $form, 'blkstart',    'Block Start',       \@blkstart);
+    &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
+    &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
+    &l00http_blockfilter_form($sock, $form, 'color',       'Colorize',          \@color);
+    &l00http_blockfilter_form($sock, $form, 'subst',       'Substitude',        \@subst);
 
     print $sock "</table><br>\n";
     print $sock "</form>\n";
@@ -162,6 +122,7 @@ sub l00http_blockfilter_proc {
     if (defined ($form->{'process'}) &&
         defined ($form->{'path'}) &&
         (&l00httpd::l00freadOpen($ctrl, $form->{'path'}))) {
+        print $sock "Processing ... \n";
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter.txt');
 
         $cnt = 0;
@@ -173,26 +134,9 @@ sub l00http_blockfilter_proc {
         $thisblock = '';
         $nonumblock = '';
         $hitlines = 0;
-        $findskipto = 1;
+        $inblk = 0;
+        $skip0scan1 = 0;    # skip to/scan to toggle
         $ending = 0;
-
-        $output .= "Skip to pattern\n";
-        foreach $condition (@skipto) {
-            $output .= "    >$condition<\n";
-        }
-        $output .= "Required pattern\n";
-        foreach $condition (@required) {
-            $output .= "    >$condition<\n";
-        }
-        $output .= "Exclude pattern\n";
-        foreach $condition (@exclude) {
-            $output .= "    >$condition<\n";
-        }
-        $output .= "Filtered output:\n\n";
-        $output .= "Skip to pattern\n";
-        foreach $condition (@skipto) {
-            $output .= "    >$condition<\n";
-        }
 
         while (1) {
             $_ = &l00httpd::l00freadLine($ctrl);
@@ -201,34 +145,92 @@ sub l00http_blockfilter_proc {
             }
             $cnt++;
 
-            if ($findskipto) {
+            # skip beginning of file until skipto hit
+            if ($skip0scan1 == 0) {
+                # skip to mode
                 foreach $condition (@skipto) {
                     if (/$condition/) {
-                        $findskipto = 0;
+                        # found skip to, now do scan to
+                        $skip0scan1 = 1;
                         last;
                     }
                 }
-                if ($findskipto) {
+                if ($skip0scan1 == 0) {
+                    # skip all lines up to first skipto hit
                     next;
                 }
-            }
-
-&l00httpd::l00fwriteBuf($ctrl, "$_");
-
-            foreach $condition (@skiptail) {
-                if (/$condition/) {
-                    $ending = 1;
-                    last;
+            } else {
+                # scan to mode
+                foreach $condition (@scanto) {
+                    if (/$condition/) {
+                        # found scan to, now do skip to
+                        $skip0scan1 = 0;
+                        last;
+                    }
                 }
             }
-            if ($ending) {
-                last;
+
+            $found = 0;
+            foreach $condition (@fileexclude) {
+                if (substr($condition, 0, 2) eq '!!') {
+                    $tmp = $condition;
+                    substr($tmp, 0, 2) = '';
+                    if (!/$tmp/) {
+                        # not found, exclude
+                        $found = 1;
+                        last;
+                    }
+                } else {
+                    if (/$condition/) {
+                        # found, exclude
+                        $found = 1;
+                        last;
+                    }
+                }
+            }
+            if ($found) {
+                # file exclude line
+                next;
+            }
+
+            &l00httpd::l00fwriteBuf($ctrl, "$_");
+
+            $blkendfound = 0;
+            if ($inblk == 0) {
+                # search for block start
+                foreach $condition (@blkstart) {
+                    if (/$condition/) {
+                        # found
+                        $inblk = 1;
+                        last;
+                    }
+                }
+            } else {
+                # search for block end
+                foreach $condition (@blkstop) {
+                    if (/$condition/) {
+                        # found
+                        $inblk = 0;
+                        $blkendfound = 1;
+                        last;
+                    }
+                }
+            }
+
+            if ($blkendfound) {
+                $blkendfound = 0;
+
+                print $sock "$thisblock";
+            }
+
+            if ($inblk) {
+                $thisblock .= sprintf ("%05d: %s", $cnt, $_);
+                $hitlinesthis++;
+                $nonumblock .= $_;
             }
 
 
-            $thisblock .= sprintf ("%05d: %s", $cnt, $_);
-            $hitlinesthis++;
-            $nonumblock .= $_;
+
 
             $blockendhits = 0;
             foreach $condition (@blockend) {
@@ -240,29 +242,29 @@ sub l00http_blockfilter_proc {
             if ($blockendhits > $#blockend) {
                 # blank line is end of block
                 # do we print?
-                if (($requiredhits > $#required) &&
-                    ($excludehits == 0)) {
-                    $blkdisplayed++;
-                    $hitlines += $hitlinesthis;
-                    $output .= $thisblock;
-                    &l00httpd::l00fwriteBuf($ctrl, "$nonumblock");
-                }
+#                if (($requiredhits > $#required) &&
+#                    ($excludehits == 0)) {
+#                    $blkdisplayed++;
+#                    $hitlines += $hitlinesthis;
+#                    $output .= $thisblock;
+#                    &l00httpd::l00fwriteBuf($ctrl, "$nonumblock");
+#                }
                 $requiredhits = 0;
                 $excludehits = 0;
                 $thisblock = '';
                 $nonumblock = '';
                 $hitlinesthis = 0;
             } else {
-                foreach $condition (@required) {
-                    if (/$condition/) {
-                        $requiredhits++;
-                    }
-                }
-                foreach $condition (@exclude) {
-                    if (/$condition/) {
-                        $excludehits++;
-                    }
-                }
+#                foreach $condition (@required) {
+#                    if (/$condition/) {
+#                        $requiredhits++;
+#                    }
+#                }
+#                foreach $condition (@exclude) {
+#                    if (/$condition/) {
+#                        $excludehits++;
+#                    }
+#                }
             }
         }
         &l00httpd::l00fwriteClose($ctrl);
