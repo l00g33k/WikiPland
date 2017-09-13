@@ -73,8 +73,7 @@ sub l00http_blockfilter_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Block filter</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
-    print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
-    print $sock "<a href=\"/view.htm?path=$form->{'path'}\">view</a><br>\n";
+    print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
 
     &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
     &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
@@ -96,7 +95,7 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'subst',       \@subst);
     }
 
-    print $sock "<form action=\"/blockfilter.htm\" method=\"get\">\n";
+    print $sock "<p><form action=\"/blockfilter.htm\" method=\"get\">\n";
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
     print $sock "<tr><td>\n";
@@ -230,13 +229,17 @@ sub l00http_blockfilter_proc {
             }
 
             if ($inblk) {
-                $thisblock .= sprintf ("%05d: %s", $cnt, $_);
+                $thisblock .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s", $cnt, $form->{'path'}, $cnt, $cnt, $_); 
+#               $thisblock .= sprintf ("%05d: %s", $cnt, $_);
                 $hitlinesthis++;
                 $nonumblock .= $_;
                 if ($blkstartfound) {
                     $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
                     $noblkfound++;
-                    $output .= "\n<a name=\"blk$noblkfound\"></a><font style=\"color:black;background-color:silver\">$thisblock</font>";
+                    $output .= "\n";
+                    $output .= "Block $noblkfound. Jump to: <a href=\"#__top__\">top</a> - <a href=\"#__toc__\">toc</a> - <a href=\"#__end__\">end</a> \n";
+                    $output .= "\n";
+                    $output .= "<a name=\"blk$noblkfound\"></a><font style=\"color:black;background-color:silver\">$thisblock</font>";
                 } else {
                     $output .= $thisblock;
                 }
@@ -280,15 +283,18 @@ sub l00http_blockfilter_proc {
 #                }
             }
         }
+
         &l00httpd::l00fwriteClose($ctrl);
         print $sock "Processed $cnt lines. ".
             "Output $blkdisplayed blocks and $hitlines lines to ".
-            "<a href=\"/view.htm?path=l00://blockfilter.txt\">l00://blockfilter.txt</a> ".
-            "<br>\n";
-        print $sock "$header<br>\n";
+            "<a href=\"/view.htm?path=l00://blockfilter.txt\" target=\"newram\">l00://blockfilter.txt</a> ".
+            "<p>\n";
+        print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a>\n";
+    } else {
+        print $sock "Unable to process $form->{'path'}<br>\n";
     }
 
     print $sock $ctrl->{'htmlfoot'};
