@@ -64,8 +64,8 @@ sub l00http_blockfilter_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($cnt, $output, $thisblocklink, $condition, $ending);
-    my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed);
+    my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
+    my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound);
 
 
@@ -129,12 +129,14 @@ sub l00http_blockfilter_proc {
         $output = '';
 
         $thisblocklink = '';
+        $thisblockbare = '';
         $hitlines = 0;
         $inblk = 0;
         $skip0scan1 = 0;    # skip to/scan to toggle
         $ending = 0;
         $header = '';
         $noblkfound = 1;
+        $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
 
         while (1) {
@@ -197,8 +199,13 @@ sub l00http_blockfilter_proc {
                 next;
             }
 
-
-            &l00httpd::l00fwriteBuf($ctrl, "$_\n");
+            $bare = $_;
+            # do eval
+            foreach $condition (@eval) {
+                eval $condition;
+            }
+            $link = $_;
+            $_ = $bare;
 
             $blkendfound = 0;
             $blkstartfound = 0;
@@ -223,22 +230,37 @@ sub l00http_blockfilter_proc {
                         last;
                     }
                 }
+#   &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@);
+                # search for required
+                foreach $condition (@blkrequired) {
+                    if (/$condition/) {
+                        # found
+                        $requiredfound = 1;
+                        last;
+                    }
+                }
             }
 
 
             if ($blkendfound && ($outputed == 0)) {
                 # found end of block
-                $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s\n", $cnt, $form->{'path'}, $cnt, $cnt, $_); 
+                if ($requiredfound) {
+                    $thisblockbare .= "$bare\n";
+                    &l00httpd::l00fwriteBuf($ctrl, "$thisblockbare");
+                    $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s\n", $cnt, $form->{'path'}, $cnt, $cnt, $link); 
 
-                $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
-                $noblkfound++;
-                $output .= $thisblocklink;
+                    $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
+                    $noblkfound++;
+                    $output .= $thisblocklink;
+                }
                 $outputed = 1;
             }
 
             if ($blkstartfound) {
                 $outputed = 0;
+                $requiredfound = 0;
 
+                $thisblockbare  = "\nBlock $noblkfound:\n\n";
                 $thisblocklink  = "<a name=\"blk$noblkfound\"></a>\n";
                 $thisblocklink .= "Block $noblkfound. Jump to: ";
                 $thisblocklink .= "<a href=\"#__top__\">top</a> - ";
@@ -249,9 +271,10 @@ sub l00http_blockfilter_proc {
                 $tmp = $noblkfound + 1;
                 $thisblocklink .= "<a href=\"#blk$tmp\">next</a> \n";
                 $thisblocklink .= "\n";
-                $thisblocklink .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s</font>\n", $cnt, $form->{'path'}, $cnt, $cnt, $_); 
+                $thisblocklink .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s</font>\n", $cnt, $form->{'path'}, $cnt, $cnt, $link); 
             } elsif ($inblk) {
-                $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s\n", $cnt, $form->{'path'}, $cnt, $cnt, $_); 
+                $thisblockbare .= "$bare\n";
+                $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s\n", $cnt, $form->{'path'}, $cnt, $cnt, $link); 
             }
         }
 
