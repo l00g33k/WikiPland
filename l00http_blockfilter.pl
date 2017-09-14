@@ -1,5 +1,5 @@
 #use strict;
-#use warnings;
+use warnings;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
