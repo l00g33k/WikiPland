@@ -66,7 +66,7 @@ sub l00http_blockfilter_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
     my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
-    my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound);
+    my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
 
 
     # Send HTTP and HTML headers
@@ -121,6 +121,22 @@ sub l00http_blockfilter_proc {
     if (defined ($form->{'process'}) &&
         defined ($form->{'path'}) &&
         (&l00httpd::l00freadOpen($ctrl, $form->{'path'}))) {
+
+        if ($form->{'path'} =~ /blockfilter/) {
+            print $sock "$form->{'path'} is recognized as a blockfilter configuration file. Please select a target below to process:<p>\n";
+            ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
+            if (opendir (DIR, $pname)) {
+                print $sock "<pre>\n";
+                foreach $fname (sort readdir (DIR)) {
+                    print $sock "$fname\n";
+                }
+                print $sock "</pre>\n";
+                closedir (DIR);
+            } else {
+                print $sock "Failed to open '$pname' as a directory<p>\n";
+            }
+        }
+
         print $sock "Processing ... \n";
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter.txt');
 
@@ -153,12 +169,17 @@ sub l00http_blockfilter_proc {
             # skipto or scanto
             if ($skip0scan1 == 0) {
                 # skip to mode
-                foreach $condition (@skipto) {
-                    if (/$condition/) {
-                        # found skip to, now do scan to
-                        $skip0scan1 = 1;
-                        last;
+                if (defined(@skipto)) {
+                    foreach $condition (@skipto) {
+                        if (/$condition/i) {
+                            # found skip to, now do scan to
+                            $skip0scan1 = 1;
+                            last;
+                        }
                     }
+                } else {
+                    # skip to regex not defined, make it always a hit
+                    $skip0scan1 = 1;
                 }
                 if ($skip0scan1 == 0) {
                     # skip all lines up to first skipto hit
@@ -167,7 +188,7 @@ sub l00http_blockfilter_proc {
             } else {
                 # scan to mode
                 foreach $condition (@scanto) {
-                    if (/$condition/) {
+                    if (/$condition/i) {
                         # found scan to, now do skip to
                         $skip0scan1 = 0;
                         last;
@@ -181,13 +202,13 @@ sub l00http_blockfilter_proc {
                 if (substr($condition, 0, 2) eq '!!') {
                     $tmp = $condition;
                     substr($tmp, 0, 2) = '';
-                    if (!/$tmp/) {
+                    if (!/$tmp/i) {
                         # not found, exclude
                         $found = 1;
                         last;
                     }
                 } else {
-                    if (/$condition/) {
+                    if (/$condition/!) {
                         # found, exclude
                         $found = 1;
                         last;
@@ -212,7 +233,7 @@ sub l00http_blockfilter_proc {
 
             # search for block start
             foreach $condition (@blkstart) {
-                if (/$condition/) {
+                if (/$condition/!) {
                     # found
                     $inblk = 1;     # flag we are inside a found block
                     $blkstartfound = 1;
@@ -223,7 +244,7 @@ sub l00http_blockfilter_proc {
             if ($inblk != 0) {
                 # search for block end
                 foreach $condition (@blkstop) {
-                    if (/$condition/) {
+                    if (/$condition/!) {
                         # found
                         $inblk = 0;
                         $blkendfound = 1;
@@ -233,7 +254,7 @@ sub l00http_blockfilter_proc {
 #   &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@);
                 # search for required
                 foreach $condition (@blkrequired) {
-                    if (/$condition/) {
+                    if (/$condition/!) {
                         # found
                         $requiredfound = 1;
                         last;
