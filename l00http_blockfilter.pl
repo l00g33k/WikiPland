@@ -69,7 +69,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
     my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput);
 
 
     # Send HTTP and HTML headers
@@ -119,7 +119,7 @@ sub l00http_blockfilter_proc {
 
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
     &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan to',           \@scanto);
-    &l00http_blockfilter_form($sock, $form, 'fileexclude', 'EXCLUDE LINE (!!)', \@fileexclude);
+    &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
     &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
     &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
@@ -154,6 +154,9 @@ sub l00http_blockfilter_proc {
             }
         }
 
+        if (!defined($blkstart[0])) {
+            print $sock "BLOCK START pattern not defined. Define at least 1 matching pattern.<p>\n";
+        }
         print $sock "Processing .";
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter.txt');
 
@@ -171,6 +174,7 @@ sub l00http_blockfilter_proc {
         $noblkfound = 1;
         $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
+        $eofoutput = 0;
 
         # do pre eval
         foreach $condition (@preeval) {
@@ -182,105 +186,112 @@ sub l00http_blockfilter_proc {
             # end of file yet?
             if (!defined($_)) {
                 # end of file
-                last;
-            }
-            s/\r//;
-            s/\n//;
-            $cnt++;
-            if (($cnt % 1000) == 0) {
-                print $sock ".";
-            }
-
-            # skipto or scanto
-            if ($skip0scan1 == 0) {
-                # skip to mode
-                if (!defined($skipto[0])) {
-                    # skip to regex not defined, make it always a hit
-                    $skip0scan1 = 1;
+                if ($eofoutput == 0) {
+                    $eofoutput = 1;
+                    $blkendfound = 1;   # simulate end found
                 } else {
-                    foreach $condition (@skipto) {
-                        if (/$condition/i) {
-                            # found skip to, now do scan to
-                            $skip0scan1 = 1;
-                            last;
-                        }
-                    }
-                }
-                if ($skip0scan1 == 0) {
-                    # skip all lines up to first skipto hit
-                    next;
-                }
-            } else {
-                # scan to mode
-                foreach $condition (@scanto) {
-                    if (/$condition/i) {
-                        # found scan to, now do skip to
-                        $skip0scan1 = 0;
-                        last;
-                    }
-                }
-            }
-
-            # exclude (!! to include only) lines
-
-
-            $bare = $_;
-            # do eval
-            foreach $condition (@eval) {
-                eval $condition;
-            }
-            $link = $_;
-            $_ = $bare;
-
-            # colorize
-            foreach $condition (@color) {
-                if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
-                    $link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i;
-                } else {
-                    $link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i;
-                }
-            }
-
-
-            $blkendfound = 0;
-            $blkstartfound = 0;
-
-            # search for block start
-            foreach $condition (@blkstart) {
-                if (/$condition/i) {
-                    # found
-                    $inblk = 1;     # flag we are inside a found block
-                    $blkstartfound = 1;
-                    $blkendfound = 1;   # when non end provided
                     last;
                 }
             }
-            if ($inblk != 0) {
-                # search for block end
-                foreach $condition (@blkstop) {
-                    if (/$condition/i) {
-                        # found
-                        $inblk = 0;
-                        $blkendfound = 1;
-                        last;
-                    }
+
+            if ($eofoutput == 0) {
+                # processing while not eof
+                s/\r//;
+                s/\n//;
+                $cnt++;
+                if (($cnt % 1000) == 0) {
+                    print $sock ".";
                 }
-#   &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@);
-                # search for required
-                if (!defined($blkrequired[0])) {
-                    # no regex defined, always hit required
-                    $requiredfound = 1;
+
+                # skipto or scanto
+                if ($skip0scan1 == 0) {
+                    # skip to mode
+                    if (!defined($skipto[0])) {
+                        # skip to regex not defined, make it always a hit
+                        $skip0scan1 = 1;
+                    } else {
+                        foreach $condition (@skipto) {
+                            if (/$condition/i) {
+                                # found skip to, now do scan to
+                                $skip0scan1 = 1;
+                                last;
+                            }
+                        }
+                    }
+                    if ($skip0scan1 == 0) {
+                        # skip all lines up to first skipto hit
+                        next;
+                    }
                 } else {
-                    foreach $condition (@blkrequired) {
+                    # scan to mode
+                    foreach $condition (@scanto) {
                         if (/$condition/i) {
-                            # found
-                            $requiredfound = 1;
+                            # found scan to, now do skip to
+                            $skip0scan1 = 0;
                             last;
                         }
                     }
                 }
-            }
 
+                # exclude (!! to include only) lines
+
+
+                $bare = $_;
+                # do eval
+                foreach $condition (@eval) {
+                    eval $condition;
+                }
+                $link = $_;
+                $_ = $bare;
+
+                # colorize
+                foreach $condition (@color) {
+                    if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
+                        $link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i;
+                    } else {
+                        $link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i;
+                    }
+                }
+
+
+                $blkendfound = 0;
+                $blkstartfound = 0;
+
+                # search for block start
+                foreach $condition (@blkstart) {
+                    if (/$condition/i) {
+                        # found
+                        $inblk = 1;     # flag we are inside a found block
+                        $blkstartfound = 1;
+                        $blkendfound = 1;   # when non end provided
+                        last;
+                    }
+                }
+                if ($inblk != 0) {
+                    # search for block end
+                    foreach $condition (@blkstop) {
+                        if (/$condition/i) {
+                            # found
+                            $inblk = 0;
+                            $blkendfound = 1;
+                            last;
+                        }
+                    }
+                    # search for required
+                    if (!defined($blkrequired[0])) {
+                        # no regex defined, always hit required
+                        $requiredfound = 1;
+                    } else {
+                        foreach $condition (@blkrequired) {
+                            if (/$condition/i) {
+                                # found
+                                $requiredfound = 1;
+                                last;
+                            }
+                        }
+                    }
+                }
+            }
 
             if ($blkendfound && ($outputed == 0)) {
                 # found end of block
