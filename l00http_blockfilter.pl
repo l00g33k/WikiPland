@@ -8,7 +8,7 @@ use warnings;
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
 my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
-    @blkrequired, @color, @eval, @blockend, @preeval, $inverexclu);
+    @blkrequired, @color, @eval, @blockend, @preeval, @stats, $inverexclu);
 
 $inverexclu = '';
 
@@ -55,6 +55,24 @@ sub l00http_blockfilter_form {
 
 }
 
+sub l00http_blockfilter_print {
+    my ($sock, $form, $name, $label, $array) = @_;
+    my ($tmp);
+
+    print $sock "<tr>\n";
+    print $sock "  <td>$label:</td>\n";
+    print $sock "  <td>\n<pre>";
+    if (!defined($$array[0])) {
+        $tmp = ' ';
+    } else {
+        $tmp = join("\n", @$array);
+    }
+    print $sock "$tmp</pre>";
+    print $sock "  </td>\n";
+    print $sock "</tr>\n";
+
+}
+
 sub l00http_blockfilter_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -69,7 +87,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
     my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx);
 
 
     # Send HTTP and HTML headers
@@ -86,7 +104,8 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
     &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
     &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
-    &l00http_blockfilter_paste($ctrl, $form, 'preeval',        \@preeval);
+    &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
+    &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
 
     if (defined ($form->{'process'})) {
         &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
@@ -98,6 +117,7 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
         &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
         &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
+        &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
     }
 
     if (defined ($form->{'invert'}) && ($form->{'invert'} eq 'on')) {
@@ -126,6 +146,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
     &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
+    &l00http_blockfilter_form($sock, $form, 'stats',       'Statistics',        \@stats);
 
     print $sock "</table><br>\n";
     print $sock "</form>\n";
@@ -188,6 +209,7 @@ sub l00http_blockfilter_proc {
                 # end of file
                 if ($eofoutput == 0) {
                     $eofoutput = 1;
+                    $_ = '';
                     $blkendfound = 1;   # simulate end found
                 } else {
                     last;
@@ -303,6 +325,7 @@ sub l00http_blockfilter_proc {
                     if ($viewskip < 0) {
                         $viewskip = 0;
                     }
+                    $hitlines++;
                     $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
 
                     $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
@@ -315,6 +338,8 @@ sub l00http_blockfilter_proc {
             if ($blkstartfound) {
                 $outputed = 0;
                 $requiredfound = 0;
+
+                $hitlines++;
 
                 $thisblockbare  = "\nBlock $noblkfound:\n\n";
                 $thisblocklink  = "<a name=\"blk$noblkfound\"></a>\n";
@@ -369,10 +394,23 @@ sub l00http_blockfilter_proc {
                 # not excluded
                 $thisblockbare .= "$bare\n";
 
+                # gather stats
+                $statsidx = 0;
+                foreach $condition (@stats) {
+                    ($tmp) = eval $condition;
+                    if (defined($tmp)) {
+print "hitlines $hitlines statsidx $statsidx tmp $tmp\n";
+                        $statsidx++;
+                    } else {
+print "hitlines $hitlines NO HIT\n";
+                    }
+                }
+
                 $viewskip = $cnt - 10;
                 if ($viewskip < 0) {
                     $viewskip = 0;
                 }
+                $hitlines++;
                 $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
             }
         }
@@ -386,7 +424,21 @@ sub l00http_blockfilter_proc {
         print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
-        print $sock "<a href=\"#__top__\">jump to top</a>\n";
+        print $sock "<a href=\"#__top__\">jump to top</a><p>\n";
+
+        print $sock "List of all parameters:<p>\n";
+        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+        &l00http_blockfilter_print($sock, $form, 'skipto',      'Skip to',           \@skipto);
+        &l00http_blockfilter_print($sock, $form, 'scanto',      'Scan to',           \@scanto);
+        &l00http_blockfilter_print($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
+        &l00http_blockfilter_print($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
+        &l00http_blockfilter_print($sock, $form, 'blkstop',     'Block End',         \@blkstop);
+        &l00http_blockfilter_print($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
+        &l00http_blockfilter_print($sock, $form, 'color',       'Colorize ()',       \@color);
+        &l00http_blockfilter_print($sock, $form, 'eval',        'Perl eval',         \@eval);
+        &l00http_blockfilter_print($sock, $form, 'preeval',     'Pre eval',          \@preeval);
+        &l00http_blockfilter_print($sock, $form, 'stats',       'Statistics',        \@stats);
+        print $sock "</table>\n";
     } else {
         if (defined ($form->{'process'})) {
             print $sock "Unable to process $form->{'path'}<br>\n";
