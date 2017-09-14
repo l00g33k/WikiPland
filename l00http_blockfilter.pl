@@ -1,4 +1,4 @@
-#use strict;
+#iuse strict;
 use warnings;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
@@ -87,7 +87,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
     my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, %statsout);
 
 
     # Send HTTP and HTML headers
@@ -196,6 +196,7 @@ sub l00http_blockfilter_proc {
         $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
         $eofoutput = 0;
+        undef %statsout;
 
         # do pre eval
         foreach $condition (@preeval) {
@@ -391,14 +392,17 @@ sub l00http_blockfilter_proc {
                     }
                 }
 
-                # not excluded
-                $thisblockbare .= "$bare\n";
-
+                # not excluded $thisblockbare .= "$bare\n"; 
                 # gather stats
                 $statsidx = 0;
                 foreach $condition (@stats) {
                     ($tmp) = eval $condition;
                     if (defined($tmp)) {
+                        if (!defined($statsout{$tmp})) {
+                            $statsout{$tmp} = 1;
+                        } else {
+                            $statsout{$tmp}++;
+                        }
 print "hitlines $hitlines statsidx $statsidx tmp $tmp\n";
                         $statsidx++;
                     } else {
@@ -439,6 +443,12 @@ print "hitlines $hitlines NO HIT\n";
         &l00http_blockfilter_print($sock, $form, 'preeval',     'Pre eval',          \@preeval);
         &l00http_blockfilter_print($sock, $form, 'stats',       'Statistics',        \@stats);
         print $sock "</table>\n";
+
+        print $sock "<pre>\n";
+        foreach $condition (sort keys %statsout) {
+            printf $sock ("%-40s %5d\n", $condition, $statsout{$condition});
+        }
+        print $sock "</pre>\n";
     } else {
         if (defined ($form->{'process'})) {
             print $sock "Unable to process $form->{'path'}<br>\n";
