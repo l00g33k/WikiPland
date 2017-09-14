@@ -1,5 +1,5 @@
-use strict;
-use warnings;
+#use strict;
+#use warnings;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -7,8 +7,10 @@ use warnings;
 
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
-my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, @blkrequired, @color, @eval, @blockend);
+my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
+    @blkrequired, @color, @eval, @blockend, @preeval, $inverexclu);
 
+$inverexclu = '';
 
 #  &l00http_blockfilter_paste($form, 'skipto', \@skipto);
 sub l00http_blockfilter_paste {
@@ -67,6 +69,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
     my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
+    my ($viewskip, $fg, $bg, $regex);
 
 
     # Send HTTP and HTML headers
@@ -83,6 +86,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
     &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
     &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
+    &l00http_blockfilter_paste($ctrl, $form, 'preeval',        \@preeval);
 
     if (defined ($form->{'process'})) {
         &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
@@ -93,13 +97,21 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
         &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
         &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
+        &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
+    }
+
+    if (defined ($form->{'invert'}) && ($form->{'invert'} eq 'on')) {
+        $inverexclu = 'check';
+    } else {
+        $inverexclu = '';
     }
 
     print $sock "<p><form action=\"/blockfilter.htm\" method=\"get\">\n";
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"process\" value=\"Process\">\n";
+    print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> target file.\n";
+    print $sock "<input type=\"checkbox\" name=\"invert\" $inverexclu>Invert EXCLUDE\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"24\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
     print $sock "</td></tr>\n";
@@ -107,12 +119,13 @@ sub l00http_blockfilter_proc {
 
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
     &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan to',           \@scanto);
-    &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude line (!!)', \@fileexclude);
-    &l00http_blockfilter_form($sock, $form, 'blkstart',    'Block Start',       \@blkstart);
+    &l00http_blockfilter_form($sock, $form, 'fileexclude', 'EXCLUDE LINE (!!)', \@fileexclude);
+    &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
     &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
     &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
+    &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
 
     print $sock "</table><br>\n";
     print $sock "</form>\n";
@@ -128,7 +141,11 @@ sub l00http_blockfilter_proc {
             if (opendir (DIR, $pname)) {
                 print $sock "<pre>\n";
                 foreach $fname (sort readdir (DIR)) {
-                    print $sock "$fname\n";
+                    if ($fname eq '.' || $fname eq '..') {
+                        next;
+                    }
+                    print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"view\">view</a> - ";
+                    print $sock "<a href=\"/blockfilter.htm?path=$pname$fname\" target=\"blockfilter\">blockfilter $fname</a>\n";
                 }
                 print $sock "</pre>\n";
                 closedir (DIR);
@@ -137,7 +154,7 @@ sub l00http_blockfilter_proc {
             }
         }
 
-        print $sock "Processing ... \n";
+        print $sock "Processing .";
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter.txt');
 
         $cnt = 0;
@@ -155,21 +172,32 @@ sub l00http_blockfilter_proc {
         $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
 
+        # do pre eval
+        foreach $condition (@preeval) {
+            eval $condition;
+        }
+
         while (1) {
             $_ = &l00httpd::l00freadLine($ctrl);
-            s/\r//;
-            s/\n//;
             # end of file yet?
             if (!defined($_)) {
                 # end of file
                 last;
             }
+            s/\r//;
+            s/\n//;
             $cnt++;
+            if (($cnt % 1000) == 0) {
+                print $sock ".";
+            }
 
             # skipto or scanto
             if ($skip0scan1 == 0) {
                 # skip to mode
-                if (defined(@skipto)) {
+                if (!defined($skipto[0])) {
+                    # skip to regex not defined, make it always a hit
+                    $skip0scan1 = 1;
+                } else {
                     foreach $condition (@skipto) {
                         if (/$condition/i) {
                             # found skip to, now do scan to
@@ -177,9 +205,6 @@ sub l00http_blockfilter_proc {
                             last;
                         }
                     }
-                } else {
-                    # skip to regex not defined, make it always a hit
-                    $skip0scan1 = 1;
                 }
                 if ($skip0scan1 == 0) {
                     # skip all lines up to first skipto hit
@@ -197,28 +222,7 @@ sub l00http_blockfilter_proc {
             }
 
             # exclude (!! to include only) lines
-            $found = 0;
-            foreach $condition (@fileexclude) {
-                if (substr($condition, 0, 2) eq '!!') {
-                    $tmp = $condition;
-                    substr($tmp, 0, 2) = '';
-                    if (!/$tmp/i) {
-                        # not found, exclude
-                        $found = 1;
-                        last;
-                    }
-                } else {
-                    if (/$condition/!) {
-                        # found, exclude
-                        $found = 1;
-                        last;
-                    }
-                }
-            }
-            if ($found) {
-                # file exclude line
-                next;
-            }
+
 
             $bare = $_;
             # do eval
@@ -228,12 +232,22 @@ sub l00http_blockfilter_proc {
             $link = $_;
             $_ = $bare;
 
+            # colorize
+            foreach $condition (@color) {
+                if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
+                    $link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i;
+                } else {
+                    $link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i;
+                }
+            }
+
+
             $blkendfound = 0;
             $blkstartfound = 0;
 
             # search for block start
             foreach $condition (@blkstart) {
-                if (/$condition/!) {
+                if (/$condition/i) {
                     # found
                     $inblk = 1;     # flag we are inside a found block
                     $blkstartfound = 1;
@@ -244,7 +258,7 @@ sub l00http_blockfilter_proc {
             if ($inblk != 0) {
                 # search for block end
                 foreach $condition (@blkstop) {
-                    if (/$condition/!) {
+                    if (/$condition/i) {
                         # found
                         $inblk = 0;
                         $blkendfound = 1;
@@ -253,11 +267,16 @@ sub l00http_blockfilter_proc {
                 }
 #   &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@);
                 # search for required
-                foreach $condition (@blkrequired) {
-                    if (/$condition/!) {
-                        # found
-                        $requiredfound = 1;
-                        last;
+                if (!defined($blkrequired[0])) {
+                    # no regex defined, always hit required
+                    $requiredfound = 1;
+                } else {
+                    foreach $condition (@blkrequired) {
+                        if (/$condition/i) {
+                            # found
+                            $requiredfound = 1;
+                            last;
+                        }
                     }
                 }
             }
@@ -268,7 +287,12 @@ sub l00http_blockfilter_proc {
                 if ($requiredfound) {
                     $thisblockbare .= "$bare\n";
                     &l00httpd::l00fwriteBuf($ctrl, "$thisblockbare");
-                    $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s\n", $cnt, $form->{'path'}, $cnt, $cnt, $link); 
+
+                    $viewskip = $cnt - 10;
+                    if ($viewskip < 0) {
+                        $viewskip = 0;
+                    }
+                    $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
 
                     $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
                     $noblkfound++;
@@ -292,16 +316,59 @@ sub l00http_blockfilter_proc {
                 $tmp = $noblkfound + 1;
                 $thisblocklink .= "<a href=\"#blk$tmp\">next</a> \n";
                 $thisblocklink .= "\n";
-                $thisblocklink .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s</font>\n", $cnt, $form->{'path'}, $cnt, $cnt, $link); 
+
+                $viewskip = $cnt - 10;
+                if ($viewskip < 0) {
+                    $viewskip = 0;
+                }
+                $thisblocklink .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
             } elsif ($inblk) {
+                # exclude (!! to include only) lines
+                $found = 0;
+                foreach $condition (@fileexclude) {
+                    if (substr($condition, 0, 2) eq '!!') {
+                        $tmp = $condition;
+                        substr($tmp, 0, 2) = '';
+                        if (!/$tmp/i) {
+                            # not found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    } else {
+                        if (/$condition/i) {
+                            # found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    }
+                }
+                if ($inverexclu eq '') {
+                    if ($found) {
+                        # file exclude line
+                        next;
+                    }
+                } else {
+                    # invert sense of exclude
+                    if (!$found) {
+                        # file exclude line
+                        next;
+                    }
+                }
+
+                # not excluded
                 $thisblockbare .= "$bare\n";
-                $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newwin\">%05d</a>: %s\n", $cnt, $form->{'path'}, $cnt, $cnt, $link); 
+
+                $viewskip = $cnt - 10;
+                if ($viewskip < 0) {
+                    $viewskip = 0;
+                }
+                $thisblocklink .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
             }
         }
 
 
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "Processed $cnt lines. ".
+        print $sock " Processed $cnt lines. ".
             "Output $blkdisplayed blocks and $hitlines lines to ".
             "<a href=\"/view.htm?path=l00://blockfilter.txt\" target=\"newram\">l00://blockfilter.txt</a> ".
             "<p>\n";
@@ -310,7 +377,11 @@ sub l00http_blockfilter_proc {
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a>\n";
     } else {
-        print $sock "Unable to process $form->{'path'}<br>\n";
+        if (defined ($form->{'process'})) {
+            print $sock "Unable to process $form->{'path'}<br>\n";
+        } else {
+            print $sock "Click 'Process' to process $form->{'path'}<br>\n";
+        }
     }
 
     print $sock $ctrl->{'htmlfoot'};
