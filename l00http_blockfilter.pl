@@ -8,11 +8,13 @@ use warnings;
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
 my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
-    @blkrequired, @color, @eval, @blockend, @preeval, @stats, $inverexclu);
+    @blkrequired, @color, @eval, @blockend, @preeval, @stats);
+my ($inverexclu, $blockfiltercfg, $reloadcfg);
 
 $inverexclu = '';
+$reloadcfg = '';
+$blockfiltercfg = '';
 
-#  &l00http_blockfilter_paste($form, 'skipto', \@skipto);
 sub l00http_blockfilter_paste {
     my ($ctrl, $form, $name, $array) = @_;
     my ($condition);
@@ -56,21 +58,39 @@ sub l00http_blockfilter_form {
 }
 
 sub l00http_blockfilter_print {
-    my ($sock, $form, $name, $label, $array) = @_;
-    my ($tmp);
+    my ($name, $array) = @_;
+    my ($output);
 
-    print $sock "<tr>\n";
-    print $sock "  <td>$label:</td>\n";
-    print $sock "  <td>\n<pre>";
-    if (!defined($$array[0])) {
-        $tmp = ' ';
-    } else {
-        $tmp = join("\n", @$array);
+    $output = '';
+    $output .= "::::${name}::::\n";
+    if (defined($$array[0])) {
+        $output .= join("\n", @$array);
     }
-    print $sock "$tmp</pre>";
-    print $sock "  </td>\n";
-    print $sock "</tr>\n";
+    $output .= "\n\n";
 
+    $output;
+}
+
+sub l00http_blockfilter_parse {
+    my ($name, $blob, $array) = @_;
+    my ($condition, $_, $parsenow);
+
+    $parsenow = 0;
+    foreach $_ (split("\n", $blob)) {
+        s/\n//g;
+        s/\r//g;
+        if (/^::::${name}::::$/) {
+            undef @$array;
+            $parsenow = 1;
+        } elsif ($parsenow) {
+            if (/^$/) {
+                $parsenow = 0;
+            } else {
+                push(@$array, $_);
+            }
+        }
+
+    }
 }
 
 sub l00http_blockfilter_desc {
@@ -87,14 +107,14 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $thisblocklink, $thisblockbare, $condition, $ending, $requiredfound);
     my ($blkdisplayed, $blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, %statsout);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout);
 
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Block filter</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
-    print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+    print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
 
     &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
     &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
@@ -120,11 +140,77 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
     }
 
-    if (defined ($form->{'invert'}) && ($form->{'invert'} eq 'on')) {
-        $inverexclu = 'check';
-    } else {
-        $inverexclu = '';
+
+    if (defined ($form->{'process'}) &&
+        defined ($form->{'path'})) {
+        if ($form->{'path'} =~ /blockfilter/) {
+            $blockfiltercfg = $form->{'path'};
+            undef $form->{'process'};   # prevent processing config file
+
+            if (&l00httpd::l00freadOpen($ctrl, $blockfiltercfg)) {
+                $tmp = &l00httpd::l00freadAll($ctrl);
+
+                &l00http_blockfilter_parse('skipto',      $tmp, \@skipto);
+                &l00http_blockfilter_parse('scanto',      $tmp, \@scanto);
+                &l00http_blockfilter_parse('fileexclude', $tmp, \@fileexclude);
+                &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
+                &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
+                &l00http_blockfilter_parse('blkrequired', $tmp, \@blkrequired);
+                &l00http_blockfilter_parse('color',       $tmp, \@color);
+                &l00http_blockfilter_parse('eval',        $tmp, \@eval);
+                &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
+                &l00http_blockfilter_parse('stats',       $tmp, \@stats);
+            }
+
+            # print target file list
+            print $sock "$form->{'path'} is recognized as a blockfilter configuration file. Please select a target below to process:<p>\n";
+            ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
+            if (opendir (DIR, $pname)) {
+                print $sock "<pre>\n";
+                foreach $fname (sort readdir (DIR)) {
+                    if ($fname eq '.' || $fname eq '..') {
+                        next;
+                    }
+                    print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"view\">view</a> - ";
+                    print $sock "blockfilter: <a href=\"/blockfilter.htm?path=$pname$fname\" target=\"blockfilter\">$fname</a>\n";
+                }
+                print $sock "</pre>\n";
+                closedir (DIR);
+            } else {
+                print $sock "Failed to open '$pname' as a directory<p>\n";
+            }
+        } elsif ($reloadcfg ne '') {
+            if (&l00httpd::l00freadOpen($ctrl, $blockfiltercfg)) {
+                $tmp = &l00httpd::l00freadAll($ctrl);
+
+                &l00http_blockfilter_parse('skipto',      $tmp, \@skipto);
+                &l00http_blockfilter_parse('scanto',      $tmp, \@scanto);
+                &l00http_blockfilter_parse('fileexclude', $tmp, \@fileexclude);
+                &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
+                &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
+                &l00http_blockfilter_parse('blkrequired', $tmp, \@blkrequired);
+                &l00http_blockfilter_parse('color',       $tmp, \@color);
+                &l00http_blockfilter_parse('eval',        $tmp, \@eval);
+                &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
+                &l00http_blockfilter_parse('stats',       $tmp, \@stats);
+            }
+        }
+
+        if (defined ($form->{'invert'}) && ($form->{'invert'} eq 'on')) {
+            $inverexclu = 'checked';
+        } else {
+            $inverexclu = '';
+        }
+
+        if (defined ($form->{'reloadcfg'}) && ($form->{'reloadcfg'} eq 'on')) {
+            $reloadcfg = 'checked';
+        } else {
+            $reloadcfg = '';
+        }
+    } elsif (defined ($form->{'path'})) {
+        print $sock "Click 'Process' to process $form->{'path'}<br>\n";
     }
+
 
     print $sock "<p><form action=\"/blockfilter.htm\" method=\"get\">\n";
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -133,9 +219,18 @@ sub l00http_blockfilter_proc {
     print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> target file.\n";
     print $sock "<input type=\"checkbox\" name=\"invert\" $inverexclu>Invert EXCLUDE\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"24\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
+    print $sock "<input type=\"text\" size=\"24\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
 
+    if ($blockfiltercfg ne '') {
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"checkbox\" name=\"reloadcfg\" $reloadcfg>Reload cfg before processing\n";
+        print $sock "</td><td>\n";
+        ($pname, $fname) = $blockfiltercfg =~ /^(.+\/)([^\/]+)$/;
+       #print $sock "<input type=\"text\" size=\"24\" readonly value=\"$blockfiltercfg\">\n";
+        print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"newcfg\">$fname</a>\n";
+        print $sock "</td></tr>\n";
+    }
 
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
     &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan to',           \@scanto);
@@ -156,30 +251,11 @@ sub l00http_blockfilter_proc {
         defined ($form->{'path'}) &&
         (&l00httpd::l00freadOpen($ctrl, $form->{'path'}))) {
 
-        if ($form->{'path'} =~ /blockfilter/) {
-            print $sock "$form->{'path'} is recognized as a blockfilter configuration file. Please select a target below to process:<p>\n";
-            ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
-            if (opendir (DIR, $pname)) {
-                print $sock "<pre>\n";
-                foreach $fname (sort readdir (DIR)) {
-                    if ($fname eq '.' || $fname eq '..') {
-                        next;
-                    }
-                    print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"view\">view</a> - ";
-                    print $sock "<a href=\"/blockfilter.htm?path=$pname$fname\" target=\"blockfilter\">blockfilter $fname</a>\n";
-                }
-                print $sock "</pre>\n";
-                closedir (DIR);
-            } else {
-                print $sock "Failed to open '$pname' as a directory<p>\n";
-            }
-        }
-
         if (!defined($blkstart[0])) {
             print $sock "BLOCK START pattern not defined. Define at least 1 matching pattern.<p>\n";
         }
         print $sock "Processing .";
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter.txt');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_output.txt');
 
         $cnt = 0;
         $blkdisplayed = 0;
@@ -196,7 +272,8 @@ sub l00http_blockfilter_proc {
         $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
         $eofoutput = 0;
-        undef %statsout;
+        undef $statsout;
+        $statsout = {};
 
         # do pre eval
         foreach $condition (@preeval) {
@@ -398,16 +475,14 @@ sub l00http_blockfilter_proc {
                 foreach $condition (@stats) {
                     ($tmp) = eval $condition;
                     if (defined($tmp)) {
-                        if (!defined($statsout{$tmp})) {
-                            $statsout{$tmp} = 1;
+                        if (!defined($statsout[$statsidx]->{$tmp})) {
+                            $statsout[$statsidx]->{$tmp} = 1;
                         } else {
-                            $statsout{$tmp}++;
+                            $statsout[$statsidx]->{$tmp}++;
                         }
-print "hitlines $hitlines statsidx $statsidx tmp $tmp\n";
-                        $statsidx++;
                     } else {
-print "hitlines $hitlines NO HIT\n";
                     }
+                    $statsidx++;
                 }
 
                 $viewskip = $cnt - 10;
@@ -423,38 +498,74 @@ print "hitlines $hitlines NO HIT\n";
         &l00httpd::l00fwriteClose($ctrl);
         print $sock " Processed $cnt lines. ".
             "Output $blkdisplayed blocks and $hitlines lines to ".
-            "<a href=\"/view.htm?path=l00://blockfilter.txt\" target=\"newram\">l00://blockfilter.txt</a> ".
+            "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a> ".
             "<p>\n";
         print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a><p>\n";
 
-        print $sock "List of all parameters:<p>\n";
-        print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-        &l00http_blockfilter_print($sock, $form, 'skipto',      'Skip to',           \@skipto);
-        &l00http_blockfilter_print($sock, $form, 'scanto',      'Scan to',           \@scanto);
-        &l00http_blockfilter_print($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
-        &l00http_blockfilter_print($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
-        &l00http_blockfilter_print($sock, $form, 'blkstop',     'Block End',         \@blkstop);
-        &l00http_blockfilter_print($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
-        &l00http_blockfilter_print($sock, $form, 'color',       'Colorize ()',       \@color);
-        &l00http_blockfilter_print($sock, $form, 'eval',        'Perl eval',         \@eval);
-        &l00http_blockfilter_print($sock, $form, 'preeval',     'Pre eval',          \@preeval);
-        &l00http_blockfilter_print($sock, $form, 'stats',       'Statistics',        \@stats);
-        print $sock "</table>\n";
-
-        print $sock "<pre>\n";
-        foreach $condition (sort keys %statsout) {
-            printf $sock ("%-40s %5d\n", $condition, $statsout{$condition});
+        # print statistics
+        $output = '';
+        for ($tmp = 0; $tmp < $statsidx; $tmp++) {
+            $output .= "statistics #$tmp\n";
+#            if (defined($statsout[$tmp])) {
+                foreach $condition (sort keys %{$statsout[$tmp]}) {
+                    $output .= sprintf ("%-40s %5d\n", $condition, $statsout[$tmp]->{$condition});
+                }
+#            }
+            $output .= "\n";
         }
-        print $sock "</pre>\n";
+        if ($output ne '') {
+            print $sock "Statistics:<pre>$output</pre>\n";
+        }
+
+        # print control parameters
+        $output = '';
+        $output .= &l00http_blockfilter_print('skipto',      \@skipto);
+        $output .= &l00http_blockfilter_print('scanto',      \@scanto);
+        $output .= &l00http_blockfilter_print('fileexclude', \@fileexclude);
+        $output .= &l00http_blockfilter_print('blkstart',    \@blkstart);
+        $output .= &l00http_blockfilter_print('blkstop',     \@blkstop);
+        $output .= &l00http_blockfilter_print('blkrequired', \@blkrequired);
+        $output .= &l00http_blockfilter_print('color',       \@color);
+        $output .= &l00http_blockfilter_print('eval',        \@eval);
+        $output .= &l00http_blockfilter_print('preeval',     \@preeval);
+        $output .= &l00http_blockfilter_print('stats',       \@stats);
+
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
+        &l00httpd::l00fwriteBuf($ctrl, "$output");
+        &l00httpd::l00fwriteClose($ctrl);
+        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"newcfg\">l00://blockfilter_cfg.txt</a><p>\n";
+
+        print $sock "List of all parameters:<p>\n";
+        print $sock "<pre>$output</pre>\n";
+
     } else {
         if (defined ($form->{'process'})) {
             print $sock "Unable to process $form->{'path'}<br>\n";
-        } else {
-            print $sock "Click 'Process' to process $form->{'path'}<br>\n";
         }
+
+        # print control parameters
+        $output = '';
+        $output .= &l00http_blockfilter_print('skipto',      \@skipto);
+        $output .= &l00http_blockfilter_print('scanto',      \@scanto);
+        $output .= &l00http_blockfilter_print('fileexclude', \@fileexclude);
+        $output .= &l00http_blockfilter_print('blkstart',    \@blkstart);
+        $output .= &l00http_blockfilter_print('blkstop',     \@blkstop);
+        $output .= &l00http_blockfilter_print('blkrequired', \@blkrequired);
+        $output .= &l00http_blockfilter_print('color',       \@color);
+        $output .= &l00http_blockfilter_print('eval',        \@eval);
+        $output .= &l00http_blockfilter_print('preeval',     \@preeval);
+        $output .= &l00http_blockfilter_print('stats',       \@stats);
+
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
+        &l00httpd::l00fwriteBuf($ctrl, "$output");
+        &l00httpd::l00fwriteClose($ctrl);
+        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"newcfg\">l00://blockfilter_cfg.txt</a><p>\n";
+
+        print $sock "List of all parameters:<p>\n";
+        print $sock "<pre>$output</pre>\n";
     }
 
     print $sock $ctrl->{'htmlfoot'};
