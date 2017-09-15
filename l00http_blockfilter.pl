@@ -73,7 +73,7 @@ sub l00http_blockfilter_print {
 
 sub l00http_blockfilter_parse {
     my ($name, $blob, $array) = @_;
-    my ($condition, $_, $parsenow);
+    my ($condition, $parsenow);
 
     $parsenow = 0;
     foreach $_ (split("\n", $blob)) {
