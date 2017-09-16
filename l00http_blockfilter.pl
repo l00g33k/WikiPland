@@ -606,7 +606,9 @@ sub l00http_blockfilter_proc {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
         &l00httpd::l00fwriteBuf($ctrl, "$output");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"newcfg\">l00://blockfilter_cfg.txt</a><p>\n";
+        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"newcfg\">l00://blockfilter_cfg.txt</a> , \n";
+        ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
+        print $sock "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=${pname}blockfilter_.txt\" target=\"newcfg\">filemgt</a><p>\n";
 
         print $sock "List of all parameters:<p>\n";
         print $sock "<pre>$output</pre>\n";
