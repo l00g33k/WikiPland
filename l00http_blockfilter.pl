@@ -8,7 +8,7 @@ use warnings;
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
 my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
-    @blkrequired, @color, @eval, @blockend, @preeval, @stats);
+    @blkrequired, @blockexclude, @color, @eval, @blockend, @preeval, @stats);
 my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines);
 
 $inverexclu = '';
@@ -105,7 +105,7 @@ sub l00http_blockfilter_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($cnt, $output, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
+    my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
     my ($blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
     my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout);
@@ -123,6 +123,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
     &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
     &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
+    &l00http_blockfilter_paste($ctrl, $form, 'blockexclude',\@blockexclude);
     &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
     &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
     &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
@@ -135,6 +136,7 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
         &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
         &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
+        &l00http_blockfilter_paste($ctrl, $form, 'blockexclude',\@blockexclude);
         &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
         &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
         &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
@@ -161,6 +163,7 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
                 &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
                 &l00http_blockfilter_parse('blkrequired', $tmp, \@blkrequired);
+                &l00http_blockfilter_parse('blockexclude',$tmp, \@blockexclude);
                 &l00http_blockfilter_parse('color',       $tmp, \@color);
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
@@ -194,6 +197,7 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
                 &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
                 &l00http_blockfilter_parse('blkrequired', $tmp, \@blkrequired);
+                &l00http_blockfilter_parse('blockexclude',$tmp, \@blockexclude);
                 &l00http_blockfilter_parse('color',       $tmp, \@color);
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
@@ -243,6 +247,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
     &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
+    &l00http_blockfilter_form($sock, $form, 'blockexclude','Block Exclude',     \@blockexclude);
     &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
     &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
@@ -267,10 +272,10 @@ sub l00http_blockfilter_proc {
         }
         print $sock "Processing .";
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_output.txt');
-        &l00httpd::l00fwriteBuf($ctrl, "<pre>");
 
         $cnt = 0;
         $output = '';
+        $outram = '';
 
         $thisblockram = '';
         $thisblockdsp = '';
@@ -420,7 +425,7 @@ sub l00http_blockfilter_proc {
                     $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
                     $noblkfound++;
                     $output .= $thisblockdsp;
-                    &l00httpd::l00fwriteBuf($ctrl, "$thisblockram");
+                    $outram .= $thisblockram;
                 }
                 $outputed = 1;
             }
@@ -498,6 +503,30 @@ sub l00http_blockfilter_proc {
                     }
                 }
 
+                # block exclude
+                $found = 0;
+                foreach $condition (@blockexclude) {
+                    if (substr($condition, 0, 2) eq '!!') {
+                        $tmp = $condition;
+                        substr($tmp, 0, 2) = '';
+                        if (!/$tmp/i) {
+                            # not found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    } else {
+                        if (/$condition/i) {
+                            # found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    }
+                }
+                if ($found) {
+                    # file exclude line
+                    next;
+                }
+
                 # gather stats
                 $statsidx = 0;
                 foreach $condition (@stats) {
@@ -529,8 +558,14 @@ sub l00http_blockfilter_proc {
         }
 
 
-        &l00httpd::l00fwriteBuf($ctrl, "</pre>");
+        &l00httpd::l00fwriteBuf($ctrl, "<br><a name=\"__top__\"></a>Processed $cnt lines. ".
+            "Output $noblkfound blocks and $hitlines lines to l00://blockfilter_output.txt</a><p>\n");
+        &l00httpd::l00fwriteBuf($ctrl, "<a name=\"__toc__\"></a>$header<br>\n");
+        &l00httpd::l00fwriteBuf($ctrl, "<pre>$outram</pre>\n");
+        &l00httpd::l00fwriteBuf($ctrl, "<a name=\"__end__\"></a>\n");
+        &l00httpd::l00fwriteBuf($ctrl, "<a href=\"#__top__\">jump to top</a><p>\n");
         &l00httpd::l00fwriteClose($ctrl);
+
         print $sock "<br>Processed $cnt lines. ".
             "Output $noblkfound blocks and $hitlines lines to ".
             "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a> ".
