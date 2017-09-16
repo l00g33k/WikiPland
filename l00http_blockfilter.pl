@@ -8,7 +8,7 @@ use warnings;
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
 my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
-    @blkrequired, @blockexclude, @color, @eval, @blockend, @preeval, @stats);
+    @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats);
 my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines);
 
 $inverexclu = '';
@@ -123,7 +123,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
     &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
     &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
-    &l00http_blockfilter_paste($ctrl, $form, 'blockexclude',\@blockexclude);
+    &l00http_blockfilter_paste($ctrl, $form, 'blkexclude',  \@blkexclude);
     &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
     &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
     &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
@@ -136,7 +136,7 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
         &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
         &l00http_blockfilter_paste($ctrl, $form, 'blkrequired', \@blkrequired);
-        &l00http_blockfilter_paste($ctrl, $form, 'blockexclude',\@blockexclude);
+        &l00http_blockfilter_paste($ctrl, $form, 'blkexclude',  \@blkexclude);
         &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
         &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
         &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
@@ -163,7 +163,7 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
                 &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
                 &l00http_blockfilter_parse('blkrequired', $tmp, \@blkrequired);
-                &l00http_blockfilter_parse('blockexclude',$tmp, \@blockexclude);
+                &l00http_blockfilter_parse('blkexclude',  $tmp, \@blkexclude);
                 &l00http_blockfilter_parse('color',       $tmp, \@color);
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
@@ -197,7 +197,7 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
                 &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
                 &l00http_blockfilter_parse('blkrequired', $tmp, \@blkrequired);
-                &l00http_blockfilter_parse('blockexclude',$tmp, \@blockexclude);
+                &l00http_blockfilter_parse('blkexclude',  $tmp, \@blkexclude);
                 &l00http_blockfilter_parse('color',       $tmp, \@color);
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
@@ -247,7 +247,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
     &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
-    &l00http_blockfilter_form($sock, $form, 'blockexclude','Block Exclude',     \@blockexclude);
+    &l00http_blockfilter_form($sock, $form, 'blkexclude',  'Block Exclude',     \@blkexclude);
     &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
     &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
@@ -505,7 +505,7 @@ sub l00http_blockfilter_proc {
 
                 # block exclude
                 $found = 0;
-                foreach $condition (@blockexclude) {
+                foreach $condition (@blkexclude) {
                     if (substr($condition, 0, 2) eq '!!') {
                         $tmp = $condition;
                         substr($tmp, 0, 2) = '';
@@ -598,6 +598,7 @@ sub l00http_blockfilter_proc {
         $output .= &l00http_blockfilter_print('blkstart',    \@blkstart);
         $output .= &l00http_blockfilter_print('blkstop',     \@blkstop);
         $output .= &l00http_blockfilter_print('blkrequired', \@blkrequired);
+        $output .= &l00http_blockfilter_print('blkexclude',  \@blkexclude);
         $output .= &l00http_blockfilter_print('color',       \@color);
         $output .= &l00http_blockfilter_print('eval',        \@eval);
         $output .= &l00http_blockfilter_print('preeval',     \@preeval);
@@ -624,6 +625,7 @@ sub l00http_blockfilter_proc {
         $output .= &l00http_blockfilter_print('blkstart',    \@blkstart);
         $output .= &l00http_blockfilter_print('blkstop',     \@blkstop);
         $output .= &l00http_blockfilter_print('blkrequired', \@blkrequired);
+        $output .= &l00http_blockfilter_print('blkexclude',  \@blkexclude);
         $output .= &l00http_blockfilter_print('color',       \@color);
         $output .= &l00http_blockfilter_print('eval',        \@eval);
         $output .= &l00http_blockfilter_print('preeval',     \@preeval);
