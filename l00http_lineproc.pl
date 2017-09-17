@@ -5,11 +5,9 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $debugcheck, $script, $newname);
+my ($arg, $eval);
 $arg = '';
-$debugcheck = '';
-$script = 'l00://lineproc.pl';
-$newname = 'l00://lineprocout.txt';
+$eval = '';
 
 my %config = (proc => "l00http_lineproc_proc",
               desc => "l00http_lineproc_desc");
@@ -19,49 +17,23 @@ sub l00http_lineproc_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "lineproc: Perl 'do' l00://lineproc.pl on target file";
+    "lineproc: Perl 'eval' on target file";
 }
 
 sub l00http_lineproc_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($dopl, $dolncnt, $dorst, $newfile);
-    my ($last, $this, $next, $perl, $perladd, $buf, $tmp, $pname, $fname);
+    my ($dopl, $dorst, $newfile);
+    my ($last, $this, $next, $perl, $buf, $tmp, $pname, $fname, $cnt);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
-    print $sock "<a href=\"#end\">Jump to end</a>\n";
-    print $sock "<a name=\"top\"></a>\n";
+    print $sock "<a href=\"#__end__\">Jump to end</a>\n";
+    print $sock "<a name=\"__top__\"></a>\n";
 
-
-    if (defined ($form->{'arg'})) {
-        $arg = $form->{'arg'};
-    }
-    if (defined ($form->{'debug'}) && ($form->{'debug'} eq 'on')) {
-        $debugcheck = 'checked';
-    } else {
-        $debugcheck = '';
-    }
-
-    if (defined ($form->{'script'})) {
-        $script = $form->{'script'};
-    } else {
-        $script = 'l00://lineproc.pl';
-    }
-    if (defined ($form->{'pastescript'})) {
-        $script = &l00httpd::l00getCB($ctrl);
-    }
-    if (defined ($form->{'newname'})) {
-        $newname = $form->{'newname'};
-    } else {
-        $newname = 'l00://lineprocout.txt';
-    }
-    if (defined ($form->{'pastenewname'})) {
-        $newname = &l00httpd::l00getCB($ctrl);
-    }
 
     $pname = '';
     $fname = '';
@@ -81,125 +53,132 @@ sub l00http_lineproc_proc (\%) {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
     }
+    print $sock "<p>\n";
 
+    if (defined ($form->{'eval'})) {
+        $eval = $form->{'eval'};
+    }
+    if (defined ($form->{'pasteeval'})) {
+        $eval = &l00httpd::l00getCB($ctrl);
+    }
+
+
+    print $sock "View: <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"newlineproc\">l00://lineproc_out.txt</a> - \n";
+    print $sock "<a href=\"/filemgt.htm?path=l00://lineproc_out.txt&path2=$pname$fname\" target=\"newfilemgt\">filemgt copy</a><br>\n";
+    print $sock "<a href=\"#__top__\">Jump to top</a> - \n";
+    print $sock "<a href=\"#__print__\">print</a> - \n";
+    print $sock "<a href=\"#__out__\">output</a> - \n";
+    print $sock "<a href=\"#__end__\">end</a><br>\n";
 
     print $sock "<form action=\"/lineproc.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"run\" value=\"Run\">\n";
-    print $sock "            <input type=\"checkbox\" name=\"debug\" $debugcheck>debug</td>\n";
+    print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
+    print $sock "            <input type=\"submit\" name=\"run\" value=\"Process\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td>target:<br>\n";
-    print $sock "            <textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$pname$fname</textarea></td>\n";
-    print $sock "    </tr>\n";
-
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"pastescript\" value=\"script\">:<br>\n";
-    print $sock "            <textarea name=\"script\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$script</textarea></td>\n";
-    print $sock "    </tr>\n";
-
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"pastenewname\" value=\"output\">:<br>\n";
-    print $sock "            <textarea name=\"newname\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$newname</textarea></td>\n";
-    print $sock "    </tr>\n";
-
-    print $sock "    <tr>\n";
-    print $sock "        <td>Arg:\n";
-    print $sock "            <input type=\"text\" size=\"10\" name=\"arg\" value=\"$arg\"></td>\n";
+    print $sock "        <td><textarea name=\"eval\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$eval</textarea>\n";
+    print $sock "            <br><input type=\"submit\" name=\"pasteeval\" value=\"eval\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
     print $sock "</form>\n";
 
-    print $sock "View: <a href=\"/view.htm?path=$pname$fname\">$pname$fname</a><br>\n";
-    print $sock "View: <a href=\"/view.htm?path=$script\">$script</a><br>\n";
-    print $sock "Copy: <a href=\"/filemgt.htm?path=$script&path2=/sdcard/lineproc.pl\">$script</a><p>\n";
-    print $sock "View: <a href=\"/view.htm?path=$newname\">$newname</a><br>\n";
-    print $sock "Copy: <a href=\"/filemgt.htm?path=$newname&path2=$pname$fname\">$newname to $pname$fname</a><p>\n";
-
     if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
-        if (&l00httpd::l00freadOpen($ctrl, $script)) {
-            $buf = &l00httpd::l00freadAll($ctrl);
-        } else {
-            # create sample script
-            $buf = <<samplelineproc;
-sub lineproc {
-    my (\$sock, \$ctrl, \$arg, \$lnno, \$last, \$this, \$next) = \@_;
-    \$this;
-}
-1;
-samplelineproc
-            &l00httpd::l00fwriteOpen($ctrl, $script);
-            &l00httpd::l00fwriteBuf($ctrl, $buf);
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $newfile = '';
+            undef $last;
+            undef $this;
+            undef $next;
+            print $sock "<a name=\"__print__\"></a>\n";
+            print $sock "<a href=\"#__top__\">Jump to top</a> - \n";
+            print $sock "<a href=\"#__print__\">print</a> - \n";
+            print $sock "<a href=\"#__out__\">output</a> - \n";
+            print $sock "<a href=\"#__end__\">end</a><br>\n";
+            print $sock "'print \$sock' from the script appears below:<p>\n<pre>\n";
+            # when $eval is eval'ed, $_ is this line, $next is what will be the next line
+            # $last is what was $_.
+            # There are two special cases:
+            # 1) at the very start, only  $next is the first line in the input, $_ and $this is undef
+            # 2) at the very end, only $last is the last line in the input, $_ and $next is undef
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/\r//;
+                s/\n//;
+                if (!defined ($next)) {
+                    # first ever line was just read and is going to be the $next line, current $_ is undef.
+                    $next = $_;
+                    $_ = undef;
+                } elsif (!defined ($this)) {
+                    # second ever line was just read
+                    $this = $next;
+                    $next = $_;
+                    $_ = $this;
+                } else {
+                    $last = $this;
+                    $this = $next;
+                    $next = $_;
+                    $_ = $this;
+                }
+                eval $eval;
+                if (defined($_)) {
+                    $newfile .= "$_\n";
+                }
+            }
+            # last line from file has just been processed, so $next will be undef
+            $last = $this;
+            $this = $next;
+            $next = undef;
+            $_ = $this;
+            eval $eval;
+            if (defined($_)) {
+                $newfile .= "$_\n";
+            }
+            # last line from file has been processed once, so $_ will be undef
+            $last = $this;
+            $next = undef;
+            $_ = undef;
+            eval $eval;
+            if (defined($_)) {
+                $newfile .= "$_\n";
+            }
+            print $sock "</pre>\n";
+
+            # write new file only if changed
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://lineproc_out.txt');
+            &l00httpd::l00fwriteBuf($ctrl, $newfile);
             &l00httpd::l00fwriteClose($ctrl);
         }
-        $dopl = "$ctrl->{'plpath'}.l00_lineproc.tmp";
-        open (OU, ">$dopl");
-        print OU "#$dopl\n$buf\n";
-        close (OU);
 
-        $dorst = do $dopl;
-        if (!defined ($dorst)) {
-            if ($!) {
-                print $sock "<hr>Can't read module: $dopl: $!<p>\n";
-            } elsif ($@) {
-                print $sock "<hr>Can't parse module: $@<p>\n";
-            } else {
-                print $sock "<hr>Unknown error in $dopl<p>\n";
-            }
-        } else {
-            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-                $dolncnt = 0;
-                $newfile = '';
-                $perl = '';
-                $perladd = 0;
-                undef $last;
-                undef $this;
-                undef $next;
-                if ($debugcheck ne '') {
-                    print $sock "Debug output:<br>\n";
-                }
-                print $sock "<pre>\n";
-                while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                    s/\r//;
-                    if ($debugcheck ne '') {
-                        print $sock "$_";
-                    }
-                    if (!defined ($next)) {
-                        $next = $_;
-                    } elsif (!defined ($this)) {
-                        $this = $next;
-                        $next = $_;
-                        $newfile .= &lineproc ($sock, $ctrl, $arg, $dolncnt, $last, $this, $next);
-                    } else {
-                        $last = $this;
-                        $this = $next;
-                        $next = $_;
-                        $newfile .= &lineproc ($sock, $ctrl, $arg, $dolncnt, $last, $this, $next);
-                    }
-                    if ($perladd > 0) {
-                        $perladd = 0;
-                        $newfile .= $perl;
-                        $perl = '';
-                    }
-                    $dolncnt++;
-                }
-                print $sock "</pre>\n";
-                $newfile .= &lineproc ($sock, $ctrl, $arg, $dolncnt, $this, $next, undef);
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://lineproc_out.txt')) {
+            $cnt = 1;
+            print $sock "<a name=\"__out__\"></a>\n";
+            print $sock "<a href=\"#__top__\">Jump to top</a> - \n";
+            print $sock "<a href=\"#__print__\">print</a> - \n";
+            print $sock "<a href=\"#__out__\">output</a> - \n";
+            print $sock "<a href=\"#__end__\">end</a><br>\n";
+            print $sock "The 'eval' script is:\n<pre>$eval</pre>\n";
+            print $sock "The first 1000 lines of output follows. (View <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"newlineproc\">l00://lineproc_out.txt</a>):\n";
+            print $sock "<pre>\n";
 
-                # write new file only if changed
-                &l00httpd::l00fwriteOpen($ctrl, $newname);
-                &l00httpd::l00fwriteBuf($ctrl, $newfile);
-                &l00httpd::l00fwriteClose($ctrl);
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                printf $sock ("%04d: %s", $cnt, $_);
+                $cnt++;
+                if ($cnt > 1000) {
+                    last;
+                }
             }
+            print $sock "</pre>\n";
         }
+
     }
 
-    print $sock "<a href=\"#__top__\">Jump to top</a>\n";
+
     print $sock "<a name=\"__end__\"></a><br>\n";
+    print $sock "<a href=\"#__top__\">Jump to top</a> - \n";
+    print $sock "<a href=\"#__print__\">print</a> - \n";
+    print $sock "<a href=\"#__out__\">output</a>\n";
 
 
     # send HTML footer and ends
