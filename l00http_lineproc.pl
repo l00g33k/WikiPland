@@ -48,7 +48,7 @@ sub l00http_lineproc_proc (\%) {
         if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
             # not ending in / or \, not a dir
             print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
-            print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a>\n";
+            print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$fname</a>\n";
         } else {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
@@ -171,7 +171,26 @@ sub l00http_lineproc_proc (\%) {
             }
             print $sock "</pre>\n";
         }
+    } else {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $cnt = 1;
+            print $sock "<a name=\"__out__\"></a>\n";
+            print $sock "<a href=\"#__top__\">Jump to top</a> - \n";
+            print $sock "<a href=\"#__print__\">print</a> - \n";
+            print $sock "<a href=\"#__out__\">output</a> - \n";
+            print $sock "<a href=\"#__end__\">end</a><br>\n";
+            print $sock "The first 1000 lines of the input file follows. (View <a href=\"/view.htm?path=$form->{'path'}\" target=\"newlineproc\">$form->{'path'}</a>):\n";
+            print $sock "<pre>\n";
 
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                printf $sock ("%04d: %s", $cnt, $_);
+                $cnt++;
+                if ($cnt > 1000) {
+                    last;
+                }
+            }
+            print $sock "</pre>\n";
+        }
     }
 
 
