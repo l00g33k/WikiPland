@@ -5,9 +5,11 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval);
+my ($arg, $eval, $sort, $sortdec);
 $arg = '';
 $eval = '';
+$sort = '';
+$sortdec = '';
 
 my %config = (proc => "l00http_lineproc_proc",
               desc => "l00http_lineproc_desc");
@@ -24,7 +26,7 @@ sub l00http_lineproc_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($dopl, $dorst, $newfile);
+    my ($dopl, $dorst, @newfile);
     my ($last, $this, $next, $perl, $buf, $tmp, $pname, $fname, $cnt);
 
     # Send HTTP and HTML headers
@@ -62,6 +64,18 @@ sub l00http_lineproc_proc (\%) {
         $eval = &l00httpd::l00getCB($ctrl);
     }
 
+    if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
+        if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
+            $sort = 'checked';
+        } else {
+            $sort = '';
+        }
+        if (defined ($form->{'sortdec'}) && ($form->{'sortdec'} eq 'on')) {
+            $sortdec = 'checked';
+        } else {
+            $sortdec = '';
+        }
+    }
 
     print $sock "<a href=\"/lineproc.htm?path=$form->{'path'}\">Refresh</a> - ";
     print $sock "View: <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"newlineproc\">l00://lineproc_out.txt</a>; \n";
@@ -81,7 +95,10 @@ sub l00http_lineproc_proc (\%) {
 
     print $sock "    <tr>\n";
     print $sock "        <td><textarea name=\"eval\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$eval</textarea>\n";
-    print $sock "            <br><input type=\"submit\" name=\"pasteeval\" value=\"eval\"></td>\n";
+    print $sock "            <br><input type=\"submit\" name=\"pasteeval\" value=\"CB to eval\">\n";
+    print $sock "            <input type=\"checkbox\" name=\"sort\" $sort>Sort after processing; \n";
+    print $sock "            <input type=\"checkbox\" name=\"sortdec\" $sortdec>in decresing order. \n";
+    print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -89,7 +106,7 @@ sub l00http_lineproc_proc (\%) {
 
     if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-            $newfile = '';
+            undef @newfile;
             undef $last;
             undef $this;
             undef $next;
@@ -124,7 +141,7 @@ sub l00http_lineproc_proc (\%) {
                 }
                 eval $eval;
                 if (defined($_)) {
-                    $newfile .= "$_\n";
+                    push(@newfile, "$_\n");
                 }
             }
             # last line from file has just been processed, so $next will be undef
@@ -134,7 +151,7 @@ sub l00http_lineproc_proc (\%) {
             $_ = $this;
             eval $eval;
             if (defined($_)) {
-                $newfile .= "$_\n";
+                push(@newfile, "$_\n");
             }
             # last line from file has been processed once, so $_ will be undef
             $last = $this;
@@ -142,13 +159,26 @@ sub l00http_lineproc_proc (\%) {
             $_ = undef;
             eval $eval;
             if (defined($_)) {
-                $newfile .= "$_\n";
+                push(@newfile, "$_\n");
             }
             print $sock "</pre>\n";
 
+            # sort
+            if ($sort eq 'checked') {
+                if ($sortdec eq 'checked') {
+                    # decreasing
+                    @newfile = sort {$b cmp $a} (@newfile);
+                } else {
+                    # increasing
+                    @newfile = sort {$a cmp $b} (@newfile);
+                }
+            }
+
             # write new file only if changed
             &l00httpd::l00fwriteOpen($ctrl, 'l00://lineproc_out.txt');
-            &l00httpd::l00fwriteBuf($ctrl, $newfile);
+            foreach $_ (@newfile) {
+                &l00httpd::l00fwriteBuf($ctrl, $_);
+            }
             &l00httpd::l00fwriteClose($ctrl);
         }
 
