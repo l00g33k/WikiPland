@@ -553,13 +553,15 @@ sub l00http_blockfilter_proc {
                 }
             }
         }
+        ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
         if ($hitlines > $maxlines) {
-            $output .= "\nOutput truncated. View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a> for complete output\n";
+            $output .= "\nOutput truncated. View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a> for complete output; ";
+            $output .= "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"newcfg\">copy it to</a>...\n";
         }
 
 
         &l00httpd::l00fwriteBuf($ctrl, "<br><a name=\"__top__\"></a>Processed $cnt lines. ".
-            "Output $noblkfound blocks and $hitlines lines to l00://blockfilter_output.txt</a><p>\n");
+            "Output $noblkfound blocks and $hitlines lines to l00://blockfilter_output.txt<p>\n");
         &l00httpd::l00fwriteBuf($ctrl, "<a name=\"__toc__\"></a>$header<br>\n");
         &l00httpd::l00fwriteBuf($ctrl, "<pre>$outram</pre>\n");
         &l00httpd::l00fwriteBuf($ctrl, "<a name=\"__end__\"></a>\n");
@@ -568,7 +570,8 @@ sub l00http_blockfilter_proc {
 
         print $sock "<br>Processed $cnt lines. ".
             "Output $noblkfound blocks and $hitlines lines to ".
-            "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a> ".
+            "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a>; ".
+            "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"newcfg\">copy it to</a>...".
             "<p>\n";
         print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         print $sock "<pre>$output</pre>\n";
