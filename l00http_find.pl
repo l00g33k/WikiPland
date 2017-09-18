@@ -280,7 +280,7 @@ sub l00http_find_search {
             "Click path to visit directory, click filename to view file\n";
     }
     print $sock "<br>Total $totalbytes bytes in $totalfiles files\n";
-    print $sock "<p>Find results also in <a href=\"/view.htm?path=l00://findinfile.htm\">l00://findinfile.htm</a>\n";
+    print $sock "<p>Find results also in <a href=\"/view.htm?path=l00://findinfile.htm\" target=\"_blank\">l00://findinfile.htm</a>\n";
 
     1;
 }
