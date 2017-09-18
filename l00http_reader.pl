@@ -134,13 +134,13 @@ sub l00http_reader_proc (\%) {
     if (defined($ctrl->{'readerjumpurl'})) {
         $tmp .= "&url=$ctrl->{'readerjumpurl'}";
     }
-    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newwin\">clipboard</a>\n";
+    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">clipboard</a>\n";
     print $sock "<input type=\"submit\" name=\"markread\" value=\"Mark read\">\n";
     print $sock "<input type=\"hidden\" name=\"readln\" value=\"$readln\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
-    print $sock "<p><a target=\"newwin\" href=\"/mobizoom.htm\">mobiz</a>\n";
+    print $sock "<p><a target=\"_blank\" href=\"/mobizoom.htm\">mobiz</a>\n";
     print $sock "<a href=\"#end\">end</a>\n";
 
     print $sock "<a href=\"#line\">Line $readln</a>:";
@@ -151,7 +151,7 @@ sub l00http_reader_proc (\%) {
         $cachename = "$cachepath$cachename.txt";
         $tmp2 = '';
 		while (-e $cachename) {
-            print $sock " <a target=\"newwin$tmp2\" href=\"/mobizoom.htm?url=$cachename&fetch=1&zoom=$zoom\">cached$tmp2</a> ";
+            print $sock " <a target=\"_blank\" href=\"/mobizoom.htm?url=$cachename&fetch=1&zoom=$zoom\">cached$tmp2</a> ";
             $cachename =~ s/\.txt$/_.txt/;   # grow _.txt :)
             if ($tmp2 eq '') {
                 $tmp2 = '-1';

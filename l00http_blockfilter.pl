@@ -179,8 +179,8 @@ sub l00http_blockfilter_proc {
                     if ($fname eq '.' || $fname eq '..') {
                         next;
                     }
-                    print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"view\">view</a> - ";
-                    print $sock "blockfilter: <a href=\"/blockfilter.htm?path=$pname$fname\" target=\"blockfilter\">$fname</a>\n";
+                    print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"_blank\">view</a> - ";
+                    print $sock "blockfilter: <a href=\"/blockfilter.htm?path=$pname$fname\" target=\"_blank\">$fname</a>\n";
                 }
                 print $sock "</pre>\n";
                 closedir (DIR);
@@ -236,8 +236,7 @@ sub l00http_blockfilter_proc {
         print $sock "<input type=\"checkbox\" name=\"reloadcfg\" $reloadcfg>Reload cfg before processing\n";
         print $sock "</td><td>\n";
         ($pname, $fname) = $blockfiltercfg =~ /^(.+\/)([^\/]+)$/;
-       #print $sock "<input type=\"text\" size=\"24\" readonly value=\"$blockfiltercfg\">\n";
-        print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"newcfg\">$fname</a>\n";
+        print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"_blank\">$fname</a>\n";
         print $sock "</td></tr>\n";
     }
 
@@ -417,9 +416,9 @@ sub l00http_blockfilter_proc {
                         $viewskip = 0;
                     }
                     $hitlines++;
-                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     if ($hitlines < $maxlines) {
-                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     }
 
                     $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
@@ -466,9 +465,9 @@ sub l00http_blockfilter_proc {
                 if ($viewskip < 0) {
                     $viewskip = 0;
                 }
-                $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                 if ($hitlines < $maxlines) {
-                    $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                 }
             } elsif ($inblk) {
                 # exclude (!! to include only) lines

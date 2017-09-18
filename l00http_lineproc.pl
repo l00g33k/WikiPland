@@ -46,7 +46,7 @@ sub l00http_lineproc_proc (\%) {
         if ($ctrl->{'os'} eq 'win') {
             $tmp =~ s/\//\\/g;
         }
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">Path</a>: ";
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>: ";
         if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
             # not ending in / or \, not a dir
             print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
@@ -78,8 +78,8 @@ sub l00http_lineproc_proc (\%) {
     }
 
     print $sock "<a href=\"/lineproc.htm?path=$form->{'path'}\">Refresh</a> - ";
-    print $sock "View: <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"newlineproc\">l00://lineproc_out.txt</a>; \n";
-    print $sock "<a href=\"/filemgt.htm?path=l00://lineproc_out.txt&path2=$pname$fname\" target=\"newfilemgt\">copy it to</a>...<br>\n";
+    print $sock "View: <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"_blank\">l00://lineproc_out.txt</a>; \n";
+    print $sock "<a href=\"/filemgt.htm?path=l00://lineproc_out.txt&path2=$pname$fname\" target=\"_blank\">copy it to</a>...<br>\n";
     print $sock "<a href=\"#__top__\">Jump to top</a> - \n";
     print $sock "<a href=\"#__print__\">print</a> - \n";
     print $sock "<a href=\"#__out__\">output</a> - \n";
@@ -190,7 +190,7 @@ sub l00http_lineproc_proc (\%) {
             print $sock "<a href=\"#__out__\">output</a> - \n";
             print $sock "<a href=\"#__end__\">end</a><br>\n";
             print $sock "The 'eval' script is:\n<pre>$eval</pre><br>\n";
-            print $sock "The first 1000 lines of output follows. (View <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"newlineproc\">l00://lineproc_out.txt</a>):\n";
+            print $sock "The first 1000 lines of output follows. (View <a href=\"/view.htm?path=l00://lineproc_out.txt\" target=\"_blank\">l00://lineproc_out.txt</a>):\n";
             print $sock "<pre>\n";
 
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -210,7 +210,7 @@ sub l00http_lineproc_proc (\%) {
             print $sock "<a href=\"#__print__\">print</a> - \n";
             print $sock "<a href=\"#__out__\">output</a> - \n";
             print $sock "<a href=\"#__end__\">end</a><br>\n";
-            print $sock "The first 1000 lines of the input file follows. (View <a href=\"/view.htm?path=$form->{'path'}\" target=\"newlineproc\">$form->{'path'}</a>):\n";
+            print $sock "The first 1000 lines of the input file follows. (View <a href=\"/view.htm?path=$form->{'path'}\" target=\"_blank\">$form->{'path'}</a>):\n";
             print $sock "<pre>\n";
 
             while ($_ = &l00httpd::l00freadLine($ctrl)) {

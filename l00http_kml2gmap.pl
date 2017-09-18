@@ -548,8 +548,8 @@ sub l00http_kml2gmap_proc {
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
             $labelsort{"$name -- $jlabel"} .= "$name <a href=\"/clip.htm?update=&clip=";
             $labelsort{"$name -- $jlabel"} .= &l00httpd::urlencode ($name);
-            $labelsort{"$name -- $jlabel"} .= "\" target=\"newwin\">:</a> ";
-            $labelsort{"$name -- $jlabel"} .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"newwin\">$lat,$lon</a>\n";
+            $labelsort{"$name -- $jlabel"} .= "\" target=\"_blank\">:</a> ";
+            $labelsort{"$name -- $jlabel"} .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"_blank\">$lat,$lon</a>\n";
 
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".

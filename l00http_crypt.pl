@@ -170,7 +170,7 @@ sub l00http_crypt_proc (\%) {
         $plain = $crypt;
         print $sock "<hr><h1>Passphrase not set!</h1></p><hr>\n";
     } else {
-        print $sock "<a href=\"/ls.htm?path=l00://crypt.htm\" target=\"newwin\">See RAM</a>. ".
+        print $sock "<a href=\"/ls.htm?path=l00://crypt.htm\" target=\"_blank\">See RAM</a>. ".
             "Jump to <a href=\"#saveram\">save from RAM</a><hr>\n";
 
         if ($plain eq "true") {
@@ -309,7 +309,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "<tr><td>\n";
     print $sock "<a name=\"saveram\"><input type=\"submit\" name=\"fromram\" value=\"save ram\">\n";
     print $sock "</td><td>\n";
-    print $sock "<a href=\"/edit.htm?path=l00://crypt.htm\" target=\"newwin\">edit ram</a> \n";
+    print $sock "<a href=\"/edit.htm?path=l00://crypt.htm\" target=\"_blank\">edit ram</a> \n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";

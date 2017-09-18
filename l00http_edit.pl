@@ -185,14 +185,14 @@ sub l00http_edit_proc2 {
                     $diffurl = "URL to <a href=\"/diff.htm?compare=Compare&width=20".
                         "&pathnew=$form->{'path'}".
                         "&pathold=$form->{'path'}.bak".
-                        "&hide=on&maxline=4000#diffchanges\" target=\"newwin\">".
+                        "&hide=on&maxline=4000#diffchanges\" target=\"_blank\">".
                         "compare previous and current versions</a><p>\n";
                 } else {
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
                     $diffurl = "URL to <a href=\"/diff.htm?compare=Compare&width=20".
                         "&pathnew=$form->{'path'}".
                         "&pathold=$form->{'path'}.-.bak".
-                        "&hide=on&maxline=4000#diffchanges\" target=\"newwin\">".
+                        "&hide=on&maxline=4000#diffchanges\" target=\"_blank\">".
                         "compare previous and current versions</a><p>\n";
                 }
             }
@@ -529,7 +529,7 @@ sub l00http_edit_proc2 {
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
     print $sock "</td><td>\n";
-    print $sock "<a href=\"/diff.htm?compare=Compare&width=20&pathnew=l00%3A%2F%2Flineproc.txt&pathold=$form->{'path'}&maxline=4000\" target=\"newwin\">diff results</a>\n";
+    print $sock "<a href=\"/diff.htm?compare=Compare&width=20&pathnew=l00%3A%2F%2Flineproc.txt&pathold=$form->{'path'}&maxline=4000\" target=\"_blank\">diff results</a>\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table><br>\n";
@@ -609,7 +609,7 @@ sub l00http_edit_proc2 {
             print $sock "\n";
 		}
         $lineclip = &l00httpd::urlencode ($line);
-        $lineclip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $lineclip . "\" target=\"newclip\">cb</a>";
+        $lineclip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=" . $lineclip . "\" target=\"_blank\">cb</a>";
         $line =~ s/\r//g;
         $line =~ s/\n//g;
         $line =~ s/</&lt;/g;

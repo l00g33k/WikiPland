@@ -89,7 +89,7 @@ sub l00http_viewfile_proc {
             if ($ctrl->{'os'} eq 'win') {
                 $tmp =~ s/\//\\/g;
             }
-            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">Path</a>: ";
+            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>: ";
             if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
                 # not ending in / or \, not a dir
                 print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
@@ -256,7 +256,7 @@ sub l00http_viewfile_proc {
                     if ($hilite == $lineno) {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
-                        print $sock sprintf ("\" target=\"newclip\">%04d</a> : ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
+                        print $sock sprintf ("\" target=\"_blank\">%04d</a> : ", $lineno) . "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
                         if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
                             if (/$form->{'hilitetext'}/) {
@@ -266,17 +266,17 @@ sub l00http_viewfile_proc {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
                                 $tmp = $hilitetextidx + 1;
-                                print $sock sprintf ("\" target=\"newclip\">%04d</a><a href=\"#hilitetext_$tmp\">&gt;</a>", $lineno) . "$_\n";
+                                print $sock sprintf ("\" target=\"_blank\">%04d</a><a href=\"#hilitetext_$tmp\">&gt;</a>", $lineno) . "$_\n";
                                 $hilitetextidx++;
                             } else {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
-                                print $sock sprintf ("\" target=\"newclip\">%04d</a> <a href=\"viewfile.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
+                                print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"viewfile.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                             }
                         } else {
                             print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                             print $sock $clip;
-                            print $sock sprintf ("\" target=\"newclip\">%04d</a> <a href=\"viewfile.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
+                            print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"viewfile.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                         }
                     }
                 }

@@ -312,7 +312,7 @@ print $sock "<input type=\"submit\" name=\"clip\" value=\"Fetch .mp3 URL\">\n";
     print $sock "</form>\n";
 
 
-    print $sock "<a href=\"/play.htm\" target=\"newwin\">volume</a><p>\n";
+    print $sock "<a href=\"/play.htm\" target=\"_blank\">volume</a><p>\n";
     print $sock "<hr>\n";
 
 

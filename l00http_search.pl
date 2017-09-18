@@ -188,10 +188,10 @@ sub l00http_search_search {
                                             $hit++;
                                             # construct output
                                             if ($linemode) {
-                                                $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&path=$fullname#line$lineno\" target=\"newwin\">$file</a>";
+                                                $line = "<a href=\"/$sendto.htm?hiliteln=$lineno&path=$fullname#line$lineno\" target=\"_blank\">$file</a>";
                                             } else {
                                                 l00httpd::dbp($config{'desc'}, "1: $fullname#line$anchorline\n"), if ($ctrl->{'debug'} >= 3);
-                                                $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&path=$fullname#line$anchorline\" target=\"newwin\">$file</a>";
+                                                $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&path=$fullname#line$anchorline\" target=\"_blank\">$file</a>";
                                             }
                                             foreach $conte (@contents) {
                                                 $lineout = $rowOutput{$conte};
@@ -269,7 +269,7 @@ sub l00http_search_search {
                                     $hit++;
                                     # construct output
                                     l00httpd::dbp($config{'desc'}, "1: $fullname#line$anchorline\n"), if ($ctrl->{'debug'} >= 3);
-                                    $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&path=$fullname#line$anchorline\" target=\"newwin\">$file</a>";
+                                    $line = "<a href=\"/$sendto.htm?hiliteln=$anchorline&path=$fullname#line$anchorline\" target=\"_blank\">$file</a>";
                                     foreach $conte (@contents) {
                                         $lineout = $rowOutput{$conte};
                                         if (defined($lineout)) {

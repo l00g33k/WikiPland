@@ -141,7 +141,7 @@ if (defined ($form->{'navigate'})) {
                                 (length ($form->{'url'}) > 0)) {
                                 # remove http://ip:port
                                 $form->{'url'} =~ s|http://[^/]+/|/|;
-                                #$buffer .= "* <a target=\"source\" href=\"$form->{'url'}\">view source</a>";
+                                #$buffer .= "* <a target=\"_blank\" href=\"$form->{'url'}\">view source</a>";
                                 # /view.htm?path=D:/w/ATI_PR3/unfuddle/casa/TDD/tddDlg.cpp&lineno=on&hilite=1021#line1011
                                 if (($fname, $tgtline) = $form->{'url'} =~ /path=(.+?)&.*hilite=(\d+)/) {
 								    if (open (SRC, "<$fname")) {
@@ -168,7 +168,7 @@ if (defined ($form->{'navigate'})) {
                                                 if ($ctrl->{'os'} eq 'win') {
                                                     $fname =~ tr/\//\\/;
                                                 }
-                                                $buffer .= "<pre>View <i><a target=\"content\" href=\"$form->{'url'}\">$fname($tgtln):</a></i>";
+                                                $buffer .= "<pre>View <i><a target=\"_blank\" href=\"$form->{'url'}\">$fname($tgtln):</a></i>";
 												s/\+/ /g;
 												s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
                                                 # prevent wikiwords

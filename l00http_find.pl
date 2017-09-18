@@ -164,15 +164,11 @@ sub l00http_find_search {
                                                                 }
                                                             }
                                                             $output .= 
-                                                                "<a target=\"source\" href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                                "<a target=\"source\" href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
+                                                                "<a href=\"/ls.htm?path=$mypath\" target=\"_blank\">$mypath</a>".
+                                                                "<a href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\" target=\"source\">$file</a>";
                                                             $tmp = "&tgtline=$lineno";
                                                             $output .= "(<a href=\"/srcdoc.htm?path=$fullname&lineno=on$srcdoc$tmp#line$lineno\">$lineno</a>): $lnout$lineend";
-                                                            #print $sock 
-                                                            #   "<a target=\"source\" href=\"/ls.htm?path=$mypath\">$mypath</a>".
-                                                            #   "<a target=\"source\" href=\"/$sendto.htm?path=$fullname&hiliteln=$lineno&lineno=on#line$lineno0\">$file</a>";
                                                             $tmp = "&tgtline=$lineno";
-                                                            #print $sock "(<a href=\"/srcdoc.htm?path=$fullname&lineno=on$srcdoc$tmp#line$lineno\">$lineno</a>): $lnout$lineend";
                                                             if ($context > 0) {
                                                                 if (open (FRAG, "<$fullname")) {
                                                                     $lnctx = 1;

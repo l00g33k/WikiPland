@@ -375,7 +375,7 @@ sub l00http_mobizoom_mobilize {
             s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag>/g;
 
             $sectprelog = 
-                "<a href=\"\/clip.htm?update=Copy+to+CB&clip=$clip\" target=\"clip\"> : <\/a> &nbsp; <a name=\"p$para\"><\/a><small>".
+                "<a href=\"\/clip.htm?update=Copy+to+CB&clip=$clip\" target=\"_blank\"> : <\/a> &nbsp; <a name=\"p$para\"><\/a><small>".
                 "<a href=\"#__end__\">V<\/a> &nbsp; ".
                 "<a href=\"#p$para\">$para<\/a> &nbsp; ";
             if (($urlgiven =~ /l00:\/\//) || (-f $urlgiven)) {
@@ -517,14 +517,14 @@ sub l00http_mobizoom_part1 {
     $tmp =~ s/\|/%7C/g;
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL:</a>\n";
     print $sock "<a href=\"$orgurl\">original</a> \n";
-    print $sock "<a href=\"/launcher.htm?path=$orgurl\" target=\"orgurl\">launcher</a> - \n";
+    print $sock "<a href=\"/launcher.htm?path=$orgurl\" target=\"_blank\">launcher</a> - \n";
     print $sock "<font style=\"color:black;background-color:lime\"><a href=\"#__here1__\">next</a></font>\n";
     print $sock "View: <a href=\"/view.htm?path=l00://mobizoom_wget.htm\">l00://mobizoom_wget.htm</a> -\n";
     print $sock "<a href=\"/view.htm?path=l00://mobizoom_mblz.htm\">l00://mobizoom_mblz.htm</a> -\n";
-    print $sock "<a href=\"/wget.htm?url=$url&submit=\" target=\"newwget\">wget</a> --\n";
+    print $sock "<a href=\"/wget.htm?url=$url&submit=\" target=\"_blank\">wget</a> --\n";
     $tmp = &l00httpd::urlencode ("http://googleweblight.com/?lite_url=$url");
-    print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\" target=\"newgwl\">Google web light</a>\n";
-    print $sock " -- <a href=\"/ls.htm?path=l00://journal.txt\" target=\"newwin\">l00://journal.txt</a>\n";
+    print $sock "<a href=\"/mobizoom.htm?fetch=Fetch&url=$tmp\" target=\"_blank\">Google web light</a>\n";
+    print $sock " -- <a href=\"/ls.htm?path=l00://journal.txt\" target=\"_blank\">l00://journal.txt</a>\n";
     $title =~ s/<\/*title>//g;
     $tmp = &l00httpd::urlencode ($title);
     print $sock "-- Title: <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">$title</a>";

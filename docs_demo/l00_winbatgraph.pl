@@ -5,7 +5,7 @@ $report =~ s/ /_/g;
 
 
 print $sock `powercfg /batteryreport /output \"$report\"`;
-print $sock " <a href=\"/ls.htm?path=$report&raw=on\" target=\"newwin\">$report</a>. \n";
+print $sock " <a href=\"/ls.htm?path=$report&raw=on\" target=\"_blank\">$report</a>. \n";
 print $sock "<p>\n";
 
 if (open(IN, "<$report")) {

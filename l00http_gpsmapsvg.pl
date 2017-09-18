@@ -1058,7 +1058,7 @@ sub l00http_gpsmapsvg_proc (\%) {
         print $sock "<pre>\n$rawstartstop</pre>\n";
         print $sock "<pre>\n$tracknpts</pre>\n";
         print $sock "View waypoint/track file: <a href=\"/view.htm?path=$waypts\">$waypts</a>. \n";
-        print $sock "Copy waypoint/track file to : <a href=\"/filemgt.htm?copy=Copy&path=$waypts&path2=l00%3A%2F%2Fwaypoints.trk\" target=\"newwin\">l00://waypoints.trk</a><p>\n";
+        print $sock "Copy waypoint/track file to : <a href=\"/filemgt.htm?copy=Copy&path=$waypts&path2=l00%3A%2F%2Fwaypoints.trk\" target=\"_blank\">l00://waypoints.trk</a><p>\n";
     }
 
     if (&l00httpd::l00freadOpen($ctrl, $map)) {
