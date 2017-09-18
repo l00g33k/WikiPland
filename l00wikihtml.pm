@@ -517,7 +517,7 @@ if(1){
         if (/\* (ID|PW): (\S+) *$/) {
             $clip = &l00httpd::urlencode ($2);
 #           $tmp = "[[/clip.htm?update=Copy+to+clipboard&clip=$clip|$2]]";
-            $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"newwin\">%s</a>", $clip, $2);
+            $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"_blank\">%s</a>", $clip, $2);
             $_ .= " ($tmp)";
         }
 
@@ -1246,7 +1246,7 @@ $oubuf =~ s|(href="[^ ]+path=)\.\/([^ ]+)|$1$pname$2|g;
     # make all links to open in 'newwin'
     if (($flags & 8) != 0) {
         # make all non local anchor link to open in 'newwin'
-        $oubuf =~ s|<a (href="[^#])|<a target="newwin" $1|g;
+        $oubuf =~ s|<a (href="[^#])|<a target="_blank" $1|g;
     }
 
 
