@@ -194,6 +194,8 @@ sub l00http_lineproc_proc (\%) {
             print $sock "<pre>\n";
 
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/</&lt;/g;
+                s/>/&gt;/g;
                 printf $sock ("%04d: %s", $cnt, $_);
                 $cnt++;
                 if ($cnt > 1000) {
@@ -214,6 +216,8 @@ sub l00http_lineproc_proc (\%) {
             print $sock "<pre>\n";
 
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/</&lt;/g;
+                s/>/&gt;/g;
                 printf $sock ("%04d: %s", $cnt, $_);
                 $cnt++;
                 if ($cnt > 1000) {
