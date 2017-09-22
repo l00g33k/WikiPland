@@ -432,82 +432,86 @@ if (defined ($ctrl{'idpwmustbe'})) {
 
 
 sub loadmods {
+    my ($thisplpath) = @_;
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $ctime, $blksize, $blocks);
     my ($newestmtime, $newestmod);
-    # scan directory
-    if (opendir (DIR, $plpath)) {
-        foreach $file (sort readdir (DIR)) {
-            if ($file =~ /^l00http_(\w*)\.pl/) {
-                # match prefix and suffix, remember it
-                $httpmods {$1} = $plpath . "l00http_$1.pl";
+
+    if (defined($thisplpath)) {
+        # scan directory
+        if (opendir (DIR, $thisplpath)) {
+            foreach $file (sort readdir (DIR)) {
+                if ($file =~ /^l00http_(\w*)\.pl/) {
+                    # match prefix and suffix, remember it
+                    $httpmods {$1} = $thisplpath . "l00http_$1.pl";
+                }
+            }
+            closedir (DIR);
+        }
+
+        $newestmtime = 0;
+        # load modules
+        print "(Re)Loading modules from $thisplpath...\n";
+        foreach $mod (sort keys %httpmods) {
+            ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+            $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+            = stat($httpmods{$mod});
+
+            if ((!defined($httpmodssig{$mod})) || 
+                ($httpmodssig{$mod} ne "$size $mtimea")) {
+                # never loaded or signature changed, reload
+                # remember file signature for smart reload
+                $httpmodssig{$mod} = "$size $mtimea";
+
+                if ($newestmtime < $mtimea) {
+                    $newestmtime = $mtimea;
+                    $newestmod = $mod;
+                }
+
+                print "$mod ";
+                $rethash = do $httpmods{$mod};
+                if (!defined ($rethash)) {
+                    if ($!) {
+                        print "Can't read module '$httpmods{$mod}': $!\n";
+                    } elsif ($@) {
+                        print "Can't parse module '$httpmods{$mod}': $@\n";
+                    }
+                } else {
+                    # default to disabled to non local clients
+                    $modsinfo{"$mod:ena:checked"} = "";
+                    $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
+                    $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
+                    $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
+                    $modsinfo{"$mod:fn:shutdown"} = $rethash->{'shutdown'};
+                    $subname = $modsinfo{"$mod:fn:desc"};
+                    $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
+                    $tmp = 'unknown:';
+                    if ($moddesc{$mod} =~ /^( *[^ ]+ *[^ ]*)/) {
+                        $tmp = $1;
+                    }
+                    $tmp .= $mod;
+                    $httpmodssort{$tmp} = $mod;
+                    l00httpd::dbp("l00httpd", "Loaded $mod\n");
+                }
             }
         }
-        closedir (DIR);
-    }
 
-    $newestmtime = 0;
-    # load modules
-    print "(Re)Loading modules from $plpath...\n";
-    foreach $mod (sort keys %httpmods) {
+        # print l00httpd.pl time stamp
         ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-        = stat($httpmods{$mod});
-
-        if ((!defined($httpmodssig{$mod})) || 
-            ($httpmodssig{$mod} ne "$size $mtimea")) {
-            # never loaded or signature changed, reload
-            # remember file signature for smart reload
-            $httpmodssig{$mod} = "$size $mtimea";
-
-            if ($newestmtime < $mtimea) {
-                $newestmtime = $mtimea;
-                $newestmod = $mod;
-            }
-
-            print "$mod ";
-            $rethash = do $httpmods{$mod};
-            if (!defined ($rethash)) {
-                if ($!) {
-                    print "Can't read module '$httpmods{$mod}': $!\n";
-                } elsif ($@) {
-                    print "Can't parse module '$httpmods{$mod}': $@\n";
-                }
-            } else {
-                # default to disabled to non local clients
-                $modsinfo{"$mod:ena:checked"} = "";
-                $modsinfo{"$mod:fn:desc"} = $rethash->{'desc'};
-                $modsinfo{"$mod:fn:proc"} = $rethash->{'proc'};
-                $modsinfo{"$mod:fn:perio"} = $rethash->{'perio'};
-                $modsinfo{"$mod:fn:shutdown"} = $rethash->{'shutdown'};
-                $subname = $modsinfo{"$mod:fn:desc"};
-                $moddesc{$mod} = __PACKAGE__->$subname(\%ctrl);
-                $tmp = 'unknown:';
-                if ($moddesc{$mod} =~ /^( *[^ ]+ *[^ ]*)/) {
-                    $tmp = $1;
-                }
-                $tmp .= $mod;
-                $httpmodssort{$tmp} = $mod;
-                l00httpd::dbp("l00httpd", "Loaded $mod\n");
-            }
-        }
-    }
-
-    # print l00httpd.pl time stamp
-    ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
-    $size, $atime, $mtimea, $ctime, $blksize, $blocks)
-    = stat("${plpath}l00httpd.pl");
-    ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
-     = localtime($mtimea);
-    printf ("\nl00httpd.pl at %4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
-    if ($newestmtime > 0) {
-        # print newest module time stamp
+        = stat("${plpath}l00httpd.pl");
         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
-         = localtime($newestmtime);
-        print "Newest module loaded is '$newestmod' at ";
-        printf ("%4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+         = localtime($mtimea);
+        printf ("\nl00httpd.pl at %4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+        if ($newestmtime > 0) {
+            # print newest module time stamp
+            ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+             = localtime($newestmtime);
+            print "Newest module loaded is '$newestmod' at ";
+            printf ("%4d/%02d/%02d %02d:%02d:%02d\n", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+        }
+        print "Ready\n";
     }
-    print "Ready\n";
 }
 $ctrl{'modsinfo'} = \%modsinfo;
 
@@ -545,7 +549,8 @@ $ctrl{'ctrl_port_first'}  = $ctrl_port_first;
 $ctrl{'ctrl_port'} = $ctrl_port;
 
 # load modules
-&loadmods;
+&loadmods($plpath);
+&loadmods($ctrl{'extraplpath'});
 
 $tmp = 0;
 do {
@@ -1148,7 +1153,8 @@ while(1) {
                 l00httpd::dbp("l00httpd", "Restart/reloading modules\n");
                 &dlog (2, "Restart/reloading modules\n");
                 &readl00httpdcfg;
-                &loadmods;
+                &loadmods($plpath);
+                &loadmods($ctrl{'extraplpath'});
             }
             if ($modcalled eq "shutdown") {
                 $shutdown++;
