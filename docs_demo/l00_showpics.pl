@@ -39,7 +39,7 @@ if ((length ($first) > 0) && (length($last) > 0)) {
     print $sock "<p>Displaying between '$first' and '$last':<br>\n";
     $disp = 0;
     if (opendir (DIR, "$jpgpath")) {
-        foreach $file (sort readdir (DIR)) {
+        foreach $file (sort {$b cmp $a} readdir (DIR)) {
             if (-f "$jpgpath$file") {
                 if ($file =~ /$first/) {
                     $disp = 1;
@@ -78,7 +78,7 @@ if ((length ($first) > 0) && (length($last) > 0)) {
 
 print $sock "<a href=\"/ls.htm?path=$jpgpath\">List of pictures</a><br>\n";
 if (opendir (DIR, "$jpgpath")) {
-    foreach $file (sort readdir (DIR)) {
+    foreach $file (sort {$b cmp $a} readdir (DIR)) {
         if (-f "$jpgpath$file") {
             if (($file =~ /\.png$/i) || 
                 ($file =~ /\.jpg$/i)) {
