@@ -732,8 +732,36 @@ sub l00http_kml2gmap_proc {
     print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>&nosp;\n";
+    print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>&nbsp;\n";
     print $sock "</td></tr>\n";
+
+    # map size pre-sets (16:9)
+    print $sock "<tr>";
+    print $sock "<td>landscape</td>\n";
+    print $sock "<td>portrait</td>\n";
+    print $sock "</tr>\n";
+    foreach $_ (("300,200,200,300",
+                 "400,200,200,400", 
+                 "500,300,300,500",
+                 "600,300,300,600", 
+                 "700,400,400,700",
+                 "800,400,400,800", 
+                 "900,500,500,900",
+                 "1000,600,600,1000", 
+                 "1100,600,600,1100",
+                 "1200,700,700,1200", 
+                 "1300,700,700,1300",
+                 "1400,800,800,1400", 
+                 "1500,800,800,1500",
+                 "1600,900,900,1600", 
+                 "1700,1000,1000,1700",
+                 "1800,1000,1000,1800")) {
+        my ($w1, $h1, $w2, $h2) = split(',', $_);
+        print $sock "<tr>";
+        print $sock "<td><a href=\"/kml2gmap.htm?path=$form->{'path'}&makemap=Update&width=$w1&height=$h1\">${w1}x$h1</a></td>\n";
+        print $sock "<td><a href=\"/kml2gmap.htm?path=$form->{'path'}&makemap=Update&width=$w2&height=$h2\">${w2}x$h2</a></td>\n";
+        print $sock "</tr>\n";
+    }
 
     print $sock "</table>\n";
     print $sock "</form>\n";
