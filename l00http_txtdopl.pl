@@ -24,7 +24,7 @@ sub l00http_txtdopl_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($dopl, $dolncnt, $dorst, $newfile, $oldfile);
+    my ($dopl, $dolncnt, $dorst, $newfile, $oldfile, $newfilenocrlf, $oldfilenocrlf);
     my ($last, $this, $next, $perl, $perladd);
 
     # Send HTTP and HTML headers
@@ -71,7 +71,6 @@ sub l00http_txtdopl_proc (\%) {
             $oldfile = '';
             print "txtdopl: sel=>$sel<\n", if ($ctrl->{'debug'} >= 3);
             while ($_= &l00httpd::l00freadLine($ctrl)) {
-                s/\r//;
                 $oldfile .= $_;
                 if (/^\%TXTDOPL$sel\%/) {
                     if ($dolncnt == -1) {
@@ -87,7 +86,6 @@ sub l00http_txtdopl_proc (\%) {
                 } elsif (/^\%TXTDOPL.*\%/) {
                     # %TXTDOPLother% not selected
                     while ($_= &l00httpd::l00freadLine($ctrl)) {
-                        s/\r//;
                         $oldfile .= $_;
                         # skip not selected do lines
                         if (/^\%TXTDOPL.*\%/) {
@@ -120,17 +118,14 @@ sub l00http_txtdopl_proc (\%) {
                 undef $this;
                 undef $next;
                 while (<TXTDOPLIN>) {
-                    s/\r//;
                     $dolncnt++;
                     if (/^\%TXTDOPL$sel\%/) {
                         $perl .= $_;
                         while (<TXTDOPLIN>) {
-                            s/\r//;
                             $dolncnt++;
                             $perl .= $_;
                             if (/^\%TXTDOPL$sel\%/) {
                                 $_ = <TXTDOPLIN>;
-                                s/\r//;
                                 $dolncnt++;
                                 $perladd = 1;
                                 last;
@@ -140,19 +135,19 @@ sub l00http_txtdopl_proc (\%) {
                         # %TXTDOPLother% not selected
                         $perl .= $_;
                         while (<TXTDOPLIN>) {
-                            s/\r//;
                             $perl .= $_;
                             # skip not selected do lines
                             if (/^\%TXTDOPL.*\%/) {
                                 $_ = <TXTDOPLIN>;
-                                s/\r//;
                                 $perladd = 1;
                                 last;
                             }
                         }
                     }
-                    s/\n//g;
-                    s/\r//g;
+                    if (defined($_)) {
+                        s/\n//g;
+                        s/\r//g;
+                    }
                     if (!defined ($next)) {
                         $next = $_;
                     } elsif (!defined ($this)) {
@@ -171,9 +166,17 @@ sub l00http_txtdopl_proc (\%) {
                         $perl = '';
                     }
                 }
-                $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
+                $_ = &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef);
+                if (defined($_)) {
+                    $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
+                }
                 close (TXTDOPLIN);
-                if ($newfile ne $oldfile) {
+                # remove all crlf before compare
+                $newfilenocrlf = $newfile;
+                $newfilenocrlf =~ s/[\r\n]//msg;
+                $oldfilenocrlf = $oldfile;
+                $oldfilenocrlf =~ s/[\r\n]//msg;
+                if ($newfilenocrlf ne $oldfilenocrlf) {
                     # write new file only if changed
                     &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
                     open (OU, ">$form->{'path'}");

@@ -50,7 +50,7 @@ sub l00http_tr_proc {
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a href=\"#__end__\">end</a> - \n";
-    print $sock "Input: <a href=\"/view.htm?path=$form->{'fname'}\">$form->{'fname'}</a><br>\n";
+    print $sock "Input: <a href=\"/ls.htm?path=$form->{'fname'}\">$form->{'fname'}</a><br>\n";
 
     # 1) Make 36 hours worth of time slots
 
