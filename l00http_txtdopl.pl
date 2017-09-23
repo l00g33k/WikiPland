@@ -144,8 +144,10 @@ sub l00http_txtdopl_proc (\%) {
                             }
                         }
                     }
-                    s/\n//g;
-                    s/\r//g;
+                    if (defined($_)) {
+                        s/\n//g;
+                        s/\r//g;
+                    }
                     if (!defined ($next)) {
                         $next = $_;
                     } elsif (!defined ($this)) {
@@ -164,7 +166,10 @@ sub l00http_txtdopl_proc (\%) {
                         $perl = '';
                     }
                 }
-                $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
+                $_ = &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef);
+                if (defined($_)) {
+                    $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
+                }
                 close (TXTDOPLIN);
                 # remove all crlf before compare
                 $newfilenocrlf = $newfile;
