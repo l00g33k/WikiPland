@@ -147,6 +147,19 @@ sub l00http_blockfilter_proc {
         }
     }
 
+    if (defined ($form->{'clear'})) {
+        @skipto = ();
+        @scanto = ();
+        @fileexclude = ();
+        @blkstart = ();
+        @blkstop = ();
+        @blkrequired = ();
+        @blkexclude = ();
+        @color = ();
+        @eval = ();
+        @preeval = ();
+        @stats = ();
+    }
 
     if (defined ($form->{'process'}) &&
         defined ($form->{'path'})) {
@@ -255,7 +268,8 @@ sub l00http_blockfilter_proc {
     print $sock "<tr><td>\n";
     print $sock "Maximum lines to display:\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"8\" name=\"maxlines\" value=\"$maxlines\">\n";
+    print $sock "<input type=\"text\" size=\"8\" name=\"maxlines\" value=\"$maxlines\"> \n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table><br>\n";
