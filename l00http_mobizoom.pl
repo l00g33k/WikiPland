@@ -141,7 +141,7 @@ $rwgeturl =~ s/\?/%3F/g;
 sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget, $saveinternal) = @_;
     my ($on_slashdot_org, $urlgiven, $wget2, $domain, $wgettmp);
-    my ($clip, $tmp, $last, $lnno);
+    my ($clip, $tmp, $last, $lnno, $wgetorg);
     my ($threads, $endanchor, $title, $freetag, $sectprelog);
 
 
@@ -155,6 +155,7 @@ sub l00http_mobizoom_mobilize {
 
     $urlgiven = $url;
 
+    $wgetorg = $wget;
     if ($wget =~ /<!-- ::mobizoom::orgurl::(.+?) -->/s) {
         # recover URL from cached file
         $url = $1;
@@ -457,6 +458,19 @@ sub l00http_mobizoom_mobilize {
         }
         $endanchor .= "<br><a href=\"#__top__\">Jump to top</a>\n";
 
+        if (($url =~ /\.(jpeg)$/i) ||
+            ($url =~ /\.(jpg)$/i) ||
+            ($url =~ /\.(gif)$/i) ||
+            ($url =~ /\.(png)$/i)) {
+            $wget = "Target is an image: <a href=\"/ls.htm?path=l00://mobizoom.$1\">l00://mobizoom.$1</a><p>".
+                    "<img src=\"/ls.htm?path=l00://mobizoom.$1\">";
+            if (length ($wgetorg) > 2000) {
+                &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.jpg');
+                &l00httpd::l00fwriteBuf($ctrl, $wgetorg);
+                &l00httpd::l00fwriteClose($ctrl);
+            }
+        }
+
         $_ = $title;
         $wget = "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
     }
@@ -720,7 +734,8 @@ sub l00http_mobizoom_proc {
 
     if ($mode1online2offline4download & 3) {
         # Add jump links if missing
-        if (!($wget =~ /<a href="#__here0__">last<\/a>/s)) {
+        if (defined($wget) && 
+            !($wget =~ /<a href="#__here0__">last<\/a>/s)) {
             &l00http_mobizoom_part2($ctrl, $sock, $here, $para);
         }
 

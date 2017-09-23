@@ -177,7 +177,9 @@ sub l00http_ls_conttype {
         $conttype = "Content-Type: application/octet-octet-stream\r\n";
     }
 
-    $conttype .= "Content-Disposition: inline; filename=\"$fname\"; size=\"$size\"\r\n";
+    if (defined($size)) {
+        $conttype .= "Content-Disposition: inline; filename=\"$fname\"; size=\"$size\"\r\n";
+    }
 
     ($conttype, $urlraw);
 }
