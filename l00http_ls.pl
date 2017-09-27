@@ -29,7 +29,7 @@ my ($el, $file, $fullpath, $gid, $hits, $hour, $htmlend, $ii);
 my ($ino, $intbl, $isdst, $editable, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
-my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date);
+my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
 my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
 
@@ -44,6 +44,7 @@ $prefmt = 'checked';
 $sortfind = '';
 $showpage = 'checked';
 $sortkey1name2date = 1;
+$lastpname = '';
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -308,6 +309,14 @@ sub l00http_ls_proc {
         # special case for /favicon.ico
         if ($path eq '/favicon.ico') {
             $path = "$ctrl->{'plpath'}favicon.ico";
+        } else {
+            if ($path !~ /[\\\/]/) {
+                # $path is filename only without path, append last pname
+                $path = "$lastpname$path";
+            } elsif (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
+                # $path has pathname, save it
+                $lastpname= $pname;
+            }
         }
         undef $filedata;
 #l00:

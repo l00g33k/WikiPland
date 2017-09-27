@@ -52,7 +52,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
             $disp =~ s/ /&nbsp;/g;
-            $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">$disp</a>";
+            $line = "MSG:<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">$disp</a>";
         } elsif (($leading, $tmp) = $line =~ /^(\d+\/\d+\/\d+\+*\d*,\d+, *)(.+)/) {
             # cal specific
             $line = $tmp;
@@ -68,7 +68,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
             $disp =~ s/ /&nbsp;/g;
-            $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">$disp</a>";
+            $line = "$leading<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">$disp</a>";
         } elsif ($record1 eq '.') {
             # drop leading date/time
             $line =~ s/^\d{8,8} \d{6,6} //;
@@ -86,7 +86,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
             $disp =~ s/ /&nbsp;/g;
-            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">$disp</a>";
+            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">$disp</a>";
         } else {
             if (length ($line) < 1) {
                 $line = '&nbsp;';
@@ -102,7 +102,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
             $disp =~ s/ /&nbsp;/g;
-            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">$disp</a>";
+            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">$disp</a>";
         }
         $html .= "$lf$line";
         $lf = "<br>\n";
