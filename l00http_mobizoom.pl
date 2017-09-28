@@ -278,10 +278,12 @@ sub l00http_mobizoom_mobilize {
 #        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
 #        $wget =~ s/<\/wml.*$>\n//g;
 
+        # convert img src="//domain to src="http://
+        $wget =~ s/<img(.+?)src="\/\//<img$1src=\"http:\/\//gsi;
         if ($freeimgsize eq 'checked') {
-            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/gsi;
+            $wget =~ s/<img.+?src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/gsi;
         } else {
-            $wget =~ s/<img src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/gsi;
+            $wget =~ s/<img.+?src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/gsi;
         }
 
 
