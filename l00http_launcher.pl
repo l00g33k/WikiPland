@@ -24,7 +24,7 @@ sub l00http_launcher_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $file, $name, $col, $extra, $path, $fname);
-    my ($lpname, $lfname, $pathuri);
+    my ($lpname, $lfname, $pathuri, $plpath);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -49,19 +49,22 @@ sub l00http_launcher_proc {
 
 
     if ($#targets == -1) {
-        if (opendir (DIR, "$ctrl->{'plpath'}")) {
-            foreach $file (sort readdir (DIR)) {
-                if ($file =~ /^l00http_(\w+)\.pl$/) {
-                    $name = $1;
-                    if (open (IN, "<$ctrl->{'plpath'}$file")) {
-                        while (<IN>) {
-                            # does this module reference 'path'?
-                            if (/\$form->\{'path'\}/) {
-                                push (@targets, $name);
-                                last;
+        foreach $plpath (("$ctrl->{'plpath'}", "$ctrl->{'extraplpath'}")) {
+            if (defined($plpath) && 
+                opendir (DIR, $plpath)) {
+                foreach $file (sort readdir (DIR)) {
+                    if ($file =~ /^l00http_(\w+)\.pl$/) {
+                        $name = $1;
+                        if (open (IN, "<$plpath$file")) {
+                            while (<IN>) {
+                                # does this module reference 'path'?
+                                if (/\$form->\{'path'\}/) {
+                                    push (@targets, $name);
+                                    last;
+                                }
                             }
+                            close (IN);
                         }
-                        close (IN);
                     }
                 }
             }
