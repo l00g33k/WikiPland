@@ -115,7 +115,23 @@ sub l00http_blockfilter_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Block filter</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>\n";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
-    print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+    if (defined($form->{'path'})) {
+        ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$pname</a>";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}\" target=\"_blank\">$fname</a><p>\n";
+    }
+    print $sock "<p>\n";
+
+
+    if (!defined($skipto[0])) {
+        # skip to regex not defined, make it always a hit
+        $skipto[0] = '.';
+    }
+    if (!defined($blkrequired[0])) {
+        # block required regex not defined, make it always a hit
+        $blkrequired[0] = '.';
+    }
+
 
     &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
     &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
@@ -335,16 +351,11 @@ sub l00http_blockfilter_proc {
                 # skipto or scanto
                 if ($skip0scan1 == 0) {
                     # skip to mode
-                    if (!defined($skipto[0])) {
-                        # skip to regex not defined, make it always a hit
-                        $skip0scan1 = 1;
-                    } else {
-                        foreach $condition (@skipto) {
-                            if (/$condition/i) {
-                                # found skip to, now do scan to
-                                $skip0scan1 = 1;
-                                last;
-                            }
+                    foreach $condition (@skipto) {
+                        if (/$condition/i) {
+                            # found skip to, now do scan to
+                            $skip0scan1 = 1;
+                            last;
                         }
                     }
                     if ($skip0scan1 == 0) {
@@ -407,16 +418,11 @@ sub l00http_blockfilter_proc {
                         }
                     }
                     # search for required
-                    if (!defined($blkrequired[0])) {
-                        # no regex defined, always hit required
-                        $requiredfound = 1;
-                    } else {
-                        foreach $condition (@blkrequired) {
-                            if (/$condition/i) {
-                                # found
-                                $requiredfound = 1;
-                                last;
-                            }
+                    foreach $condition (@blkrequired) {
+                        if (/$condition/i) {
+                            # found
+                            $requiredfound = 1;
+                            last;
                         }
                     }
                 }
