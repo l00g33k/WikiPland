@@ -280,12 +280,13 @@ sub l00http_mobizoom_mobilize {
 
         # convert img src="//domain to src="http://
         $wget =~ s/<img(.+?)src="\/\//<img$1src=\"http:\/\//gsi;
+        # display alt text
+        $wget =~ s/(<img.+?alt=")(.+?)"(.*?>)/$1$2$3$2/gsi;
         if ($freeimgsize eq 'checked') {
             $wget =~ s/<img.+?src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/gsi;
         } else {
             $wget =~ s/<img.+?src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/gsi;
         }
-
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
         $wget =~ s/<h(\d).*?>/<\/span><h$1>/gsi;
@@ -367,6 +368,8 @@ sub l00http_mobizoom_mobilize {
                 }
             }
 
+            # handle anchor like: <a href="//domain.com">
+            s/(<a.+?href=["'])\/\//$1http:\/\/\//gm;
             # add domain for local domain url
             s/(<a.+?href=["'])\//$1$domain\//gm;
             s/(<a.+?href=)\//$1$domain\//gm;
