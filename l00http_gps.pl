@@ -81,7 +81,7 @@ sub android_get_gps {
 
         $lon = $coor->{'longitude'};
         $lat = $coor->{'latitude'};
-        $lastcoor = sprintf ("%14.10f,%15.10f", $lon, $lat);
+        $lastcoor = sprintf ("%15.10f,%14.10f", $lat, $lon);
         $tim = substr ($coor->{'time'}, 0, 10);
         my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($tim);
         if ($lon > 0) {
@@ -232,7 +232,7 @@ sub l00http_gps_proc {
 			close(OUT);
         }
     } elsif (defined ($form->{"getgps"})) {
-        &l00httpd::l00setCB($ctrl, "$lon,$lat\n$buf");
+        &l00httpd::l00setCB($ctrl, "$lat,$lon $ctrl->{'now_string'}");
     }
     if ($datename) {
         $fname = 'gps_' . 
@@ -336,7 +336,7 @@ sub l00http_gps_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"getgps\" value=\"Get GPS\"></td>\n";
-    print $sock "        <td>paste to clipboard ($lastcoor)</td>\n";
+    print $sock "        <td>pasted to clipboard ($lastcoor)</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";

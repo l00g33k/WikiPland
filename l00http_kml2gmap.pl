@@ -348,9 +348,6 @@ sub l00http_kml2gmap_proc {
                 }
             }
             $buffer = "* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
-            if ($form->{'desc'} =~ /^new\d/) {
-                $new++;
-            }
 
             # back up
             &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
