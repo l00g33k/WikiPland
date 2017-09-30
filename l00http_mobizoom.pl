@@ -466,8 +466,8 @@ sub l00http_mobizoom_mobilize {
             ($url =~ /\.(png)$/i)) {
             $wget = "Target is an image: <a href=\"/ls.htm?path=l00://mobizoom.$1\">l00://mobizoom.$1</a><p>".
                     "<img src=\"/ls.htm?path=l00://mobizoom.$1\">";
-            if (length ($wgetorg) > 2000) {
-                &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom.jpg');
+            if (length ($wgetorg) > 200) {
+                &l00httpd::l00fwriteOpen($ctrl, "l00://mobizoom.$1");
                 &l00httpd::l00fwriteBuf($ctrl, $wgetorg);
                 &l00httpd::l00fwriteClose($ctrl);
             }
