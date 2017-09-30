@@ -20,12 +20,14 @@ use l00wget;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here, $prolog, $freeimgsize, $backurl);
+my ($url, $zoom, $para, $here, $prolog, $freeimgsize, $imgsrclink, $backurl, $forcetarget);
 $url = '';
 $zoom = 150;
 $para = 1;
 $freeimgsize = 'checked';
+$imgsrclink = '';
 $backurl = '';
+$forcetarget = '';
 
 sub wgetfollow2 {
     my ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug) = @_;
@@ -48,46 +50,7 @@ sub wgetfollow2 {
             $domain = $1;
         }
         $wgetjournal = '';
-        if ($url =~ /https:\/\//) {
-            ($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
-if (0) {
-            #rwgetshell^http://127.0.0.1:30443/shell.htm?exec=Exec&buffer=wget+-O+c%3A%2Fx%2Fram%2Frwget.htm+
-            #rwgetfetch^http://127.0.0.1:30443/ls.htm?path=c:/x/ram/rwget.htm&raw=on
-            if (defined($ctrl->{'rwgetshell'}) &&
-                defined($ctrl->{'rwgetfetch'})) {
-                $wgetjournal .= "\n";
-                # shell rwget to wget
-                $rwgeturl = "\"$url\"";
-#                $rwgeturl = &l00httpd::urlencode ("\"$url\"");
-$rwgeturl =~ s/%/%25/g;
-$rwgeturl =~ s/"/%22/g;
-$rwgeturl =~ s/&/%26/g;
-$rwgeturl =~ s/\+/%2B/g;
-$rwgeturl =~ s/\//%2F/g;
-$rwgeturl =~ s/:/%3A/g;
-$rwgeturl =~ s/=/%3D/g;
-$rwgeturl =~ s/\?/%3F/g;
-                $rwgeturl = "$ctrl->{'rwgetshell'}$rwgeturl";
-                $wgetjournal .= "rwgetshell: <a href=\"$rwgeturl\">$rwgeturl</a>\n";
-                ($hdr, $bdy) = &l00wget::wget ($ctrl, $rwgeturl, undef, $opentimeout, $readtimeout, $debug);
-                $wgetjournal .= sprintf("rwgetshell: HDR (%d B), BDY (%d B)\n", 
-                    length($hdr), length($bdy));
-                # fetch rwget file
-                $rwgeturl = $ctrl->{'rwgetfetch'};
-                $wgetjournal .= "rwgetfetch: <a href=\"$rwgeturl\">$rwgeturl</a>\n";
-                ($hdr, $bdy) = &l00wget::wget ($ctrl, $rwgeturl, undef, $opentimeout, $readtimeout, $debug);
-                $wgetjournal .= sprintf("rwgetfetch: HDR (%d B), BDY (%d B)\n", 
-                    length($hdr), length($bdy));
-            } else {
-                $journal .= "'rwgetshell' and 'rwgetfetch' are not defined in 'l00httpd.cfg'. Not using rwget server to fetch https\n";
-                $hdr = '';
-                $bdy = '';
-                last;
-            }
-}
-        } else {
-            ($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
-        }
+        ($hdr, $bdy) = &l00wget::wget ($ctrl, $url, $nmpw, $opentimeout, $readtimeout, $debug);
         $journal .= sprintf("PASS #%d: HDR (%d B), BDY (%d B)\nURL: %s\n", 
             $followmoves, length($hdr), length($bdy), $url);
         $journal .= sprintf ("URL is %3d bytes long and CRC32 is 0x%08x. ",
@@ -202,9 +165,9 @@ sub l00http_mobizoom_mobilize {
         # remote target=
         $wget =~ s/(<a.+?href=["'].+?) target=".+?"(.*?>)/$1$2/g;
         # convert URL to mobizoom, some uses ' instead of "
-        $wget =~ s/(<a.+?href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
-        $wget =~ s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
-        $wget =~ s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag>/g;
+        $wget =~ s/(<a.+?href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch$freetag&url=$2"/g;
+        $wget =~ s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch$freetag&url=$2'/g;
+        $wget =~ s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch$freetag&url=$2>/g;
 
         $wget = "Paragraph: $tmp<br>$wget<p><hr><a name=\"__end__\"></a>Paragraph: $tmp";
     } else {
@@ -236,11 +199,6 @@ sub l00http_mobizoom_mobilize {
         # remote various HTML tags
         $wget =~ s/<\/*html.*?>//gs;
 
-#    # remote various HTML tags
-#    $wget =~ s/<\/*html.*?>//gs;
-#    $wget =~ s/<head.*?>.*?<\/head.*?>//gs;
-#    $wget =~ s/<\/*body.*?>//gs;
-
         # display tags in debug mode
         if ($ctrl->{'debug'} >= 4) {
             $wget =~ s/<(\w+)/&lt;$1&gt; <$1/gs;
@@ -271,21 +229,22 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<p.*?>/<br>/gsi;
         $wget =~ s/<\/p>//sgi;
 
-#        $wget =~ s/\r//g;
-#        $wget =~ s/\n//g;
-#        $wget =~ s/^.+<body.*?>\n//g;
-#        $wget =~ s/<\/body.*$>\n//g;
-#        $wget =~ s/^.+>(This page adapted for your browser comes from )/$1/g;  # cut off before This page adapted
-#        $wget =~ s/<\/wml.*$>\n//g;
-
         # convert img src="//domain to src="http://
-        $wget =~ s/<img(.+?)src="\/\//<img$1src=\"http:\/\//gsi;
+        $wget =~ s/<img +src="\/\//<img src=\"http:\/\//gsi;
         # display alt text
         $wget =~ s/(<img.+?alt=")(.+?)"(.*?>)/$1$2$3$2/gsi;
         if ($freeimgsize eq 'checked') {
-            $wget =~ s/<img.+?src="(.+?)".*?>/ <a href="$1"><img src=\"$1\"><\/a>/gsi;
+            if ($imgsrclink eq 'checked') {
+                $wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1"><\/a>/gsi;
+            } else {
+                $wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1">/gsi;
+            }
         } else {
-            $wget =~ s/<img.+?src="(.+?)".*?>/ <a href="$1"><img src=\"$1\" width=\"200\" height=\"200\"><\/a>/gsi;
+            if ($imgsrclink eq 'checked') {
+                $wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1" width="200" height="200"><\/a>/gsi;
+            } else {
+                $wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1" width="200" height="200">/gsi;
+            }
         }
 
         $wget = "<span style=\"font-size : $zoom%;\">$wget</span>";
@@ -376,9 +335,9 @@ sub l00http_mobizoom_mobilize {
             # remote target=
             s/(<a.+?href=["'].+?) target=".+?"(.*?>)/$1$2/g;
             # convert URL to mobizoom, some uses ' instead of "
-            s/(<a.+?href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag"/g;
-            s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag'/g;
-            s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch&url=$2$freetag>/g;
+            s/(<a.+?href=")(https*:\/\/.+?)"/$1\/mobizoom.htm?fetch=Fetch$freetag&url=$2"/g;
+            s/(<a.+?href=')(https*:\/\/.+?)'/$1\/mobizoom.htm?fetch=Fetch$freetag&url=$2'/g;
+            s/(<a.+?href=)(https*:\/\/.+?)>/$1\/mobizoom.htm?fetch=Fetch$freetag&url=$2>/g;
 
             $sectprelog = 
                 "<a href=\"\/clip.htm?update=Copy+to+CB&clip=$clip\" target=\"_blank\"> : <\/a> &nbsp; <a name=\"p$para\"><\/a><small>".
@@ -474,6 +433,16 @@ sub l00http_mobizoom_mobilize {
                 &l00httpd::l00fwriteBuf($ctrl, $wgetorg);
                 &l00httpd::l00fwriteClose($ctrl);
             }
+        } elsif (($forcetarget eq 'jpg') ||
+                 ($forcetarget eq 'png') ||
+                 ($forcetarget eq 'gif')) {
+            $wget = "Target forced to $forcetarget: <a href=\"/ls.htm?path=l00://mobizoom.$forcetarget\">l00://mobizoom.$forcetarget</a><p>".
+                    "<img src=\"/ls.htm?path=l00://mobizoom.$forcetarget\">";
+            if (length ($wgetorg) > 200) {
+                &l00httpd::l00fwriteOpen($ctrl, "l00://mobizoom.$forcetarget");
+                &l00httpd::l00fwriteBuf($ctrl, $wgetorg);
+                &l00httpd::l00fwriteClose($ctrl);
+            }
         }
 
         $_ = $title;
@@ -512,14 +481,19 @@ sub l00http_mobizoom_part1 {
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\"></td>\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
     foreach $_ ((100, 110, 121, 133, 146, 160, 176, 194, 240, 300, 400, 500, 600)) {
-        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=Fetch&url=$url&zoomradio=$_\">$_</a> ";
+        print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=Fetch&zoomradio=$_&url=$url\">$_</a> ";
     }
-    print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size\n";
+    print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size.\n";
     if (-f $url) {
         # if we have a cached file
         print $sock "(<input type=\"checkbox\" name=\"saveinternal\">Save int.buf. \n";
-        print $sock "<a href=\"/view.htm?path=$url.internal.txt\">view</a>)\n";
+        print $sock "<a href=\"/view.htm?path=$url.internal.txt\">view</a>).\n";
     }
+    print $sock "<input type=\"checkbox\" name=\"imgsrclink\" $imgsrclink>Link img src.\n";
+    print $sock "Force ";
+    print $sock "<input type=\"radio\" name=\"forcetarget\" value=\"jpg\">.jpg";
+    print $sock "<input type=\"radio\" name=\"forcetarget\" value=\"png\">.png";
+    print $sock "<input type=\"radio\" name=\"forcetarget\" value=\"gif\">.gif";
     print $sock "</form>\n";
 
     # web page interactive mode, render web page
@@ -610,6 +584,12 @@ sub l00http_mobizoom_proc {
         } else {
             $freeimgsize = '';
         }
+        # link to img src
+        if ((defined ($form->{'imgsrclink'})) && ($form->{'imgsrclink'} eq 'on')) {
+            $imgsrclink = 'checked';
+        } else {
+            $imgsrclink = '';
+        }
     }
 
     $mode1online2offline4download = 0;
@@ -644,7 +624,11 @@ sub l00http_mobizoom_proc {
     if (defined ($form->{'zoomradio'})) {
         $zoom = $form->{'zoomradio'};
     }
-
+    if (defined ($form->{'forcetarget'})) {
+        $forcetarget = $form->{'forcetarget'};
+    } else {
+        $forcetarget = '';
+    }
 
     # determining mode of operation: $mode1online2offline4download
     ## 1: online: do a live fetch (user interacts through web page)
