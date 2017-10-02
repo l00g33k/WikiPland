@@ -119,7 +119,7 @@ sub l00http_scratch_proc {
         } else {
             $_ = 'checked';
         }
-        print $sock "<br><input type=\"checkbox\" name=\"newwin\" $_>Open links in new windows (set by Set)\n";
+        print $sock "<br><input type=\"checkbox\" name=\"newwin\" $_>Open links in new windows ('Set' to set)\n";
         print $sock "</form>\n";
 
         print $sock "<form action=\"/scratch.htm\" method=\"get\">\n";
