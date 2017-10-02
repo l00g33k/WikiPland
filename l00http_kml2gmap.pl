@@ -618,7 +618,24 @@ sub l00http_kml2gmap_proc {
             $span = 180;
         }
 
-        if ($nomarkers == 1) {
+        if (defined ($form->{'gpsmark'})) {
+            # selecting one
+            $zoom = 18;
+            # the selected marker
+            $ctrlon = $gpslon;
+            $ctrlat = $gpslat;
+
+            # var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
+            $myCenters .= "var myCenterGPS =new google.maps.LatLng($gpslat,$gpslon);\n";
+
+            $myMarkers .= "var markerGPS =new google.maps.Marker({ ".
+                "  position:myCenterGPS , \n".
+                "  label: 'gps' , \n".
+                "  title: 'GPS'});\n";
+
+            # marker.setMap(map);
+            $mySetMap .= "markerGPS.setMap(map);\n";
+        } elsif ($nomarkers == 1) {
             # if only one marker or
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
