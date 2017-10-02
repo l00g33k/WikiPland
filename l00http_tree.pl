@@ -183,7 +183,7 @@ sub l00http_tree_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     print $sock " Path: <a href=\"/launcher.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
     print $sock " <a href=\"#__end__\">jump to end</a><br>\n";
-    print $sock "Links: line#=clip path, path=ls.pl, filename=view.pl<p>\n";
+    print $sock "Links: line#=clip path, size=launcher.htm, path=ls.htm, filename=view.htm<p>\n";
 
 
     if (-f $form->{'path'}) {
@@ -390,7 +390,7 @@ sub l00http_tree_proc {
                     if ((!$isdir) || ($nodirs ne 'checked')) {
                         if ($nolinks ne 'checked') {
                             print $sock "<a href=\"/ls.htm?path=$path\">$path2</a>";
-                            print $sock "<a href=\"/ls.htm?path=$path$file\">$file</a>\n";
+                            print $sock "<a href=\"/view.htm?path=$path$file\">$file</a>\n";
                         } else {
                             print $sock "$path2$file\n";
                         }
