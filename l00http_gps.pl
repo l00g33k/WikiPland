@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use l00httpd;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -11,8 +12,10 @@ my %config = (proc => "l00http_gps_proc",
               desc => "l00http_gps_desc",
               perio => "l00http_gps_perio");
 my ($interval, $trkhdr, $wake, $lastcoor, $toast, $nexttoast);
-my ($lon, $lat, $EW, $NS, $lastgps, $lastpoll);
-my ($buf, $coor, $src, $dup, $dolog, $context);
+my ($lon, $lat, $lastgps, $lastpoll);
+my ($dup, $dolog, $context);
+$lon = 0;
+$lat = 0;
 $interval = 0;
 $lastcalled = 0;
 $percnt = 0;
@@ -32,8 +35,6 @@ $nexttoast = 0xffffffff;
 $datename = 0;
 $fname = 'gps.trk';
 
-my @mname = ( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-"Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
 $trkhdr = "\nH  LATITUDE    LONGITUDE    DATE      TIME     ALT    ;track\n";
 my $filhdr = 
@@ -47,64 +48,6 @@ my $filhdr =
 "U  LAT LON DM\n";
 
 
-sub android_get_gps {
-    my ($ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($tim, $out, $tmp, $lons, $lats);
-
-    if ($ctrl->{'os'} eq 'and') {
-        if ($known0loc1 == 0) {
-            $buf = $ctrl->{'droid'}->getLastKnownLocation();
-        } else {
-            $buf = $ctrl->{'droid'}->readLocation();
-        }
-    }
-#&l00httpd::dumphash ("buf", $buf);
-    if (ref $buf->{'result'}->{'network'} eq 'HASH') {
-        $lastres = "        $lastgps";
-        $coor = $buf->{'result'}->{'network'};
-        $src = 'network';
-    }
-    # 'network' is always available whenever phone is on GSM network
-    # put 'gps' second so as to always use gps even when network 
-    # is available.
-    if (ref $buf->{'result'}->{'gps'} eq 'HASH') {
-        $lastres = "    $lastgps";
-        $coor = $buf->{'result'}->{'gps'};
-        $src = 'gps';
-    }
-    if (defined ($coor)) {
-        $lastgps = time;
-        $lastres .= " = $ctrl->{'now_string'}\n";
-
-        $tmp = $lastgps - ($coor->{'time'} / 1000);
-        $lastres .= "$coor->{'provider'}@"."$coor->{'time'} diff=$tmp s\n";
-
-        $lon = $coor->{'longitude'};
-        $lat = $coor->{'latitude'};
-        $lastcoor = sprintf ("%15.10f,%14.10f", $lat, $lon);
-        $tim = substr ($coor->{'time'}, 0, 10);
-        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($tim);
-        if ($lon > 0) {
-            $EW = "E";
-            $lons = $lon;
-        } else {
-            $EW = "W";
-            $lons = -$lon;
-        }
-        if ($lat > 0) {
-            $NS = "N";
-            $lats = $lat;
-        } else {
-            $NS = "S";
-            $lats = -$lat;
-        }
-        #T  N2226.76139 E11354.35311 30-Dec-89 23:00:00 -9999
-        $out = sprintf ("T  %s%02d%08.5f %s%03d%08.5f %02d-%s-%02d %02d:%02d:%02d % 4d ; $src $ctrl->{'now_string'}",
-            $NS, int ($lats), ($lats - int ($lats)) * 60,
-            $EW, int ($lons), ($lons - int ($lons)) * 60,
-            $mday, $mname [$mon], $year % 100, $hour, $min, $sec, $coor->{'altitude'});
-    }
-}
 
 
 
@@ -120,7 +63,7 @@ sub l00http_gps_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buf, @countinglines);
+    my ($buf, @countinglines, $out);
 
     if (!defined($ctrl->{'gpsdir'})) {
         # if not defined
@@ -226,7 +169,8 @@ sub l00http_gps_proc {
             $form->{"locremark"} = '';
 	    }
         if ($ctrl->{'os'} eq 'and') {
-            $buf = &android_get_gps ($ctrl);
+            ($out, $lat, $lon, $lastcoor, $lastgps, $lastres)
+                = &l00httpd::android_get_gps ($ctrl, $known0loc1, $lastgps);
             open (OUT, ">>$ctrl->{'gpsdir'}gps.way");
 			print OUT "$lat,$lon $form->{'locremark'} $buf\n";
 			close(OUT);
@@ -412,7 +356,8 @@ sub l00http_gps_perio {
             # if we slept for longer, the phone might be sleeping,
             # during which it is not safe(?) to make socket JSON call
             # as the phone might (?, will?) during the call?
-            $out = &android_get_gps ($ctrl);
+            ($out, $lat, $lon, $lastcoor, $lastgps, $lastres)
+                = &l00httpd::android_get_gps ($ctrl, $known0loc1, $lastgps);
             if ($out ne '') {
                 if (($dup == 1) || ($out ne $lastout)) {
                     if ($dolog) {
