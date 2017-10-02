@@ -648,4 +648,80 @@ sub l00PopMsg {
 }
 
 
+my @mname = ( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+"Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+
+#&l00httpd::android_get_gps($ctrl, $known0loc1, $lastgps);
+sub android_get_gps {
+    my ($ctrl, $known0loc1, $lastgps) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my ($tim, $out, $tmp, $lons, $lats);
+    my ($gps, $coor, $src, $NS, $EW);
+    my ($lat, $lon, $lastcoor, $lastres);
+
+
+    $out = 'No GPS support';
+    $lat = 0;
+    $lon = 0;
+    $lastcoor = '0,0';
+    $lastres = '';
+
+    if ($ctrl->{'os'} eq 'and') {
+        if ($known0loc1 == 0) {
+            $gps = $ctrl->{'droid'}->getLastKnownLocation();
+        } else {
+            $gps = $ctrl->{'droid'}->readLocation();
+        }
+        #&l00httpd::dumphash ("gps", $gps);
+
+        if (ref $gps->{'result'}->{'network'} eq 'HASH') {
+            $lastres = "        $lastgps";
+            $coor = $gps->{'result'}->{'network'};
+            $src = 'network';
+        }
+        # 'network' is always available whenever phone is on GSM network
+        # put 'gps' second so as to always use gps even when network 
+        # is available.
+        if (ref $gps->{'result'}->{'gps'} eq 'HASH') {
+            $lastres = "    $lastgps";
+            $coor = $gps->{'result'}->{'gps'};
+            $src = 'gps';
+        }
+        if (defined ($coor)) {
+            $lastgps = time;
+            $lastres .= " = $ctrl->{'now_string'}\n";
+
+            $tmp = $lastgps - ($coor->{'time'} / 1000);
+            $lastres .= "$coor->{'provider'}@"."$coor->{'time'} diff=$tmp s\n";
+
+            $lon = $coor->{'longitude'};
+            $lat = $coor->{'latitude'};
+            $lastcoor = sprintf ("%15.10f,%14.10f", $lat, $lon);
+            $tim = substr ($coor->{'time'}, 0, 10);
+            my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($tim);
+            if ($lon > 0) {
+                $EW = "E";
+                $lons = $lon;
+            } else {
+                $EW = "W";
+                $lons = -$lon;
+            }
+            if ($lat > 0) {
+                $NS = "N";
+                $lats = $lat;
+            } else {
+                $NS = "S";
+                $lats = -$lat;
+            }
+            #T  N2226.76139 E11354.35311 30-Dec-89 23:00:00 -9999
+            $out = sprintf ("T  %s%02d%08.5f %s%03d%08.5f %02d-%s-%02d %02d:%02d:%02d % 4d ; $src $ctrl->{'now_string'}",
+                $NS, int ($lats), ($lats - int ($lats)) * 60,
+                $EW, int ($lons), ($lons - int ($lons)) * 60,
+                $mday, $mname [$mon], $year % 100, $hour, $min, $sec, $coor->{'altitude'});
+        }
+    }
+
+    ($out, $lat, $lon, $lastcoor, $lastgps, $lastres);
+}
+
+
 1;

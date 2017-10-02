@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00wikihtml;
+use l00httpd;
 
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
@@ -220,11 +221,14 @@ sub l00http_kml2gmap_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $lon, $lat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
-    my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat);
+    my ($tmp, $lon, $lat, $gpslon, $gpslat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
+    my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $matched, $exclude, $drawgriddo, $drawgriddo2);
 
+    $gpslon = '';
+    $gpslat = '';
+    $desc = "new$new";
 
     if (defined($ctrl->{'googleapikey'})) {
         $apikey = $ctrl->{'googleapikey'};
@@ -358,6 +362,18 @@ sub l00http_kml2gmap_proc {
         }
     } 
 
+    # paste GPS
+    if (defined ($form->{'path'}) && 
+        defined ($form->{'gpsmark'})) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            my ($out, $lastcoor, $lastgps, $lastres);
+            ($out, $gpslat, $gpslon, $lastcoor, $lastgps, $lastres)
+                = &l00httpd::android_get_gps ($ctrl, 1, 0);
+            $desc = "GPS$new $ctrl->{'now_string'}";
+            $new++;
+        }
+    } 
+
     undef %labelsort;
     if (defined($form->{'selregex'})) {
         if (length($form->{'selregex'}) > 0) {
@@ -386,16 +402,32 @@ sub l00http_kml2gmap_proc {
     if ($exclude eq 'checked') {
         $tmp .= '&exclude=on';
     }
-    $labeltable = "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
-    $labeltable .= "Description: latitude,longitude ";
-    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
-    $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&selregex=\">all</a>. ";
-    $labeltable .= "<a href=\"#__end__\">end</a>).$_\n<pre>";
+
     if (!defined ($form->{'path'})) {
         $form->{'path'} = 'l00://waypoint.txt';
         &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
         &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
         &l00httpd::l00fwriteClose($ctrl);
+    }
+    $labeltable = '';
+    $labeltable .= "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
+    $labeltable .= "Description: latitude,longitude ";
+    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
+    $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&selregex=\">all</a>. ";
+    $labeltable .= "<a href=\"#__end__\">end</a>)";
+    $labeltable .= "$_\n<pre>";
+    if ($ctrl->{'os'} eq 'and') {
+        $labeltable .= "<form action=\"/kml2gmap.htm\" method=\"get\">";
+        $labeltable .= "<input type=\"submit\" name=\"gpsmark\" value=\"Read GPS\">";
+        $labeltable .= "<input type=\"hidden\" name=\"width\" value=\"$width\">";
+        $labeltable .= "<input type=\"hidden\" name=\"height\" value=\"$height\">";
+        $labeltable .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
+        $labeltable .= "</form>";
+        if (defined ($form->{'path'}) && 
+            defined ($form->{'gpsmark'})) {
+            $labeltable .= "<br><font style=\"color:red;background-color:yellow\">Enter Description below and click 'Add waypoint'</font>\n";
+        }
+        $labeltable .= "<br>";
     }
     $htmlout = '';
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
@@ -586,7 +618,24 @@ sub l00http_kml2gmap_proc {
             $span = 180;
         }
 
-        if ($nomarkers == 1) {
+        if (defined ($form->{'gpsmark'})) {
+            # selecting one
+            $zoom = 18;
+            # the selected marker
+            $ctrlon = $gpslon;
+            $ctrlat = $gpslat;
+
+            # var myCenter =new google.maps.LatLng(45.4357487,12.3098395);
+            $myCenters .= "var myCenterGPS =new google.maps.LatLng($gpslat,$gpslon);\n";
+
+            $myMarkers .= "var markerGPS =new google.maps.Marker({ ".
+                "  position:myCenterGPS , \n".
+                "  label: 'gps' , \n".
+                "  title: 'GPS'});\n";
+
+            # marker.setMap(map);
+            $mySetMap .= "markerGPS.setMap(map);\n";
+        } elsif ($nomarkers == 1) {
             # if only one marker or
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
@@ -649,7 +698,7 @@ sub l00http_kml2gmap_proc {
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
     print $sock "<span id=\"coor\">&nbsp;</span><br>";
     print $sock "<span id=\"distance\">&nbsp;</span><p>";
-    print $sock "<p>$labeltable</pre>\n";
+    print $sock "$labeltable</pre>\n";
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
@@ -677,16 +726,16 @@ sub l00http_kml2gmap_proc {
         print $sock "Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"new$new\">\n";
+        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"$desc\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Longitude:</td><td><input type=\"text\" name=\"long\" id=\"long\" size=\"12\">\n";
+        print $sock "Longitude:</td><td><input type=\"text\" name=\"long\" id=\"long\" size=\"12\" value=\"$gpslon\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\">\n";
+        print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\" value=\"$gpslat\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
@@ -695,7 +744,6 @@ sub l00http_kml2gmap_proc {
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"Update\">\n";
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
-    $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
         print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";
         print $sock "<input type=\"hidden\" name=\"height\" value=\"$height\">\n";
         print $sock "</form>\n";
