@@ -230,29 +230,32 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/p>//sgi;
 
         # convert img src="//domain to src="http://
-        $wget =~ s/<img +src="\/\//<img src=\"http:\/\//gsi;
+        $wget =~ s/<(img[^>]+src=["']\/\/)/$1http:\/\//gsi;
         # display alt text
-        #$wget =~ s/(<img.+?alt=")(.+?)(".*?>)/$1$2$3((alt text: $2))/gsi;
-#       $wget =~ s/(<img[^>]+?alt=")(.+?)"/((alt text: $2))$1$2"/gsi;
-#       $wget =~ s/(<img[^>]+?alt=")(.+?)(".*?>)/$1$2$3/gsi;
-#@_ = $wget =~ /<img[^>]+?(alt=".+?").*?>/gsi;
-@_ = $wget =~ /(<img[^>]+?alt=")([^"]+?)(".*?>)/gsi;
         $wget =~ s/(<img[^>]+?alt=")([^"]+?)(".*?>)/$1$2$3((alt text: $2))/gsi;
-#open(DBG,">d:/x/ram/del/del.txt");
-#print DBG $#_ . "\n".join("\n", @_);
-#close(DBG);
 
         if ($freeimgsize eq 'checked') {
             if ($imgsrclink eq 'checked') {
-                $wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1"><\/a>/gsi;
+               #$wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1"><\/a>/gsi;
+                $wget =~ s/(<img[^"]+src=")(.+?)("[^"]*?>)/ <a href="$2">$1$2$3<\/a>/gsi;
             } else {
-                $wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1">/gsi;
+               #$wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1">/gsi;
+                $wget =~ s/(<img[^"]+src=")(.+?)("[^"]*?>)/$1$2$3/gsi;
             }
         } else {
             if ($imgsrclink eq 'checked') {
+               #$wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1" width="200" height="200"><\/a>/gsi;
                 $wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1" width="200" height="200"><\/a>/gsi;
             } else {
+               #$wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1" width="200" height="200">/gsi;
                 $wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1" width="200" height="200">/gsi;
+            }
+            if ($imgsrclink eq 'checked') {
+               #$wget =~ s/<img +src=['"](.+?)['"].*?>/ <a href="$1"><img src="$1"><\/a>/gsi;
+                $wget =~ s/(<img[^"]+src=")(.+?)("[^"]*?)>/ <a href="$2">$1$2$3 width="200" height="200"><\/a>/gsi;
+            } else {
+               #$wget =~ s/<img +src=['"](.+?)['"].*?>/<img src="$1">/gsi;
+                $wget =~ s/(<img[^"]+src=")(.+?)("[^"]*?)>/$1$2$3 width="200" height="200">/gsi;
             }
         }
 
