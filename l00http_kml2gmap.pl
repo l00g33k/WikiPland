@@ -249,6 +249,20 @@ sub l00http_kml2gmap_proc {
         $satellite = 0;
     }
 
+    if (!defined ($form->{'path'})) {
+        $form->{'path'} = 'l00://waypoint.txt';
+        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
+        &l00httpd::l00fwriteClose($ctrl);
+    }
+    if (!&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+        # target doesn't exist
+        $form->{'path'} = 'l00://waypoint.txt';
+        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
+        &l00httpd::l00fwriteClose($ctrl);
+    }
+
 
     $matched = '';
     $exclude = '';
@@ -403,12 +417,6 @@ sub l00http_kml2gmap_proc {
         $tmp .= '&exclude=on';
     }
 
-    if (!defined ($form->{'path'})) {
-        $form->{'path'} = 'l00://waypoint.txt';
-        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-        &l00httpd::l00fwriteBuf($ctrl, "# sample waypoint\n40.7488798,-73.9701978 United Nations HQ\n");
-        &l00httpd::l00fwriteClose($ctrl);
-    }
     $labeltable = '';
     $labeltable .= "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
     $labeltable .= "Description: latitude,longitude ";
@@ -426,6 +434,10 @@ sub l00http_kml2gmap_proc {
         if (defined ($form->{'path'}) && 
             defined ($form->{'gpsmark'})) {
             $labeltable .= "<br><font style=\"color:red;background-color:yellow\">Enter Description below and click 'Add waypoint'</font>\n";
+            $tmp = "path=l00://waypoint.txt&addway=add&desc=GPS$new+$ctrl->{'now_string'}&long=$gpslon&lat=$gpslat";
+            $tmp =~ s/ /+/g;
+            $labeltable .= "<a href=\"/kml2gmap.htm?$tmp\">Save to RAM file</a>\n";
+            $new++;
         }
         $labeltable .= "<br>";
     }
