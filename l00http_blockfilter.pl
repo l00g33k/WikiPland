@@ -117,7 +117,7 @@ sub l00http_blockfilter_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#__end__\">jump to end</a> - \n";
     if (defined($form->{'path'})) {
         ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$pname</a>";
+        print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/view.htm?path=$form->{'path'}\" target=\"_blank\">$fname</a><p>\n";
     }
     print $sock "<p>\n";
