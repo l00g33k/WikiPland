@@ -23,7 +23,7 @@ sub l00http_recedit_output_row {
     $html .= "    <tr>\n";
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
-        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"add$id\">+1d<br>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"add$id\"><font style=\"color:black;background-color:silver\">+1d</font><br>\n";
         $html .= "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
         $html .= "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
         $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
