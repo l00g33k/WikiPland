@@ -5,11 +5,12 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec);
+my ($arg, $eval, $sort, $sortdec, $wholefile);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
+$wholefile = '';
 
 my %config = (proc => "l00http_lineproc_proc",
               desc => "l00http_lineproc_desc");
@@ -27,7 +28,7 @@ sub l00http_lineproc_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($dopl, $dorst, @newfile);
-    my ($last, $this, $next, $perl, $buf, $tmp, $pname, $fname, $cnt);
+    my ($last, $this, $next, $perl, $buf, $tmp, $pname, $fname, $cnt, @evals, $eval1);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -75,6 +76,11 @@ sub l00http_lineproc_proc (\%) {
         } else {
             $sortdec = '';
         }
+        if (defined ($form->{'wholefile'}) && ($form->{'wholefile'} eq 'on')) {
+            $wholefile = 'checked';
+        } else {
+            $wholefile = '';
+        }
     }
 
     print $sock "<a href=\"/lineproc.htm?path=$form->{'path'}\">Refresh</a> - ";
@@ -90,6 +96,7 @@ sub l00http_lineproc_proc (\%) {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
+    print $sock "            <input type=\"checkbox\" name=\"wholefile\" $wholefile>whole file.\n";
     print $sock "            <input type=\"submit\" name=\"run\" value=\"Process\"></td>\n";
     print $sock "    </tr>\n";
 
@@ -121,45 +128,57 @@ sub l00http_lineproc_proc (\%) {
             # There are two special cases:
             # 1) at the very start, only  $next is the first line in the input, $_ and $this is undef
             # 2) at the very end, only $last is the last line in the input, $_ and $next is undef
-            while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                s/\r//;
-                s/\n//;
-                if (!defined ($next)) {
-                    # first ever line was just read and is going to be the $next line, current $_ is undef.
-                    $next = $_;
-                    $_ = undef;
-                } elsif (!defined ($this)) {
-                    # second ever line was just read
-                    $this = $next;
-                    $next = $_;
-                    $_ = $this;
-                } else {
-                    $last = $this;
-                    $this = $next;
-                    $next = $_;
-                    $_ = $this;
+            $eval =~ s/\r//g;
+            @evals = split("\n", $eval);
+            if ($wholefile eq 'checked') {
+                $_ = &l00httpd::l00freadAll($ctrl);
+                foreach $eval1 (@evals) {
+                    eval $eval1;
                 }
+                push(@newfile, "$_\n");
+            } else {
+                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                    s/\r//;
+                    s/\n//;
+                    if (!defined ($next)) {
+                        # first ever line was just read and is going to be the $next line, current $_ is undef.
+                        $next = $_;
+                        $_ = undef;
+                    } elsif (!defined ($this)) {
+                        # second ever line was just read
+                        $this = $next;
+                        $next = $_;
+                        $_ = $this;
+                    } else {
+                        $last = $this;
+                        $this = $next;
+                        $next = $_;
+                        $_ = $this;
+                    }
+                    foreach $eval1 (@evals) {
+                        eval $eval1;
+                    }
+                    if (defined($_)) {
+                        push(@newfile, "$_\n");
+                    }
+                }
+                # last line from file has just been processed, so $next will be undef
+                $last = $this;
+                $this = $next;
+                $next = undef;
+                $_ = $this;
                 eval $eval;
                 if (defined($_)) {
                     push(@newfile, "$_\n");
                 }
-            }
-            # last line from file has just been processed, so $next will be undef
-            $last = $this;
-            $this = $next;
-            $next = undef;
-            $_ = $this;
-            eval $eval;
-            if (defined($_)) {
-                push(@newfile, "$_\n");
-            }
-            # last line from file has been processed once, so $_ will be undef
-            $last = $this;
-            $next = undef;
-            $_ = undef;
-            eval $eval;
-            if (defined($_)) {
-                push(@newfile, "$_\n");
+                # last line from file has been processed once, so $_ will be undef
+                $last = $this;
+                $next = undef;
+                $_ = undef;
+                eval $eval;
+                if (defined($_)) {
+                    push(@newfile, "$_\n");
+                }
             }
             print $sock "</pre>\n";
 
