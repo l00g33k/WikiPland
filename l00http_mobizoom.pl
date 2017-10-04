@@ -230,9 +230,9 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/p>//sgi;
 
         # convert img src="//domain to src="http://
-        $wget =~ s/<(img[^>]+src=["']\/\/)/$1http:\/\//gsi;
+        $wget =~ s/(<img[^>]+src=["'])\/\//$1http:\/\//gsi;
         # display alt text
-        $wget =~ s/(<img[^>]+?alt=")([^"]+?)(".*?>)/$1$2$3((alt text: $2))/gsi;
+        $wget =~ s/(<img[^>]+?alt=")([^"]+?)(".*?>)/$1$2$3&lt;$2&gt;/gsi;
 
         if ($freeimgsize eq 'checked') {
             if ($imgsrclink eq 'checked') {
