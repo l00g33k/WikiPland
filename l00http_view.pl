@@ -11,7 +11,7 @@ my %config = (proc => "l00http_view_proc",
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
-my ($findmaxln, $findskip);
+my ($findmaxln, $findskip, $eval, $evalbox);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -25,6 +25,8 @@ $hilitetext = '';
 $lastpath = '';
 $refresh = '';
 $refreshfile = '';
+$eval = '';
+$evalbox = '';
 
 
 sub l00http_view_desc {
@@ -52,12 +54,6 @@ sub l00http_view_proc {
         }
     }
 
-    if (defined ($form->{'nohdr'})) {
-        $nohdr = 'checked';
-    } else {
-        $nohdr = '';
-    }
-
     if (defined ($form->{'clr'})) {
         undef $form->{'findtext'};
         $findtext = '';
@@ -73,6 +69,25 @@ sub l00http_view_proc {
                 }
             }
         }
+        if ((defined($form->{'evalbox'})) && ($form->{'evalbox'} eq 'on')) {
+            $evalbox = 'checked';
+        } else {
+            $evalbox = '';
+        }
+        if (defined($form->{'eval'})) {
+            $eval = $form->{'eval'};
+        }
+        if ((defined($form->{'nohdr'})) && ($form->{'nohdr'} eq 'on')) {
+            $nohdr = 'checked';
+        } else {
+            $nohdr = '';
+        }
+    }
+    if (defined($form->{'cb2eval'})) {
+        $eval = &l00httpd::l00getCB($ctrl);
+    }
+    if (defined($form->{'clreval'})) {
+        $eval = '';
     }
 
     if ($refresh eq '') {
@@ -167,6 +182,12 @@ sub l00http_view_proc {
         print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
         print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
         print $sock "Auto-refresh (0=off) <input type=\"text\" size=\"3\" name=\"refresh\" value=\"\"> sec.\n";
+
+        print $sock "(<input type=\"checkbox\" name=\"evalbox\" $evalbox> Eval each \$_:\n";
+        print $sock "<input type=\"text\" size=\"6\" name=\"eval\" value=\"$eval\">\n";
+        print $sock "<input type=\"submit\" name=\"cb2eval\" value=\"<-CB\"> \n";
+        print $sock "<input type=\"submit\" name=\"clreval\" value=\"clr\"> )\n";
+
         # skip backward $maxln
         if ($skip >= 0) {
             # only if skipping from the start
@@ -235,12 +256,22 @@ sub l00http_view_proc {
                 $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$form->{'path'}", "text/plain");
             }
 
-            $buffer = &l00httpd::l00freadAll($ctrl);
+            if ($evalbox eq 'checked') {
+                $buffer = '';
+                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                    s/[\n\r]//g;
+                    eval $eval;
+                    $buffer .= "$_\n";
+                }
+            } else {
+                $buffer = &l00httpd::l00freadAll($ctrl);
 
-            # Some has only \r as line endings. So convert DOS \r\n to Unix \n
-            # then convert \r to Unix \n
-            $buffer =~ s/\r\n/\n/g;
-            $buffer =~ s/\r/\n/g;
+                # Some has only \r as line endings. So convert DOS \r\n to Unix \n
+                # then convert \r to Unix \n
+                $buffer =~ s/\r\n/\n/g;
+                $buffer =~ s/\r/\n/g;
+            }
+
 
             if (defined ($form->{'find'})) {
                 ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
