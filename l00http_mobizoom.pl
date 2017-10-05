@@ -104,7 +104,7 @@ sub wgetfollow2 {
 sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget, $saveinternal) = @_;
     my ($on_slashdot_org, $urlgiven, $wget2, $domain, $wgettmp);
-    my ($clip, $tmp, $last, $lnno, $wgetorg);
+    my ($clip, $tmp, $last, $lnno, $wgetorg, $inhref);
     my ($threads, $endanchor, $title, $freetag, $sectprelog);
 
 
@@ -299,6 +299,7 @@ sub l00http_mobizoom_mobilize {
         $last = '';
         $clip = '';
         $lnno = 0;
+        $inhref = 0;
         foreach $_ (split ("\n", $wget2)) {
             chomp;
             if (/^ *$/) {
@@ -360,28 +361,37 @@ sub l00http_mobizoom_mobilize {
             }
             $sectprelog .= "<\/small>";
 
-            if (/<br>/i) {
-                #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");
-                s/<br>/<br>$sectprelog /i;
-                # increase paragraph count/index
-                $para++;
-                $clip = '';
-            } elsif (/<h\d.*?>/i) {
-                #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
-                s/<(h\d.*?)>/$sectprelog<$1>/i;
-                # increase paragraph count/index
-                $para++;
-                $clip = '';
-            } elsif (/<p>/i) {
-                #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
-                s/<p>/<br>$sectprelog /i;
-                # increase paragraph count/index
-                $para++;
-                $clip = '';
-            } else {
-                #&l00httpd::dbp($config{'desc'}, "xx: >$_<\n");
+            # do not insert paragraph break between <a href...> and </a>
+            if (/<a[^>]+href=[^>]+>/i) {
+                $inhref = 1;
             }
-
+            if (/<\/a[^>]*>/i) {
+                $inhref = 0;
+            }
+            if (!$inhref) {
+                # don't put paragraph in the middle of <a href>..</a>
+                if (/<br>/i) {
+                    #&l00httpd::dbp($config{'desc'}, "BR: >$_<\n");
+                    s/<br>/<br>$sectprelog /i;
+                    # increase paragraph count/index
+                    $para++;
+                    $clip = '';
+                } elsif (/<h\d.*?>/i) {
+                    #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
+                    s/<(h\d.*?)>/$sectprelog<$1>/i;
+                    # increase paragraph count/index
+                    $para++;
+                    $clip = '';
+                } elsif (/<p>/i) {
+                    #&l00httpd::dbp($config{'desc'}, "P: >$_<\n");
+                    s/<p>/<br>$sectprelog /i;
+                    # increase paragraph count/index
+                    $para++;
+                    $clip = '';
+                } else {
+                    #&l00httpd::dbp($config{'desc'}, "xx: >$_<\n");
+                }
+            }
 
             $wget .= "$_\n";
             $last = $_;
