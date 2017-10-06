@@ -14,8 +14,8 @@ $displen = 50;
 
 
 sub l00http_recedit_output_row {
-    my ($sock, $form, $line, $id, $obuf) = @_;
-    my ($tmp, $disp, $lf, $leading, $html);
+    my ($ctrl, $sock, $form, $line, $id, $obuf) = @_;
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2);
 
     $html = '';
 
@@ -23,7 +23,7 @@ sub l00http_recedit_output_row {
     $html .= "    <tr>\n";
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
-        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"add$id\"><font style=\"color:black;background-color:silver\">+1d</font><br>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
         $html .= "            <input type=\"checkbox\" name=\"add4h$id\">+4h<br>\n";
         $html .= "            del<input type=\"checkbox\" name=\"id$id\"></td>\n";
         $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
@@ -91,6 +91,18 @@ sub l00http_recedit_output_row {
             if (length ($line) < 1) {
                 $line = '&nbsp;';
             }
+            # match reminder
+            # 20171005 110000:10:0:60:
+            $color1 = '';
+            $color2 = '';
+            if (defined ($form->{'reminder'})) {
+                if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
+                    if ($1 lt $ctrl->{'now_string'}) {
+                        $color1 = '<font style="color:black;background-color:silver">';
+                        $color2 = '</font>';
+                    }
+                }
+            }
             # match any specific
             $tmp = $line;
             $tmp =~ s/ /+/g;
@@ -102,7 +114,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
             $disp =~ s/ /&nbsp;/g;
-            $line = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">$disp</a>";
+            $line = "$color1<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"newclip\">$disp</a>$color2";
         }
         $html .= "$lf$line";
         $lf = "<br>\n";
@@ -341,7 +353,7 @@ sub l00http_recedit_proc (\%) {
                 if (/$record1/) {
                     # found start of new record
                     if ($found) {
-                        push (@table, &l00http_recedit_output_row($sock, $form, $line, $id, $obuf));
+                        push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
                         $id++;
                     }
                     $found = 1;
@@ -352,7 +364,7 @@ sub l00http_recedit_proc (\%) {
                 }
             }
             if ($found) {
-                push (@table, &l00http_recedit_output_row($sock, $form, $line, $id, $obuf));
+                push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
             }
             close (IN);
         }
