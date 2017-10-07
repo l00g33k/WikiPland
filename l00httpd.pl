@@ -52,7 +52,7 @@ eval "use Android";
 
 my ($addr, $checked, $client_ip, $cmd_param_pair);
 my ($ishost, $ctrl_lstn_sock, $cli_lstn_sock, $ctrl_port, $ctrl_port_first, $cli_port, $debug, $file, $hour);
-my ($idpw, $idpwmustbe, $ip, $isdst, $key, $mday, $min, $host_ip);
+my ($idpw, $idpwmustbe, $isdst, $key, $mday, $min, $host_ip);
 my ($modcalled, $mod, $mon, $name, $param, $tmp, $dnspattern, $ipaddr, $buf);
 my ($rethash, $retval, $sec, $sock, $tickdelta, $postlen);
 my ($urlparams, $val, $wday, $yday, $year, $subname);
@@ -63,7 +63,7 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil);
+my ($cmdlnhome, $waketil, $ipage);
 
 # set listening port
 $ctrl_port = 20337;
@@ -77,6 +77,7 @@ $httpmax = 1024 * 1024 * 3;
 $ctrl{'bannermute'} = 0;
 $cmdlnhome = '';
 $waketil = 0;
+$ipage = 0;
 
 undef $timeout;
 
@@ -114,6 +115,85 @@ sub perlvmsize {
     }
 
     $vmsize;
+}
+
+
+sub getsvrip {
+    my ($ip, $now);
+
+    $now = time;
+    if ($ipage + 60 > $now) {
+        # server ip less than 60 seconds old, use cache
+        $ip = $ctrl{'myip'};
+    } else {
+        $ipage = $now;
+
+        if ($ctrl{'os'} eq 'and') {
+            if ($ctrl{'machine'} eq 'Morrison') {
+                $ip = `busybox ifconfig`;
+            } else {
+                $ip = `ip addr show`;
+                undef %ifnet;
+                foreach $_ (split ("\n", $ip)) {
+                    #1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
+                    if (/^\d+: *(\w+):/) {
+                        $tmp = $1;
+                    }
+                    #    inet 127.0.0.1/8 scope host lo
+                    if (/inet *(\d+\.\d+\.\d+\.\d+)\//) {
+                        $ifnet {$tmp} = $1;;
+                    }
+                }
+                $ip = '';
+                foreach $_ (keys %ifnet) {
+                    if (/wlan/) {
+                        $ip .= "$ifnet{$_} ";
+                    } elsif (/eth/) {
+                        $ip .= "$ifnet{$_} ";
+                    }
+                }
+                if ($ip eq '') {
+                    # didn't find wifi, try mobile net
+                    foreach $_ (keys %ifnet) {
+                        if (/rmnet/) {
+                            $ip .= "$ifnet{$_} ";
+                        }
+                    }
+                }
+            }
+        } elsif (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
+            $ip = `ipconfig`;
+        } else {
+            #print "shell /sbin/ifconfig\n", if ($debug >= 5);
+            print "shell ifconfig\n", if ($debug >= 5);
+            if (-f "/sbin/ifconfig") {
+                $ip = `/sbin/ifconfig`;
+            } else {
+                $ip = `ifconfig`;
+            }
+        }
+        print "raw ip = $ip\n", if ($debug >= 5);
+        if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
+            $ip = `ipconfig`;
+            if ($ip =~ /(192\.168\.\d+\.\d+)/) {
+                $ip = $1;
+            }
+        } else {
+            if (defined ($ip)) {
+                if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
+                    $ip = $1;
+                } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
+                    $ip = $1;
+                }
+            } else {
+                $ip = '(unknown)';
+            }
+        }
+        $ip =~ s/ //g;
+    }
+
+    $ctrl{'myip'} = $ip;
+    $ip;
 }
 
 sub updateNow_string {
@@ -718,74 +798,8 @@ while(1) {
                 $hiresclockmsec = Time::HiRes::time();
             }
             $ctrl{'ishost'} = $ishost;
-            if ($ctrl{'os'} eq 'and') {
-                if ($ctrl{'machine'} eq 'Morrison') {
-                    $ip = `busybox ifconfig`;
-#               } elsif ($ctrl{'machine'} eq 'doubleshot') {
-                } else {
-                    $ip = `ip addr show`;
-                    undef %ifnet;
-                    foreach $_ (split ("\n", $ip)) {
-                        #1: lo: <LOOPBACK,UP,LOWER_UP> mtu 16436 qdisc noqueue
-                        if (/^\d+: *(\w+):/) {
-                            $tmp = $1;
-                        }
-                        #    inet 127.0.0.1/8 scope host lo
-                        if (/inet *(\d+\.\d+\.\d+\.\d+)\//) {
-                            $ifnet {$tmp} = $1;;
-                        }
-                    }
-                    $ip = '';
-                    foreach $_ (keys %ifnet) {
-                        if (/wlan/) {
-                            $ip .= "$ifnet{$_} ";
-                        } elsif (/eth/) {
-                            $ip .= "$ifnet{$_} ";
-                        }
-                    }
-                    if ($ip eq '') {
-                        # didn't find wifi, try mobile net
-                        foreach $_ (keys %ifnet) {
-                            if (/rmnet/) {
-                                $ip .= "$ifnet{$_} ";
-                            }
-                        }
-                    }
-#               } else {
-#                   # don't know how to find self IP yet
-#                   $ip = undef;
-                }
-            } elsif (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
-                $ip = `ipconfig`;
-            } else {
-                #print "shell /sbin/ifconfig\n", if ($debug >= 5);
-                print "shell ifconfig\n", if ($debug >= 5);
-                if (-f "/sbin/ifconfig") {
-                    $ip = `/sbin/ifconfig`;
-                } else {
-                    $ip = `ifconfig`;
-                }
-            }
-            print "raw ip = $ip\n", if ($debug >= 5);
-            if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
-                $ip = `ipconfig`;
-                if ($ip =~ /(192\.168\.\d+\.\d+)/) {
-                    $ip = $1;
-                }
-            } else {
-                if (defined ($ip)) {
-                    if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
-                        $ip = $1;
-                    } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
-                        $ip = $1;
-                    }
-                } else {
-                    $ip = '(unknown)';
-                }
-            }
-            $ip =~ s/ //g;
-            print "ip = $ip\n", if ($debug >= 5);
-            $ctrl{'myip'} = $ip;
+            $ctrl{'myip'} = &getsvrip();
+            print "ip = $ctrl{'myip'}\n", if ($debug >= 5);
             if (defined ($connected{$client_ip})) {
                 $connected{$client_ip}++;
             } else {
@@ -1436,7 +1450,7 @@ while(1) {
                 print "Send host control HTTP header\n", if ($debug >= 5);
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: $client_ip connected to WikiPland on '$ctrl{'machine'}' aka '$ctrl{'whoami'}'. \n";
-                print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ip%3A20338%2Fclip.htm\">$ip</a>, up: ";
+                print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ctrl{'myip'}%3A20338%2Fclip.htm\">$ctrl{'myip'}</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns.\n";
                 print $sock "PID $$ VM ", &perlvmsize(), " MBytes<p>\n";
