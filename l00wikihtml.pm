@@ -715,7 +715,7 @@ if(1){
             } else {
                 $_ = "<font style=\"color:black;background-color:$color\">$_</font>";
             }
-            $_ .= " <a href=\"#___top___\">top</a>" .
+            $_ .= " <a href=\"#___top___\">^</a>" .
                   " <a href=\"#__toc__\">toc</a>";
         }
 
@@ -829,8 +829,8 @@ if(1){
                     $_ = $anchor .
                          sprintf("<h%d>",length($el[0])) .
                          $_ .
-                         " <a href=\"#$tag\">here</a>".
-                         " <a href=\"#___top___\">top</a>" .
+                         " <a href=\"#$tag\">@</a>".
+                         " <a href=\"#___top___\">^</a>" .
                          " <a href=\"#__toc__\">toc</a>" .
                          " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
@@ -1213,7 +1213,7 @@ if(1){
 
     if (($flags & 4) == 0) {
         # not 'bare'
-        $oubuf .= " <a href=\"#___top___\">top</a>";
+        $oubuf .= " <a href=\"#___top___\">^</a>";
         $oubuf .= " <a href=\"#__toc__\">toc</a>";
     }
 
