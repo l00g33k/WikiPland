@@ -54,8 +54,8 @@ sub l00http_txtdopl_proc (\%) {
     print $sock "    </tr>\n";
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\"></td>\n";
-    print $sock "        <td>tag: <input type=\"text\" size=\"4\" name=\"sel\" value=\"$sel\"></td>\n";
     print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td>tag: <input type=\"text\" size=\"4\" name=\"sel\" value=\"$sel\"></td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
@@ -72,8 +72,8 @@ sub l00http_txtdopl_proc (\%) {
             print "txtdopl: sel=>$sel<\n", if ($ctrl->{'debug'} >= 3);
             while ($_= &l00httpd::l00freadLine($ctrl)) {
                 $oldfile .= $_;
-                if (/^\%TXTDOFILEPL<(.+?)>\%/) {
-                    # %TXTDOFILEPL<in_same_dir.pl>\%
+                if (/^\%TXTDOPL<(.+?)>\%/) {
+                    # %TXTDOPL<in_same_dir.pl>\%
                     $dopl = "$pname$1";
                 } elsif (/^\%TXTDOPL$sel\%/) {
                     if ($dolncnt == -1) {
@@ -86,12 +86,12 @@ sub l00http_txtdopl_proc (\%) {
                         # stop collecting do lines
                         $dolncnt = -1;
                     }
-                } elsif (/^\%TXTDOPL.*\%/) {
+                } elsif (/^\%TXTDOPL[^<>]*\%/) {
                     # %TXTDOPLother% not selected
                     while ($_= &l00httpd::l00freadLine($ctrl)) {
                         $oldfile .= $_;
                         # skip not selected do lines
-                        if (/^\%TXTDOPL.*\%/) {
+                        if (/^\%TXTDOPL[^<>]*\%/) {
                             last;
                         }
                     }
@@ -126,7 +126,7 @@ sub l00http_txtdopl_proc (\%) {
                 undef $next;
                 while (<TXTDOPLIN>) {
                     $dolncnt++;
-                    if (/^\%TXTDOFILEPL<(.+?)>\%/) {
+                    if (/^\%TXTDOPL<(.+?)>\%/) {
                         $perl = $_;
                         $perladd = 1;
                         $_ = <TXTDOPLIN>;
@@ -143,13 +143,13 @@ sub l00http_txtdopl_proc (\%) {
                                 last;
                             }
                         }
-                    } elsif (/^\%TXTDOPL.*\%/) {
+                    } elsif (/^\%TXTDOPL[^<>]*\%/) {
                         # %TXTDOPLother% not selected
                         $perl .= $_;
                         while (<TXTDOPLIN>) {
                             $perl .= $_;
                             # skip not selected do lines
-                            if (/^\%TXTDOPL.*\%/) {
+                            if (/^\%TXTDOPL[^<>]*\%/) {
                                 $_ = <TXTDOPLIN>;
                                 $perladd = 1;
                                 last;

@@ -624,7 +624,7 @@ if(1){
         }
 #gc11 - format %TXTDOPL.*%
         # Print %TXTDOPL.*% in <pre>
-        if (/^\%TXTDOPL.*\%/) {
+        if (/^\%TXTDOPL[^<>]*\%/) {
             $tbuf = "$_\n";
             $ahead = $cacheidx + 1;
             # look forward
@@ -636,7 +636,7 @@ if(1){
                 }
                 $tmp =~ s/&nbsp;/ /g;
                 $tbuf .= "$tmp\n";
-                if ($tmp =~ /^\%TXTDOPL.*\%/) {
+                if ($tmp =~ /^\%TXTDOPL[^<>]*\%/) {
                     $loop = 0;
                 } else {
                     $ahead++;
