@@ -8,25 +8,38 @@ use l00backup;
 
 my %config = (proc => "l00http_blog_proc",
               desc => "l00http_blog_desc");
-my ($buffer, $lastbuf);
+my ($buffer, $lastbuf, %addtimeval);
 $lastbuf = '';
+
+%addtimeval = (
+    'NewTime' => 0,
+    '1h' => 3600,
+    '2h' => 7200,
+    '5h' => 18000,
+    '10h' => 36000,
+    '1d' => 86400,
+    '2d' => 172800,
+    '5d' => 432000,
+    '28d' => 2419200);
 
 
 sub blog_make_hdr {
-    my ($ctrl, $style) = @_;
-    my ($buffer, $sock);
+    my ($ctrl, $style, $addtime) = @_;
+    my ($buffer, $sock, $now_string);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time + $addtime);
+    $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
 
     $buffer = '';
 
     if ($style eq 'log') {
         # log
-        $buffer = $ctrl->{'now_string'} . ' ';
+        $buffer = $now_string . ' ';
     } elsif ($style eq 'star') {
         # star
-        $buffer = '* ' . $ctrl->{'now_string'} . ' ';
+        $buffer = '* ' . $now_string . ' ';
     } elsif ($style eq 'blog') {
         # blog
-        $buffer = "==$ctrl->{'now_string'} ==\n* ";
+        $buffer = "==$now_string ==\n* ";
     } elsif ($style eq 'bare') {
         # bare
         # nothing
@@ -98,7 +111,7 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
-    my ($output, $keys, $key, $space, $stylecurr, $stylenew);
+    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -155,23 +168,26 @@ sub l00http_blog_proc {
         }
     }
 
-
+    $addtime = 0;
     if (defined ($form->{'newtime'})) {
         # new time
+        $addtime = $addtimeval{$form->{'newtime'}};
         $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr);
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, $addtime);
         $form->{'buffer'} .= $buffer;
     }
+
+
     if (defined ($form->{'timesave'})) {
         # update time and save form buffer
         $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr);
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
         $form->{'buffer'} .= $buffer;
         # fake a 'Save' click
         $form->{'save'} = 1;
     }
     if (defined ($form->{'pastesave'})) {
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr);
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
         $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
@@ -181,8 +197,9 @@ sub l00http_blog_proc {
             ((defined ($form->{'path'})) && 
             (length ($form->{'path'}) > 0))) {
             $buffer = $form->{'buffer'};
-            if (($buffer ne $lastbuf) &&
-                !($buffer =~ /^\d{8,8} \d{6,6} $/)) {
+#           if (($buffer ne $lastbuf) &&
+#               !($buffer =~ /^\d{8,8} \d{6,6} $/))
+            if ($buffer ne $lastbuf) {
                 $lastbuf = $buffer;
                 # don't backup when just appending
                 local $/ = undef;
@@ -241,7 +258,7 @@ sub l00http_blog_proc {
 
 
     # make header
-    $buffer = &blog_make_hdr ($ctrl, $stylenew);
+    $buffer = &blog_make_hdr ($ctrl, $stylenew, $addtime);
 
     if (defined ($form->{'paste'})) {
         $buffer .= &l00httpd::l00getCB($ctrl);
@@ -329,6 +346,17 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log style add\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"blog\">\n";
     }
+    print $sock "<p>";
+    $_ = 'style="height:1.4em; width:2.3em"';
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"1h\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2h\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5h\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"10h\" $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"1d\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2d\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5d\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"28d\" $_>\n";
+
     print $sock "</form><br>\n";
 
     print $sock $output;
