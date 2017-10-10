@@ -314,7 +314,7 @@ sub l00http_view_proc {
                     }
                 }
 
-                $foundcnt -= 2; # adjustment
+                #$foundcnt -= 2; # adjustment
                 if ($foundcnt > $findmaxln) {
                     $tmp = $foundcnt - $findmaxln;
                     $found .= "There are $tmp more results: ".
