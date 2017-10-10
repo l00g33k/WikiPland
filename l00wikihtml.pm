@@ -810,10 +810,8 @@ if(1){
                 $toc .= $jump;
                 $_ = $el[1];
                 # wikiword links
-#d612                s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
                 s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
                 # special case when wiki word is the first word without leading space
-#d612                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;
                 s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
                 # !not wiki
                 s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
@@ -1004,11 +1002,19 @@ if(1){
                     $oubuf .=  "<a name=\"line$lnnoinfo\"></a>";
                 }
             }
+            # wikiword
             $oubuf .= "<tr>\n";
             # Perl/SL4A doesn't handle split ("\|\|", $_);????
             s/\|\|/``/g;
             @cols = split ("``", $_);
             for ($ii = 1; $ii <= $#cols; $ii++) {
+                # wikiword links
+                $cols[$ii] =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+                # special case when wiki word is the first word without leading space
+                $cols[$ii] =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
+                # !not wiki
+                $cols[$ii] =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+
                 if ($cols[$ii] =~ /^ *$/) {
                     $oubuf .= "<td>&nbsp;</td>\n";
                 } else {
@@ -1103,14 +1109,10 @@ if(1){
             }
             # wikiword links
             # Palm TX wants to see ending in .htm
-            #s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt&tx=$2.htm\">$2</a>|g;
-#d612            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
             s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
             # special case without space in front
             s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|g;
             # special case when wiki word is the first word without leading space
-            #s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt&tx=$1.htm\">$1</a>|;
-#d612            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;
             s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
             # !not wiki
             s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
