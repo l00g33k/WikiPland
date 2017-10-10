@@ -321,6 +321,7 @@ sub l00http_ls_proc {
         undef $filedata;
 #l00:
         if ($form->{'path'} =~ /^l00:\/\//) {
+            print "ls: it is l00:// >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined($ctrl->{'l00file'})) {
                 if (!defined($ctrl->{'l00file'}->{$form->{'path'}})) {
                     $httphdr = "Content-Type: text/html\r\n";
@@ -515,6 +516,7 @@ sub l00http_ls_proc {
                 }
             }
         } elsif (open (FILE, "<$path")) {
+            print "ls: opened as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined ($form->{'bkvish'})) {
                 &l00backup::backupfile ($ctrl, $path, 1, 5);
                 if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
@@ -1056,6 +1058,7 @@ print;
             }
             close (FILE);
         } else {
+            print "ls: failed to open as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
             print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
             print $sock "<a href=\"#end\">end</a><br>\n";
@@ -1248,6 +1251,7 @@ print;
         }
         print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
     }
+    print "ls: processed >$path<\n", if ($ctrl->{'debug'} >= 5);
 
     # 4) If not in raw mode, also display a control table
     if (!defined($pname)) {
@@ -1458,6 +1462,7 @@ print;
         }
         print $sock $ctrl->{'htmlfoot'};
     }
+    print "ls: return after processed >$path<\n", if ($ctrl->{'debug'} >= 5);
 
 }
 

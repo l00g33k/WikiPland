@@ -624,7 +624,7 @@ if(1){
         }
 #gc11 - format %TXTDOPL.*%
         # Print %TXTDOPL.*% in <pre>
-        if (/^\%TXTDOPL.*\%/) {
+        if (/^\%TXTDOPL[^<>]*\%/) {
             $tbuf = "$_\n";
             $ahead = $cacheidx + 1;
             # look forward
@@ -636,7 +636,7 @@ if(1){
                 }
                 $tmp =~ s/&nbsp;/ /g;
                 $tbuf .= "$tmp\n";
-                if ($tmp =~ /^\%TXTDOPL.*\%/) {
+                if ($tmp =~ /^\%TXTDOPL[^<>]*\%/) {
                     $loop = 0;
                 } else {
                     $ahead++;
@@ -715,7 +715,7 @@ if(1){
             } else {
                 $_ = "<font style=\"color:black;background-color:$color\">$_</font>";
             }
-            $_ .= " <a href=\"#___top___\">top</a>" .
+            $_ .= " <a href=\"#___top___\">^</a>" .
                   " <a href=\"#__toc__\">toc</a>";
         }
 
@@ -810,10 +810,8 @@ if(1){
                 $toc .= $jump;
                 $_ = $el[1];
                 # wikiword links
-#d612                s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
                 s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
                 # special case when wiki word is the first word without leading space
-#d612                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;
                 s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
                 # !not wiki
                 s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
@@ -829,8 +827,8 @@ if(1){
                     $_ = $anchor .
                          sprintf("<h%d>",length($el[0])) .
                          $_ .
-                         " <a href=\"#$tag\">here</a>".
-                         " <a href=\"#___top___\">top</a>" .
+                         " <a href=\"#$tag\">@</a>".
+                         " <a href=\"#___top___\">^</a>" .
                          " <a href=\"#__toc__\">toc</a>" .
                          " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
@@ -1004,11 +1002,19 @@ if(1){
                     $oubuf .=  "<a name=\"line$lnnoinfo\"></a>";
                 }
             }
+            # wikiword
             $oubuf .= "<tr>\n";
             # Perl/SL4A doesn't handle split ("\|\|", $_);????
             s/\|\|/``/g;
             @cols = split ("``", $_);
             for ($ii = 1; $ii <= $#cols; $ii++) {
+                # wikiword links
+                $cols[$ii] =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+                # special case when wiki word is the first word without leading space
+                $cols[$ii] =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
+                # !not wiki
+                $cols[$ii] =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+
                 if ($cols[$ii] =~ /^ *$/) {
                     $oubuf .= "<td>&nbsp;</td>\n";
                 } else {
@@ -1103,14 +1109,10 @@ if(1){
             }
             # wikiword links
             # Palm TX wants to see ending in .htm
-            #s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt&tx=$2.htm\">$2</a>|g;
-#d612            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
             s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
             # special case without space in front
             s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|g;
             # special case when wiki word is the first word without leading space
-            #s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt&tx=$1.htm\">$1</a>|;
-#d612            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm?path=$pname$1.txt\">$1</a>|;
             s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
             # !not wiki
             s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
@@ -1213,7 +1215,7 @@ if(1){
 
     if (($flags & 4) == 0) {
         # not 'bare'
-        $oubuf .= " <a href=\"#___top___\">top</a>";
+        $oubuf .= " <a href=\"#___top___\">^</a>";
         $oubuf .= " <a href=\"#__toc__\">toc</a>";
     }
 

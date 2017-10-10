@@ -11,11 +11,12 @@ use l00crc32;
 my %config = (proc => "l00http_tree_proc",
               desc => "l00http_tree_desc");
 
-my (@list, $lvl, $md5support, $depthmax, $maxlines);
+my (@list, $lvl, $md5support, $depthmax, $maxlines, $fileinclu);
 
 $md5support = -1;
 $depthmax = 20;
 $maxlines = 1000;
+$fileinclu = '';
 
 sub l00Http_tree_proxy {
     my ($sock, $target) = @_;
@@ -115,6 +116,7 @@ sub l00http_tree_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $nolinks, $nodirs, $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
     my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums, $base, $partpath);
+    my ($fil0no1exclu2inclu);
 
 
     $time0 = time;
@@ -261,6 +263,16 @@ sub l00http_tree_proc {
 	    $time0 = time;
         $nobytes = 0;
         undef %countext;
+        $fil0no1exclu2inclu = 0;
+        if ($form->{'filter'} !~ /^ *$/) {
+            if (defined($form->{'fileinclu'}) && ($form->{'fileinclu'} eq 'on')) {
+                $fil0no1exclu2inclu = 2;
+                $fileinclu = 'checked';
+            } else {
+                $fil0no1exclu2inclu = 1;
+                $fileinclu = '';
+            }
+        }
         foreach $file (sort @list) {
             if (defined($form->{'showbak'}) ||
                (!($file =~ /\.bak$/))) {
@@ -272,6 +284,18 @@ sub l00http_tree_proc {
 		        }
                 if ((!$isdir) || ($nodirs ne 'checked')) {
     		        $cnt++;
+                }
+                if ($fil0no1exclu2inclu == 1) {
+                    if ($file =~ /$form->{'filter'}/) {
+                        # exclude match
+                        next;
+                    }
+                }
+                if ($fil0no1exclu2inclu == 2) {
+                    if ($file !~ /$form->{'filter'}/) {
+                        # include match
+                        next;
+                    }
                 }
 		        $_ = $file;
 			    s/ /%20/g;
@@ -449,8 +473,8 @@ sub l00http_tree_proc {
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Scan\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
-$form->{'filter'} = 'not implemented';
-    print $sock "<br>Filter: <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
+    print $sock "<br>Filter (fullpath): <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
+    print $sock "<input type=\"checkbox\" name=\"fileinclu\" $fileinclu>include matched (case sensitive)\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
     if ($ctrl->{'os'} eq 'and') {
         if ($md5support > 0) {
