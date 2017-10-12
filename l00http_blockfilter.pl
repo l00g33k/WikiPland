@@ -382,12 +382,16 @@ sub l00http_blockfilter_proc {
                     eval $condition;
                 }
                 $link = $_;
+                $link =~ s/</&lt;/g;
+                $link =~ s/>/&gt;/g;
                 $_ = $bare;
 
                 # colorize
                 foreach $condition (@color) {
                     if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
                         $link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i;
+                    } elsif (($bg, $regex) = $condition =~ /^!!([a-z]+?)!!(.+)/) {
+                        $link =~ s/($regex)/<font style="color:black;background-color:$bg">$1<\/font>/i;
                     } else {
                         $link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i;
                     }

@@ -1,0 +1,63 @@
+%TOC%
+
+=Introduction=
+
+=Input Fields=
+
+==Process==
+* Start processing target file
+* If the target filename contains 'blockfilter' then it is 
+treated as a configuration file and the following fields 
+are loaded from the file.
+
+==Invert EXCLUDE==
+* 
+
+==(target file)==
+* The target file to be procesed
+
+==Reload cfg before processing==
+* Reload the remembered 'blockfilter' configuration file 
+before processing. This allows the configuration to be 
+changed in a separate editor.
+
+==(link to blockfilter_config file)==
+* URL to view the configuration file
+
+==Skip to==
+* Skip all lines before this regex match. Defaults 
+to '.' which means it matches the first line and 
+start the processing.
+
+==Scan to==
+* 
+
+==Exclude Line (!!)==
+* 
+
+==BLOCK START==
+* 
+
+==Block End==
+* 
+
+==Block Required==
+* 
+
+==Block Exclude (!!)==
+* 
+
+==Colorize ()==
+* 
+
+==Perl eval==
+* 
+
+==Pre eval==
+* 
+
+==Statistics==
+* 
+
+==Maximum lines to display==
+* 
