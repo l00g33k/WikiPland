@@ -58,7 +58,7 @@ sub l00http_clip_proc {
                 $words = 'more..';
             }
             $tmp = &l00httpd::urlencode ($clip);
-            $tmp = sprintf ("[[/clip.htm?update=Copy+to+clipboard&clip=%s|%s]]", $tmp, $words);
+            $tmp = sprintf ("* [[/clip.htm?update=Copy+to+clipboard&clip=%s|%s]]", $tmp, $words);
             printf $sock ("Sent:<p><i>%s</i><p>to clipboard.\n", $tmp);
 #           printf $sock ("Sent:<br><pre>%s</pre>to clipboard.\n", $tmp);
             &l00httpd::l00setCB($ctrl, $tmp);

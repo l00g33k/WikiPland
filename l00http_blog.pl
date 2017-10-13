@@ -336,15 +336,15 @@ sub l00http_blog_proc {
     } elsif ($stylenew eq 'star') {
         # star
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Star style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"bare\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"blog\">\n";
     } elsif ($stylenew eq 'blog') {
         # blog
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Bare style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"bare\">\n";
     } elsif ($stylenew eq 'bare') {
         # bare
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log style add\">\n";
-        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"blog\">\n";
+        print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
     print $sock "<p>";
     $_ = 'style="height:1.4em; width:2.3em"';

@@ -73,13 +73,15 @@ sub l00http_iframes_proc (\%) {
                 !defined ($form->{"ht_$rowidx"})) {
                 last;
             }
-            if ($spec ne '') {
-                if (defined ($form->{"lf_$rowidx"}) &&
-                    ($form->{"lf_$rowidx"} eq 'on')) {
-#                    $form->{"url_$rowidx"} = &l00httpd::l00getCB($ctrl);
+            if (defined ($form->{"cb_$rowidx"}) && ($form->{"cb_$rowidx"} eq 'on')) {
+                $form->{"url_$rowidx"} = &l00httpd::l00getCB($ctrl);
+                if ($form->{"url_$rowidx"} =~ /(http:\/\/[^ \n\r\t]+)/) {
+                    $form->{"url_$rowidx"} = $1;
                 }
-                if (defined ($form->{"lf_$rowidx"}) &&
-                    ($form->{"lf_$rowidx"} eq 'on')) {
+                l00httpd::dbp($config{'desc'}, "update: cb: )".$form->{"url_$rowidx"}."(\n");
+            }
+            if ($spec ne '') {
+                if (defined ($form->{"lf_$rowidx"}) && ($form->{"lf_$rowidx"} eq 'on')) {
                     $spec .= '   ';
                 } else {
                     $spec .= '  ';
@@ -204,12 +206,12 @@ sub l00http_iframes_proc (\%) {
             }
             $out .= "<br>\n";
         }
+        $tmp = $out;
+        $tmp =~ s/</&lt;/g;
+        $tmp =~ s/>/&gt;/g;
+        $tmp =~ s/(&lt;iframe src)/<br>$1/g;
+        l00httpd::dbp($config{'desc'}, "\n$tmp\n");
     }
-    $tmp = $out;
-    $tmp =~ s/</&lt;/g;
-    $tmp =~ s/>/&gt;/g;
-    $tmp =~ s/(&lt;iframe src)/<br>$1/g;
-    l00httpd::dbp($config{'desc'}, "\n$tmp\n");
 
     $formout .= "</table>\n";
     $formout .= "<input type=\"hidden\" name=\"spec\" value=\"$spec\">\n";

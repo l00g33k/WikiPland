@@ -136,16 +136,16 @@ sub l00http_notify_proc (\%) {
         }
     }
 
-    if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
-        while (<IN>) {
-            if (/^TTL:/) {
-                print $sock "<pre>\n$_</pre>\n";
-            } else {
-                print $sock "$_\n";
-            }
-        }
-        close (IN);
-    }
+#   if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
+#       while (<IN>) {
+#           if (/^TTL:/) {
+#               print $sock "<pre>\n$_</pre>\n";
+#           } else {
+#               print $sock "$_\n";
+#           }
+#       }
+#       close (IN);
+#   }
     
 
     # send HTML footer and ends

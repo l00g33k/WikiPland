@@ -39,16 +39,19 @@ sub l00http_crypt_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buffer, $line, $pre, $post, $phase, $lineno);
-    my ($crypt, $plain, $plain2, $filemethod, $tmp);
+    my ($crypt, $plain, $plain2, $filemethod, $tmp, $pname, $fname);
     $crypt = "";
     $plain = "";
     $tmp = '';
 
+    $pname = '';
+    $fname = '';
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     if (defined ($form->{'path'})) {
+        ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
         $size, $atime, $mtime, $ctime, $blksize, $blocks)
@@ -260,7 +263,7 @@ sub l00http_crypt_proc (\%) {
         }
     } else {
         $buffer = "$found$pre\n$cryptbound:$method:\n$plain2\n$cryptbound:$method:\n$post";
-        print $sock &l00wikihtml::wikihtml ($ctrl, $ctrl->{'plpath'}, $buffer, 0);
+        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $buffer, 0);
     }
 
     $buffer = "$pre\n$cryptbound:$method:\n$plain\n$cryptbound:$method:\n$post";
