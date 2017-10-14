@@ -111,6 +111,10 @@ sub makeanchor {
     } else {
         $jump = '';
     }
+
+    # Handle !NonWikiWord
+    $ttl =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+
     $url = "<a href=\"#$tag\">$ttl</a>";
     $jump .= "$url<br>\n";
     $anchor = "<a name=\"$tag\"></a>";
