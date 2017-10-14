@@ -192,6 +192,17 @@ sub l00http_blog_proc {
         $form->{'save'} = 1;
     }
 
+    if (defined ($form->{'time.start'})) {
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
+        $form->{'buffer'} .= 'time.start';
+        $form->{'save'} = 1;
+    }
+    if (defined ($form->{'time.stop'})) {
+        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
+        $form->{'buffer'} .= 'time.stop';
+        $form->{'save'} = 1;
+    }
+
     if (defined ($form->{'save'})) {
         if ((defined ($form->{'buffer'})) &&
             ((defined ($form->{'path'})) && 
@@ -355,7 +366,10 @@ sub l00http_blog_proc {
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"1d\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2d\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5d\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"28d\" $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"28d\" $_><p>\n";
+
+    print $sock "<input type=\"submit\" name=\"time.start\"  value=\"time.start\">\n";
+    print $sock "<input type=\"submit\" name=\"time.stop\"  value=\"time.stop\">\n";
 
     print $sock "</form><br>\n";
 
