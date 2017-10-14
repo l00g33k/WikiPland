@@ -2,6 +2,7 @@
 use warnings;
 use strict;
 
+use l00mktime;
 
 
 package l00httpd;
@@ -722,6 +723,36 @@ sub android_get_gps {
 
     ($out, $lat, $lon, $lastcoor, $lastgps, $lastres);
 }
+
+
+sub time2now_string {
+    my ($time) = @_;
+    my ($now_string);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($time);
+
+    $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+
+    $now_string;
+}
+
+
+sub now_string2time {
+    my ($now_string) = @_;
+    my ($time, $year,$mon,$mday,$hour,$min,$sec);
+
+    if (($year,$mon,$mday,$hour,$min,$sec) = $now_string =~ 
+        /(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/) {
+        $year -= 1900;
+        $mon--;
+        $time = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
+    } else {
+        $time = 0;
+    }
+
+
+    $time;
+}
+
 
 
 1;

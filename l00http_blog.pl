@@ -57,13 +57,19 @@ sub blog_get_msg {
 
     if ($style eq 'log') {
         # log
-        $buffer = substr ($buffer, 16, 9999);
+        if (length($buffer) >= 16) {
+            $buffer = substr ($buffer, 16, 9999);
+        }
     } elsif ($style eq 'star') {
         # star
-        $buffer = substr ($buffer, 18, 9999);
+        if (length($buffer) >= 18) {
+            $buffer = substr ($buffer, 18, 9999);
+        }
     } elsif ($style eq 'blog') {
         # blog
-        $buffer = substr ($buffer, 24, 9999);
+        if (length($buffer) >= 24) {
+            $buffer = substr ($buffer, 24, 9999);
+        }
     } elsif ($style eq 'bare') {
         # bare
         # no header, no change
