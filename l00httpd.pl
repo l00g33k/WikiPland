@@ -495,6 +495,22 @@ while ($_ = shift) {
         $ctrl{'noclinav'}  = 0;
         $ctrl{'clipath'}  = '/';
 		$open = 1;
+	} elsif (($key, $val) = /(\w+)\^(.+)/) {
+        # looks like config name^value
+        if ((defined ($key)) &&
+            (length ($key) > 0) && 
+            (defined ($val)) &&
+            (length ($val) > 0)) {
+            print "cmdln>$key< = >$val<\n";;
+            if ($key eq 'workdir') {
+                # special case workdir to accept only if exist
+                if (-d $val) {
+                    $ctrl{$key} = $val;
+                }
+            } else {
+                $ctrl{$key} = $val;
+            }
+        }
 	}
 }
 $ctrl_port_first = $ctrl_port;
