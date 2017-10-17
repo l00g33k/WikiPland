@@ -52,6 +52,11 @@ sub l00http_view_proc {
             $refreshfile = $form->{'path'};
             $refresh = '';
         }
+        if ($lastpath ne $form->{'path'}) {
+            $nohdr = '';
+        }
+    } else {
+        $nohdr = '';
     }
 
     if (defined ($form->{'clr'})) {
@@ -105,6 +110,13 @@ sub l00http_view_proc {
     print $sock "<a name=\"top\"></a>\n";
 
     if (defined ($form->{'path'})) {
+        if ($lastpath ne $form->{'path'}) {
+            # reset skip and length for different file
+            $skip = 0;
+            $maxln = 1000;
+            $lastpath = $form->{'path'};
+            $nohdr = '';
+        }
         if ($nohdr eq '') {
             $tmp = $form->{'path'};
             if ($ctrl->{'os'} eq 'win') {
@@ -120,12 +132,6 @@ sub l00http_view_proc {
             }
             print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
             print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
-        }
-        if ($lastpath ne $form->{'path'}) {
-            # reset skip and length for different file
-            $skip = 0;
-            $maxln = 1000;
-            $lastpath = $form->{'path'};
         }
     }
 
