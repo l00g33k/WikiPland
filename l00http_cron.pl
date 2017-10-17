@@ -325,6 +325,7 @@ sub l00http_cron_proc {
     print $sock "</form></p>\n";
                                                 
     print $sock "View scheduler: <a href=\"/view.htm?path=l00://crontab.htm\">l00://crontab.htm</a><p>\n";
+    print $sock "View log: <a href=\"/view.htm?path=l00://cronlog.txt\">l00://cronlog.txt</a><p>\n";
     $timenow = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($timenow);

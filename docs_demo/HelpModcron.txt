@@ -1,0 +1,36 @@
+The cron moduel is a crude emulation of the Linux cron job.
+
+The syntax is inspired by the cron job too:
+
+* * * * * cmd
+m h d m w cmd
+
+In this simplified implementation, the time fields can be * which 
+matches anything, or a single number that match the respective field.
+No range is allowed. For example, this matches every minute:
+
+    * * * * * cmd
+
+This matches on 1 minute past the hour:
+
+    1 * * * * cmd
+
+As the names imply, they are executed at the respective time:
+
+    @boot cmd
+    @shutdown cmd
+
+Three kinds of commands are supported:
+
+* A local URL 
+
+    http://localhost:20347/toast.htm?helloname=cron+says+hello&submit=Submit&ip=127.0.0.1
+
+* An external URL, using wget:
+
+    http://google.com
+
+* A shell command:
+
+    date
+
