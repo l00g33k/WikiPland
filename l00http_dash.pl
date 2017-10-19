@@ -11,7 +11,7 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all);
-$dash_all = '';
+$dash_all = 'past';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -28,15 +28,15 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
-    my ($lnnostr, $lnno);
+    my ($lnnostr, $lnno, $hot);
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
             $dash_all = 'all';
-        } elsif ($form->{'dash_all'} eq 'older') {
-            $dash_all = 'older';
+        } elsif ($form->{'dash_all'} eq 'future') {
+            $dash_all = 'future';
         } else {
-            $dash_all = 'newer';
+            $dash_all = 'past';
         }
     }
 
@@ -58,19 +58,19 @@ sub l00http_dash_proc {
     print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
     print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
-    if (($dash_all ne 'all') && ($dash_all ne 'older')) {
+    if (($dash_all ne 'all') && ($dash_all ne 'future')) {
         $_ = 'checked';
     } else {
         $_ = '';
     }
-    print $sock "List <input type=\"radio\" name=\"dash_all\" value=\"newer\" $_>newer";
-    if ($dash_all eq 'older') {
+    print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>past";
+    if ($dash_all eq 'future') {
         $_ = 'checked';
     } else {
         $_ = '';
     }
-    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"older\" $_>older";
-    if ($dash_all eq 'newer') {
+    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>future";
+    if ($dash_all eq 'all') {
         $_ = 'checked';
     } else {
         $_ = '';
@@ -109,6 +109,7 @@ sub l00http_dash_proc {
         @alllines = split ("\n", $buffer);
         foreach $this (@alllines) {
             $lnno++;
+            $hot = '';
             if ($this =~ /^=([^=]+)=/) {
                 $cat1 = $1;
             } elsif ($this =~ /^==([^=]+)==/) {
@@ -119,6 +120,9 @@ sub l00http_dash_proc {
                     print $sock "  $cat1  $cat2\n";
                 }
                 $time_start = 0;
+                if ($cat2 =~ /^INC: (.+)/) {
+                    $hot = $1;
+                }
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                     $time_start = &l00httpd::now_string2time($tim);
@@ -180,10 +184,9 @@ sub l00http_dash_proc {
             } else {
                 #print $sock "$_\n";
             }
-            # Link from TmpTodoIncHot.txt
-            if ($this =~ /^=+(.*TmpTodoIncHot.*?)=+$/) {
-                # speacial include ./TmpTodoIncHot.txt
-                if (open(IN, "<${pname}TmpTodoIncHot.txt")) {
+            # Link from INC: filename
+            if ($hot ne '') {
+                if (open(IN, "<${pname}$hot")) {
                     $cnt = 0;
                     ($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
                     while (<IN>) {
@@ -195,8 +198,8 @@ sub l00http_dash_proc {
                         $lnnostr = sprintf("%02d", $cnt);
                         #[[/ls.htm?path=$form->{'path'}#$jmp|iHot]]
                         #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a>
-                        $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> || $lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}TmpTodoIncHot.txt\">Tmphot</a> "} = "!!$tim";
-                        $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> || $lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}TmpTodoIncHot.txt\">Tmphot</a> "} = "$_";
+                        $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> || $lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "!!$tim";
+                        $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> || $lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "$_";
                     }
                     close(IN);
                 }
@@ -266,14 +269,14 @@ sub l00http_dash_proc {
                 print $sock "  tim $tim fir $fir\n";
             }
             if ($dash_all ne 'all') {
-                if ($dash_all eq '') {
-                    # hide future based on newest entry
-                    if ("$fir" gt $ctrl->{'now_string'}) {
+                if ($dash_all eq 'future') {
+                    # hide past based on newest entry
+                    if ("$fir" lt $ctrl->{'now_string'}) {
                         next;
                     }
                 } else {
-                    # hide past based on newest entry
-                    if ("$fir" lt $ctrl->{'now_string'}) {
+                    # hide future based on newest entry
+                    if ("$fir" gt $ctrl->{'now_string'}) {
                         next;
                     }
                 }
@@ -342,7 +345,7 @@ sub l00http_dash_proc {
         $out .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
         $out .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
         $out .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+clipboard&clip=%2A+%5B%5B%2Fls.htm%3Ffind%3DFind%26amp%3Bfindtext%3D%5E%5C%3D%3D%3D%26amp%3Bblock%3D.%26amp%3Bprefmt%3Don%26amp%3Bpath%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Ftxtdopl.htm%3Frunbare%3DRunBare%26amp%3Bpath%3D%24%7CProcessed+table%5D%5D|to clipboard]]\n";
+        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+clipboard&clip=%2A+%5B%5B%2Fls.htm%3Ffind%3DFind%26amp%3Bfindtext%3D%5E%5C%3D%3D%3D%26amp%3Bblock%3D.%26amp%3Bprefmt%3Don%26amp%3Bpath%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D|to clipboard]]\n";
 
         print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
 
