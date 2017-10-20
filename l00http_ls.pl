@@ -269,7 +269,7 @@ sub l00http_ls_proc {
         $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
     }
     if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
-        $wikihtmlflags = 2;      # flags for &l00wikihtml::wikihtml
+        $wikihtmlflags += 2;      # flags for &l00wikihtml::wikihtml
     }
     if (defined ($form->{'bare'})) {
         $wikihtmlflags += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
