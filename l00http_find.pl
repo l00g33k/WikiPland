@@ -336,6 +336,9 @@ sub l00http_find_proc {
     } else {
         $content = '';
 	}
+    if (defined ($form->{'cb2cont'})) {
+        $content = &l00httpd::l00getCB($ctrl);
+    }
     if (defined ($form->{'maxlines'})) {
         $maxlines = $form->{'maxlines'};
     }
@@ -459,12 +462,12 @@ sub l00http_find_proc {
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"> <input type=\"submit\" name=\"cbclrname\" value=\"Clr\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"wraptext\" $wraptext>Wrapped text</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"cb2name\" value=\"CB2name\"> <input type=\"submit\" name=\"cbclrname\" value=\"Clr\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"cb2name\" value=\"CB2name\"> <input type=\"submit\" name=\"cb2cont\" value=\"2cont\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"filenameonly\" $filenameonly>Filename only</td>\n";
     print $sock "    </tr>\n";
 
