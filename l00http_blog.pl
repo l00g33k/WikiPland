@@ -13,12 +13,12 @@ $lastbuf = '';
 
 %addtimeval = (
     'NewTime' => 0,
-    '1h' => 3600,
     '2h' => 7200,
     '5h' => 18000,
     '10h' => 36000,
     '1d' => 86400,
     '2d' => 172800,
+    '3d' => 259200,
     '5d' => 432000,
     '28d' => 2419200);
 
@@ -117,11 +117,22 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
-    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime);
+    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
+    my (@blockquick);
 
+    undef @blockquick;
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
         ($pname, $fname) = $path =~ /^(.+[\\\/])([^\\\/]+)$/;
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/\r//g;
+                s/\n//g;
+                if (/^%BLOGQUICK:(.+?)%/) {
+                    push(@blockquick, $1);
+                }
+            }
+        }
     } else {
         $path = '(none)';
         $fname = '(none)';
@@ -198,15 +209,12 @@ sub l00http_blog_proc {
         $form->{'save'} = 1;
     }
 
-    if (defined ($form->{'time.start'})) {
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
-        $form->{'buffer'} .= 'time.start';
-        $form->{'save'} = 1;
-    }
-    if (defined ($form->{'time.stop'})) {
-        $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
-        $form->{'buffer'} .= 'time.stop';
-        $form->{'save'} = 1;
+    foreach $_ (@blockquick) {
+        if (defined ($form->{'$_'})) {
+            $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
+            $form->{'buffer'} .= '$_';
+            $form->{'save'} = 1;
+        }
     }
 
     if (defined ($form->{'save'})) {
@@ -292,6 +300,7 @@ sub l00http_blog_proc {
     $keys = 0;
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $lineno = 1;
+        $linedisp = 1;
         $output .= "<pre>\n";
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             s/\r//g;
@@ -307,11 +316,19 @@ sub l00http_blog_proc {
                 $keys++;
             }
             # trim width
-            if ($lineno < $ctrl->{'blogmaxln'}) {
+            if ($linedisp < $ctrl->{'blogmaxln'}) {
                 if (length($_) > $ctrl->{'blogwd'}) {
                     $_ = substr($_, 0, $ctrl->{'blogwd'});
                 }
-                $output .= sprintf ("%04d: ", $lineno) . "$_\n";
+                if (defined($form->{'afterline'})) {
+                    if ($lineno >= $form->{'afterline'}) {
+                        $output .= sprintf ("%04d: ", $lineno) . "$_\n";
+                        $linedisp++;
+                    }
+                } else {
+                    $output .= sprintf ("%04d: ", $lineno) . "$_\n";
+                    $linedisp++;
+                }
             } else {
                 $line = $_;
             }
@@ -364,18 +381,19 @@ sub l00http_blog_proc {
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
     print $sock "<p>";
-    $_ = 'style="height:1.4em; width:2.3em"';
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"1h\"  $_>\n";
+    $_ = 'style="height:1.4em; width:2.0em"';
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2h\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5h\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\" value=\"10h\" $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"1d\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2d\"  $_>\n";
+    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"3d\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5d\"  $_>\n";
     print $sock "<input type=\"submit\" name=\"newtime\" value=\"28d\" $_><p>\n";
 
-    print $sock "<input type=\"submit\" name=\"time.start\"  value=\"time.start\">\n";
-    print $sock "<input type=\"submit\" name=\"time.stop\"  value=\"time.stop\">\n";
+    foreach $_ (@blockquick) {
+        print $sock "<input type=\"submit\" name=\"$_\"  value=\"$_\">\n";
+    }
 
     print $sock "</form><br>\n";
 
