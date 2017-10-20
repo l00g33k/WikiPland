@@ -345,7 +345,7 @@ sub l00http_dash_proc {
         $out .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
         $out .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
         $out .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+clipboard&clip=%2A+%5B%5B%2Fls.htm%3Ffind%3DFind%26amp%3Bfindtext%3D%5E%5C%3D%3D%3D%26amp%3Bblock%3D.%26amp%3Bprefmt%3Don%26amp%3Bpath%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D|to clipboard]]\n";
+        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+CB&clip=*+%5B%5B%2Fls.htm%3Ffind%3DFind%26findtext%3D%255E%255C%253D%253D%253D%26block%3D.%26prefmt%3Don%26path%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D%0D%0A&url=|to clipboard]]\n";
 
         print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
 
