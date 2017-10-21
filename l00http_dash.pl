@@ -10,8 +10,9 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all);
+my ($dash_all, $listbang);
 $dash_all = 'past';
+$listbang = '';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -38,6 +39,12 @@ sub l00http_dash_proc {
         } else {
             $dash_all = 'past';
         }
+    }
+
+    if ((defined ($form->{'listbang'})) && ($form->{'listbang'} eq 'on')) {
+        $listbang = 'checked';
+    } else {
+        $listbang = '';
     }
 
     # Send HTTP and HTML headers
@@ -75,7 +82,8 @@ sub l00http_dash_proc {
     } else {
         $_ = '';
     }
-    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all";
+    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
+    print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'\n";
     print $sock "</form>\n";
 
     print $sock "<pre>\n";
@@ -175,8 +183,16 @@ sub l00http_dash_proc {
                 if (!defined($tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "})) {
                              $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = '';
                 }
-                if ($dsc =~ /^!!/) {
-                             $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= " - $dsc";
+                if ($listbang eq '') {
+                    # not listing all !, i.e. listing ! only
+                    if ($dsc =~ /^!!/) {
+                                 $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= " - $dsc";
+                    }
+                } else {
+                    # listing all !, i.e. listing ! and !!
+                    if ($dsc =~ /^!/) {
+                                 $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= "<br>$dsc";
+                    }
                 }
                 if ($dsc =~ /^![^!]/) {
                              $countBang{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "}++;
