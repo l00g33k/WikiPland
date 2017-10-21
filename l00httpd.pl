@@ -456,6 +456,11 @@ sub readl00httpdcfg {
         # on start up $ctrl{'HOME'} is set by ARGV parser
         $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$cmdlnhome\">HOME</a>"
     }
+
+    # tmp not defined in l00httpd.cfg
+    if (!defined ($ctrl{'tmp'})) {
+        $ctrl{'tmp'} = "$ctrl{'workdir'}/";      # make it available to modules
+    }
 }
 
 &readl00httpdcfg;
