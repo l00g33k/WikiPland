@@ -29,7 +29,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
-    my ($lnnostr, $lnno, $hot);
+    my ($lnnostr, $lnno, $hot, $hide);
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
@@ -115,8 +115,23 @@ sub l00http_dash_proc {
         }
         $buffer =~ s/\r//g;
         @alllines = split ("\n", $buffer);
+        $hide = 0;
         foreach $this (@alllines) {
             $lnno++;
+
+            # %DASHHIDE:ON% and %DASHHIDE:OFF% hides bracketted secsions
+            if ($this =~ /^%DASHHIDE:ON%/) {
+                $hide = 1;
+                next;
+            }
+            if ($this =~ /^%DASHHIDE:OFF%/) {
+                $hide = 0;
+                next;
+            }
+            if ($hide) {
+                next;
+            }
+
             $hot = '';
             if ($this =~ /^=([^=]+)=/) {
                 $cat1 = $1;
