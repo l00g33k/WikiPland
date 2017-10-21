@@ -334,7 +334,7 @@ sub l00http_ls_proc {
         }
         undef $filedata;
 #l00:
-        if ($form->{'path'} =~ /^l00:\/\//) {
+        if (($pname, $fname) = $form->{'path'} =~ /^(l00:\/\/)(.+)/) {
             print "ls: it is l00:// >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined($ctrl->{'l00file'})) {
                 if (!defined($ctrl->{'l00file'}->{$form->{'path'}})) {
@@ -530,6 +530,7 @@ sub l00http_ls_proc {
                 }
             }
         } elsif (open (FILE, "<$path")) {
+            ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
             print "ls: opened as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined ($form->{'bkvish'})) {
                 &l00backup::backupfile ($ctrl, $path, 1, 5);
@@ -1136,6 +1137,9 @@ sub l00http_ls_proc {
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
                  = stat($path.$file);
+                if (!defined($mtime)) {
+                    $mtime = 0;
+                }
                 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                  = localtime($mtime);
 
