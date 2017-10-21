@@ -127,6 +127,7 @@ sub wikihtml {
     #        2=prefix chapter number
     #        4=bare, no header/footer
     #        8=open link in 'newwin'
+    #       16=newline is always <br>
     # $ctrl: system variables
     # $pname: current path for relateive wikiword links
     my ($ctrl, $pname, $inbuf, $flags, $fname) = @_;
@@ -227,7 +228,7 @@ sub wikihtml {
 		            $desc = $clip;
                     $bareclip = 1;
 		        }
-if(1){
+
                 # look ahead. If the the current line ends in:
                 # \r\n
                 # and the next line starts with:
@@ -240,8 +241,6 @@ if(1){
                         # remove internal tag
                         $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
                     }
-#print "\n\nTHIS: $_\n";
-#print "NEXT: $tmp\n";
                     # so $tmp is the next line
                     # Does it look line extended line?
                     if ((/\\r\\n$/) && ($tmp =~ /^\|\|(.*)/)) {
@@ -256,33 +255,20 @@ if(1){
                             }
                         }
 
-#print "EXT0: >$clip<\n";
                         # drop ending \r\n
                         $clip =~ s/\\r\\n$//;
                         # append extension line
                         $clip .= "\n$tmp";
                         # skip forward
-#print "EXT1: >$clip<\n";
                         $cacheidx++;
                     } else {
                         # no extension line
                         last;
                     }
                 }        
-#print "END\n\n";
-}
 
-                #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=Asd+ddf
-#               $clip =~ s/ /+/g;
                 #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=
                 #%3A%2F
-#               $clip =~ s/:/%3A/g;
-#               $clip =~ s/&/%26/g;
-#               $clip =~ s/=/%3D/g;
-#               $clip =~ s/"/%22/g;
-#               $clip =~ s/\//%2F/g;
-#               $clip =~ s/\|/%7C/g;
-#               $clip =~ s/#/%23/g;
                 $clip = &l00httpd::urlencode ($clip);
                 $url = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
                 $url = "[[$url|$desc]]";
@@ -520,7 +506,6 @@ if(1){
         # password/ID clipboard
         if (/\* (ID|PW): (\S+) *$/) {
             $clip = &l00httpd::urlencode ($2);
-#           $tmp = "[[/clip.htm?update=Copy+to+clipboard&clip=$clip|$2]]";
             $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"_blank\">%s</a>", $clip, $2);
             $_ .= " ($tmp)";
         }
@@ -562,26 +547,27 @@ if(1){
         # This is an [example link](http://example.com/).
         s/\[(.+?)\]\((.+?)\)/<a href="$2">$1<\/a>/g;
         # mutiple line paragraphs
-#h630        if ($mode0unknown1twiki2markdown == 2) {
+
         # if line start with word, then it must be 
         # normal paragraph. Don't put <br> at the end
         # Do this for non markdown too. h630
-        if (/^ *$/) {
-            # blank line in markdown is end of paragraph
-            $markdownparanobr = 1;
-        } else {
-            # this is a non-blank line
-#            $markdownparanobr = /^\w/;
-            if ($seenEqualStar == 0) {
-                # if we haven't seen ^* or ^=, then newline is <br>
-                $markdownparanobr = 0;
+        if (($flags & 16) == 0) {
+            # do so only if not set: 16=newline is always <br>
+            if (/^ *$/) {
+                # blank line in markdown is end of paragraph
+                $markdownparanobr = 1;
             } else {
-                # if we have seen ^* or ^=, then do not 
-                # add <br> if this line starts with non-blank
-                $markdownparanobr = /^[^ ]/;
+                # this is a non-blank line
+                if ($seenEqualStar == 0) {
+                    # if we haven't seen ^* or ^=, then newline is <br>
+                    $markdownparanobr = 0;
+                } else {
+                    # if we have seen ^* or ^=, then do not 
+                    # add <br> if this line starts with non-blank
+                    $markdownparanobr = /^[^ ]/;
+                }
             }
         }
-#h630        }
 
         # was in a table but not any more, close table
         if (!(/^\|\|/) && ($intbl == 1)) {
@@ -953,10 +939,6 @@ if(1){
               s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
         s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
         # *l*color bold**
-#             s/ \*([rylsafgo])\*([^*]+?)\*[rylsafgo]\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-#             s/^\*([rylsafgo])\*([^*]+?)\*[rylsafgo]\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-#             s/^\*([rylsafgo])\*([^*]+?)\*[rylsafgo]\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-#       s/([ >|])\*([rylsafgo])\*([^*]+?)\*[rylsafgo]\*([ <\]])/$1<strong><font style="color:black;background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
               s/ \*([rylsafgo])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
               s/^\*([rylsafgo])\*([^*]+?)\*\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
               s/^\*([rylsafgo])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
@@ -1166,7 +1148,6 @@ if(1){
     # The next statement overwrites the old style TOC with 
     # collapsible Java TOC.  Uncomment to restore old style TOC
     $toc = &makejavatoc ();
-#print $toc;
 
     if ($hideBlkId > 0) {
         if ($oubuf =~ /%TOC%/) {

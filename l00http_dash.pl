@@ -10,8 +10,9 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all);
+my ($dash_all, $listbang);
 $dash_all = 'past';
+$listbang = '';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -28,7 +29,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
-    my ($lnnostr, $lnno, $hot);
+    my ($lnnostr, $lnno, $hot, $hide);
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
@@ -38,6 +39,12 @@ sub l00http_dash_proc {
         } else {
             $dash_all = 'past';
         }
+    }
+
+    if ((defined ($form->{'listbang'})) && ($form->{'listbang'} eq 'on')) {
+        $listbang = 'checked';
+    } else {
+        $listbang = '';
     }
 
     # Send HTTP and HTML headers
@@ -75,7 +82,8 @@ sub l00http_dash_proc {
     } else {
         $_ = '';
     }
-    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all";
+    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
+    print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'\n";
     print $sock "</form>\n";
 
     print $sock "<pre>\n";
@@ -107,8 +115,23 @@ sub l00http_dash_proc {
         }
         $buffer =~ s/\r//g;
         @alllines = split ("\n", $buffer);
+        $hide = 0;
         foreach $this (@alllines) {
             $lnno++;
+
+            # %DASHHIDE:ON% and %DASHHIDE:OFF% hides bracketted secsions
+            if ($this =~ /^%DASHHIDE:ON%/) {
+                $hide = 1;
+                next;
+            }
+            if ($this =~ /^%DASHHIDE:OFF%/) {
+                $hide = 0;
+                next;
+            }
+            if ($hide) {
+                next;
+            }
+
             $hot = '';
             if ($this =~ /^=([^=]+)=/) {
                 $cat1 = $1;
@@ -175,8 +198,16 @@ sub l00http_dash_proc {
                 if (!defined($tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "})) {
                              $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = '';
                 }
-                if ($dsc =~ /^!!/) {
-                             $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= " - $dsc";
+                if ($listbang eq '') {
+                    # not listing all !, i.e. listing ! only
+                    if ($dsc =~ /^!!/) {
+                                 $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= " - $dsc";
+                    }
+                } else {
+                    # listing all !, i.e. listing ! and !!
+                    if ($dsc =~ /^!/) {
+                                 $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= "<br>$dsc";
+                    }
                 }
                 if ($dsc =~ /^![^!]/) {
                              $countBang{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "}++;
@@ -345,7 +376,7 @@ sub l00http_dash_proc {
         $out .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
         $out .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
         $out .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+clipboard&clip=%2A+%5B%5B%2Fls.htm%3Ffind%3DFind%26amp%3Bfindtext%3D%5E%5C%3D%3D%3D%26amp%3Bblock%3D.%26amp%3Bprefmt%3Don%26amp%3Bpath%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D|to clipboard]]\n";
+        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+CB&clip=*+%5B%5B%2Fls.htm%3Ffind%3DFind%26findtext%3D%255E%255C%253D%253D%253D%26block%3D.%26prefmt%3Don%26path%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D%0D%0A&url=|to clipboard]]\n";
 
         print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
 

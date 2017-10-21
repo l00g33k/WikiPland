@@ -30,7 +30,7 @@ my ($ino, $intbl, $isdst, $editable, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
-my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
+my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto, $lfisbr);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
 
 
@@ -45,6 +45,7 @@ $sortfind = '';
 $showpage = 'checked';
 $sortkey1name2date = 1;
 $lastpname = '';
+$lfisbr = '';
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -112,8 +113,8 @@ sub l00http_ls_conttype {
 
     $urlraw = 0;
 
-    if (($path =~ /\.zip$/i) ||
-        ($path =~ /\.kmz$/i)) {
+    if (($fname =~ /\.zip$/i) ||
+        ($fname =~ /\.kmz$/i)) {
         $urlraw = 1;
         $conttype = "Content-Type: application/x-zip\r\n";
         $conttype .= "Content-Disposition: inline; filename=\"$fname\"; size=\"$size\"\r\n";
@@ -131,48 +132,51 @@ sub l00http_ls_conttype {
 #Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
 #P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
 
-    } elsif ($path =~ /\.kml$/i) {
+    } elsif ($fname =~ /\.kml$/i) {
         $conttype = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-    } elsif ($path =~ /\.apk$/i) {
+    } elsif ($fname =~ /\.apk$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/vnd.android.package-archive\r\n";
-    } elsif (($path =~ /\.jpeg$/i) ||
-             ($path =~ /\.jpg$/i)) {
+    } elsif (($fname =~ /\.jpeg$/i) ||
+             ($fname =~ /\.jpg$/i)) {
         $urlraw = 1;
         $conttype = "Content-Type: image/jpeg\r\n";
-    } elsif ($path =~ /\.wma$/i) {
+    } elsif ($fname =~ /\.wma$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: audio/x-ms-wma\r\n";
-    } elsif ($path =~ /\.3gp$/i) {
+    } elsif ($fname =~ /\.3gp$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: audio/3gp\r\n";
-    } elsif ($path =~ /\.pdf$/i) {
+    } elsif ($fname =~ /\.pdf$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/pdf\r\n";
-    } elsif ($path =~ /\.mp3$/i) {
+    } elsif ($fname =~ /\.mp3$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: audio/mpeg\r\n";
-    } elsif ($path =~ /\.mp4$/i) {
+    } elsif ($fname =~ /\.mp4$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: video/mp4\r\n";
-    } elsif ($path =~ /\.gif$/i) {
+    } elsif ($fname =~ /\.gif$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/gif\r\n";
-    } elsif ($path =~ /\.svg$/i) {
+    } elsif ($fname =~ /\.svg$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/svg+xml\r\n";
-    } elsif ($path =~ /\.js$/i) {
+    } elsif ($fname =~ /\.js$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/javascript\r\n";
-    } elsif ($path =~ /\.png$/i) {
+    } elsif ($fname =~ /\.png$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/png\r\n";
-    } elsif (($path =~ /\.html$/i) ||
-             ($path =~ /\.htm$/i) ||
-             ($path =~ /\.bak$/i) ||
-             ($path =~ /\.way$/i) ||
-             ($path =~ /\.trk$/i) ||
-             ($path =~ /\.txt$/i)) {
+    } elsif (($fname =~ /\.html$/i) ||
+             ($fname =~ /\.htm$/i) ||
+             ($fname =~ /\.bak$/i) ||
+             ($fname =~ /\.way$/i) ||
+             ($fname =~ /\.trk$/i) ||
+             ($fname =~ /\.trk$/i) ||
+             ($fname =~ /\.txt$/i) ||
+             ($fname !~ /\./)           # doesn't have '.'
+             ) {
         $conttype = "Content-Type: text/html\r\n";
     } else {
         $conttype = "Content-Type: application/octet-octet-stream\r\n";
@@ -217,6 +221,16 @@ sub l00http_ls_proc {
         } else {
             $sortkey1name2date = 1;
         }
+
+        if (defined ($form->{'lfisbr'}) && ($form->{'lfisbr'} eq 'on')) {
+            $lfisbr = 'checked';
+        } else {
+            $lfisbr = '';
+        }
+    }
+
+    if ($lfisbr eq 'checked') {
+        $wikihtmlflags += 16;      # flags for &l00wikihtml::wikihtml for 16=newline is always <br>
     }
 
     print "ls: path >$path<\n", if ($ctrl->{'debug'} >= 3);
@@ -255,7 +269,7 @@ sub l00http_ls_proc {
         $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
     }
     if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
-        $wikihtmlflags = 2;      # flags for &l00wikihtml::wikihtml
+        $wikihtmlflags += 2;      # flags for &l00wikihtml::wikihtml
     }
     if (defined ($form->{'bare'})) {
         $wikihtmlflags += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
@@ -320,7 +334,7 @@ sub l00http_ls_proc {
         }
         undef $filedata;
 #l00:
-        if ($form->{'path'} =~ /^l00:\/\//) {
+        if (($pname, $fname) = $form->{'path'} =~ /^(l00:\/\/)(.+)/) {
             print "ls: it is l00:// >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined($ctrl->{'l00file'})) {
                 if (!defined($ctrl->{'l00file'}->{$form->{'path'}})) {
@@ -516,6 +530,7 @@ sub l00http_ls_proc {
                 }
             }
         } elsif (open (FILE, "<$path")) {
+            ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
             print "ls: opened as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined ($form->{'bkvish'})) {
                 &l00backup::backupfile ($ctrl, $path, 1, 5);
@@ -549,23 +564,23 @@ sub l00http_ls_proc {
             if ($read0raw1 == 0) {
                 # auto raw for reading
                 # if not usual text file extension, make it raw
-#::heremark::
-                if (!($path =~ /\.txt$/i) &&
-                    !($path =~ /\.way$/i) &&
-                    !($path =~ /\.trk$/i) &&
-                    !($path =~ /\.inc$/i) &&
-                    !($path =~ /\.bak$/i) &&
-                    !($path =~ /\.csv$/i) &&
-                    !($path =~ /\.log$/i) &&
-                    !($path =~ /\.md$/i) &&
-                    !($path =~ /\.pl$/i) &&
-                    !($path =~ /\.pm$/i) &&
-                    !($path =~ /\.h$/i) &&
-                    !($path =~ /\.c$/i) &&
-                    !($path =~ /\.js$/i) &&
-                    !($path =~ /\.cpp$/i) &&
-                    !($path =~ /\.htm$/i) &&
-                    !($path =~ /\.html$/i)) {
+                if (!($fname =~ /\.txt$/i) &&
+                    !($fname =~ /\.way$/i) &&
+                    !($fname =~ /\.trk$/i) &&
+                    !($fname =~ /\.inc$/i) &&
+                    !($fname =~ /\.bak$/i) &&
+                    !($fname =~ /\.csv$/i) &&
+                    !($fname =~ /\.log$/i) &&
+                    !($fname =~ /\.md$/i) &&
+                    !($fname =~ /\.pl$/i) &&
+                    !($fname =~ /\.pm$/i) &&
+                    !($fname =~ /\.h$/i) &&
+                    !($fname =~ /\.c$/i) &&
+                    !($fname =~ /\.js$/i) &&
+                    !($fname =~ /\.cpp$/i) &&
+                    !($fname =~ /\.htm$/i) &&
+                    !($fname =~ /\.html$/i) &&
+                    !($fname !~ /\./)) {    # doesn't have '.'
                     $urlraw = 1;
                 }
             }
@@ -578,57 +593,13 @@ sub l00http_ls_proc {
                  = stat($path);
 
                 ($httphdr, $urlraw) = &l00http_ls_conttype($path);
-#                if (($path =~ /\.zip$/i) ||
-#                    ($path =~ /\.kmz$/i)) {
-#                    $httphdr = "Content-Type: application/x-zip\r\n";
-##HTTP/1.1 200 OK
-##Server: nginx/0.7.65
-##Date: Sat, 08 May 2010 00:45:04 GMT
-##Content-Type: application/x-zip
-##Connection: keep-alive
-##Cache-Control: must-revalidate
-##Expires:
-##$httphdr .= "Content-Disposition: inline; size=\"$size\"\r\n";
-#$httphdr .= "Content-Disposition: inline; filename=\"Socal Eats - will repeat.kmz\"; size=\"$size\"\r\n";
-##X-Whom: s5-x
-##Content-Length: 23215
-##Etag: "947077edb066e7c363df5cc2a40311e5"
-##Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
-##P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
-# 
-#                } elsif ($path =~ /\.kml$/i) {
-#                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
-#                } elsif ($path =~ /\.apk$/i) {
-#                    $httphdr = "Content-Type: application/vnd.android.package-archive\r\n";
-#                } elsif (($path =~ /\.jpeg$/i) ||
-#                         ($path =~ /\.jpg$/i)) {
-#                    $httphdr = "Content-Type: image/jpeg\r\n";
-#                } elsif ($path =~ /\.wma$/i) {
-#                    $httphdr = "Content-Type: audio/x-ms-wma\r\n";
-#                } elsif ($path =~ /\.3gp$/i) {
-#                    $httphdr = "Content-Type: audio/3gp\r\n";
-#                } elsif ($path =~ /\.pdf$/i) {
-#                    $httphdr = "Content-Type: application/pdf\r\n";
-#                } elsif ($path =~ /\.mp3$/i) {
-#                    $httphdr = "Content-Type: audio/mpeg\r\n";
-#                } elsif ($path =~ /\.mp4$/i) {
-#                    $httphdr = "Content-Type: video/mp4\r\n";
-#                } elsif ($path =~ /\.gif$/i) {
-#                    $httphdr = "Content-Type: image/gif\r\n";
-#                } elsif ($path =~ /\.svg$/i) {
-#                    $httphdr = "Content-Type: image/svg+xml\r\n";
-#                } elsif ($path =~ /\.png$/i) {
-#                    $httphdr = "Content-Type: image/png\r\n";
-#                } elsif (($path =~ /\.html$/i) ||
-#                         ($path =~ /\.htm$/i) ||
-#                         ($path =~ /\.bak$/i) ||
-#                         ($path =~ /\.txt$/i)) {
-#                    $httphdr = "Content-Type: text/html\r\n";
-#                } else {
-#                    $httphdr = "Content-Type: application/octet-octet-stream\r\n";
-#                }
                 $httphdr .= "Content-Length: $size\r\n";
                 $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                if ($path =~ /favicon\.ico/) {
+                    # special case caching for favicon.ico
+                    $httphdr .= "Cache-Control: max-age=2592000\r\n";
+                    # //30days (60sec * 60min * 24hours * 30days)
+                }
                 print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
 
                 $htmlend = 0;       # make note not to add control table
@@ -794,7 +765,6 @@ sub l00http_ls_proc {
                                     # prepend line number
                                     $_ = sprintf("%04d: ", $lnno). $_;
                                 }
-print;
                                 if (/^(=+.+[^=])(=+)$/) {
                                     $_ = "$1 ($lnno) $2\n";
                                 }
@@ -1172,6 +1142,9 @@ print;
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
                  = stat($path.$file);
+                if (!defined($mtime)) {
+                    $mtime = 0;
+                }
                 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                  = localtime($mtime);
 
@@ -1336,7 +1309,7 @@ print;
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"crc32\">Compute crc32</td>\n";
-            print $sock "        <td>&nbsp;</td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"lfisbr\" $lfisbr>Newline is paragraph</td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";

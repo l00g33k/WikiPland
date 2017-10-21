@@ -10,10 +10,11 @@ package l00httpd;
 #use l00httpd;      # used for findInBuf
 
 my ($readName, $readBuf, @readAllLines, $readIdx, $writeName, $writeBuf);
-my ($debuglog, $debuglogstate, %poorwhois);
+my ($debuglog, $debuglogstate, %poorwhois, $usewinclipboard);
 
 $debuglog = '';
 $debuglogstate = 0;
+$usewinclipboard = 0;
 
 #debugprint("calling $cnt\n");
 
@@ -567,7 +568,7 @@ sub pcSyncCmdline {
 sub l00getCB {
     my ($ctrl) = @_;
     my ($buf);
-    my ($clip);
+    my ($clip, $fhdl);
 
 #   $ctrl{'os'} = 'win';
 #   $ctrl{'os'} = 'rhc';
@@ -578,11 +579,18 @@ sub l00getCB {
         $buf = $buf->{'result'};
     } elsif ($ctrl->{'os'} eq 'win') {
         # Use Perl module
-        eval 'use Win32::Clipboard';
+        if ($usewinclipboard == 0) {
+            $usewinclipboard =  1;
+            eval 'use Win32::Clipboard';
+        }
         $clip = Win32::Clipboard();
         $buf = $clip->Get();
     } elsif ($ctrl->{'os'} eq 'cyg') {
-        $buf = `cat /dev/clipboard`;
+        local $/ = undef;
+        if (open($fhdl,"</dev/clipboard")) {
+            $buf = <$fhdl>;
+            close($fhdl);
+        }
     } elsif ($ctrl->{'os'} eq 'tmx') {
         $buf = `termux-clipboard-get`;
     } else {
@@ -598,7 +606,7 @@ sub l00getCB {
 #&l00httpd::l00setCB($ctrl, $buf);
 sub l00setCB {
     my ($ctrl, $buf) = @_;
-    my ($clip);
+    my ($clip, $fhdl);
 
     &l00fwriteOpen($ctrl, 'l00://clipboard.txt');
     &l00fwriteBuf($ctrl, $buf);
@@ -608,23 +616,28 @@ sub l00setCB {
         $ctrl->{'droid'}->setClipboard ($buf);
     } elsif ($ctrl->{'os'} eq 'cyg') {
         # ::todo:: add windows special character escape
-        $buf =~ s/\\/\\\\/g;
-        $buf =~ s/\n//g;
-        $buf =~ s/\r//g;
-        `echo $buf| clip`;
+#        $buf =~ s/\\/\\\\/g;
+#        $buf =~ s/\n//g;
+#        $buf =~ s/\r//g;
+
+#        $buf =~ s/\\/\\\\/gm;
+#        $buf =~ s/\//\\\//gm;
+#        $buf =~ s/|/\|/gm;
+#        $buf =~ s/\(/\\\(/gm;
+#        $buf =~ s/\)/\\\)/gm;
+#        $buf =~ s/'/\\'/gm;
+        if (open($fhdl,">/dev/clipboard")) {
+            print $fhdl $buf;
+            close($fhdl);
+        }
     } elsif ($ctrl->{'os'} eq 'win') {
         # Use Perl module
-        eval 'use Win32::Clipboard';
+        if ($usewinclipboard == 0) {
+            $usewinclipboard =  1;
+            eval 'use Win32::Clipboard';
+        }
         $clip = Win32::Clipboard();
         $clip->Set($buf);
-    } elsif ($ctrl->{'os'} eq 'cyg') {
-        $buf =~ s/\\/\\\\/gm;
-        $buf =~ s/\//\\\//gm;
-        $buf =~ s/|/\|/gm;
-        $buf =~ s/\(/\\\(/gm;
-        $buf =~ s/\)/\\\)/gm;
-        $buf =~ s/'/\\'/gm;
-        `echo "$buf" > /dev/clipboard`;
     } elsif ($ctrl->{'os'} eq 'tmx') {
         $buf =~ s/\\/\\\\/gm;
         $buf =~ s/\//\\\//gm;
