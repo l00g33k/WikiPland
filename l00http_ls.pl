@@ -30,9 +30,9 @@ my ($ino, $intbl, $isdst, $editable, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
-my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto, $lfisbr);
+my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
-
+my ($lfisbr, $chno, $bare);
 
 my $path;
 my $read0raw1 = 0;
@@ -46,6 +46,8 @@ $showpage = 'checked';
 $sortkey1name2date = 1;
 $lastpname = '';
 $lfisbr = '';
+$chno = '';
+$bare = '';
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -227,6 +229,16 @@ sub l00http_ls_proc {
         } else {
             $lfisbr = '';
         }
+        if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
+            $chno = 'checked';
+        } else {
+            $chno = '';
+        }
+        if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
+            $bare = 'checked';
+        } else {
+            $bare = '';
+        }
     }
 
     if ($lfisbr eq 'checked') {
@@ -268,10 +280,10 @@ sub l00http_ls_proc {
     if (defined ($form->{'mode'}) && ($form->{'mode'} eq 'pre')) {
         $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
     }
-    if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
+    if ($chno eq 'checked') {
         $wikihtmlflags += 2;      # flags for &l00wikihtml::wikihtml
     }
-    if (defined ($form->{'bare'})) {
+    if ($bare eq 'checked') {
         $wikihtmlflags += 4;      # flags for &l00wikihtml::wikihtml for 'bare'
     }
     if (defined ($form->{'newwin'})) {
@@ -388,7 +400,7 @@ sub l00http_ls_proc {
 
                     } else {
                         print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
-                        if (!defined ($form->{'bare'})) {
+                        if ($bare ne 'checked') {
                             if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
                                 print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                                 # not ending in / or \, not a dir
@@ -625,7 +637,7 @@ sub l00http_ls_proc {
                 $httphdr = "Content-Type: text/html\r\n";
                 print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
 
-                if (!defined ($form->{'bare'})) {
+                if ($bare ne 'checked') {
                     if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
                         print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                         # not ending in / or \, not a dir
@@ -714,7 +726,6 @@ sub l00http_ls_proc {
                         $showlnno = 0;
                         undef %showdir;
                         $lnno = 0;
-#                        $chno = 0;
                         $searchtag = 1;
                         if (defined($form->{'SHOWTAG'})) {
                             # SHOWTAG specified in URL, to ignore definitions in file
@@ -827,7 +838,7 @@ sub l00http_ls_proc {
                                             }
                                         }
                                         if (/^%SHOWON$showtag%/ || /^%SHOWON:ALWAYS%/) {
-#                                            if (!defined ($form->{'bare'})) {
+#                                            if ($bare ne 'checked') {
 #                                                $buf .= "&nbsp;&nbsp;&nbsp;&nbsp; (%SHOWTAG%: skipped $skipped lines)\n";
 #                                            }
                                             last;
@@ -901,7 +912,7 @@ sub l00http_ls_proc {
                             $buf .= $_;
                         }
                         if (%showdir) {
-                            if (!defined ($form->{'bare'})) {
+                            if ($bare ne 'checked') {
                                 $found = "---\n<b><i>SHOWTAG directory</i></b>\n"; # borrow variable
                                 $found .= "* :ALWAYS:";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
@@ -1236,7 +1247,7 @@ sub l00http_ls_proc {
     }
 
     if ($htmlend) {
-        if (!defined ($form->{'bare'})) {
+        if ($bare ne 'checked') {
             if ($ctrl->{'ishost'}) {
                 if ($ctrl->{'noclinav'}) {
                     print $sock "Client access mode: limited: $ctrl->{'clipath'} <br>\n";
@@ -1297,14 +1308,14 @@ sub l00http_ls_proc {
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
-            print $sock "        <td><input type=\"checkbox\" name=\"chno\">Show chapter #.\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"chno\" $chno>Show chapter #.\n";
             print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
-            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&bare=on&chno=on\">Bare without forms</a></td>\n";
+            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&submit=Submit&bare=on&chno=on\">Bare without forms</a></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
@@ -1432,6 +1443,8 @@ sub l00http_ls_proc {
                 print $sock "</form>\n";
                 print $sock "</tr></table>\n";
             }
+        } else {
+            print $sock "<p><a href=\"/ls.htm?path=$path&submit=Submit&bare=&chno=\">form</a>\n";
         }
         print $sock $ctrl->{'htmlfoot'};
     }

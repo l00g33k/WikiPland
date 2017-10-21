@@ -1,6 +1,6 @@
 # powercfg /batteryreport /output C:\x\battery.html"
 
-$report = "C:\\x\\win_batt_rpt_$ctrl->{'now_string'}.txt";
+$report = "$ctrl->{'tmp'}win_batt_rpt_$ctrl->{'now_string'}.txt";
 $report =~ s/ /_/g;
 
 
