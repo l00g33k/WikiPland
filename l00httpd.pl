@@ -122,7 +122,7 @@ sub getsvrip {
     my ($ip, $now);
 
     $now = time;
-    if ($ipage + 60 > $now) {
+    if ($ipage + 300 > $now) {
         # server ip less than 60 seconds old, use cache
         $ip = $ctrl{'myip'};
     } else {
@@ -174,7 +174,6 @@ sub getsvrip {
         }
         print "raw ip = $ip\n", if ($debug >= 5);
         if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
-            $ip = `ipconfig`;
             if ($ip =~ /(192\.168\.\d+\.\d+)/) {
                 $ip = $1;
             }
@@ -699,7 +698,7 @@ sub periodictask {
             }
         }
     }
-    &dlog (2, "$ctrl{'now_string'} $tickdelta ($who)\n");
+    &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
 
     if (($waketil != 0) &&
         ($waketil < time)) {
@@ -774,7 +773,7 @@ while(1) {
     $l00time = time;
     $clicnt = 0;
     foreach my $curr_socket (@$ready) {
-        if ( $hiresclock && ($debug >= 3)) {
+        if (($debug >= 3) && $hiresclock) {
             $hiresclockmsec = Time::HiRes::time();
         }
         print "curr_socket = $curr_socket\n", if ($debug >= 5);
@@ -808,7 +807,7 @@ while(1) {
             } else {
                 $ishost = 0;
             }
-            if ( $hiresclock && ($debug >= 3)) {
+            if (($debug >= 3) && $hiresclock) {
                 $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
                 l00httpd::dbp("l00httpd", sprintf("%8.3f ms Socket connected --------------------\n", $hiresclockmsec * 1000));
                 $hiresclockmsec = Time::HiRes::time();
@@ -822,7 +821,7 @@ while(1) {
                 $connected{$client_ip} = 1;
             }
             $ttlconns++;
-            if ( $hiresclock && ($debug >= 3)) {
+            if (($debug >= 3) && $hiresclock) {
                 $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
                 l00httpd::dbp("l00httpd", sprintf("%8.3f ms Host identified\n", $hiresclockmsec * 1000));
                 $hiresclockmsec = Time::HiRes::time();
@@ -939,7 +938,7 @@ while(1) {
                 $httphdr = $httpbuf;
                 print "GET?\n", if ($debug >= 4);
             }
-            if ( $hiresclock && ($debug >= 3)) {
+            if (($debug >= 3) && $hiresclock) {
                 $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
                 l00httpd::dbp("l00httpd", sprintf("%8.3f ms HTTP requested data received\n", $hiresclockmsec * 1000));
                 $hiresclockmsec = Time::HiRes::time();
@@ -1169,7 +1168,7 @@ while(1) {
                 }
             }
 
-            if ( $hiresclock && ($debug >= 3)) {
+            if (($debug >= 3) && $hiresclock) {
                 $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
                 l00httpd::dbp("l00httpd", sprintf("%8.3f ms Ready to process request\n", $hiresclockmsec * 1000));
                 $hiresclockmsec = Time::HiRes::time();
@@ -1278,7 +1277,7 @@ while(1) {
                 }
 
                 # invoke module
-                if ( $hiresclock && ($debug >= 3)) {
+                if (($debug >= 3) && $hiresclock) {
                     $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
                     l00httpd::dbp("l00httpd", sprintf("%8.3f ms Ready to invoke module\n", $hiresclockmsec * 1000));
                     $hiresclockmsec = Time::HiRes::time();
@@ -1784,7 +1783,7 @@ while(1) {
                 print $sock $ctrl{'htmlfoot'};
                 print "Completed host control page\n", if ($debug >= 5);
             }
-            if ( $hiresclock && ($debug >= 3)) {
+            if (($debug >= 3) && $hiresclock) {
                 if ($hiresclockmsec > 0) {
                     $hiresclockmsec = Time::HiRes::time() - $hiresclockmsec;
                     l00httpd::dbp("l00httpd", sprintf("%8.3f ms Request serviced\n", $hiresclockmsec * 1000));

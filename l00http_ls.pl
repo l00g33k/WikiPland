@@ -595,6 +595,11 @@ sub l00http_ls_proc {
                 ($httphdr, $urlraw) = &l00http_ls_conttype($path);
                 $httphdr .= "Content-Length: $size\r\n";
                 $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
+                if ($path =~ /favicon\.ico/) {
+                    # special case caching for favicon.ico
+                    $httphdr .= "Cache-Control: max-age=2592000\r\n";
+                    # //30days (60sec * 60min * 24hours * 30days)
+                }
                 print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
 
                 $htmlend = 0;       # make note not to add control table
