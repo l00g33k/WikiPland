@@ -38,7 +38,7 @@ sub l00http_editsort_proc {
 
     if (defined ($form->{'init'})) {
         $linessorted = 0;
-        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
             $orgbuf = &l00httpd::l00freadAll($ctrl);
         }
     }
@@ -48,7 +48,7 @@ sub l00http_editsort_proc {
 
     if (defined ($form->{'reset'})) {
         $linessorted = 0;
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
         &l00httpd::l00fwriteBuf($ctrl, $orgbuf);
         &l00httpd::l00fwriteClose($ctrl);
     }
@@ -56,7 +56,7 @@ sub l00http_editsort_proc {
 
     if (defined ($form->{'pick'})) {
         undef @inbuf;
-        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 push (@inbuf, $_);
             }
@@ -72,7 +72,7 @@ sub l00http_editsort_proc {
                     $outbuf .= $inbuf[$ii];
                 }
             }
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
             $linessorted++;
@@ -81,30 +81,30 @@ sub l00http_editsort_proc {
 
     if (defined ($form->{'ascend'})) {
         undef @inbuf;
-        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 push (@inbuf, $_);
             }
             $outbuf = join("", sort (@inbuf));
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
         }
     }
     if (defined ($form->{'descend'})) {
         undef @inbuf;
-        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 push (@inbuf, $_);
             }
             $outbuf = join("", sort {$b cmp $a} (@inbuf));
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
         }
     }
 
-    if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+    if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
         print $sock "<p><pre>\n";
         $lineno = 1;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -154,7 +154,7 @@ sub l00http_editsort_proc {
     print $sock "</table><br>\n";
 
     print $sock "<a name=\"end\"></a>";
-    print $sock "Working buffer: <a href=\"/view.htm?path=l00://editblock\">l00://editblock</a><p>\n";
+    print $sock "Working buffer: <a href=\"/view.htm?path=l00://editblock.txt\">l00://editblock.txt</a><p>\n";
     print $sock "<a href=\"#top\">top</a>\n";
 
     # send HTML footer and ends

@@ -65,7 +65,7 @@ sub l00http_edit_proc2 {
         ($blklineno > 0)) {
         $form->{'path'} = $form->{'pathorg'};
         if (defined($form->{'editsorted'})) {
-			if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock')) {
+			if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
                 $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
                 $form->{'save'} = 1;    # fake a save from buffer
 			}
@@ -562,7 +562,7 @@ sub l00http_edit_proc2 {
     $buffer =~ s/\r//g;
     @alllines = split ("\n", $buffer);
     if ($blklineno > 0) {
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
     }
     $st = 0;
     $en = $#alllines;
@@ -588,7 +588,8 @@ sub l00http_edit_proc2 {
     for ($lineno = $st; $lineno <= $en; $lineno++) {
         $line = $alllines[$lineno];
         if ($blklineno != 0) {
-            if (($lineno >= $blklineno) && ($lineno < ($blklineno + $contextln))) {
+            if (($lineno + 1 >= $blklineno) && ($lineno + 1 < ($blklineno + $contextln))) {
+                # because $lineno is 0 base, $blklineno is 1 base
                 # also send selected lines to ram file
                 &l00httpd::l00fwriteBuf($ctrl, "$line\n");
             }
