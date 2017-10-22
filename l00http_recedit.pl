@@ -12,7 +12,6 @@ my ($record1, $displen);
 $record1 = '^\d{8,8} \d{6,6} ';
 $displen = 50;
 
-
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf) = @_;
     my ($tmp, $disp, $lf, $leading, $html, $color1, $color2);
@@ -138,7 +137,8 @@ sub l00http_recedit_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted);
-    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii);
+    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
+
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -163,6 +163,10 @@ sub l00http_recedit_proc (\%) {
 
     if (defined ($form->{'displen'}) && ($form->{'displen'} =~ /(\d+)/)) {
         $displen = $1;
+    }
+    $afterline = 0;
+    if (defined ($form->{'afterline'}) && ($form->{'afterline'} =~ /(\d+)/)) {
+        $afterline = $1;
     }
 
     if (defined ($form->{'submit'}) && (length($record1) > 0)) {
@@ -318,7 +322,9 @@ sub l00http_recedit_proc (\%) {
     print $sock "        <tr>\n";
     print $sock "            <td>Record 1:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"record1\" value=\"$record1\">.".
-                                " Max len: <input type=\"text\" size=\"4\" name=\"displen\" value=\"$displen\"></td>\n";
+                                " After line: <input type=\"text\" size=\"4\" name=\"afterline\" value=\"$afterline\">.".
+                                " Max len: <input type=\"text\" size=\"4\" name=\"displen\" value=\"$displen\">.".
+                                "</td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
@@ -343,7 +349,9 @@ sub l00http_recedit_proc (\%) {
             $obuf = '';
             $found = 0;
             $id = 1;
+            $lnno = 0;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                $lnno++;
                 if (/^ *$/) {
                     next;
                 }
@@ -353,7 +361,9 @@ sub l00http_recedit_proc (\%) {
                 if (/$record1/) {
                     # found start of new record
                     if ($found) {
-                        push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
+                        if ($lnno > $afterline) {
+                            push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
+                        }
                         $id++;
                     }
                     $found = 1;
@@ -364,7 +374,9 @@ sub l00http_recedit_proc (\%) {
                 }
             }
             if ($found) {
-                push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
+                if ($lnno > $afterline) {
+                    push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
+                }
             }
             close (IN);
         }

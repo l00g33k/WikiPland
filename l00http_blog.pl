@@ -147,7 +147,11 @@ sub l00http_blog_proc {
     if (defined ($form->{'path'})) {
         print $sock "<a href=\"/launcher.htm?path=$path\">Launch</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> ";
-        print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\">+ #</a> ";
+        if (defined($form->{'afterline'})) {
+            print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}&afterline=$form->{'afterline'}\">+$form->{'afterline'}#</a> ";
+        } else {
+            print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\">+ #</a> ";
+        }
         print $sock "%BLOG:key%:<br>\n";
     } else {
         print $sock "%BLOG:key% quick save link:<br>\n";
