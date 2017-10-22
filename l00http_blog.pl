@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00backup;
+use l00httpd;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -118,7 +119,7 @@ sub l00http_blog_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
-    my (@blockquick);
+    my (@blockquick, $urlencode);
 
     undef @blockquick;
     if (defined ($form->{'path'})) {
@@ -214,9 +215,13 @@ sub l00http_blog_proc {
     }
 
     foreach $_ (@blockquick) {
-        if (defined ($form->{'$_'})) {
+#       if (defined ($form->{$_})) {
+#       &l00httpd::urlencode ($buf)
+        $urlencode  = &l00httpd::urlencode ($_);
+print "$_ -> $urlencode\n";
+        if (defined ($form->{$urlencode})) {
             $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
-            $form->{'buffer'} .= '$_';
+            $form->{'buffer'} .= $_;
             $form->{'save'} = 1;
         }
     }

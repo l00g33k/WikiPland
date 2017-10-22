@@ -93,6 +93,7 @@ sub urlencode {
         $buf =~  s/#/%23/g;
         $buf =~ s/\[/%5B/g;
         $buf =~ s/\]/%5D/g;
+        $buf =~ s/\^/%5E/g;
 
         $buf =~    s/ /+/g;
 
