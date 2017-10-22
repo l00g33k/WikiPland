@@ -215,10 +215,7 @@ sub l00http_blog_proc {
     }
 
     foreach $_ (@blockquick) {
-#       if (defined ($form->{$_})) {
-#       &l00httpd::urlencode ($buf)
         $urlencode  = &l00httpd::urlencode ($_);
-print "$_ -> $urlencode\n";
         if (defined ($form->{$urlencode})) {
             $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, 0);
             $form->{'buffer'} .= $_;
