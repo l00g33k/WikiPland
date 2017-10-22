@@ -656,7 +656,12 @@ sub l00http_ls_proc {
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
                     }
-                    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+                    print $sock "$ctrl->{'home'} \n";
+                    if ($path =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
+                        # we are displaying help text, also generate a link to source code
+                        print $sock "<a href=\"/view.htm/$fname?path=$ctrl->{'plpath'}l00http_$1.pl\">code</a>\n";
+                    }
+                    print $sock "$ctrl->{'HOME'} \n";
                     print $sock "<a href=\"#end\">end</a>\n";
                     print $sock "<a href=\"#__toc__\">TOC</a>\n";
                     if (defined ($form->{'bkvish'})) {
