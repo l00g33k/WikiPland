@@ -63,7 +63,7 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil, $ipage);
+my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime);
 
 # set listening port
 $ctrl_port = 20337;
@@ -78,6 +78,8 @@ $ctrl{'bannermute'} = 0;
 $cmdlnhome = '';
 $waketil = 0;
 $ipage = 0;
+$battpct = '';
+$batttime = 0;
 
 undef $timeout;
 
@@ -1504,7 +1506,30 @@ while(1) {
                 if ($ctrl{'os'} eq 'and') {
                     print $sock "<a href=\"#wifi\">wifi</a> \n";
                     if ($ishost) {
-                        print $sock "<a href=\"/view.htm?path=/sys/class/power_supply/battery/uevent\">Batt</a> \n";
+                        if ($batttime + 300 < time) {
+                            $batttime = time;
+                            if (open(IN,"</sys/class/power_supply/battery/uevent")) {
+                                while (<IN>) {
+                                    if (/POWER_SUPPLY_CAPACITY=(\d+)/) {
+                                        $battpct = "=$1\%";
+                                    }
+                                }
+                                close(IN);
+                            }
+                        }
+                        print $sock "<a href=\"/view.htm?path=/sys/class/power_supply/battery/uevent\">Batt$battpct</a> \n";
+                    }
+                }
+                if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
+                    if ($ishost) {
+                        if ($batttime + 300 < time) {
+                            $batttime = time;
+                            $battpct = `WMIC PATH Win32_Battery Get EstimatedChargeRemaining`;
+                            if ($battpct =~ /(\d+)/m) {
+                                $battpct = "=$1\%";
+                            }
+                        }
+                        print $sock "<a href=\"/shell.htm?buffer=WMIC+PATH+Win32_Battery+Get+EstimatedChargeRemaining&exec=Exec\">Batt$battpct</a> \n";
                     }
                 }
                 if ($ishost) {
