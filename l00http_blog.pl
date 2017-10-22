@@ -355,7 +355,7 @@ sub l00http_blog_proc {
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
     if (defined($form->{'afterline'})) {
-        print $sock "<input type=\"text\" size=\"4\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
+        print $sock "on line<input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
