@@ -1260,12 +1260,10 @@ while(1) {
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> ";
-                if (-f "${plpath}docs_demo/HelpMod$modcalled.txt") {
-                    # help file exist, point to it
-                    $ctrl{'home'} .= "<a href=\"/ls.htm/HelpMod$modcalled.htm?path=${plpath}docs_demo/HelpMod$modcalled.txt\">?</a>";
-                } else {
-                    # else point to source code
-                    $ctrl{'home'} .= "<a href=\"/view.htm/l00http_$modcalled.pl?path=${plpath}l00http_$modcalled.pl\">?</a>";
+                $ctrl{'home'} .= "<a href=\"/ls.htm/HelpMod$modcalled.htm?path=${plpath}docs_demo/HelpMod$modcalled.txt\">?</a> ";
+                if (!-f "${plpath}docs_demo/HelpMod$modcalled.txt") {
+                    # also point to source code
+                    $ctrl{'home'} .= "<a href=\"/view.htm/l00http_$modcalled.pl?path=${plpath}l00http_$modcalled.pl\">code</a> ";
                 }
 
                 if ($ishost && 

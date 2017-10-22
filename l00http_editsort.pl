@@ -9,10 +9,36 @@ use l00backup;
 #l00httpd::dbp($config{'desc'}, "2 contextln $contextln\n");
 my %config = (proc => "l00http_editsort_proc",
               desc => "l00http_editsort_desc");
-my ($linessorted, @sortbuf, $pathorg, $orgbuf);
+my ($linessorted, @sortbuf, $pathorg, $orgbuf, $sortkey, $sortdir);
 $linessorted = 0;
 $pathorg = '';
 $orgbuf = '';
+$sortkey = '';
+
+sub sortfn {
+    my ($cmp, $akey, $bkey);
+
+    if ($a =~ /$sortkey/) {
+        $akey = $1;
+    } else {
+        $akey = $a;
+    }
+    if ($b =~ /$sortkey/) {
+        $bkey = $1;
+    } else {
+        $bkey = $b;
+    }
+    l00httpd::dbp('l00http_editsort_desc', "akey $akey       bkey $bkey\n");
+
+    if ($sortdir) {
+        $cmp = $akey cmp $bkey;
+    } else {
+        $cmp = $bkey cmp $akey;
+    }
+
+
+    $cmp;
+}
 
 sub l00http_editsort_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -82,10 +108,16 @@ sub l00http_editsort_proc {
     if (defined ($form->{'ascend'})) {
         undef @inbuf;
         if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
+            $sortdir = 1;
+            $sortkey = '(.+)';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 push (@inbuf, $_);
+                if (/%EDITSORTKEY:(.+)%/) {
+                    $sortkey = $1;
+                    l00httpd::dbp('l00http_editsort_desc', "Ascending sortkey $sortkey\n");
+                }
             }
-            $outbuf = join("", sort (@inbuf));
+            $outbuf = join("", sort sortfn (@inbuf));
             &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
@@ -94,10 +126,16 @@ sub l00http_editsort_proc {
     if (defined ($form->{'descend'})) {
         undef @inbuf;
         if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
+            $sortdir = 0;
+            $sortkey = '(.+)';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 push (@inbuf, $_);
+                if (/%EDITSORTKEY:(.+)%/) {
+                    $sortkey = $1;
+                    l00httpd::dbp('l00http_editsort_desc', "Dscending sortkey $sortkey\n");
+                }
             }
-            $outbuf = join("", sort {$b cmp $a} (@inbuf));
+            $outbuf = join("", sort sortfn (@inbuf));
             &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);

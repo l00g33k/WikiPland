@@ -424,8 +424,9 @@ sub l00http_edit_proc2 {
     }
 
     if ($blklineno > 0) {
+        $_ = $blklineno - 1;
         print $sock "<br>In block editing mode: editing line ", 
-                    "<a href=\"#line$blklineno\">$blklineno</a>", 
+                    "<a href=\"#line$_\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".\n";
         print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
 

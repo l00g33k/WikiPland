@@ -1,0 +1,5 @@
+* To sort using less than the full line, use regex following the following form:
+
+** any text %EDITSORTKEY:^\* \d+ \d+ .*?(\d+)$%
+
+* See [[/debug.pl|debug]] for the extracted regex and actual sort keys
