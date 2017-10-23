@@ -357,7 +357,6 @@ sub l00http_ls_proc {
                     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                     print $sock "File $form->{'path'} not found.<p>\n";
                 } else {
-#::heremark::
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
                     $editable = 1;
 
@@ -746,6 +745,21 @@ sub l00http_ls_proc {
                         }
                         while (<FILE>) {
                             $lnno++;
+                            # special case for wikispaces
+                            # images has the form:
+                            # [[image:rear_medium.jpg width="560" height="261" caption="caption text"]]
+                            # [[image:path/rear_medium.jpg
+                            # images are stored at path/pages/../files
+                            if (($pname =~ /pages[\\\/]$/) &&
+                                (($tmp, $tmp2) = /^\[\[image:(.+?) .*caption="(.+)"\]\]/)) {
+                                # strip path
+                                $tmp =~ s/^.*?([^\\\/]+)$/$1/;
+                                $_ = $pname;
+                                s/pages([\\\/])$/files$1/;
+                                $_ = "<img src=\"${_}$tmp\"><br><i>caption: $tmp2</i><p>\n";
+                            }
+
+
                             if (defined ($form->{'editline'})) {
 							    s/\r//;
 							    s/\n//;
