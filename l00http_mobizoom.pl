@@ -145,6 +145,12 @@ sub l00http_mobizoom_mobilize {
         $freetag = '';
     }
 
+    # put all tags on a line
+    $wget =~ s/[\r\n]/ /gs;
+    $wget =~ s/</\n</gs;
+    $wget =~ s/>/>\n/gs;
+
+
 
     if ((!($wget =~ /<html/im) || !($wget =~ /<\/html/im)) &&
         (($wget =~ /<font/im))) {
