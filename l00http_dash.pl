@@ -10,9 +10,10 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang);
+my ($dash_all, $listbang, $newwin);
 $dash_all = 'past';
 $listbang = '';
+$newwin = '';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -29,7 +30,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
-    my ($lnnostr, $lnno, $hot, $hide);
+    my ($lnnostr, $lnno, $hot, $hide, $key, $target);
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
@@ -45,6 +46,13 @@ sub l00http_dash_proc {
         $listbang = 'checked';
     } else {
         $listbang = '';
+    }
+    if ((defined ($form->{'newwin'})) && ($form->{'newwin'} eq 'on')) {
+        $newwin = 'checked';
+        $target = 'target="_blank"';
+    } else {
+        $newwin = '';
+        $target = '';
     }
 
     # Send HTTP and HTML headers
@@ -83,7 +91,8 @@ sub l00http_dash_proc {
         $_ = '';
     }
     print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
-    print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'\n";
+    print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
+    print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
     print $sock "</form>\n";
 
     print $sock "<pre>\n";
@@ -150,13 +159,14 @@ sub l00http_dash_proc {
                 if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                     $time_start = &l00httpd::now_string2time($tim);
                 }
+                $key = "||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>||$cat2 ";
                 if (($time_start > 0) && ($dsc =~ /time\.start/)) {
                     $time_start -= &l00httpd::now_string2time($tim);
 
-                    if (!defined($logedTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "})) {
-                                 $logedTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "}  = $time_start;
+                    if (!defined($logedTime{$key})) {
+                                 $logedTime{$key}  = $time_start;
                     } else {
-                                 $logedTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} += $time_start;
+                                 $logedTime{$key} += $time_start;
                     }
                     if (substr($ctrl->{'now_string'}, 0, 8) eq 
                         substr($tim                 , 0, 8)) {
@@ -169,23 +179,23 @@ sub l00http_dash_proc {
 
                 #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
                 #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
-                if (!defined($tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "}) ||
-                            ($tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} lt $tim)) {
-                             $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = $tim;
+                if (!defined($tasksTime{$key}) ||
+                            ($tasksTime{$key} lt $tim)) {
+                             $tasksTime{$key} = $tim;
                              $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
-                             $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = $dsc;
-                             $countBang{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = 0;
+                             $tasksDesc{$key} = $dsc;
+                             $countBang{$key} = 0;
                             if ($dbg) {
                                 print $sock "    TIME  $tim\n";
                             }
                 }
                 # save timestamp of first (newest entered) entry
-                if (!defined($firstTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "})) {
-                             $firstTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = $tim;
+                if (!defined($firstTime{$key})) {
+                             $firstTime{$key} = $tim;
                             if ($dbg) {
                                 print $sock "    FIRST $cat1    $cat2    $tim\n";
                             }
-                             $tasksLine{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = $lnno - 1;
+                             $tasksLine{$key} = $lnno - 1;
                 }
                 if ($this =~ /!!!$/) {
                              $lnnostr = sprintf("%02d", $lnno);
@@ -195,22 +205,22 @@ sub l00http_dash_proc {
                                 print $sock "    !!! $this\n";
                             }
                 }
-                if (!defined($tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "})) {
-                             $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} = '';
+                if (!defined($tasksSticky{$key})) {
+                             $tasksSticky{$key} = '';
                 }
                 if ($listbang eq '') {
                     # not listing all !, i.e. listing ! only
                     if ($dsc =~ /^!!/) {
-                                 $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= " - $dsc";
+                                 $tasksSticky{$key} .= " - $dsc";
                     }
                 } else {
                     # listing all !, i.e. listing ! and !!
                     if ($dsc =~ /^!/) {
-                                 $tasksSticky{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "} .= "<br>$dsc";
+                                 $tasksSticky{$key} .= "<br>$dsc";
                     }
                 }
                 if ($dsc =~ /^![^!]/) {
-                             $countBang{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$cat2 "}++;
+                             $countBang{$key}++;
                 }
             } else {
                 #print $sock "$_\n";
@@ -350,7 +360,7 @@ sub l00http_dash_proc {
             if (defined($tasksLine{$1})) {
                 $cat1cat2 = $1;
                 #print $sock "$tasksLine{$cat1cat2} $1          ";
-                s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$1<\/a>||/;
+                s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star" $target>$1<\/a>||/;
                 #print $sock "$_\n";
             }
             $out .= "$_\n";
