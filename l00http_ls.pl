@@ -936,15 +936,15 @@ sub l00http_ls_proc {
                                 $found .= "* :ALWAYS:";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
                                 $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on\">no header/footer</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&bare=on&chno=on\">+ ch no</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on\">no header/footer</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on&chno=on\">+ ch no</a>";
                                 $found .= "\n";
                                 foreach $_ (sort keys %showdir) {
                                     $found .= "* $_:";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
                                     $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on\">no header/footer</a>";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&bare=on&chno=on\">+ ch no</a>";
+                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on\">no header/footer</a>";
+                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on&chno=on\">+ ch no</a>";
                                     $found .= "\n";
                                 }
                                 $buf = "$found\n$buf";
