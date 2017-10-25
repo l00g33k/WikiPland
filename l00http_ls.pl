@@ -170,18 +170,24 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.png$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/png\r\n";
-    } elsif (($fname =~ /\.html$/i) ||
-             ($fname =~ /\.htm$/i) ||
-             ($fname =~ /\.bak$/i) ||
-             ($fname =~ /\.way$/i) ||
-             ($fname =~ /\.trk$/i) ||
-             ($fname =~ /\.trk$/i) ||
-             ($fname =~ /\.txt$/i) ||
-             ($fname !~ /\./)           # doesn't have '.'
-             ) {
-        $conttype = "Content-Type: text/html\r\n";
-    } else {
+    } elsif (($fname =~ /\.bin$/i) ||
+             ($fname =~ /\.exe$/i) ||
+             ($fname =~ /\.dat$/i)) {
+        $urlraw = 1;
         $conttype = "Content-Type: application/octet-octet-stream\r\n";
+    } else {
+    #} elsif (($fname =~ /\.html$/i) ||
+    #         ($fname =~ /\.htm$/i) ||
+    #         ($fname =~ /\.bak$/i) ||
+    #         ($fname =~ /\.way$/i) ||
+    #         ($fname =~ /\.trk$/i) ||
+    #         ($fname =~ /\.trk$/i) ||
+    #         ($fname =~ /\.txt$/i) ||
+    #         ($fname !~ /\./)           # doesn't have '.'
+    #         ) {
+        $conttype = "Content-Type: text/html\r\n";
+    #} else {
+    #    $conttype = "Content-Type: application/octet-octet-stream\r\n";
     }
 
     if (defined($size)) {
@@ -575,23 +581,28 @@ sub l00http_ls_proc {
             if ($read0raw1 == 0) {
                 # auto raw for reading
                 # if not usual text file extension, make it raw
-                if (!($fname =~ /\.txt$/i) &&
-                    !($fname =~ /\.way$/i) &&
-                    !($fname =~ /\.trk$/i) &&
-                    !($fname =~ /\.inc$/i) &&
-                    !($fname =~ /\.bak$/i) &&
-                    !($fname =~ /\.csv$/i) &&
-                    !($fname =~ /\.log$/i) &&
-                    !($fname =~ /\.md$/i) &&
-                    !($fname =~ /\.pl$/i) &&
-                    !($fname =~ /\.pm$/i) &&
-                    !($fname =~ /\.h$/i) &&
-                    !($fname =~ /\.c$/i) &&
-                    !($fname =~ /\.js$/i) &&
-                    !($fname =~ /\.cpp$/i) &&
-                    !($fname =~ /\.htm$/i) &&
-                    !($fname =~ /\.html$/i) &&
-                    !($fname !~ /\./)) {    # doesn't have '.'
+                #if (!($fname =~ /\.txt$/i) &&
+                #    !($fname =~ /\.way$/i) &&
+                #    !($fname =~ /\.trk$/i) &&
+                #    !($fname =~ /\.inc$/i) &&
+                #    !($fname =~ /\.bak$/i) &&
+                #    !($fname =~ /\.csv$/i) &&
+                #    !($fname =~ /\.log$/i) &&
+                #    !($fname =~ /\.md$/i) &&
+                #    !($fname =~ /\.pl$/i) &&
+                #    !($fname =~ /\.pm$/i) &&
+                #    !($fname =~ /\.h$/i) &&
+                #    !($fname =~ /\.c$/i) &&
+                #    !($fname =~ /\.js$/i) &&
+                #    !($fname =~ /\.cpp$/i) &&
+                #    !($fname =~ /\.htm$/i) &&
+                #    !($fname =~ /\.html$/i) &&
+                #    !($fname !~ /\./)) {    # doesn't have '.'
+                #    $urlraw = 1;
+                #}
+                if (($fname =~ /\.bin$/i) ||
+                    ($fname =~ /\.exe$/i) ||
+                    ($fname =~ /\.dat$/i)) { # raw for known binary
                     $urlraw = 1;
                 }
             }
