@@ -9,7 +9,7 @@ my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
 my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
     @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats);
-my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines);
+my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, @hide);
 
 $inverexclu = '';
 $reloadcfg = '';
@@ -144,6 +144,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
     &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
     &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
+    &l00http_blockfilter_paste($ctrl, $form, 'hide',        \@hide);
 
     if (defined ($form->{'process'})) {
         &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
@@ -157,6 +158,7 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
         &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
         &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
+        &l00http_blockfilter_paste($ctrl, $form, 'hide',        \@hide);
 
         if ((defined ($form->{'maxlines'})) && ($form->{'maxlines'} =~ /(\d+)/)) {
             $maxlines = $1;
@@ -175,6 +177,7 @@ sub l00http_blockfilter_proc {
         @eval = ();
         @preeval = ();
         @stats = ();
+        @hide = ();
     }
 
     if (defined ($form->{'process'}) &&
@@ -201,6 +204,7 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
                 &l00http_blockfilter_parse('stats',       $tmp, \@stats);
+                &l00http_blockfilter_parse('hide',        $tmp, \@hide);
             }
 
             # print target file list
@@ -235,6 +239,7 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
                 &l00http_blockfilter_parse('stats',       $tmp, \@stats);
+                &l00http_blockfilter_parse('hide',        $tmp, \@hide);
             }
         }
 
@@ -288,6 +293,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
     &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
     &l00http_blockfilter_form($sock, $form, 'stats',       'Statistics',        \@stats);
+    &l00http_blockfilter_form($sock, $form, 'hide',        'Hide line',         \@hide);
 
     print $sock "<tr><td>\n";
     print $sock "Maximum lines to display:\n";
@@ -586,6 +592,21 @@ sub l00http_blockfilter_proc {
                     $statsidx++;
                 }
 
+                # hide line
+                $found = 0;
+                foreach $condition (@hide) {
+                    if (/$condition/i) {
+                        # found, exclude
+                        $found = 1;
+                        last;
+                    }
+                }
+                if ($found) {
+                    # hide line
+                    next;
+                }
+
+
                 $viewskip = $cnt - 10;
                 if ($viewskip < 0) {
                     $viewskip = 0;
@@ -626,11 +647,9 @@ sub l00http_blockfilter_proc {
         $output = '';
         for ($tmp = 0; $tmp < $statsidx; $tmp++) {
             $output .= "statistics #$tmp\n";
-#            if (defined($statsout[$tmp])) {
-                foreach $condition (sort keys %{$statsout[$tmp]}) {
-                    $output .= sprintf ("%-40s %5d\n", $condition, $statsout[$tmp]->{$condition});
-                }
-#            }
+            foreach $condition (sort keys %{$statsout[$tmp]}) {
+                $output .= sprintf ("%7d %-60s\n", $statsout[$tmp]->{$condition}, $condition);
+            }
             $output .= "\n";
         }
         if ($output ne '') {
@@ -650,6 +669,7 @@ sub l00http_blockfilter_proc {
         $output .= &l00http_blockfilter_print('eval',        \@eval);
         $output .= &l00http_blockfilter_print('preeval',     \@preeval);
         $output .= &l00http_blockfilter_print('stats',       \@stats);
+        $output .= &l00http_blockfilter_print('hide',        \@hide);
 
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
         &l00httpd::l00fwriteBuf($ctrl, "$output");
@@ -679,6 +699,7 @@ sub l00http_blockfilter_proc {
         $output .= &l00http_blockfilter_print('eval',        \@eval);
         $output .= &l00http_blockfilter_print('preeval',     \@preeval);
         $output .= &l00http_blockfilter_print('stats',       \@stats);
+        $output .= &l00http_blockfilter_print('hide',        \@hide);
 
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
         &l00httpd::l00fwriteBuf($ctrl, "$output");

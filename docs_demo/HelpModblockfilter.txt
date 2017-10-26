@@ -51,13 +51,38 @@ start the processing.
 * 
 
 ==Perl eval==
-* 
+* These expressions are eval'd for each input lines
 
 ==Pre eval==
-* 
+* These expressions are eval'd before any input processing. 
+They can be used for initialization.
 
 ==Statistics==
-* 
+* These expressions are eval'd for each included lines. A separate 
+hash is maintained for each of these expressions. The value of the 
+expression is used as the key for the hash and the value is incremented 
+as a counter. 
+For example, if you have a list in a .csv file:
+    apple,... other info...
+    pear,... other info...
+    apple,... other info...
+    orange,... other info...
+    orange,... other info...
+    pear,... other info...
+you can use this pattern:
+    /^(.+?),/;
+and you can set 'Hide line' to match anything (.) so 
+nothing is displayed. You will get a report such as this at 
+the end:
+  statistics #1
+    219   apple
+      3   orange
+     49   pear
+==Hide line==
+* Any line matching these expressions are processed, but 
+are not displayed. This would be useful for computing statistics. 
+See Statistics.
 
 ==Maximum lines to display==
-* 
+* So you won't try to display 10,000 lines in the browser 
+on your cell phone:)
