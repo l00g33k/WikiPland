@@ -108,7 +108,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
     my ($blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $lnno);
 
 
     # Send HTTP and HTML headers
@@ -179,6 +179,10 @@ sub l00http_blockfilter_proc {
 
     if (defined ($form->{'process'}) &&
         defined ($form->{'path'})) {
+        if (defined($form->{'cfg'}) && (-f $form->{'cfg'})) {
+            # may be overwritten by the next clause
+            $blockfiltercfg = $form->{'cfg'};
+        }
         if ($form->{'path'} =~ /blockfilter/) {
             $blockfiltercfg = $form->{'path'};
             undef $form->{'process'};   # prevent processing config file
@@ -263,6 +267,10 @@ sub l00http_blockfilter_proc {
     if ($blockfiltercfg ne '') {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"reloadcfg\" $reloadcfg>Reload cfg before processing\n";
+        if ($reloadcfg ne '') {
+            # also save config in hidden field
+            print $sock "<input type=\"hidden\" name=\"cfg\" value=\"$blockfiltercfg\">\n";
+        }
         print $sock "</td><td>\n";
         ($pname, $fname) = $blockfiltercfg =~ /^(.+\/)([^\/]+)$/;
         print $sock "<a href=\"/view.htm?path=$pname$fname\" target=\"_blank\">$fname</a>\n";
@@ -270,7 +278,7 @@ sub l00http_blockfilter_proc {
     }
 
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
-    &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan to',           \@scanto);
+    &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan until',        \@scanto);
     &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
     &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
@@ -319,6 +327,7 @@ sub l00http_blockfilter_proc {
         $eofoutput = 0;
         undef $statsout;
         $statsout = {};
+        $lnno = 0;
 
         # do pre eval
         foreach $condition (@preeval) {
@@ -327,6 +336,7 @@ sub l00http_blockfilter_proc {
 
         while (1) {
             $_ = &l00httpd::l00freadLine($ctrl);
+            $lnno++;
             # end of file yet?
             if (!defined($_)) {
                 # end of file
@@ -402,13 +412,24 @@ sub l00http_blockfilter_proc {
                 $blkstartfound = 0;
 
                 # search for block start
-                foreach $condition (@blkstart) {
-                    if (/$condition/i) {
-                        # found
+                if (($#blkstart == 0) && 
+                    ($blkstart[0] =~ /^(\d+)$/)) {
+                    # only one condition and it is a number, take it as a line number
+                    if ($1 == $lnno) {
                         $inblk = 1;     # flag we are inside a found block
                         $blkstartfound = 1;
                         $blkendfound = 1;   # when non end provided
-                        last;
+                    }
+                } else {
+                    # regex search
+                    foreach $condition (@blkstart) {
+                        if (/$condition/i) {
+                            # found
+                            $inblk = 1;     # flag we are inside a found block
+                            $blkstartfound = 1;
+                            $blkendfound = 1;   # when non end provided
+                            last;
+                        }
                     }
                 }
                 if ($inblk != 0) {
