@@ -10,10 +10,11 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newwin);
+my ($dash_all, $listbang, $newwin, $freefmt);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
+$freefmt = '';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -54,6 +55,11 @@ sub l00http_dash_proc {
         $newwin = '';
         $target = '';
     }
+    if ((defined ($form->{'freefmt'})) && ($form->{'freefmt'} eq 'on')) {
+        $freefmt = 'checked';
+    } else {
+        $freefmt = '';
+    }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -93,9 +99,9 @@ sub l00http_dash_proc {
     print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
     print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
     print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
+    print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>free format.\n";
     print $sock "</form>\n";
 
-    print $sock "<pre>\n";
 
     if (defined ($form->{'path'})) {
         undef %tasksTime;
@@ -105,6 +111,10 @@ sub l00http_dash_proc {
         undef %countBang;
         undef %firstTime;
         undef %logedTime;
+
+        if ($freefmt ne 'checked') {
+            print $sock "<pre>\n";
+        }
 
         $cat1 = 'cat1';
         $cat2 = 'cat2';
@@ -281,7 +291,6 @@ sub l00http_dash_proc {
             }
         }
 
-       #$out  = "</pre>\n";
         $out  = '';
         undef @tops2;
         if ($dbg) {
@@ -369,7 +378,6 @@ sub l00http_dash_proc {
         $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
                int($timetoday / 60 + 0.5)) . $out;
 
-       #$out .= "<pre>\n";
         $out .= "* Color in section: *l*now** , *s*next** , *g*near** . Last updated first.\n";
         $out .= "* List: <a href=\"/txtdopl.htm?runbare=RunBare&arg=&sel=&path=$form->{'path'}&arg=all\">all</a>; ";
         $out .= "<a href=\"/txtdopl.htm?runbare=RunBare&arg=&sel=&path=$form->{'path'}&arg=new\">new only</a>; ";
@@ -390,7 +398,9 @@ sub l00http_dash_proc {
 
         print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
 
-        print $sock "</pre>\n";
+        if ($freefmt ne 'checked') {
+            print $sock "</pre>\n";
+        }
         print $sock "<hr><a name=\"end\"></a>";
         print $sock "<a href=\"#top\">top</a>\n";
     }
