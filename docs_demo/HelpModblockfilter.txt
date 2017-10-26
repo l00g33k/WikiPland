@@ -70,7 +70,7 @@ For example, if you have a list in a .csv file:
     orange,... other info...
     pear,... other info...
 you can use this pattern:
-    /^(.+?),/;
+    if(/^(.+?),/){($1);}else{undef;}
 and you can set 'Hide line' to match anything (.) so 
 nothing is displayed. You will get a report such as this at 
 the end:

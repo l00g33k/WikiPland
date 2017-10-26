@@ -335,6 +335,7 @@ sub l00http_blockfilter_proc {
         $statsout = {};
         $lnno = 0;
 
+
         # do pre eval
         foreach $condition (@preeval) {
             eval $condition;
@@ -587,7 +588,6 @@ sub l00http_blockfilter_proc {
                         } else {
                             $statsout[$statsidx]->{$tmp}++;
                         }
-                    } else {
                     }
                     $statsidx++;
                 }
