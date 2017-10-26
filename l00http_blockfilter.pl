@@ -106,9 +106,9 @@ sub l00http_blockfilter_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
-    my ($blockendhits, $hitlines, $tmp, $skip0scan1, $outputed, $link, $bare);
+    my ($blockendhits, $hitlines, $tmp, @nameVals, $skip0scan1, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $lnno);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $statsoutcnt, $lnno);
 
 
     # Send HTTP and HTML headers
@@ -333,6 +333,8 @@ sub l00http_blockfilter_proc {
         $eofoutput = 0;
         undef $statsout;
         $statsout = {};
+        undef $statsoutcnt;
+        $statsoutcnt = {};
         $lnno = 0;
 
 
@@ -581,12 +583,17 @@ sub l00http_blockfilter_proc {
                 # gather stats
                 $statsidx = 0;
                 foreach $condition (@stats) {
-                    ($tmp) = eval $condition;
-                    if (defined($tmp)) {
-                        if (!defined($statsout[$statsidx]->{$tmp})) {
-                            $statsout[$statsidx]->{$tmp} = 1;
+                    @nameVals = eval $condition;
+                    if (defined($nameVals[0])) {
+                        if (!defined($nameVals[1])) {
+                            $nameVals[1] = 1;
+                        }
+                        if (!defined($statsout[$statsidx]->{$nameVals[0]})) {
+                            $statsout[$statsidx]->{$nameVals[0]}  = $nameVals[1];
+                            $statsoutcnt[$statsidx]->{$nameVals[0]} = 1;
                         } else {
-                            $statsout[$statsidx]->{$tmp}++;
+                            $statsout[$statsidx]->{$nameVals[0]} += $nameVals[1];
+                            $statsoutcnt[$statsidx]->{$nameVals[0]}++;
                         }
                     }
                     $statsidx++;
@@ -648,7 +655,7 @@ sub l00http_blockfilter_proc {
         for ($tmp = 0; $tmp < $statsidx; $tmp++) {
             $output .= "statistics #$tmp\n";
             foreach $condition (sort keys %{$statsout[$tmp]}) {
-                $output .= sprintf ("%7d %-60s\n", $statsout[$tmp]->{$condition}, $condition);
+                $output .= sprintf ("%7d %8g %-60s\n", $statsout[$tmp]->{$condition}, $statsoutcnt[$tmp]->{$condition}, $condition);
             }
             $output .= "\n";
         }
