@@ -347,7 +347,7 @@ sub l00http_blockfilter_proc {
         $lnno = 0;
 
         # zero statistics
-        for ($tmp = 0; defined(%{$statsout[$tmp]}); $tmp++) {
+        for ($tmp = 0; %{$statsout[$tmp]}; $tmp++) {
             foreach $condition (sort keys %{$statsout[$tmp]}) {
                 $statsout   [$tmp]->{$condition} = undef;
                 $statsoutcnt[$tmp]->{$condition} = undef;
