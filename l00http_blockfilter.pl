@@ -390,11 +390,20 @@ sub l00http_blockfilter_proc {
                 # skipto or scanuntil
                 if ($skip0scan1done2 == 0) {
                     # skip to mode
-                    foreach $condition (@skipto) {
-                        if (/$condition/i) {
+                    if (($#skipto == 0) && 
+                        ($skipto[0] =~ /^(\d+)$/)) {
+                        # only one condition and it is a number, take it as a line number
+                        if ($1 == $lnno) {
                             # found skip to, now do scan until
                             $skip0scan1done2 = 1;
-                            last;
+                        }
+                    } else {
+                        foreach $condition (@skipto) {
+                            if (/$condition/i) {
+                                # found skip to, now do scan until
+                                $skip0scan1done2 = 1;
+                                last;
+                            }
                         }
                     }
                     if ($skip0scan1done2 == 0) {
@@ -403,11 +412,20 @@ sub l00http_blockfilter_proc {
                     }
                 } else {
                     # scan to mode
-                    foreach $condition (@scanuntil) {
-                        if (/$condition/i) {
+                    if (($#scanuntil == 0) && 
+                        ($scanuntil[0] =~ /^(\d+)$/)) {
+                        # only one condition and it is a number, take it as a line number
+                        if ($1 == $lnno) {
                             # found scan to, now do skip to
                             $skip0scan1done2 = 2;
-                            last;
+                        }
+                    } else {
+                        foreach $condition (@scanuntil) {
+                            if (/$condition/i) {
+                                # found scan to, now do skip to
+                                $skip0scan1done2 = 2;
+                                last;
+                            }
                         }
                     }
                     if ($skip0scan1done2 == 2) {
@@ -466,14 +484,25 @@ sub l00http_blockfilter_proc {
                 }
                 if ($inblk != 0) {
                     # search for block end
-                    foreach $condition (@blkstop) {
-                        if (/$condition/i) {
+                    if (($#blkstop == 0) && 
+                        ($blkstop[0] =~ /^(\d+)$/)) {
+                        # only one condition and it is a number, take it as a line number
+                        if ($1 == $lnno) {
                             # found
                             $inblk = 0;
                             $blkendfound = 1;
-                            last;
+                        }
+                    } else {
+                        foreach $condition (@blkstop) {
+                            if (/$condition/i) {
+                                # found
+                                $inblk = 0;
+                                $blkendfound = 1;
+                                last;
+                            }
                         }
                     }
+
                     # search for required
                     foreach $condition (@blkrequired) {
                         if (/$condition/i) {
