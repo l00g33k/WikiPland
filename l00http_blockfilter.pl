@@ -110,7 +110,7 @@ sub l00http_blockfilter_proc {
     my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
     my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $statsoutcnt, $lnno, $tmp2);
-    my ($cntsum, $valsum);
+    my ($cntsum, $valsum, $blockfilterstatfmt);
 
 
     # Send HTTP and HTML headers
@@ -348,7 +348,7 @@ sub l00http_blockfilter_proc {
         $lnno = 0;
 
         # zero statistics
-        for ($tmp = 0; %{$statsout[$tmp]}; $tmp++) {
+        for ($tmp = 0; defined($statsout) && %{$statsout[$tmp]}; $tmp++) {
             foreach $condition (sort keys %{$statsout[$tmp]}) {
                 $statsout   [$tmp]->{$condition} = undef;
                 $statsoutcnt[$tmp]->{$condition} = undef;
@@ -356,7 +356,7 @@ sub l00http_blockfilter_proc {
         }
 
 
-
+        $blockfilterstatfmt = '%9.4g';
         # do pre eval
         foreach $condition (@preeval) {
             eval $condition;
@@ -694,12 +694,12 @@ sub l00http_blockfilter_proc {
                     defined($statsout[$tmp]->{$condition})) {
                     $cntsum += $statsoutcnt[$tmp]->{$condition};
                     $valsum += $statsout[$tmp]->{$condition};
-                    $tmp2 .= sprintf ("%7d %9.4g  %-60s\n", $statsoutcnt[$tmp]->{$condition}, $statsout[$tmp]->{$condition}, $condition);
+                    $tmp2 .= sprintf ("%7d $blockfilterstatfmt  %-60s\n", $statsoutcnt[$tmp]->{$condition}, $statsout[$tmp]->{$condition}, $condition);
                     $cnt++;
                 }
             }
             if ($cnt > 0) {
-                $tmp2 .= sprintf ("%7d %9.4g  &lt;- total\n", $cntsum, $valsum);
+                $tmp2 .= sprintf ("%7d $blockfilterstatfmt  &lt;- total\n", $cntsum, $valsum);
                 $output .= "$tmp2\n";
             }
         }
