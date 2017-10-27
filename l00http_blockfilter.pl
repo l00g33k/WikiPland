@@ -349,8 +349,7 @@ sub l00http_blockfilter_proc {
         $lnno = 0;
 
         # zero statistics
-#       for ($tmp = 0; %{$statsout[$tmp]}; $tmp++) 
-        for ($tmp = 0; $tmp < $statsidx; $tmp++) {
+        for ($tmp = 0; $tmp <= $#stats; $tmp++) {
             foreach $condition (sort keys %{$statsout[$tmp]}) {
                 $statsout   [$tmp]->{$condition} = undef;
                 $statsoutcnt[$tmp]->{$condition} = undef;
@@ -686,7 +685,7 @@ sub l00http_blockfilter_proc {
 
         # print statistics
         $output = '';
-        for ($tmp = 0; $tmp < $statsidx; $tmp++) {
+        for ($tmp = 0; $tmp <= $#stats; $tmp++) {
             $cnt = 0;
             $cntsum = 0;
             $valsum = 0;
