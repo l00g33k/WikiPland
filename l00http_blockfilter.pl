@@ -10,12 +10,13 @@ my %config = (proc => "l00http_blockfilter_proc",
 my (@skipto, @scanuntil, @fileexclude, @blkstart, @blkstop, 
     @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats,
     @preblkeval, @postblkeval);
-my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, @hide);
+my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, @hide, $statsidx);
 
 $inverexclu = '';
 $reloadcfg = '';
 $blockfiltercfg = '';
 $maxlines = 1000;
+$statsidx = 0;
 
 sub l00http_blockfilter_paste {
     my ($ctrl, $form, $name, $array) = @_;
@@ -109,7 +110,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
     my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $statsoutcnt, $lnno, $tmp2);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2);
     my ($cntsum, $valsum, $blockfilterstatfmt);
 
 
@@ -348,7 +349,8 @@ sub l00http_blockfilter_proc {
         $lnno = 0;
 
         # zero statistics
-        for ($tmp = 0; defined($statsout) && %{$statsout[$tmp]}; $tmp++) {
+#       for ($tmp = 0; %{$statsout[$tmp]}; $tmp++) 
+        for ($tmp = 0; $tmp < $statsidx; $tmp++) {
             foreach $condition (sort keys %{$statsout[$tmp]}) {
                 $statsout   [$tmp]->{$condition} = undef;
                 $statsoutcnt[$tmp]->{$condition} = undef;
@@ -356,7 +358,7 @@ sub l00http_blockfilter_proc {
         }
 
 
-        $blockfilterstatfmt = '%9.4g';
+        $blockfilterstatfmt = '%10.4g';
         # do pre eval
         foreach $condition (@preeval) {
             eval $condition;
