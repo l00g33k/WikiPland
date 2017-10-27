@@ -7,8 +7,9 @@ use warnings;
 
 my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
-my (@skipto, @scanto, @fileexclude, @blkstart, @blkstop, 
-    @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats);
+my (@skipto, @scanuntil, @fileexclude, @blkstart, @blkstop, 
+    @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats,
+    @preblkeval, @postblkeval);
 my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, @hide);
 
 $inverexclu = '';
@@ -106,9 +107,9 @@ sub l00http_blockfilter_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
-    my ($blockendhits, $hitlines, $tmp, @nameVals, $skip0scan1, $outputed, $link, $bare);
+    my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $statsoutcnt, $lnno);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsidx, $statsout, $statsoutcnt, $lnno, $tmp2);
 
 
     # Send HTTP and HTML headers
@@ -134,7 +135,7 @@ sub l00http_blockfilter_proc {
 
 
     &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
-    &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
+    &l00http_blockfilter_paste($ctrl, $form, 'scanuntil',   \@scanuntil);
     &l00http_blockfilter_paste($ctrl, $form, 'fileexclude', \@fileexclude);
     &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
     &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
@@ -143,12 +144,14 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
     &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
     &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
+    &l00http_blockfilter_paste($ctrl, $form, 'preblkeval',  \@preblkeval);
+    &l00http_blockfilter_paste($ctrl, $form, 'postblkeval', \@postblkeval);
     &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
     &l00http_blockfilter_paste($ctrl, $form, 'hide',        \@hide);
 
     if (defined ($form->{'process'})) {
         &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
-        &l00http_blockfilter_paste($ctrl, $form, 'scanto',      \@scanto);
+        &l00http_blockfilter_paste($ctrl, $form, 'scanuntil',   \@scanuntil);
         &l00http_blockfilter_paste($ctrl, $form, 'fileexclude', \@fileexclude);
         &l00http_blockfilter_paste($ctrl, $form, 'blkstart',    \@blkstart);
         &l00http_blockfilter_paste($ctrl, $form, 'blkstop',     \@blkstop);
@@ -157,6 +160,8 @@ sub l00http_blockfilter_proc {
         &l00http_blockfilter_paste($ctrl, $form, 'color',       \@color);
         &l00http_blockfilter_paste($ctrl, $form, 'eval',        \@eval);
         &l00http_blockfilter_paste($ctrl, $form, 'preeval',     \@preeval);
+        &l00http_blockfilter_paste($ctrl, $form, 'preblkeval',  \@preblkeval);
+        &l00http_blockfilter_paste($ctrl, $form, 'postblkeval', \@postblkeval);
         &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
         &l00http_blockfilter_paste($ctrl, $form, 'hide',        \@hide);
 
@@ -167,7 +172,7 @@ sub l00http_blockfilter_proc {
 
     if (defined ($form->{'clear'})) {
         @skipto = ();
-        @scanto = ();
+        @scanuntil = ();
         @fileexclude = ();
         @blkstart = ();
         @blkstop = ();
@@ -176,6 +181,8 @@ sub l00http_blockfilter_proc {
         @color = ();
         @eval = ();
         @preeval = ();
+        @preblkeval = ();
+        @postblkeval = ();
         @stats = ();
         @hide = ();
     }
@@ -194,7 +201,7 @@ sub l00http_blockfilter_proc {
                 $tmp = &l00httpd::l00freadAll($ctrl);
 
                 &l00http_blockfilter_parse('skipto',      $tmp, \@skipto);
-                &l00http_blockfilter_parse('scanto',      $tmp, \@scanto);
+                &l00http_blockfilter_parse('scanuntil',   $tmp, \@scanuntil);
                 &l00http_blockfilter_parse('fileexclude', $tmp, \@fileexclude);
                 &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
                 &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
@@ -203,6 +210,8 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('color',       $tmp, \@color);
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
+                &l00http_blockfilter_parse('preblkeval',  $tmp, \@preblkeval);
+                &l00http_blockfilter_parse('postblkeval', $tmp, \@postblkeval);
                 &l00http_blockfilter_parse('stats',       $tmp, \@stats);
                 &l00http_blockfilter_parse('hide',        $tmp, \@hide);
             }
@@ -229,7 +238,7 @@ sub l00http_blockfilter_proc {
                 $tmp = &l00httpd::l00freadAll($ctrl);
 
                 &l00http_blockfilter_parse('skipto',      $tmp, \@skipto);
-                &l00http_blockfilter_parse('scanto',      $tmp, \@scanto);
+                &l00http_blockfilter_parse('scanuntil',   $tmp, \@scanuntil);
                 &l00http_blockfilter_parse('fileexclude', $tmp, \@fileexclude);
                 &l00http_blockfilter_parse('blkstart',    $tmp, \@blkstart);
                 &l00http_blockfilter_parse('blkstop',     $tmp, \@blkstop);
@@ -238,6 +247,8 @@ sub l00http_blockfilter_proc {
                 &l00http_blockfilter_parse('color',       $tmp, \@color);
                 &l00http_blockfilter_parse('eval',        $tmp, \@eval);
                 &l00http_blockfilter_parse('preeval',     $tmp, \@preeval);
+                &l00http_blockfilter_parse('preblkeval',  $tmp, \@preblkeval);
+                &l00http_blockfilter_parse('postblkeval', $tmp, \@postblkeval);
                 &l00http_blockfilter_parse('stats',       $tmp, \@stats);
                 &l00http_blockfilter_parse('hide',        $tmp, \@hide);
             }
@@ -283,7 +294,7 @@ sub l00http_blockfilter_proc {
     }
 
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
-    &l00http_blockfilter_form($sock, $form, 'scanto',      'Scan until',        \@scanto);
+    &l00http_blockfilter_form($sock, $form, 'scanuntil',   'Scan until',        \@scanuntil);
     &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
     &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
@@ -292,6 +303,8 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
     &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
+    &l00http_blockfilter_form($sock, $form, 'preblkeval',  'Pre blk eval',      \@preblkeval);
+    &l00http_blockfilter_form($sock, $form, 'postblkeval', 'Post blk eval',     \@postblkeval);
     &l00http_blockfilter_form($sock, $form, 'stats',       'Statistics',        \@stats);
     &l00http_blockfilter_form($sock, $form, 'hide',        'Hide line',         \@hide);
 
@@ -324,18 +337,23 @@ sub l00http_blockfilter_proc {
         $thisblockdsp = '';
         $hitlines = 0;
         $inblk = 0;
-        $skip0scan1 = 0;    # skip to/scan to toggle
+        $skip0scan1done2 = 0;    # skip to/scan to toggle
         $ending = 0;
         $header = '';
         $noblkfound = 1;
         $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
         $eofoutput = 0;
-        undef $statsout;
-        $statsout = {};
-        undef $statsoutcnt;
-        $statsoutcnt = {};
         $lnno = 0;
+
+        # zero statistics
+        for ($tmp = 0; defined(%{$statsout[$tmp]}); $tmp++) {
+            foreach $condition (sort keys %{$statsout[$tmp]}) {
+                $statsout   [$tmp]->{$condition} = undef;
+                $statsoutcnt[$tmp]->{$condition} = undef;
+            }
+        }
+
 
 
         # do pre eval
@@ -367,28 +385,31 @@ sub l00http_blockfilter_proc {
                     print $sock " .";
                 }
 
-                # skipto or scanto
-                if ($skip0scan1 == 0) {
+                # skipto or scanuntil
+                if ($skip0scan1done2 == 0) {
                     # skip to mode
                     foreach $condition (@skipto) {
                         if (/$condition/i) {
-                            # found skip to, now do scan to
-                            $skip0scan1 = 1;
+                            # found skip to, now do scan until
+                            $skip0scan1done2 = 1;
                             last;
                         }
                     }
-                    if ($skip0scan1 == 0) {
+                    if ($skip0scan1done2 == 0) {
                         # skip all lines up to first skipto hit
                         next;
                     }
                 } else {
                     # scan to mode
-                    foreach $condition (@scanto) {
+                    foreach $condition (@scanuntil) {
                         if (/$condition/i) {
                             # found scan to, now do skip to
-                            $skip0scan1 = 0;
+                            $skip0scan1done2 = 2;
                             last;
                         }
+                    }
+                    if ($skip0scan1done2 == 2) {
+                        last;
                     }
                 }
 
@@ -427,7 +448,7 @@ sub l00http_blockfilter_proc {
                     if ($1 == $lnno) {
                         $inblk = 1;     # flag we are inside a found block
                         $blkstartfound = 1;
-                        $blkendfound = 1;   # when non end provided
+                        $blkendfound = 1;   # when no end provided
                     }
                 } else {
                     # regex search
@@ -436,7 +457,7 @@ sub l00http_blockfilter_proc {
                             # found
                             $inblk = 1;     # flag we are inside a found block
                             $blkstartfound = 1;
-                            $blkendfound = 1;   # when non end provided
+                            $blkendfound = 1;   # when no end provided
                             last;
                         }
                     }
@@ -465,6 +486,11 @@ sub l00http_blockfilter_proc {
             if ($blkendfound && ($outputed == 0)) {
                 # found end of block
                 if ($requiredfound) {
+                    # do post blk eval
+                    foreach $condition (@postblkeval) {
+                        eval $condition;
+                    }
+
                     $viewskip = $cnt - 10;
                     if ($viewskip < 0) {
                         $viewskip = 0;
@@ -484,6 +510,11 @@ sub l00http_blockfilter_proc {
             }
 
             if ($blkstartfound) {
+                # do pre blk eval
+                foreach $condition (@preblkeval) {
+                    eval $condition;
+                }
+
                 $outputed = 0;
                 $requiredfound = 0;
 
@@ -583,17 +614,17 @@ sub l00http_blockfilter_proc {
                 # gather stats
                 $statsidx = 0;
                 foreach $condition (@stats) {
-                    @nameVals = eval $condition;
-                    if (defined($nameVals[0])) {
-                        if (!defined($nameVals[1])) {
-                            $nameVals[1] = 1;
+                    ($evalName, $evalVals) = eval $condition;
+                    if (defined($evalName)) {
+                        if (!defined($evalVals)) {
+                            $evalVals = 1;
                         }
-                        if (!defined($statsout[$statsidx]->{$nameVals[0]})) {
-                            $statsout[$statsidx]->{$nameVals[0]}  = $nameVals[1];
-                            $statsoutcnt[$statsidx]->{$nameVals[0]} = 1;
+                        if (!defined($statsout   [$statsidx]->{$evalName})) {
+                                     $statsout   [$statsidx]->{$evalName}  = $evalVals + 0;
+                                     $statsoutcnt[$statsidx]->{$evalName} = 1;
                         } else {
-                            $statsout[$statsidx]->{$nameVals[0]} += $nameVals[1];
-                            $statsoutcnt[$statsidx]->{$nameVals[0]}++;
+                                     $statsout   [$statsidx]->{$evalName} += $evalVals + 0;
+                                     $statsoutcnt[$statsidx]->{$evalName}++;
                         }
                     }
                     $statsidx++;
@@ -653,11 +684,18 @@ sub l00http_blockfilter_proc {
         # print statistics
         $output = '';
         for ($tmp = 0; $tmp < $statsidx; $tmp++) {
-            $output .= "statistics #$tmp\n";
+            $cnt = 0;
+            $tmp2 = "statistics #$tmp\n";
             foreach $condition (sort keys %{$statsout[$tmp]}) {
-                $output .= sprintf ("%7d %8g %-60s\n", $statsout[$tmp]->{$condition}, $statsoutcnt[$tmp]->{$condition}, $condition);
+                if (defined($statsoutcnt[$tmp]->{$condition}) && 
+                    defined($statsout[$tmp]->{$condition})) {
+                    $tmp2 .= sprintf ("%7d %9.4g  %-60s\n", $statsoutcnt[$tmp]->{$condition}, $statsout[$tmp]->{$condition}, $condition);
+                    $cnt++;
+                }
             }
-            $output .= "\n";
+            if ($cnt > 0) {
+                $output .= "$tmp2\n";
+            }
         }
         if ($output ne '') {
             print $sock "Statistics:<pre>$output</pre>\n";
@@ -666,7 +704,7 @@ sub l00http_blockfilter_proc {
         # print control parameters
         $output = '';
         $output .= &l00http_blockfilter_print('skipto',      \@skipto);
-        $output .= &l00http_blockfilter_print('scanto',      \@scanto);
+        $output .= &l00http_blockfilter_print('scanuntil',   \@scanuntil);
         $output .= &l00http_blockfilter_print('fileexclude', \@fileexclude);
         $output .= &l00http_blockfilter_print('blkstart',    \@blkstart);
         $output .= &l00http_blockfilter_print('blkstop',     \@blkstop);
@@ -675,6 +713,8 @@ sub l00http_blockfilter_proc {
         $output .= &l00http_blockfilter_print('color',       \@color);
         $output .= &l00http_blockfilter_print('eval',        \@eval);
         $output .= &l00http_blockfilter_print('preeval',     \@preeval);
+        $output .= &l00http_blockfilter_print('preblkeval',  \@preblkeval);
+        $output .= &l00http_blockfilter_print('postblkeval', \@postblkeval);
         $output .= &l00http_blockfilter_print('stats',       \@stats);
         $output .= &l00http_blockfilter_print('hide',        \@hide);
 
@@ -696,7 +736,7 @@ sub l00http_blockfilter_proc {
         # print control parameters
         $output = '';
         $output .= &l00http_blockfilter_print('skipto',      \@skipto);
-        $output .= &l00http_blockfilter_print('scanto',      \@scanto);
+        $output .= &l00http_blockfilter_print('scanuntil',   \@scanuntil);
         $output .= &l00http_blockfilter_print('fileexclude', \@fileexclude);
         $output .= &l00http_blockfilter_print('blkstart',    \@blkstart);
         $output .= &l00http_blockfilter_print('blkstop',     \@blkstop);
@@ -705,6 +745,8 @@ sub l00http_blockfilter_proc {
         $output .= &l00http_blockfilter_print('color',       \@color);
         $output .= &l00http_blockfilter_print('eval',        \@eval);
         $output .= &l00http_blockfilter_print('preeval',     \@preeval);
+        $output .= &l00http_blockfilter_print('preblkeval',  \@preblkeval);
+        $output .= &l00http_blockfilter_print('postblkeval', \@postblkeval);
         $output .= &l00http_blockfilter_print('stats',       \@stats);
         $output .= &l00http_blockfilter_print('hide',        \@hide);
 
