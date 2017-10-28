@@ -1480,7 +1480,14 @@ while(1) {
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ctrl{'myip'}%3A20338%2Fclip.htm\">$ctrl{'myip'}</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
                 print $sock "h, connections: $ttlconns.\n";
-                print $sock "PID $$ VM ", &perlvmsize(), " MBytes<p>\n";
+                print $sock "PID $$ VM ", &perlvmsize(), " MBytes.\n";
+                if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
+                    $_ = `wmic OS get FreePhysicalMemory`;
+                    /(\d+)/ms;
+                    $_ = int($1 / 1024);
+                    print $sock "Free mem $_ MBytes\n";
+                }
+                print $sock "<p>\n";
 
                 print "Send host control HTTP form\n", if ($debug >= 6);
                 print $sock "<a name=\"top\"></a>\n";

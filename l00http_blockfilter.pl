@@ -111,7 +111,7 @@ sub l00http_blockfilter_proc {
     my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
     my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2);
-    my ($cntsum, $valsum, $blockfilterstatfmt);
+    my ($cntsum, $valsum, $blockfilterstatfmt, $noblkstartOneTime, $stopreadingfile);
 
 
     # Send HTTP and HTML headers
@@ -298,7 +298,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
     &l00http_blockfilter_form($sock, $form, 'scanuntil',   'Scan until',        \@scanuntil);
     &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
-    &l00http_blockfilter_form($sock, $form, 'blkstart',    'BLOCK START',       \@blkstart);
+    &l00http_blockfilter_form($sock, $form, 'blkstart',    'Block Start',       \@blkstart);
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
     &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
     &l00http_blockfilter_form($sock, $form, 'blkexclude',  'Block Exclude (!!)',\@blkexclude);
@@ -325,9 +325,6 @@ sub l00http_blockfilter_proc {
         defined ($form->{'path'}) &&
         (&l00httpd::l00freadOpen($ctrl, $form->{'path'}))) {
 
-        if (!defined($blkstart[0])) {
-            print $sock "BLOCK START pattern not defined. Define at least 1 matching pattern.<p>\n";
-        }
         print $sock "Processing .";
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_output.txt');
 
@@ -347,6 +344,8 @@ sub l00http_blockfilter_proc {
         $outputed = 1;  # meaning we haven't anything to output on starting up
         $eofoutput = 0;
         $lnno = 0;
+        $noblkstartOneTime = 1;
+        $stopreadingfile = 0;
 
         # zero statistics
         for ($tmp = 0; $tmp <= $#stats; $tmp++) {
@@ -367,7 +366,7 @@ sub l00http_blockfilter_proc {
             $_ = &l00httpd::l00freadLine($ctrl);
             $lnno++;
             # end of file yet?
-            if (!defined($_)) {
+            if ((!defined($_)) || $stopreadingfile) {
                 # end of file
                 if ($eofoutput == 0) {
                     $eofoutput = 1;
@@ -411,7 +410,7 @@ sub l00http_blockfilter_proc {
                         next;
                     }
                 } else {
-                    # scan to mode
+                    # scan until mode
                     if (($#scanuntil == 0) && 
                         ($scanuntil[0] =~ /^(\d+)$/)) {
                         # only one condition and it is a number, take it as a line number
@@ -429,7 +428,8 @@ sub l00http_blockfilter_proc {
                         }
                     }
                     if ($skip0scan1done2 == 2) {
-                        last;
+                        $stopreadingfile = 1;
+                        next;
                     }
                 }
 
@@ -462,7 +462,13 @@ sub l00http_blockfilter_proc {
                 $blkstartfound = 0;
 
                 # search for block start
-                if (($#blkstart == 0) && 
+                if (($#blkstart < 0) && $noblkstartOneTime) {
+                    # blkstart condition not defined, simulate hitting at the start once
+                    $noblkstartOneTime = 0;
+                    $inblk = 1;     # flag we are inside a found block
+                    $blkstartfound = 1;
+                    $blkendfound = 1;   # when no end provided
+                } elsif (($#blkstart == 0) && 
                     ($blkstart[0] =~ /^(\d+)$/)) {
                     # only one condition and it is a number, take it as a line number
                     if ($1 == $lnno) {
