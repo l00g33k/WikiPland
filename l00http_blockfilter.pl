@@ -126,15 +126,6 @@ sub l00http_blockfilter_proc {
     print $sock "<p>\n";
 
 
-    if (!defined($skipto[0])) {
-        # skip to regex not defined, make it always a hit
-        $skipto[0] = '.';
-    }
-    if (!defined($blkrequired[0])) {
-        # block required regex not defined, make it always a hit
-        $blkrequired[0] = '.';
-    }
-
 
     &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
     &l00http_blockfilter_paste($ctrl, $form, 'scanuntil',   \@scanuntil);
@@ -150,6 +141,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_paste($ctrl, $form, 'postblkeval', \@postblkeval);
     &l00http_blockfilter_paste($ctrl, $form, 'stats',       \@stats);
     &l00http_blockfilter_paste($ctrl, $form, 'hide',        \@hide);
+
 
     if (defined ($form->{'process'})) {
         &l00http_blockfilter_paste($ctrl, $form, 'skipto',      \@skipto);
@@ -171,6 +163,16 @@ sub l00http_blockfilter_proc {
             $maxlines = $1;
         }
     }
+
+    if (!defined($skipto[0])) {
+        # skip to regex not defined, make it always a hit
+        $skipto[0] = '.';
+    }
+    if (!defined($blkrequired[0])) {
+        # block required regex not defined, make it always a hit
+        $blkrequired[0] = '.';
+    }
+
 
     if (defined ($form->{'clear'})) {
         @skipto = ();
