@@ -115,26 +115,26 @@ sub l00http_ls_conttype {
 
     $urlraw = 0;
 
+    #HTTP/1.1 200 OK
+    #Server: nginx/0.7.65
+    #Date: Sat, 08 May 2010 00:45:04 GMT
+    #Content-Type: application/x-zip
+    #Connection: keep-alive
+    #Cache-Control: must-revalidate
+    #Expires:
+    #$conttype .= "Content-Disposition: inline; size=\"$size\"\r\n";
+    #X-Whom: s5-x
+    #Content-Length: 23215
+    #Etag: "947077edb066e7c363df5cc2a40311e5"
+    #Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
+    #P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
     if (($fname =~ /\.zip$/i) ||
         ($fname =~ /\.kmz$/i)) {
         $urlraw = 1;
         $conttype = "Content-Type: application/x-zip\r\n";
         $conttype .= "Content-Disposition: inline; filename=\"$fname\"; size=\"$size\"\r\n";
-#HTTP/1.1 200 OK
-#Server: nginx/0.7.65
-#Date: Sat, 08 May 2010 00:45:04 GMT
-#Content-Type: application/x-zip
-#Connection: keep-alive
-#Cache-Control: must-revalidate
-#Expires:
-#$conttype .= "Content-Disposition: inline; size=\"$size\"\r\n";
-#X-Whom: s5-x
-#Content-Length: 23215
-#Etag: "947077edb066e7c363df5cc2a40311e5"
-#Last-Modified: Mon, 11 Jan 2010 05:54:08 GMT
-#P3P: CP: ALL DSP COR CURa ADMa DEVa CONo OUR IND ONL COM NAV INT CNT STA
-
     } elsif ($fname =~ /\.kml$/i) {
+        $urlraw = 1;
         $conttype = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
     } elsif ($fname =~ /\.apk$/i) {
         $urlraw = 1;
@@ -600,11 +600,12 @@ sub l00http_ls_proc {
                 #    !($fname !~ /\./)) {    # doesn't have '.'
                 #    $urlraw = 1;
                 #}
-                if (($fname =~ /\.bin$/i) ||
-                    ($fname =~ /\.exe$/i) ||
-                    ($fname =~ /\.dat$/i)) { # raw for known binary
-                    $urlraw = 1;
-                }
+                #if (($fname =~ /\.bin$/i) ||
+                #    ($fname =~ /\.exe$/i) ||
+                #    ($fname =~ /\.dat$/i)) { # raw for known binary
+                #    $urlraw = 1;
+                #}
+                ($httphdr, $urlraw) = &l00http_ls_conttype($path);
             }
             # auto raw for
             if (($read0raw1 == 1) || ($urlraw == 1)) {
