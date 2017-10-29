@@ -396,7 +396,10 @@ sub l00http_dash_proc {
         $out .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         $out .= "* Send shortcut [[/clip.htm?update=Copy+to+CB&clip=*+%5B%5B%2Fls.htm%3Ffind%3DFind%26findtext%3D%255E%255C%253D%253D%253D%26block%3D.%26prefmt%3Don%26path%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D%0D%0A&url=|to clipboard]]\n";
 
-        print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
+#       print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
+        $out = &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
+        $out =~ s/ +(<\/td>)/$1/mg;
+        print $sock $out;
 
         if ($freefmt ne 'checked') {
             print $sock "</pre>\n";
