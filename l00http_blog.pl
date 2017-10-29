@@ -9,19 +9,9 @@ use l00httpd;
 
 my %config = (proc => "l00http_blog_proc",
               desc => "l00http_blog_desc");
-my ($buffer, $lastbuf, %addtimeval);
+my ($buffer, $lastbuf);
 $lastbuf = '';
 
-%addtimeval = (
-    'NewTime' => 0,
-    '2h' => 7200,
-    '5h' => 18000,
-    '10h' => 36000,
-    '1d' => 86400,
-    '2d' => 172800,
-    '3d' => 259200,
-    '5d' => 432000,
-    '28d' => 2419200);
 
 
 sub blog_make_hdr {
@@ -119,9 +109,12 @@ sub l00http_blog_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
-    my (@blockquick, $urlencode);
+    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval);
 
     undef @blockquick;
+    undef @blocktime;
+    undef %addtimeval;
+    $addtimeval{'NewTime'} = 0;
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
         ($pname, $fname) = $path =~ /^(.+[\\\/])([^\\\/]+)$/;
@@ -131,6 +124,17 @@ sub l00http_blog_proc {
                 s/\n//g;
                 if (/^%BLOGQUICK:(.+?)%/) {
                     push(@blockquick, $1);
+                }
+                if (/^%BLOGTIME:(.+?)%/) {
+                    $tmp = $1;
+                    $addtimeval{$tmp} = 0;
+                    if ($tmp =~ /(\d+)h/) {
+                        $addtimeval{$tmp} = 3600 * $1;
+                    }
+                    if ($tmp =~ /(\d+)d/) {
+                        $addtimeval{$tmp} = 24 * 3600 * $1;
+                    }
+                    push(@blocktime, $tmp);
                 }
             }
         }
@@ -213,6 +217,18 @@ sub l00http_blog_proc {
         $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
+
+
+if(0){
+    foreach $_ (@blocktime) {
+        $urlencode  = &l00httpd::urlencode ($_);
+        if (defined ($form->{$urlencode})) {
+            $form->{'buffer'} .= $_;
+            $form->{'save'} = 1;
+            last;
+        }
+    }
+}
 
     foreach $_ (@blockquick) {
         $urlencode  = &l00httpd::urlencode ($_);
@@ -386,16 +402,13 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log style add\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
+
     print $sock "<p>";
-    $_ = 'style="height:1.4em; width:2.0em"';
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2h\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5h\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"10h\" $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"1d\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"2d\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"3d\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\"  value=\"5d\"  $_>\n";
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"28d\" $_><p>\n";
+    $tmp = 'style="height:1.4em; width:2.0em"';
+    foreach $_ (@blocktime) {
+        print $sock "<input type=\"submit\" name=\"newtime\"  value=\"$_\"  $tmp>\n";
+    }
+    print $sock "<p>";
 
     foreach $_ (@blockquick) {
         print $sock "<input type=\"submit\" name=\"$_\"  value=\"$_\">\n";
