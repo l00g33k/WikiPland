@@ -379,6 +379,10 @@ sub l00http_blockfilter_proc {
                 }
             }
 
+            # processing input lines
+            #   skip to/scan until search
+            #   colorize
+            #   search for block start/end/required
             if ($eofoutput == 0) {
                 # processing while not eof
                 s/\r//;
@@ -386,6 +390,39 @@ sub l00http_blockfilter_proc {
                 $cnt++;
                 if (($cnt % 1000) == 0) {
                     print $sock " .";
+                }
+
+                # file exclude (may exclude block start)
+                # exclude (!! to include only) lines
+                $found = 0;
+                foreach $condition (@fileexclude) {
+                    if (substr($condition, 0, 2) eq '!!') {
+                        $tmp = $condition;
+                        substr($tmp, 0, 2) = '';
+                        if (!/$tmp/i) {
+                            # not found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    } else {
+                        if (/$condition/i) {
+                            # found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    }
+                }
+                if ($inverexclu eq '') {
+                    if ($found) {
+                        # file exclude line
+                        next;
+                    }
+                } else {
+                    # invert sense of exclude
+                    if (!$found) {
+                        # file exclude line
+                        next;
+                    }
                 }
 
                 # skipto or scanuntil
@@ -491,22 +528,24 @@ sub l00http_blockfilter_proc {
                     }
                 }
                 if ($inblk != 0) {
-                    # search for block end
-                    if (($#blkstop == 0) && 
-                        ($blkstop[0] =~ /^(\d+)$/)) {
-                        # only one condition and it is a number, take it as a line number
-                        if ($1 == $lnno) {
-                            # found
-                            $inblk = 0;
-                            $blkendfound = 1;
-                        }
-                    } else {
-                        foreach $condition (@blkstop) {
-                            if (/$condition/i) {
+                    # search for block end but not on the starting line
+                    if ($blkstartfound == 0) {
+                        if (($#blkstop == 0) && 
+                            ($blkstop[0] =~ /^(\d+)$/)) {
+                            # only one condition and it is a number, take it as a line number
+                            if ($1 == $lnno) {
                                 # found
                                 $inblk = 0;
                                 $blkendfound = 1;
-                                last;
+                            }
+                        } else {
+                            foreach $condition (@blkstop) {
+                                if (/$condition/i) {
+                                    # found
+                                    $inblk = 0;
+                                    $blkendfound = 1;
+                                    last;
+                                }
                             }
                         }
                     }
@@ -519,12 +558,84 @@ sub l00http_blockfilter_proc {
                             last;
                         }
                     }
+
+                    # block exclude
+                    $found = 0;
+                    foreach $condition (@blkexclude) {
+                        if (substr($condition, 0, 2) eq '!!') {
+                            $tmp = $condition;
+                            substr($tmp, 0, 2) = '';
+                            if (!/$tmp/i) {
+                                # not found, exclude
+                                $found = 1;
+                                last;
+                            }
+                        } else {
+                            if (/$condition/i) {
+                                # found, exclude
+                                $found = 1;
+                                last;
+                            }
+                        }
+                    }
+                    if ($found) {
+                        # file exclude line
+                        next;
+                    }
+
+
+
+                    # gather stats
+                    $statsidx = 0;
+                    foreach $condition (@stats) {
+                        ($evalName, $evalVals) = eval $condition;
+                        if (defined($evalName)) {
+                            if (!defined($evalVals)) {
+                                $evalVals = 1;
+                            }
+                            if (!defined($statsout   [$statsidx]->{$evalName})) {
+                                         $statsout   [$statsidx]->{$evalName}  = $evalVals + 0;
+                                         $statsoutcnt[$statsidx]->{$evalName} = 1;
+                            } else {
+                                         $statsout   [$statsidx]->{$evalName} += $evalVals + 0;
+                                         $statsoutcnt[$statsidx]->{$evalName}++;
+                            }
+                        }
+                        $statsidx++;
+                    }
+
+                    # hide line
+                    $found = 0;
+                    foreach $condition (@hide) {
+                        if (/$condition/i) {
+                            # found, exclude
+                            $found = 1;
+                            last;
+                        }
+                    }
+                    if ($found) {
+                        # hide line
+                        next;
+                    }
+
+
+                    $viewskip = $cnt - 10;
+                    if ($viewskip < 0) {
+                        $viewskip = 0;
+                    }
+                    $hitlines++;
+                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    if ($hitlines < $maxlines) {
+                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    }
                 }
             }
 
+            # after scanned a line or after end of file
+            # output if we have found a block with required
             if ($blkendfound && ($outputed == 0)) {
-                # found end of block
                 if ($requiredfound) {
+                    # found end of block
                     # do post blk eval
                     foreach $condition (@postblkeval) {
                         eval $condition;
@@ -545,9 +656,11 @@ sub l00http_blockfilter_proc {
                     $output .= $thisblockdsp;
                     $outram .= $thisblockram;
                 }
+
                 $outputed = 1;
             }
 
+            # found new start
             if ($blkstartfound) {
                 # do pre blk eval
                 foreach $condition (@preblkeval) {
@@ -592,106 +705,6 @@ sub l00http_blockfilter_proc {
                 $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                 if ($hitlines < $maxlines) {
                     $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                }
-            } elsif ($inblk) {
-                # exclude (!! to include only) lines
-                $found = 0;
-                foreach $condition (@fileexclude) {
-                    if (substr($condition, 0, 2) eq '!!') {
-                        $tmp = $condition;
-                        substr($tmp, 0, 2) = '';
-                        if (!/$tmp/i) {
-                            # not found, exclude
-                            $found = 1;
-                            last;
-                        }
-                    } else {
-                        if (/$condition/i) {
-                            # found, exclude
-                            $found = 1;
-                            last;
-                        }
-                    }
-                }
-                if ($inverexclu eq '') {
-                    if ($found) {
-                        # file exclude line
-                        next;
-                    }
-                } else {
-                    # invert sense of exclude
-                    if (!$found) {
-                        # file exclude line
-                        next;
-                    }
-                }
-
-                # block exclude
-                $found = 0;
-                foreach $condition (@blkexclude) {
-                    if (substr($condition, 0, 2) eq '!!') {
-                        $tmp = $condition;
-                        substr($tmp, 0, 2) = '';
-                        if (!/$tmp/i) {
-                            # not found, exclude
-                            $found = 1;
-                            last;
-                        }
-                    } else {
-                        if (/$condition/i) {
-                            # found, exclude
-                            $found = 1;
-                            last;
-                        }
-                    }
-                }
-                if ($found) {
-                    # file exclude line
-                    next;
-                }
-
-                # gather stats
-                $statsidx = 0;
-                foreach $condition (@stats) {
-                    ($evalName, $evalVals) = eval $condition;
-                    if (defined($evalName)) {
-                        if (!defined($evalVals)) {
-                            $evalVals = 1;
-                        }
-                        if (!defined($statsout   [$statsidx]->{$evalName})) {
-                                     $statsout   [$statsidx]->{$evalName}  = $evalVals + 0;
-                                     $statsoutcnt[$statsidx]->{$evalName} = 1;
-                        } else {
-                                     $statsout   [$statsidx]->{$evalName} += $evalVals + 0;
-                                     $statsoutcnt[$statsidx]->{$evalName}++;
-                        }
-                    }
-                    $statsidx++;
-                }
-
-                # hide line
-                $found = 0;
-                foreach $condition (@hide) {
-                    if (/$condition/i) {
-                        # found, exclude
-                        $found = 1;
-                        last;
-                    }
-                }
-                if ($found) {
-                    # hide line
-                    next;
-                }
-
-
-                $viewskip = $cnt - 10;
-                if ($viewskip < 0) {
-                    $viewskip = 0;
-                }
-                $hitlines++;
-                $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                if ($hitlines < $maxlines) {
-                    $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                 }
             }
         }
