@@ -341,7 +341,7 @@ sub l00http_blockfilter_proc {
         $skip0scan1done2 = 0;    # skip to/scan to toggle
         $ending = 0;
         $header = '';
-        $noblkfound = 1;
+        $noblkfound = 0;
         $requiredfound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
         $eofoutput = 0;
@@ -624,9 +624,9 @@ sub l00http_blockfilter_proc {
                         $viewskip = 0;
                     }
                     $hitlines++;
-                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     if ($hitlines < $maxlines) {
-                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"newblkfltwin\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     }
                 }
             }
@@ -710,8 +710,9 @@ sub l00http_blockfilter_proc {
         }
         ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
         if ($hitlines > $maxlines) {
-            $output .= "\nOutput truncated. View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a> for complete output; ";
-            $output .= "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"newcfg\">copy it to</a>...\n";
+            $output = "<font style=\"color:black;background-color:yellow\">Output truncated</font>. View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a> for complete output\n$output";
+            $output .= "\n<font style=\"color:black;background-color:yellow\">Output truncated</font>. View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a> for complete output; ";
+            $output .= "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a>...\n";
         }
 
 
@@ -725,8 +726,8 @@ sub l00http_blockfilter_proc {
 
         print $sock "<br>Processed $cnt lines. ".
             "Output $noblkfound blocks and $hitlines lines to ".
-            "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"newram\">l00://blockfilter_output.txt</a>; ".
-            "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"newcfg\">copy it to</a>...".
+            "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a>; ".
+            "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a>...".
             "<p>\n";
         print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         print $sock "<pre>$output</pre>\n";
@@ -778,9 +779,9 @@ sub l00http_blockfilter_proc {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
         &l00httpd::l00fwriteBuf($ctrl, "$output");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"newcfg\">l00://blockfilter_cfg.txt</a> , \n";
+        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"_blank\">l00://blockfilter_cfg.txt</a> , \n";
         ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
-        print $sock "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=${pname}blockfilter_.txt\" target=\"newcfg\">filemgt</a><p>\n";
+        print $sock "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=${pname}blockfilter_.txt\" target=\"_blank\">filemgt</a><p>\n";
 
         print $sock "List of all parameters:<p>\n";
         print $sock "<pre>$output</pre>\n";
@@ -810,7 +811,7 @@ sub l00http_blockfilter_proc {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
         &l00httpd::l00fwriteBuf($ctrl, "$output");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"newcfg\">l00://blockfilter_cfg.txt</a><p>\n";
+        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"_blank\">l00://blockfilter_cfg.txt</a><p>\n";
 
         print $sock "List of all parameters:<p>\n";
         print $sock "<pre>$output</pre>\n";
