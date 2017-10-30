@@ -175,6 +175,10 @@ sub l00http_ls_conttype {
              ($fname =~ /\.dat$/i)) {
         $urlraw = 1;
         $conttype = "Content-Type: application/octet-octet-stream\r\n";
+    } elsif (($fname =~ /\.html$/i) ||
+             ($fname =~ /\.htm$/i)) {
+        $urlraw = 1;
+        $conttype = "Content-Type: text/html\r\n";
     } else {
     #} elsif (($fname =~ /\.html$/i) ||
     #         ($fname =~ /\.htm$/i) ||
@@ -277,15 +281,16 @@ sub l00http_ls_proc {
     $path =~ s/%20/ /g;
     print "ls: path after client restriction (noclinav $ctrl->{'noclinav'}) >$path<\n", if ($ctrl->{'debug'} >= 5);
 
-    if (defined ($form->{'mode'}) && ($form->{'mode'} eq 'read')) {
-        $read0raw1 = 0;     # reading mode, i.e. add <br> for linefeed
-    }
+    $read0raw1 = 0;     # always reset to reading mode
+#   if (defined ($form->{'mode'}) && ($form->{'mode'} eq 'read')) {
+#       $read0raw1 = 0;     # reading mode, i.e. add <br> for linefeed
+#   }
     if (defined ($form->{'mode'}) && ($form->{'mode'} eq 'raw')) {
         $read0raw1 = 1;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
     }
-    if (defined ($form->{'mode'}) && ($form->{'mode'} eq 'pre')) {
-        $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
-    }
+#   if (defined ($form->{'mode'}) && ($form->{'mode'} eq 'pre')) {
+#       $read0raw1 = 2;     # raw mode, i.e. unmodified binary transfer, e.g. view .jpg
+#   }
     if ($chno eq 'checked') {
         $wikihtmlflags += 2;      # flags for &l00wikihtml::wikihtml
     }
@@ -578,7 +583,7 @@ sub l00http_ls_proc {
             if (defined ($form->{'raw'}) && ($form->{'raw'} eq 'on')) {
                 $urlraw = 1;
             }
-            if ($read0raw1 == 0) {
+            if (($read0raw1 == 0) && ($urlraw == 0)) {
                 # auto raw for reading
                 # if not usual text file extension, make it raw
                 #if (!($fname =~ /\.txt$/i) &&
@@ -695,376 +700,366 @@ sub l00http_ls_proc {
 
                 # 2.2) If not, try reading 30 lines and look for Wikitext
 
-                if ($read0raw1 == 2) {
-                    # formatted
-                    print $sock "<pre>\n";
-                    while (<FILE>) {
-                        print $sock "$_";
+                $ln = 4000;
+                $hits = 0;
+                while (<FILE>) {
+                    # count wikitext keywords
+                    if (/=+[^=]+=+/) {
+                        #==title==
+                        $hits++;
                     }
-                    print $sock "</pre>\n";
-                    close (FILE);
-                } else {
-                    $ln = 4000;
-                    $hits = 0;
-                    while (<FILE>) {
-                        # count wikitext keywords
-                        if (/=+[^=]+=+/) {
-                            #==title==
-                            $hits++;
-                        }
-                        if (/^\*+ /) {
-                            #* bullet
-                            $hits++;
-                        }
-                        if (/^\|\|/) {
-                            #|| table
-                            $hits++;
-                            if ($ctrl->{'debug'} >= 3) {
-                                $ctrl->{'msglog'} .= "ls:table >$_<\n";
-                            }
-                        }
-                        if ($hits >= 1) {
-                            last;
-                        }
-                        if (--$ln < 0) {
-                            last;
+                    if (/^\*+ /) {
+                        #* bullet
+                        $hits++;
+                    }
+                    if (/^\|\|/) {
+                        #|| table
+                        $hits++;
+                        if ($ctrl->{'debug'} >= 3) {
+                            $ctrl->{'msglog'} .= "ls:table >$_<\n";
                         }
                     }
-                    close (FILE);
-
-                    open (FILE, "<$path");
-                    $bulvl = 0;
                     if ($hits >= 1) {
-                        # rendering as wiki text
-                        $buf = "";
-                        undef $showtag;
-                        $showltgt = 0;
-                        $showlnno = 0;
-                        undef %showdir;
-                        $lnno = 0;
-                        $searchtag = 1;
-                        if (defined($form->{'SHOWTAG'})) {
-                            # SHOWTAG specified in URL, to ignore definitions in file
-                            $showtag = $form->{'SHOWTAG'};
-                            if (length($showtag) < 1) {
-                                $showtag = '.*';
-                            }
-                            $searchtag = 0;
+                        last;
+                    }
+                    if (--$ln < 0) {
+                        last;
+                    }
+                }
+                close (FILE);
+
+                open (FILE, "<$path");
+                $bulvl = 0;
+                if ($hits >= 1) {
+                    # rendering as wiki text
+                    $buf = "";
+                    undef $showtag;
+                    $showltgt = 0;
+                    $showlnno = 0;
+                    undef %showdir;
+                    $lnno = 0;
+                    $searchtag = 1;
+                    if (defined($form->{'SHOWTAG'})) {
+                        # SHOWTAG specified in URL, to ignore definitions in file
+                        $showtag = $form->{'SHOWTAG'};
+                        if (length($showtag) < 1) {
+                            $showtag = '.*';
                         }
-                        if (defined($form->{'SHOWLINENO'})) {
-                            # SHOWLINENO specified in URL, turn on SHOWLINENO mode
+                        $searchtag = 0;
+                    }
+                    if (defined($form->{'SHOWLINENO'})) {
+                        # SHOWLINENO specified in URL, turn on SHOWLINENO mode
+                        $showlnno = 1;
+                    }
+                    while (<FILE>) {
+                        $lnno++;
+                        # special case for wikispaces
+                        # images has the form:
+                        # [[image:rear_medium.jpg width="560" height="261" caption="caption text"]]
+                        # [[image:path/rear_medium.jpg
+                        # images are stored at path/pages/../files
+                        if (($pname =~ /pages[\\\/]$/) &&
+                            (($tmp, $tmp2) = /^\[\[image:(.+?) .*caption="(.+)"\]\]/)) {
+                            # strip path
+                            $tmp =~ s/^.*?([^\\\/]+)$/$1/;
+                            $_ = $pname;
+                            s/pages([\\\/])$/files$1/;
+                            $_ = "<img src=\"${_}$tmp\"><br><i>caption: $tmp2</i><p>\n";
+                        }
+
+
+                        if (defined ($form->{'editline'})) {
+                            s/\r//;
+                            s/\n//;
+                            $_ = "$_ <a href=\"/edit.htm?path=$path&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
+                        }
+
+                        # highlighting
+                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
+                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                        }
+
+
+                        # path=./ substitution
+                        s/path=\.\//path=$pname/g;
+                        # path=$ substitution
+                        s/path=\$/path=$path/g;
+
+                        # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+                        if (/%L00HTTP<(.+?)>%/) {
+                            if (defined($ctrl->{$1})) {
+                                s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                            }
+                        }
+
+                        # implement %SHOWLINENO%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
+                        if (/^%SHOWLINENO%/) {
                             $showlnno = 1;
+                            next;
                         }
-                        while (<FILE>) {
-                            $lnno++;
-                            # special case for wikispaces
-                            # images has the form:
-                            # [[image:rear_medium.jpg width="560" height="261" caption="caption text"]]
-                            # [[image:path/rear_medium.jpg
-                            # images are stored at path/pages/../files
-                            if (($pname =~ /pages[\\\/]$/) &&
-                                (($tmp, $tmp2) = /^\[\[image:(.+?) .*caption="(.+)"\]\]/)) {
-                                # strip path
-                                $tmp =~ s/^.*?([^\\\/]+)$/$1/;
-                                $_ = $pname;
-                                s/pages([\\\/])$/files$1/;
-                                $_ = "<img src=\"${_}$tmp\"><br><i>caption: $tmp2</i><p>\n";
+                        # prepend line number
+                        if ($showlnno) {
+                            if (/^[^=*%:]/) {
+                                # prepend line number
+                                $_ = sprintf("%04d: ", $lnno). $_;
                             }
-
-
-                            if (defined ($form->{'editline'})) {
-							    s/\r//;
-							    s/\n//;
-                                $_ = "$_ <a href=\"/edit.htm?path=$path&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
-							}
-
-                            # highlighting
-                            if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-                                s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                            if (/^(=+.+[^=])(=+)$/) {
+                                $_ = "$1 ($lnno) $2\n";
                             }
-
-
-                            # path=./ substitution
-                            s/path=\.\//path=$pname/g;
-							# path=$ substitution
-                            s/path=\$/path=$path/g;
-
-                            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-                            if (/%L00HTTP<(.+?)>%/) {
-                                if (defined($ctrl->{$1})) {
-                                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                        }
+                        # implement %SHOWLEADINGSPACES%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
+                        # convert leading spaces to no break spaces
+                        # but not leading */_{ which are font formatting (//})
+                        if (!/^ *$/) {
+                            # and not blank lines
+                            s/^( +)([^*\/_\{])/'&nbsp;' x length($1).$2/e;
+                            # This } matches the search pattern just above so editor matching works
+                        }
+                        # implement %SHOWLTGT%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
+                        if (/^%SHOWLTGT%/) {
+                            $showltgt = 1;
+                            next;
+                        }
+                        if (/^%NOSHOWLTGT%/) {
+                            $showltgt = 0;
+                            next;
+                        }
+                        if ($showltgt) {
+                            s/</&lt;/g;
+                            s/>/&gt;/g;
+                        }
+                        # implement SHOWTAG; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
+                        if ($searchtag) {
+                            # SHOWTAG not defined in URL, search in file
+                            if (/^%SHOWTAG(.*?)%/) {
+                                $showtag = $1;
+                                if (length($showtag) < 1) {
+                                    $showtag = '.*';
                                 }
-                            }
-
-                            # implement %SHOWLINENO%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
-                            if (/^%SHOWLINENO%/) {
-                                $showlnno = 1;
                                 next;
                             }
-                            # prepend line number
-                            if ($showlnno) {
-                                if (/^[^=*%:]/) {
-                                    # prepend line number
-                                    $_ = sprintf("%04d: ", $lnno). $_;
-                                }
-                                if (/^(=+.+[^=])(=+)$/) {
-                                    $_ = "$1 ($lnno) $2\n";
-                                }
-                            }
-                            # implement %SHOWLEADINGSPACES%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
-                            # convert leading spaces to no break spaces
-                            # but not leading */_{ which are font formatting (//})
-                            if (!/^ *$/) {
-                                # and not blank lines
-                                s/^( +)([^*\/_\{])/'&nbsp;' x length($1).$2/e;
-                                # This } matches the search pattern just above so editor matching works
-                            }
-                            # implement %SHOWLTGT%; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
-                            if (/^%SHOWLTGT%/) {
-                                $showltgt = 1;
-                                next;
-                            }
-                            if (/^%NOSHOWLTGT%/) {
-                                $showltgt = 0;
-                                next;
-                            }
-                            if ($showltgt) {
-                                s/</&lt;/g;
-                                s/>/&gt;/g;
-                            }
-                            # implement SHOWTAG; see sl4a/scripts/l00httpd/docs_demo/DemO_developer_journal.txt
-                            if ($searchtag) {
-                                # SHOWTAG not defined in URL, search in file
-                                if (/^%SHOWTAG(.*?)%/) {
-                                    $showtag = $1;
-                                    if (length($showtag) < 1) {
-                                        $showtag = '.*';
-                                    }
-                                    next;
-                                }
-                            } elsif (/^%SHOWTAG/) {
-                                # hides all %SHOWTAG
-                                next;
-                            }
+                        } elsif (/^%SHOWTAG/) {
+                            # hides all %SHOWTAG
+                            next;
+                        }
 
-                            # search SHOWON/SHOWOFF for directory
-                            if (/^%SHOWO[FN]+(.*?)%/) {
-                                if (length ($1) > 0) {
-                                    $showdir {$1} = 1;
-                                }
+                        # search SHOWON/SHOWOFF for directory
+                        if (/^%SHOWO[FN]+(.*?)%/) {
+                            if (length ($1) > 0) {
+                                $showdir {$1} = 1;
                             }
-                            # implement SHOWOFF and SHOWON
-                            if (defined($showtag)) {
-                                # skip if SHOWOFF is found
-                                if (/^%SHOWOFF$showtag%/ || /^%SHOWOFF:ALWAYS%/) {
-                                    $showdir {$showtag} = 1;
-                                    $skipped = 0;
-                                    # skipping until %SHOWON%
-                                    while (<FILE>) {
-                                        $lnno++;
-                                        $skipped++;
-                                        if (/^%SHOWO[FN]+(.*?)%/) {
-                                            if (length ($1) > 0) {
-                                                $showdir {$1} = 1;
-                                            }
+                        }
+                        # implement SHOWOFF and SHOWON
+                        if (defined($showtag)) {
+                            # skip if SHOWOFF is found
+                            if (/^%SHOWOFF$showtag%/ || /^%SHOWOFF:ALWAYS%/) {
+                                $showdir {$showtag} = 1;
+                                $skipped = 0;
+                                # skipping until %SHOWON%
+                                while (<FILE>) {
+                                    $lnno++;
+                                    $skipped++;
+                                    if (/^%SHOWO[FN]+(.*?)%/) {
+                                        if (length ($1) > 0) {
+                                            $showdir {$1} = 1;
                                         }
-                                        if (/^%SHOWON$showtag%/ || /^%SHOWON:ALWAYS%/) {
+                                    }
+                                    if (/^%SHOWON$showtag%/ || /^%SHOWON:ALWAYS%/) {
 #                                            if ($bare ne 'checked') {
 #                                                $buf .= "&nbsp;&nbsp;&nbsp;&nbsp; (%SHOWTAG%: skipped $skipped lines)\n";
 #                                            }
-                                            last;
-                                        }
-                                    }
-                                    next;
-                                } elsif (/^%SHOWOFF/) {
-                                    # hide all %SHOW...
-                                    next;
-                                } elsif (/^%SHOWO/) {
-                                    # in SHOWOFF/SHOWON mode, hide all controls
-                                    next;
-                                }
-                            }
-
-                            if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
-								if (defined($1)) {
-                                    $buf .= $1;
-								}
-                                $_ = $2;
-								if (defined($3)) {
-								    $tmp = $3;
-								} else {
-								    $tmp = '';
-								}
-                                # include file
-                                #s/^%INCLUDE%://;
-                                #s/\r//;
-                                #s/\n//;
-
-                                # is this superceded by path=./ substitution in ls.pl?
-                                # subst %INCLUDE<./xxx> as 
-                                #       %INCLUDE</absolute/path/xxx>
-                                s/^\.\//$pname\//;
-                                # drop last directory from $pname for:
-                                # subst %INCLUDE<../xxx> as 
-                                #       %INCLUDE</absolute/path/../xxx>
-                                $pnameup = $pname;
-                                $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
-                                s/^\.\.\//$pnameup\//;
-
-                                if (&l00httpd::l00freadOpen($ctrl, $_)) {
-                                    # %INCLUDE%: here
-                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                        if (/^##/) {
-                                            # skip to next ^#
-                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                                if (/^#/) {
-                                                    last;
-                                                }
-                                            }
-                                        }
-                                        if (/^#/) {
-                                            # skip ^#
-                                            next;
-                                        }
-                                        # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-                                        if (/%L00HTTP<(.+?)>%/) {
-                                            if (defined($ctrl->{$1})) {
-                                                s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
-                                            }
-                                        }
-                                        $buf .= $_;
+                                        last;
                                     }
                                 }
-                                $tmp = "%l00httpd:lnno:$lnno%$tmp";
-                                $buf .= $tmp;
-								next;
-                            }
-                            $_ = "%l00httpd:lnno:$lnno%$_";
-                            $buf .= $_;
-                        }
-                        if (%showdir) {
-                            if ($bare ne 'checked') {
-                                $found = "---\n<b><i>SHOWTAG directory</i></b>\n"; # borrow variable
-                                $found .= "* :ALWAYS:";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on\">no header/footer</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on&chno=on\">+ ch no</a>";
-                                $found .= "\n";
-                                foreach $_ (sort keys %showdir) {
-                                    $found .= "* $_:";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on\">no header/footer</a>";
-                                    $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on&chno=on\">+ ch no</a>";
-                                    $found .= "\n";
-                                }
-                                $buf = "$found\n$buf";
+                                next;
+                            } elsif (/^%SHOWOFF/) {
+                                # hide all %SHOW...
+                                next;
+                            } elsif (/^%SHOWO/) {
+                                # in SHOWOFF/SHOWON mode, hide all controls
+                                next;
                             }
                         }
-                        $found = '';
-                        if (defined ($form->{'find'})) {
-                            $foundhdr = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
-                            if (defined ($form->{'findtext'})) {
-                                $findtext = $form->{'findtext'};
+
+                        if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
+                            if (defined($1)) {
+                                $buf .= $1;
                             }
-                            if (defined ($form->{'prefmt'})) {
-                                $prefmt = 'checked';
+                            $_ = $2;
+                            if (defined($3)) {
+                                $tmp = $3;
                             } else {
-                                $prefmt = '';
-                            }
-                            if (defined ($form->{'block'})) {
-                                $block = $form->{'block'};
-                            }
-                            if ($prefmt ne '') {
-                                $foundhdr .= "<pre>\n";
-                            }
-                            $found = &l00httpd::findInBuf ($findtext, $block, $buf);
-                            if ($block eq '.') {
-                                if ($sortfind ne '') {
-                                    $found = join("\n", sort l00http_ls_sortfind split("\n", $found));
-                                }
-                                # add line number
                                 $tmp = '';
-                                foreach $_ (split ("\n", $found)) {
-                                    if (/%l00httpd:lnno:(\d+)%/) {
-                                        $tmp2 = $1 - 10;
-                                        if ($tmp2 < 1) {
-                                            $tmp2 = 1;
+                            }
+                            # include file
+                            #s/^%INCLUDE%://;
+                            #s/\r//;
+                            #s/\n//;
+
+                            # is this superceded by path=./ substitution in ls.pl?
+                            # subst %INCLUDE<./xxx> as 
+                            #       %INCLUDE</absolute/path/xxx>
+                            s/^\.\//$pname\//;
+                            # drop last directory from $pname for:
+                            # subst %INCLUDE<../xxx> as 
+                            #       %INCLUDE</absolute/path/../xxx>
+                            $pnameup = $pname;
+                            $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                            s/^\.\.\//$pnameup\//;
+
+                            if (&l00httpd::l00freadOpen($ctrl, $_)) {
+                                # %INCLUDE%: here
+                                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                    if (/^##/) {
+                                        # skip to next ^#
+                                        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                            if (/^#/) {
+                                                last;
+                                            }
                                         }
-                                        $_ = "<a href=\"/view.htm?path=$path&skip=$tmp2#line$1\">".sprintf("%05d", $1)."</a>: $_";
                                     }
-                                    $tmp .= "$_\n";
+                                    if (/^#/) {
+                                        # skip ^#
+                                        next;
+                                    }
+                                    # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+                                    if (/%L00HTTP<(.+?)>%/) {
+                                        if (defined($ctrl->{$1})) {
+                                            s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                                        }
+                                    }
+                                    $buf .= $_;
                                 }
-                                $found = $tmp;
                             }
-                            $found = $foundhdr . $found;
-                            if ($prefmt ne '') {
-                                $found .= "</pre>\n";
-                            } else {
-                                # remove line number
-                                $found =~ s/^\d+: //gm;
-                            }
-                            $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
-                            # render found results
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
+                            $tmp = "%l00httpd:lnno:$lnno%$tmp";
+                            $buf .= $tmp;
+                            next;
                         }
-                        
-                        if ((defined ($form->{'find'})) &&
-                            ($showpage ne 'checked')) {
-                            # find without displaying page
+                        $_ = "%l00httpd:lnno:$lnno%$_";
+                        $buf .= $_;
+                    }
+                    if (%showdir) {
+                        if ($bare ne 'checked') {
+                            $found = "---\n<b><i>SHOWTAG directory</i></b>\n"; # borrow variable
+                            $found .= "* :ALWAYS:";
+                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on\">no header/footer</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on&chno=on\">+ ch no</a>";
+                            $found .= "\n";
+                            foreach $_ (sort keys %showdir) {
+                                $found .= "* $_:";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on\">no header/footer</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on&chno=on\">+ ch no</a>";
+                                $found .= "\n";
+                            }
+                            $buf = "$found\n$buf";
+                        }
+                    }
+                    $found = '';
+                    if (defined ($form->{'find'})) {
+                        $foundhdr = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
+                        if (defined ($form->{'findtext'})) {
+                            $findtext = $form->{'findtext'};
+                        }
+                        if (defined ($form->{'prefmt'})) {
+                            $prefmt = 'checked';
                         } else {
-                            $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
-                            if (defined ($form->{'hiliteln'})) {
-                                foreach $_ (split ("\n", $buf)) {
-                                    if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
-                                        s/>(.+)</><font style="color:black;background-color:lime">$1<\/font></g;
-                                        print $sock "$_\n";
-                                    } else {
-                                        print $sock "$_\n";
+                            $prefmt = '';
+                        }
+                        if (defined ($form->{'block'})) {
+                            $block = $form->{'block'};
+                        }
+                        if ($prefmt ne '') {
+                            $foundhdr .= "<pre>\n";
+                        }
+                        $found = &l00httpd::findInBuf ($findtext, $block, $buf);
+                        if ($block eq '.') {
+                            if ($sortfind ne '') {
+                                $found = join("\n", sort l00http_ls_sortfind split("\n", $found));
+                            }
+                            # add line number
+                            $tmp = '';
+                            foreach $_ (split ("\n", $found)) {
+                                if (/%l00httpd:lnno:(\d+)%/) {
+                                    $tmp2 = $1 - 10;
+                                    if ($tmp2 < 1) {
+                                        $tmp2 = 1;
                                     }
+                                    $_ = "<a href=\"/view.htm?path=$path&skip=$tmp2#line$1\">".sprintf("%05d", $1)."</a>: $_";
                                 }
-                            } else {
-                                print $sock $buf;
+                                $tmp .= "$_\n";
                             }
+                            $found = $tmp;
                         }
+                        $found = $foundhdr . $found;
+                        if ($prefmt ne '') {
+                            $found .= "</pre>\n";
+                        } else {
+                            # remove line number
+                            $found =~ s/^\d+: //gm;
+                        }
+                        $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
+                        # render found results
+                        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
+                    }
+                    
+                    if ((defined ($form->{'find'})) &&
+                        ($showpage ne 'checked')) {
+                        # find without displaying page
                     } else {
+                        $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                        if (defined ($form->{'hiliteln'})) {
+                            foreach $_ (split ("\n", $buf)) {
+                                if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
+                                    s/>(.+)</><font style="color:black;background-color:lime">$1<\/font></g;
+                                    print $sock "$_\n";
+                                } else {
+                                    print $sock "$_\n";
+                                }
+                            }
+                        } else {
+                            print $sock $buf;
+                        }
+                    }
+                } else {
+                    # rendering as raw text
+
+                    $buf = "";
+                    while (<FILE>) {
+                        $buf .= $_;
+                    }
+                    # 2.4) If no Wikitext were found, a <br> as linefeed
+
+                    $found = '';
+                    if (defined ($form->{'find'})) {
+                        $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
+                        if (defined ($form->{'findtext'})) {
+                            $findtext = $form->{'findtext'};
+                        }
+                        if (defined ($form->{'block'})) {
+                            $block = $form->{'block'};
+                        }
+                        if ($prefmt ne '') {
+                            $found .= "<pre>\n";
+                        }
+                        $found .= &l00httpd::findInBuf ($findtext, $block, $buf);
+                        if ($prefmt ne '') {
+                            $found .= "</pre>\n";
+                        }
+                        $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                         # rendering as raw text
+                        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
+                    }
 
-                        $buf = "";
-                        while (<FILE>) {
-                            $buf .= $_;
-                        }
-                        # 2.4) If no Wikitext were found, a <br> as linefeed
-
-                        $found = '';
-                        if (defined ($form->{'find'})) {
-                            $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
-                            if (defined ($form->{'findtext'})) {
-                                $findtext = $form->{'findtext'};
-                            }
-                            if (defined ($form->{'block'})) {
-                                $block = $form->{'block'};
-                            }
-                            if ($prefmt ne '') {
-                                $found .= "<pre>\n";
-                            }
-                            $found .= &l00httpd::findInBuf ($findtext, $block, $buf);
-                            if ($prefmt ne '') {
-                                $found .= "</pre>\n";
-                            }
-                            $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
-                            # rendering as raw text
-                            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
-                        }
-
-                        $ln = 1;
-                        foreach $_ (split ("\n", $buf)) {
-                            s/</&lt;/g;  # no HTML tags
-                            s/>/&gt;/g;
-                            print $sock "<a name=\"$ln\">$_</a><br>\n";
-                            $ln++;
-                        }
+                    $ln = 1;
+                    foreach $_ (split ("\n", $buf)) {
+                        s/</&lt;/g;  # no HTML tags
+                        s/>/&gt;/g;
+                        print $sock "<a name=\"$ln\">$_</a><br>\n";
+                        $ln++;
                     }
                 }
             }
@@ -1297,31 +1292,30 @@ sub l00http_ls_proc {
             print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path\"></td>\n";
             print $sock "</tr>\n";
 
-            if ($read0raw1 == 0) {
-                $readst = "checked";
-                $raw_st = "unchecked";
-                $pre_st = "unchecked";
-            } elsif ($read0raw1 == 1) {
-                $readst = "unchecked";
-                $raw_st = "checked";
-                $pre_st = "unchecked";
-            } else {
-                $readst = "unchecked";
-                $raw_st = "unchecked";
-                $pre_st = "checked";
-            }
+#           if ($read0raw1 == 0) {
+#               $readst = "checked";
+#               $raw_st = "unchecked";
+#               $pre_st = "unchecked";
+#           } elsif ($read0raw1 == 1) {
+#               $readst = "unchecked";
+#               $raw_st = "checked";
+#               $pre_st = "unchecked";
+#           } else {
+#               $readst = "unchecked";
+#               $raw_st = "unchecked";
+#               $pre_st = "checked";
+#           }
             print $sock "    <tr>\n";
-            print $sock "        <td>".
-              "<input type=\"radio\" name=\"mode\" value=\"read\" $readst>reading<br>".
-              "<input type=\"radio\" name=\"mode\" value=\"raw\"  $raw_st>raw<br>".
-              "<input type=\"radio\" name=\"mode\" value=\"pre\"  $pre_st>pre<br>".
-              "</td>\n";
-            print $sock "        <td>add new line for reading<br>raw dump<br>".
-                        "<input type=\"checkbox\" name=\"bare\">No header/footer</td>\n";
+            print $sock "<td><input type=\"checkbox\" name=\"bare\">No header/footer</td>\n";
+#           print $sock "        <td>".
+#             "<input type=\"radio\" name=\"mode\" value=\"read\" $readst>reading<br>".
+#             "<input type=\"radio\" name=\"mode\" value=\"raw\"  $raw_st>raw<br>".
+#             "<input type=\"radio\" name=\"mode\" value=\"pre\"  $pre_st>pre<br>".
+#             "&nbsp;</td>\n";
+            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&submit=Submit&raw=on\">Raw binary</a></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
-    #       print $sock "        <td>&nbsp;</td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"editline\">Edit line link</td>\n";
 
             if ($sortkey1name2date == 2) {
