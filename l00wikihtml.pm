@@ -1004,7 +1004,7 @@ sub wikihtml {
                 if ($cols[$ii] =~ /^ *$/) {
                     $oubuf .= "<td>&nbsp;</td>\n";
                 } else {
-                    $oubuf .= "<td>$cols[$ii]</td>\n";
+                    $oubuf .= "<td valign=\"top\">$cols[$ii]</td>\n";
                 }
             }
             $oubuf .= "</tr>\n";

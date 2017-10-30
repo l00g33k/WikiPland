@@ -99,7 +99,13 @@ sub l00http_dash_proc {
     print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
     print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
     print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
-    print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>free format.\n";
+    print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
+    if ($freefmt ne 'checked') {
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
+    } else {
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">free format</a>.\n";
+    }
+
     print $sock "</form>\n";
 
 
@@ -113,7 +119,7 @@ sub l00http_dash_proc {
         undef %logedTime;
 
         if ($freefmt ne 'checked') {
-            print $sock "<pre>\n";
+            print $sock "<pre>";
         }
 
         $cat1 = 'cat1';
@@ -341,7 +347,7 @@ sub l00http_dash_proc {
                 /^(\|\|!!*)(\d\d\d\d \d\d)/;
                 if ($2 ne substr($ctrl->{'now_string'}, 4, 7)) {
                     # highlight !!! because all iHot has current time
-                    s/^(\|\| *!*)(\d\d\d\d \d\d\d\d)/$1<strong>$2<\/strong>/;
+                    s/^(\|\| *!*)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2_$3<\/strong>/;
                 }
             }
             if (/^\|\|\d/) {
@@ -350,7 +356,7 @@ sub l00http_dash_proc {
                 /^\|\|(\d\d\d\d) \d\d/;
                 if ($1 eq substr($ctrl->{'now_string'}, 4, 4)) {
                     # highlight !!! because all iHot has current time
-                    s/^(\|\|)(\d\d\d\d)( \d\d\d\d)/$1<strong>$2<\/strong>$3/;
+                    s/^(\|\|)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2 $3<\/strong>/;
                 }
             }
             push(@tops2, $_);
