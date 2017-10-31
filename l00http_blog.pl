@@ -109,11 +109,12 @@ sub l00http_blog_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
-    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval);
+    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url);
 
     undef @blockquick;
     undef @blocktime;
     undef %addtimeval;
+    $url = '';
     $addtimeval{'NewTime'} = 0;
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -122,6 +123,12 @@ sub l00http_blog_proc {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//g;
                 s/\n//g;
+                if (/^%BLOGURL:<(.+?)>%/) {
+                    $url = $1;
+                    $url =~ s/path=\$/path=$form->{'path'}/;
+                    $url = "Quick URL: <a href=\"$url\">$url</a>";
+print "url: $url\n";
+                }
                 if (/^%BLOGQUICK:(.+?)%/) {
                     push(@blockquick, $1);
                 }
@@ -414,9 +421,9 @@ if(0){
         print $sock "<input type=\"submit\" name=\"$_\"  value=\"$_\">\n";
     }
 
-    print $sock "</form><br>\n";
+    print $sock "</form>\n";
 
-    print $sock $output;
+    print $sock "$url\n$output";
 
     print $sock "<hr><a name=\"end\"></a>";
     print $sock "<a href=\"#__top__\">top</a>\n";
