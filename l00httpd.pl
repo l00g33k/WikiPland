@@ -367,6 +367,7 @@ sub readl00httpdcfg {
                     print ">$key< = >$val<\n";;
                     if ($key eq 'workdir') {
                         # special case workdir to accept only if exist
+                        $val =~ s/%PLPATH%/$plpath/;    # only fly plpath translation
                         if (-d $val) {
                             $ctrl{$key} = $val;
                         }
