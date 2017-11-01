@@ -72,7 +72,12 @@ sub l00http_eval_proc {
     print $sock "</form>\n";
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
-    print $sock "<a href=\"#end\">Jump to end</a><br>\n";
+    print $sock "<a href=\"#end\">Jump to end</a><p>\n";
+
+    print $sock "<a href=\"/eval.htm?eval=%27Time+in+sec%3A+%27.time.%27+is+%27.l00httpd%3A%3Atime2now_string%28time%29&url=\">Example to invoke</a>:<br>\n";
+    print $sock "<pre>\n";
+    print $sock "'Time in sec: '.time.' is '.l00httpd::time2now_string(time)\n";
+    print $sock "</pre>\n";
 
     print $sock "<a href=\"/eval.htm?eval=%24ctrl-%3E%7B%27droid%27%7D-%3EmakeToast%28%27Making+a+toast%27%29%3B\">Example to invoke</a>:<br>\n";
     print $sock "<pre>\n";
