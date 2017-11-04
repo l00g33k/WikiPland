@@ -1257,6 +1257,7 @@ while(1) {
                 # make data available to module
                 $ctrl{'client_ip'} = $client_ip;
                 $ctrl{'FORM'} = \%FORM;
+                $ctrl{'FORMORG'} = $urlparams;
                 $ctrl{'sock'} = $sock;
                 $ctrl{'debug'} = $debug;
                 $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
