@@ -10,11 +10,12 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newwin, $freefmt);
+my ($dash_all, $listbang, $newwin, $freefmt, $smallhead);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
 $freefmt = '';
+$smallhead = '';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -38,8 +39,7 @@ sub l00http_dash_proc {
             $dash_all = 'all';
         } elsif ($form->{'dash_all'} eq 'future') {
             $dash_all = 'future';
-        } else {
-            $dash_all = 'past';
+        } else { $dash_all = 'past';
         }
     }
 
@@ -60,53 +60,84 @@ sub l00http_dash_proc {
     } else {
         $freefmt = '';
     }
+    if (defined ($form->{'process'})) {
+        if ((defined ($form->{'smallhead'})) && ($form->{'smallhead'} eq 'on')) {
+            $smallhead = 'checked';
+        } else {
+            $smallhead = '';
+        }
+    }
+
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
-    print $sock "<a href=\"#end\">Jump to end</a>\n";
 
-    if (defined ($form->{'path'})) {
-        ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
-        print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
-        print $sock " <a href=\"/ls.htm?path=$form->{'path'}&editline=on\">Edit line link</a>\n";
+    if ($smallhead ne 'checked') {
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
+        print $sock "<a href=\"#end\">Jump to end</a>\n";
+        if (defined ($form->{'path'})) {
+            ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
+            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
+            print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
+            print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
+            print $sock " <a href=\"/ls.htm?path=$form->{'path'}&editline=on\">Edit line link</a>\n";
+        }
     }
     print $sock "<p>\n";
 
-    print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
-    print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
-    if (($dash_all ne 'all') && ($dash_all ne 'future')) {
-        $_ = 'checked';
+    if ($smallhead eq 'checked') {
+        print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
+        print $sock "<a href=\"#end\">end</a> - \n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+        print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
+        if ($smallhead ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&smallhead=on\">small header</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
+        }
+    
+        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
+        print $sock "</form>\n";
     } else {
-        $_ = '';
+        print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
+        print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
+        if (($dash_all ne 'all') && ($dash_all ne 'future')) {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>past";
+        if ($dash_all eq 'future') {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>future";
+        if ($dash_all eq 'all') {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
+        print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
+        print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
+        print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
+        if ($freefmt ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">free format</a>.\n";
+        }
+        print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
+        if ($smallhead ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&smallhead=on\">small header</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
+        }
+    
+        print $sock "</form>\n";
     }
-    print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>past";
-    if ($dash_all eq 'future') {
-        $_ = 'checked';
-    } else {
-        $_ = '';
-    }
-    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>future";
-    if ($dash_all eq 'all') {
-        $_ = 'checked';
-    } else {
-        $_ = '';
-    }
-    print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
-    print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
-    print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
-    print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
-    if ($freefmt ne 'checked') {
-        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
-    } else {
-        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">free format</a>.\n";
-    }
-
-    print $sock "</form>\n";
 
 
     if (defined ($form->{'path'})) {
@@ -242,7 +273,7 @@ sub l00http_dash_proc {
                 #print $sock "$_\n";
             }
             # Link from INC: filename
-            if ($hot ne '') {
+            if (($hot ne '') && defined($pname)) {
                 if (open(IN, "<${pname}$hot")) {
                     $cnt = 0;
                     ($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
@@ -411,6 +442,53 @@ sub l00http_dash_proc {
             print $sock "</pre>\n";
         }
         print $sock "<hr><a name=\"end\"></a>";
+
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
+        print $sock "<a href=\"#end\">Jump to end</a>\n";
+        ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
+        print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
+        print $sock " <a href=\"/ls.htm?path=$form->{'path'}&editline=on\">Edit line link</a>\n";
+        print $sock "<p>\n";
+        print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
+        print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
+        if (($dash_all ne 'all') && ($dash_all ne 'future')) {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>past";
+        if ($dash_all eq 'future') {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>future";
+        if ($dash_all eq 'all') {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
+        print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
+        print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
+        print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
+        if ($freefmt ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">free format</a>.\n";
+        }
+        print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
+        if ($smallhead ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&smallhead=on\">small header</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
+        }
+    
+        print $sock "</form>\n";
+
         print $sock "<a href=\"#top\">top</a>\n";
     }
 
