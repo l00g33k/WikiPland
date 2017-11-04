@@ -1267,6 +1267,7 @@ while(1) {
                     # also point to source code
                     $ctrl{'home'} .= "<a href=\"/view.htm/l00http_$modcalled.pl?path=${plpath}l00http_$modcalled.pl\">code</a> ";
                 }
+                $ctrl{'homesml'} = $ctrl{'home'};
 
                 if ($ishost && 
                     !defined($ctrl{'nobanners'}) &&
