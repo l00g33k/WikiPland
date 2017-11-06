@@ -532,14 +532,15 @@ sub pcSyncCmdline {
         $clip .= "perl ${pcpath}adb.pl ${pcpath}adb.in\n";
         $clip .= "${pcpath}adb.in\n";
 
-        # append in RAM
-        &l00freadOpen($ctrl, 'l00://pcSyncCmdline');
-        $tmp = &l00freadAll($ctrl);
-        if (!defined($tmp)) {
-            $tmp = '';
-        }
+#       # append in RAM
+#       &l00freadOpen($ctrl, 'l00://pcSyncCmdline');
+#       $tmp = &l00freadAll($ctrl);
+#       if (!defined($tmp)) {
+#           $tmp = '';
+#       }
         &l00fwriteOpen($ctrl, 'l00://pcSyncCmdline');
-        &l00fwriteBuf($ctrl, "$tmp\n$clip\n");
+#       &l00fwriteBuf($ctrl, "$tmp\n$clip\n");
+        &l00fwriteBuf($ctrl, "$clip\n");
         &l00fwriteClose($ctrl);
 
         $clip = urlencode ($clip);

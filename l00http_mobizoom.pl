@@ -550,7 +550,10 @@ sub l00http_mobizoom_part1 {
     $tmp = &l00httpd::urlencode ($title);
     print $sock "-- Title: <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">$title</a>";
     print $sock "-- <a href=\"/mobizoom.htm?fetch=Fetch&url=$backurl\">Back</a>\n";
-    $backurl = $url;
+    if ($backurl ne $url) {
+        # remember back url only if different
+        $backurl = $url;
+    }
     print $sock "<hr>\n";
 }
 
