@@ -186,7 +186,8 @@ sub l00http_slideshow_proc {
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
                         if ($nonewline ne 'checked') {
-                            $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:", 
+                            $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
+                                "$path$allpics[$ii]",
                                 $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             if ($gpstrk ne '') {
                                 #::now::#1
