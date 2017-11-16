@@ -30,7 +30,7 @@ sub l00http_play_proc (\%) {
 
     if ($ctrl->{'os'} eq 'and') {
         if (defined ($form->{'midvol'})) {
-            $ctrl->{'droid'}->setMediaVolume (6);
+            $ctrl->{'droid'}->setMediaVolume (0);
         }
         if (defined ($form->{'maxvol'})) {
             $ctrl->{'droid'}->setMediaVolume (15);
@@ -54,7 +54,7 @@ sub l00http_play_proc (\%) {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"newvol\" value=\"Set vol\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"midvol\" value=\"Mid vol\"> <input type=\"submit\" name=\"maxvol\" value=\"Max vol\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"midvol\" value=\"Mute\"> <input type=\"submit\" name=\"maxvol\" value=\"Max vol\"></td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>Vol: \n";
     for ($vol = 0; $vol < 16; $vol++) {
