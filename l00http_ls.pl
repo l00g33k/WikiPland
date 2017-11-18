@@ -136,6 +136,9 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.kml$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+    } elsif ($fname =~ /\.css$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: text/css\r\n";
     } elsif ($fname =~ /\.apk$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/vnd.android.package-archive\r\n";
