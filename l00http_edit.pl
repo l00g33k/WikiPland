@@ -31,7 +31,7 @@ sub l00http_edit_proc2 {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tmp, $outbuf, $st, $en);
-	my ($clipblk, $pname, $fname, $rsyncpath, $lineclip, $diffurl, $lineno1);
+	my ($pname, $fname, $rsyncpath, $lineclip, $diffurl, $lineno1);
     my ($thischlvl, $lastchlvl, @chlvls, @el, $ii);
 
     $diffurl  = '';
@@ -58,7 +58,6 @@ sub l00http_edit_proc2 {
     }
 
     l00httpd::dbphash($config{'desc'}, 'FORM', $form);
-	$clipblk = 0;
 
     if ((defined($form->{'pathorg'})) &&
         ($contextln > 1) &&
@@ -127,9 +126,10 @@ sub l00http_edit_proc2 {
                 $form->{'noblock'} = 1;
             } elsif (($form->{'blklineno'} == ($blklineno + $contextln - 1) &&
 			    $contextln >= 1)) {
-                $clipblk = 1;
-#                # when a block has been selected, selecting the last line clears block
-#				# skip to below
+                # when a block has been selected, selecting the last line clears block 
+                # and reselect the last line
+           	    $blklineno = $form->{'blklineno'};
+       	        $contextln = 1;
             } elsif ($form->{'blklineno'} < $blklineno) {
 			    # selected line before start, expand start
        	        $contextln += ($blklineno - $form->{'blklineno'});
@@ -396,10 +396,6 @@ sub l00http_edit_proc2 {
                     }
                 }
                 $lineno++;
-            }
-            if ($clipblk) {
-                # when a block has been selected, selecting the last line clears block
-                &l00httpd::l00setCB($ctrl, $buffer);
             }
             if (defined ($form->{'appbookmark'})) {
                 # append %BOOKMARK% and %END%

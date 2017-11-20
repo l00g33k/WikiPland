@@ -80,8 +80,8 @@ sub l00http_slideshow_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $file, @allpics, $last, $next, $phase, $outbuf, $ii, $tmp);
-    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+    my ($path, $file, @allpics, $phase, $outbuf, $ii, $tmp);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $older, $newer, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
     my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
@@ -168,33 +168,15 @@ sub l00http_slideshow_proc {
                 $llspath = $path;
                 @allpics = sort llsfn2 @allpics;
 
-                $last = '';
-                $next = '';
                 $phase = 0; # search for 1 pic match
                 for ($ii = 0; $ii <= $#allpics; $ii++) {
                     $file = $allpics[$ii];
                     if ("$path$file" eq $form->{'path'}) {
-                        # found 'this', don't update $last
                         $phase = 1;
                         $idx0 = $ii + 1;
                     }
-                    if ($phase == 0) {
-                        # remember the one that comes before 'this'. Because
-                        # we are in reverse order, what's before 'this' is next
-                        $tmp = $ii - $picsperpage + 1;
-                        if ($tmp < 0) {
-                            $tmp = 0;
-                        }
-                        $next = $path . $allpics[$tmp];
-                    }
                     if ($phase == ($picsperpage + 1)) {
                         # we have found the number of pictures to display
-                        $tmp = $ii + $picsperpage;
-                        if ($tmp > $#allpics) {
-                            $tmp = $#allpics;
-                        }
-                        $last = $path . $allpics[$tmp];
-
                         last;   # done searching
                     }
                     if ($phase) {
@@ -204,7 +186,9 @@ sub l00http_slideshow_proc {
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
                         if ($nonewline ne 'checked') {
-                            $outbuf .= sprintf ("%d: %4d/%02d/%02d %02d:%02d:%02d:", $#allpics - $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                            $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
+                                "$path$allpics[$ii]",
+                                $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             if ($gpstrk ne '') {
                                 #::now::#1
                                 if ($file =~ /(\d{8,8}_\d{6,6})/) {
@@ -225,46 +209,54 @@ sub l00http_slideshow_proc {
                             }
                         }
                         $outbuf .= "$newline\n";
-
-                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        $outbuf .= "$newline\n";
                         $phase++;
                     }
                 }
                 $idx1 = $ii;
-                if ($last eq '') {
-                    # if we never found $last, use given path=
-                    $last = $form->{'path'};
-                }
-                if ($next eq '') {
-                    # if we never found $next, use given path=
-                    $next = $form->{'path'};
-                }
             }
         }
 
-
         print $sock "<a href=\"/slideshow.htm?path=$path$allpics[0]\">Newest</a> \n";
-        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[$#allpics]\">Oldest</a> \n";
+        $tmp = $#allpics - $picsperpage + 1;
+        if ($tmp < 0) {
+            $tmp = 0;
+        }
+        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[$tmp]\">Oldest</a> \n";
 
-        if ($nonewline eq 'checked') {
+        if ($nonewline ne 'checked') {
             print $sock "<p>\n";
         }
 
-        print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
-        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
+        # find older and newer pages.
+        $tmp = $idx0 - $picsperpage - 1;
+        if ($tmp < 0) {
+            $tmp = 0;
+        }
+        $newer = "$path$allpics[$tmp]";
+
+        $tmp = $idx1;
+        if ($tmp > $#allpics - $picsperpage + 1) {
+            $tmp = $#allpics - $picsperpage + 1;
+        }
+        $older = "$path$allpics[$tmp]";
+
+        print $sock "<a href=\"/slideshow.htm?path=$newer\">Newer</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$older\">Older</a> \n";
         print $sock "$idx0..$idx1 of ", $#allpics + 1, ".\n";
-        if ($nonewline eq 'checked') {
+        if ($nonewline ne 'checked') {
             print $sock "<p>\n";
         }
 
         print $sock $outbuf;
 
-        if ($nonewline eq 'checked') {
+        if ($nonewline ne 'checked') {
             print $sock "<p>\n";
         }
 
-        print $sock "<a href=\"/slideshow.htm?path=$next\">Newer</a> \n";
-        print $sock "<a href=\"/slideshow.htm?path=$last\">Older</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$newer\">Newer</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$older\">Older</a> \n";
         print $sock "$idx0..$idx1 of ", $#allpics + 1, "\n";
 
         if ($nonewline ne 'checked') {

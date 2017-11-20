@@ -361,10 +361,12 @@ sub l00http_view_proc {
                 $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.\n";
                 $found = "Found $foundcnt matches. $found";
                 $found .= "<hr>\n";
+
                 # path=./ substitution
                 $found =~ s/path=\.\//path=$pname/g;
                 # path=$ substitution
                 $found =~ s/path=\$/path=$pname$fname/g;
+
                 print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, 0);
                 print $sock "<p>\n";
                 # save in RAM file too
