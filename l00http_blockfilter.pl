@@ -107,11 +107,11 @@ sub l00http_blockfilter_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound);
+    my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound, $blkexclufound);
     my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $bare);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
     my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2);
-    my ($cntsum, $valsum, $blockfilterstatfmt, $noblkstartOneTime, $stopreadingfile);
+    my ($cntsum, $valsum, $blockfilterstatfmt, $noblkstartOneTime, $stopreadingfile, $hitlinesoutputed);
 
 
     # Send HTTP and HTML headers
@@ -343,11 +343,13 @@ sub l00http_blockfilter_proc {
         $header = '';
         $noblkfound = 0;
         $requiredfound = 0;
+        $blkexclufound = 0;
         $outputed = 1;  # meaning we haven't anything to output on starting up
         $eofoutput = 0;
         $lnno = 0;
         $noblkstartOneTime = 1;
         $stopreadingfile = 0;
+        $hitlinesoutputed = 0;
 
         # zero statistics
         for ($tmp = 0; $tmp <= $#stats; $tmp++) {
@@ -579,7 +581,8 @@ sub l00http_blockfilter_proc {
                         }
                     }
                     if ($found) {
-                        # file exclude line
+                        # this block to be excluded
+                        $blkexclufound = 1;
                         next;
                     }
 
@@ -625,7 +628,7 @@ sub l00http_blockfilter_proc {
                     }
                     $hitlines++;
                     $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                    if ($hitlines < $maxlines) {
+                    if ($hitlines + $hitlinesoutputed < $maxlines) {
                         $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     }
                 }
@@ -634,7 +637,7 @@ sub l00http_blockfilter_proc {
             # after scanned a line or after end of file
             # output if we have found a block with required
             if ($blkendfound && ($outputed == 0)) {
-                if ($requiredfound) {
+                if (($requiredfound) && ($blkexclufound == 0)) {
                     # found end of block
                     # do post blk eval
                     foreach $condition (@postblkeval) {
@@ -647,7 +650,7 @@ sub l00http_blockfilter_proc {
                     }
                     $hitlines++;
                     $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                    if ($hitlines < $maxlines) {
+                    if ($hitlines + $hitlinesoutputed < $maxlines) {
                         $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     }
 
@@ -655,6 +658,10 @@ sub l00http_blockfilter_proc {
                     $noblkfound++;
                     $output .= $thisblockdsp;
                     $outram .= $thisblockram;
+
+                    # displayed line accounting
+                    $hitlinesoutputed += $hitlines;
+                    $hitlines = 0;
                 }
 
                 $outputed = 1;
@@ -669,8 +676,9 @@ sub l00http_blockfilter_proc {
 
                 $outputed = 0;
                 $requiredfound = 0;
+                $blkexclufound = 0;
 
-                $hitlines++;
+                $hitlines = 1;
 
                 $thisblockram  = "<a name=\"blk$noblkfound\"></a>\n";
                 $thisblockram .= "Block $noblkfound. Jump to: ";
@@ -683,7 +691,7 @@ sub l00http_blockfilter_proc {
                 $thisblockram .= "<a href=\"#blk$tmp\">next</a> \n";
                 $thisblockram .= "\n";
 
-                if ($hitlines < $maxlines) {
+                if ($hitlines + $hitlinesoutputed < $maxlines) {
                     $thisblockdsp  = "<a name=\"blk$noblkfound\"></a>\n";
                     $thisblockdsp .= "Block $noblkfound. Jump to: ";
                     $thisblockdsp .= "<a href=\"#__top__\">top</a> - ";
@@ -703,7 +711,7 @@ sub l00http_blockfilter_proc {
                     $viewskip = 0;
                 }
                 $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                if ($hitlines < $maxlines) {
+                if ($hitlines + $hitlinesoutputed < $maxlines) {
                     $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                 }
             }
