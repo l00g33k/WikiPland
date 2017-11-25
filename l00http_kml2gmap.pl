@@ -505,6 +505,18 @@ sub l00http_kml2gmap_proc {
                 # https://www.google.com/maps/@31.1956864,121.3522793,15z
                 $starname = $1;
                 next;
+            } elsif (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
+                # of the form:
+                #T  N3349.55193 W11802.27050 04-Nov-17 07:35:18  -31 ; gps 20171104 005423
+                $lon = $5 + $6 / 60;
+                $lat = $2 + $3 / 60;
+                if ($4 eq 'W') {
+                    $lon = -$lon;
+                }
+                if ($1 eq 'S') {
+                    $lat = -$lat;
+                }
+                $name = "L$lnno";
             } else {
                 #$starname = '';
                 next;
@@ -582,8 +594,10 @@ sub l00http_kml2gmap_proc {
             # var marker =new google.maps.Marker({ position:myCenter , });
             if ($nowypts < 26) {
                 $jlabel = chr(65 + $nowypts);
-            } else {
+            } elsif ($nowypts < 52) {
                 $jlabel = chr(97 + $nowypts - 26);
+            } else {
+                $jlabel = "P$nowypts";
             }
             $labelsort{"$name -- $jlabel"}  = "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
