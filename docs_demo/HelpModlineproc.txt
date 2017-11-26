@@ -1,3 +1,21 @@
 %TOC%
 =Introduction to lineproc=
 * 
+=Options=
+* The 'edit box' contains multiple lines of Perl statement. 
+Each line of the input is loaded into $_ and each line of the 'edit box' 
+is 'eval'. For example, the line "s/apple/orange/g;" will change all 
+occurances of 'apple' to 'orange'.
+* The output is saved in l00://lineproc_out.txt. You will have to save it 
+if you want to keep the results. You could use the filemgt module by 
+'view' it first and follow the 'launch' link.
+* 'whole file' checkbox: When checked, $_ contains the whole file with \n separating the lines.
+* $last, $_, $next are defined when the expressions are eval'ed. $last is the content 
+of the line that has already been processed. $next is the content of the line to 
+be processed next. $_ is the line being processed. $last and $next provide 
+the one line context around line being processed. Before the first line 
+is processed, $last contains the first line and $_ and $next are undef; after 
+the last line has been processed, $_ and $next are undef and $last is the 
+last line. To process only the current line, simply operate on $_; since 
+the result is under, it will not be output.
+* The variable '$lnno' is pre-defined to be the line number starting at 1.
