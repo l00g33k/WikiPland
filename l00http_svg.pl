@@ -11,9 +11,11 @@ use l00svg;
 
 my %config = (proc => "l00http_svg_proc",
               desc => "l00http_svg_desc");
-my ($lastx, $lasty, $lastoff, $svgwd, $svght);
+my ($lastx, $lasty, $lastoff, $svgwd, $svght, $extractor, $extractororg);
 $svgwd = 500;
 $svght = 300;
+$extractororg = '([0-9.\-+fe]+)[, :]+([0-9.\-+fe]+)';
+$extractor = $extractororg;
 
 sub l00http_svg_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -27,7 +29,7 @@ sub l00http_svg_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $data, $svg, $size, $graphname, $x, $xpix, $y, $ypix, $off);
-    my ($se,$mi,$hr,$da,$mo,$yr,$dummy, $date, $httphdr, $lnno);
+    my ($se,$mi,$hr,$da,$mo,$yr,$dummy, $date, $httphdr, $lnno, $cnt);
 
 
     if (defined ($form->{'view'})) {
@@ -125,6 +127,11 @@ sub l00http_svg_proc {
             if (defined($form->{'svght'}) && ($form->{'svght'} =~ /(\d+)/)) {
                 $svght = $1;
             }
+            if (defined($form->{'extractor'}) && (length($form->{'extractor'}) > 3)) {
+                $extractor = $form->{'extractor'};
+            } else {
+                $extractor = $extractororg;
+            }
         }
 
         print $sock "<form action=\"/svg.htm\" method=\"get\">\n";
@@ -133,6 +140,10 @@ sub l00http_svg_proc {
         print $sock "        <tr>\n";
         print $sock "            <td><input type=\"submit\" name=\"plot\" value=\"Plot\"></td>\n";
         print $sock "            <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\"></td>\n";
+        print $sock "        </tr>\n";
+        print $sock "        <tr>\n";
+        print $sock "            <td>Extrator regex</td>\n";
+        print $sock "            <td><input type=\"text\" size=\"16\" name=\"extractor\" value=\"$extractor\"></td>\n";
         print $sock "        </tr>\n";
         print $sock "        <tr>\n";
         print $sock "            <td>width</td>\n";
@@ -150,11 +161,17 @@ sub l00http_svg_proc {
             $data = "<pre>\n";
             $lnno = 0;
             $svg = '';
+            $cnt = 0;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $lnno++;
                 s/[\r\n]//g;
-                if (($x, $y) = /([0-9.\-+fe]+)[, :]+([0-9.\-+fe]+)/) {
-                    $svg .= " $x,$y";
+                if (($x, $y) = /$extractor/) {
+                    $cnt++;
+                    if (defined($y)) {
+                        $svg .= " $x,$y";
+                    } else {
+                        $svg .= " $cnt,$x";
+                    }
                 }
                 if ($lnno < 1000) {
                     $data .= "$_\n";

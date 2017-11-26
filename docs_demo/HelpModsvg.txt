@@ -1,8 +1,28 @@
-* Paste these into /eval.htm:
-    @g=undef;
-    push(@g,"0,0\n");
-    push(@g,"1,1\n");
-    push(@g,"2,2\n");
-    push(@g,"3,3\n");
-    push(@g,"4,20\n");
-    &l00svg::plotsvg ('ram', join (' ', @g), 500, 300);
+%TOC%
+
+=svg module=
+The svg module has three interfaces. Only one interface is 
+exposed through the 'path' interface that makes it visible 
+in the launcher. This is the plotting interface. This document 
+describes the plotting interface.
+
+When a comma delimited file is sent to the svg module through 
+the svg interface, an attempt is made to plot the graph using 
+default settings. The following describes the form:
+
+* 'Plot': click the 'Plot' button to plot the graph. The 
+data is read from the file given to the right of the 'Plot' 
+button.
+
+* 'Extrator regex': the text field to the right is taken 
+as a regex to extractor plotting data. In nothing is provided, 
+a default expression is used. The default expression assume 
+there are two numbers separated by ',', ':', or ' '. The first 
+number is taken as X and the second number is taken as Y. An X/Y 
+graph is plotted.
+
+Any custom regex may be entered. The data are to be extracted 
+by (). When two pairs of () are specified, an X/Y graph is plotted 
+where X = $1 and Y = $2. When only one pair of () is specified, 
+a line graph is plotted where X = count and Y = $1.
+
