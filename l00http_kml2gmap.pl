@@ -422,7 +422,8 @@ sub l00http_kml2gmap_proc {
     $labeltable .= "Description: latitude,longitude ";
     $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
     $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&selregex=\">all</a>. ";
-    $labeltable .= "<a href=\"#__end__\">end</a>)";
+    $labeltable .= "<a href=\"#__end__\">end</a>. ";
+    $labeltable .= "<a href=\"#__form__\">form</a>)";
     $labeltable .= "$_\n<pre>";
     if ($ctrl->{'os'} eq 'and') {
         $labeltable .= "<form action=\"/kml2gmap.htm\" method=\"get\">";
@@ -505,6 +506,18 @@ sub l00http_kml2gmap_proc {
                 # https://www.google.com/maps/@31.1956864,121.3522793,15z
                 $starname = $1;
                 next;
+            } elsif (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
+                # of the form:
+                #T  N3349.55193 W11802.27050 04-Nov-17 07:35:18  -31 ; gps 20171104 005423
+                $lon = $5 + $6 / 60;
+                $lat = $2 + $3 / 60;
+                if ($4 eq 'W') {
+                    $lon = -$lon;
+                }
+                if ($1 eq 'S') {
+                    $lat = -$lat;
+                }
+                $name = "L$lnno";
             } else {
                 #$starname = '';
                 next;
@@ -582,8 +595,10 @@ sub l00http_kml2gmap_proc {
             # var marker =new google.maps.Marker({ position:myCenter , });
             if ($nowypts < 26) {
                 $jlabel = chr(65 + $nowypts);
-            } else {
+            } elsif ($nowypts < 52) {
                 $jlabel = chr(97 + $nowypts - 26);
+            } else {
+                $jlabel = "P$nowypts";
             }
             $labelsort{"$name -- $jlabel"}  = "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
@@ -698,8 +713,12 @@ sub l00http_kml2gmap_proc {
             $gmapscript3 .
             $ctrl->{'htmlhead2'};
 
+        print $sock "<a name=\"___top___\"></a>\n";
         print $sock "<input id=\"pac-input\" class=\"controls\" type=\"text\" placeholder=\"Search Box\">\n";
         print $sock "<div id=\"googleMap\" style=\"width:${width}px;height:${height}px;\"></div>\n";
+    } else {
+        print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . $ctrl->{'htmlhead2'};
+        print $sock "<a name=\"___top___\"></a>\n";
     }
 
     # sort markers
@@ -715,6 +734,7 @@ sub l00http_kml2gmap_proc {
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "<a href=\"#__toc__\">TOC</a> - \n";
+    print $sock "<a href=\"#__form__\">form</a> - \n";
     print $sock "<a href=\"#__end__\">end</a> - \n";
     print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
@@ -723,6 +743,7 @@ sub l00http_kml2gmap_proc {
 
 
     if (defined ($form->{'path'})) {
+        print $sock "<a name=\"__form__\"></a>\n";
         print $sock "<p><form action=\"/kml2gmap.htm\" method=\"get\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";

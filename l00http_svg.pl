@@ -11,7 +11,11 @@ use l00svg;
 
 my %config = (proc => "l00http_svg_proc",
               desc => "l00http_svg_desc");
-my ($lastx, $lasty, $lastoff);
+my ($lastx, $lasty, $lastoff, $svgwd, $svght, $extractor, $extractororg);
+$svgwd = 500;
+$svght = 300;
+$extractororg = '([0-9.\-+fe]+)[, :]+([0-9.\-+fe]+)';
+$extractor = $extractororg;
 
 sub l00http_svg_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -25,7 +29,7 @@ sub l00http_svg_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $data, $svg, $size, $graphname, $x, $xpix, $y, $ypix, $off);
-    my ($se,$mi,$hr,$da,$mo,$yr,$dummy, $date);
+    my ($se,$mi,$hr,$da,$mo,$yr,$dummy, $date, $httphdr, $lnno, $cnt);
 
 
     if (defined ($form->{'view'})) {
@@ -108,6 +112,80 @@ sub l00http_svg_proc {
                     "\r\n";
         syswrite ($sock, $svg, $size);
         $sock->close;
+    } elsif (defined ($form->{'path'})) {
+        $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
+        $httphdr .= "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'}<a href=\"#end\">end</a> -\n";
+        if (defined ($form->{'path'})) {
+            $httphdr .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        }
+        print $sock "$httphdr<br>\n";
+
+        if (defined($form->{'plot'})) {
+            if (defined($form->{'svgwd'}) && ($form->{'svgwd'} =~ /(\d+)/)) {
+                $svgwd = $1;
+            }
+            if (defined($form->{'svght'}) && ($form->{'svght'} =~ /(\d+)/)) {
+                $svght = $1;
+            }
+            if (defined($form->{'extractor'}) && (length($form->{'extractor'}) > 3)) {
+                $extractor = $form->{'extractor'};
+            } else {
+                $extractor = $extractororg;
+            }
+        }
+
+        print $sock "<form action=\"/svg.htm\" method=\"get\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+
+        print $sock "        <tr>\n";
+        print $sock "            <td><input type=\"submit\" name=\"plot\" value=\"Plot\"></td>\n";
+        print $sock "            <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\"></td>\n";
+        print $sock "        </tr>\n";
+        print $sock "        <tr>\n";
+        print $sock "            <td>Extrator regex</td>\n";
+        print $sock "            <td><input type=\"text\" size=\"16\" name=\"extractor\" value=\"$extractor\"></td>\n";
+        print $sock "        </tr>\n";
+        print $sock "        <tr>\n";
+        print $sock "            <td>width</td>\n";
+        print $sock "            <td><input type=\"text\" size=\"6\" name=\"svgwd\" value=\"$svgwd\"></td>\n";
+        print $sock "        </tr>\n";
+        print $sock "        <tr>\n";
+        print $sock "            <td>height</td>\n";
+        print $sock "            <td><input type=\"text\" size=\"6\" name=\"svght\" value=\"$svght\"></td>\n";
+        print $sock "        </tr>\n";
+
+        print $sock "</table>\n";
+        print $sock "</form><p>\n";
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            print $sock "View: <a href=\"/view.htm?path=l00://concat.txt\">l00://concat.txt</a><p>Processing $form->{'path'}:<br>\n";
+            $data = "<pre>\n";
+            $lnno = 0;
+            $svg = '';
+            $cnt = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                $lnno++;
+                s/[\r\n]//g;
+                if (($x, $y) = /$extractor/) {
+                    $cnt++;
+                    if (defined($y)) {
+                        $svg .= " $x,$y";
+                    } else {
+                        $svg .= " $cnt,$x";
+                    }
+                }
+                if ($lnno < 1000) {
+                    $data .= "$_\n";
+                }
+            }
+            $data .= "</pre>\n";
+            &l00svg::plotsvg ($form->{'path'}, $svg, $svgwd, $svght);
+            print $sock "<a href=\"/svg.pl?graph=$form->{'path'}&view=\"><img src=\"/svg.pl?graph=$form->{'path'}\" alt=\"alt\"></a>\n";
+#print $sock $svg;
+            print $sock "$data";
+        }
+
+        # send HTML footer and ends
+        print $sock $ctrl->{'htmlfoot'};
     } else {
         # wrong usage, demo feature
         # create the demo

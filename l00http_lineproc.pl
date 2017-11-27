@@ -27,7 +27,7 @@ sub l00http_lineproc_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($dopl, $dorst, @newfile);
+    my ($dopl, $dorst, @newfile, $lnno);
     my ($last, $this, $next, $perl, $buf, $tmp, $pname, $fname, $cnt, @evals, $eval1);
 
     # Send HTTP and HTML headers
@@ -132,11 +132,13 @@ sub l00http_lineproc_proc (\%) {
             @evals = split("\n", $eval);
             if ($wholefile eq 'checked') {
                 $_ = &l00httpd::l00freadAll($ctrl);
+                $lnno = 0;
                 foreach $eval1 (@evals) {
                     eval $eval1;
                 }
                 push(@newfile, "$_\n");
             } else {
+                $lnno = 0;
                 while ($_ = &l00httpd::l00freadLine($ctrl)) {
                     s/\r//;
                     s/\n//;
@@ -161,6 +163,7 @@ sub l00http_lineproc_proc (\%) {
                     if (defined($_)) {
                         push(@newfile, "$_\n");
                     }
+                    $lnno++;
                 }
                 # last line from file has just been processed, so $next will be undef
                 $last = $this;
