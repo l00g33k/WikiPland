@@ -108,19 +108,22 @@ sub l00http_dash_proc {
         } else {
             $_ = '';
         }
-        print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>past";
+        print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>";
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">past</a>\n";
         if ($dash_all eq 'future') {
             $_ = 'checked';
         } else {
             $_ = '';
         }
-        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>future";
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>";
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=future\">future</a>\n";
         if ($dash_all eq 'all') {
             $_ = 'checked';
         } else {
             $_ = '';
         }
-        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>";
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\">all</a>.\n";
         print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
         print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
         print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
