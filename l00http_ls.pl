@@ -504,12 +504,12 @@ sub l00http_ls_proc {
                                                 # skip ^#
                                                 next;
                                             }
-                                            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-                                            if (/%L00HTTP<(.+?)>%/) {
-                                                if (defined($ctrl->{$1})) {
-                                                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
-                                                }
-                                            }
+#                                           # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+#                                           if (/%L00HTTP<(.+?)>%/) {
+#                                               if (defined($ctrl->{$1})) {
+#                                                   s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+#                                               }
+#                                           }
                                             $buf .= $_;
                                         }
                                     }

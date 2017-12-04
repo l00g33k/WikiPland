@@ -68,6 +68,11 @@ sub l00http_dash_proc {
         }
     }
 
+    $pname = '';
+    $fname = '';
+    if (defined ($form->{'path'})) {
+        ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
+    }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -77,7 +82,6 @@ sub l00http_dash_proc {
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
         print $sock "<a href=\"#end\">Jump to end</a>\n";
         if (defined ($form->{'path'})) {
-            ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
@@ -414,7 +418,8 @@ sub l00http_dash_proc {
             }
             $out .= "$_\n";
         }
-        $out =~ s/\\n/<br>/g;
+#       $out =~ s/path=\.\//path=$pname/gms;
+        $out =~ s/\\n/<br>/gm;
         $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
                int($timetoday / 60 + 0.5)) . $out;
 
@@ -437,7 +442,7 @@ sub l00http_dash_proc {
         $out .= "* Send shortcut [[/clip.htm?update=Copy+to+CB&clip=*+%5B%5B%2Fls.htm%3Ffind%3DFind%26findtext%3D%255E%255C%253D%253D%253D%26block%3D.%26prefmt%3Don%26path%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D%0D%0A&url=|to clipboard]]\n";
 
 #       print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
-        $out = &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
+        $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
         print $sock $out;
 
@@ -448,7 +453,6 @@ sub l00http_dash_proc {
 
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
         print $sock "<a href=\"#end\">Jump to end</a>\n";
-        ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
         print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
