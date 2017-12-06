@@ -427,7 +427,7 @@ sub l00http_cron_perio {
                                         $ctrl->{'htmlhead2'} = '';
                                         $ctrl->{'client_ip'} = 0;
                                         if ($ctrl->{'os'} eq 'win') {
-                                            open ($socknul, ">nul");
+                                            open ($socknul, ">\\\\.\\nul");
                                         } else {
                                             open ($socknul, ">/dev/null");
                                         }
