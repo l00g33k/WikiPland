@@ -364,6 +364,12 @@ sub wikihtml {
     $seenEqualStar = 0;
     for ($cacheidx = 0; $cacheidx <= $#inputcache; $cacheidx++) {
         $_ = $inputcache[$cacheidx];
+        # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+        if (/%L00HTTP<(.+?)>%/) {
+            if (defined($ctrl->{$1})) {
+                s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+            }
+        }
         if (/%l00httpd:lnno:([0-9,]+)%/) {
             $lnnoinfo = $1;
             s/%l00httpd:lnno:([0-9,]+)%//;

@@ -127,7 +127,6 @@ sub l00http_blog_proc {
                     $url = $1;
                     $url =~ s/path=\$/path=$form->{'path'}/;
                     $url = "Quick URL: <a href=\"$url\">$url</a>";
-print "url: $url\n";
                 }
                 if (/^%BLOGQUICK:(.+?)%/) {
                     push(@blockquick, $1);
@@ -231,7 +230,7 @@ if(0){
         $urlencode  = &l00httpd::urlencode ($_);
         if (defined ($form->{$urlencode})) {
             $form->{'buffer'} .= $_;
-            $form->{'save'} = 1;
+#           $form->{'save'} = 1;
             last;
         }
     }
@@ -241,7 +240,7 @@ if(0){
         $urlencode  = &l00httpd::urlencode ($_);
         if (defined ($form->{$urlencode})) {
             $form->{'buffer'} .= $_;
-            $form->{'save'} = 1;
+#           $form->{'save'} = 1;
             last;
         }
     }

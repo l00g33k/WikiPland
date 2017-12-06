@@ -95,7 +95,7 @@ sub l00http_crypt_proc (\%) {
     if (defined ($form->{'clear'})) {
         $pass = "";
         # clear ram buffer
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.htm');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.txt');
         &l00httpd::l00fwriteBuf($ctrl, '');
         &l00httpd::l00fwriteClose($ctrl);
     }
@@ -104,11 +104,11 @@ sub l00http_crypt_proc (\%) {
     $plain = '';
     if (defined ($form->{'fromram'})) {
         # retrieve from ram buffer, save, then clear ram buffer
-        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.htm")) {
+        if (&l00httpd::l00freadOpen($ctrl, "l00://crypt.txt")) {
             $form->{'buffer'} = &l00httpd::l00freadAll($ctrl);
             $form->{'save'} = 1;
             # clear ram buffer
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.htm');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.txt');
             &l00httpd::l00fwriteBuf($ctrl, '');
             &l00httpd::l00fwriteClose($ctrl);
 		}
@@ -173,7 +173,7 @@ sub l00http_crypt_proc (\%) {
         $plain = $crypt;
         print $sock "<hr><h1>Passphrase not set!</h1></p><hr>\n";
     } else {
-        print $sock "<a href=\"/ls.htm?path=l00://crypt.htm\" target=\"_blank\">See RAM</a>. ".
+        print $sock "<a href=\"/ls.htm?path=l00://crypt.txt\" target=\"_blank\">See RAM</a>. ".
             "Jump to <a href=\"#saveram\">save from RAM</a><hr>\n";
 
         if ($plain eq "true") {
@@ -182,8 +182,8 @@ sub l00http_crypt_proc (\%) {
         } else {
             $method = $filemethod;
             $plain = l00crypt::l00decrypt ($pass, $crypt, $method);
-            # also send it to l00://crypt.htm
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.htm');
+            # also send it to l00://crypt.txt
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.txt');
             &l00httpd::l00fwriteBuf($ctrl, "$pre\n$cryptbound:$method:\n$plain\n$cryptbound:$method:\n$post");
             &l00httpd::l00fwriteClose($ctrl);
         }
@@ -277,8 +277,8 @@ sub l00http_crypt_proc (\%) {
     }
     if ($pass ne "") {
         if ($plain ne "true") {
-            # also send it to l00://crypt.htm
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.htm');
+            # also send it to l00://crypt.txt
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.txt');
             &l00httpd::l00fwriteBuf($ctrl, $buffer);
             &l00httpd::l00fwriteClose($ctrl);
         }
@@ -312,7 +312,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "<tr><td>\n";
     print $sock "<a name=\"saveram\"><input type=\"submit\" name=\"fromram\" value=\"save ram\">\n";
     print $sock "</td><td>\n";
-    print $sock "<a href=\"/edit.htm?path=l00://crypt.htm\" target=\"_blank\">edit ram</a> \n";
+    print $sock "<a href=\"/edit.htm?path=l00://crypt.txt\" target=\"_blank\">edit ram</a> \n";
     print $sock "</td></tr>\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<tr><td>\n";
