@@ -90,6 +90,10 @@ sub l00http_dash_proc {
     }
     print $sock "<p>\n";
 
+    # new section with new timestamp
+    $out = $ctrl->{'now_string'};
+    $out =~ s/ /+/g;
+    $out = "<a href=\"/clip.htm?update=Copy+to+CB&url=&clip=%3D%3Dx%3D%3D%0D%0A*+$out+%0D%0A\" target=\"_blank\">new sect</a>";
     if ($smallhead eq 'checked') {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
         print $sock "<a href=\"#end\">end</a> - \n";
@@ -100,6 +104,7 @@ sub l00http_dash_proc {
         } else {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
         }
+        print $sock "$out.\n";
     
         print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
         print $sock "</form>\n";
@@ -142,6 +147,7 @@ sub l00http_dash_proc {
         } else {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
         }
+        print $sock "$out.\n";
     
         print $sock "</form>\n";
     }

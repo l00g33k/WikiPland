@@ -367,6 +367,11 @@ sub l00http_edit_proc2 {
             }
             $buffer .= "$line\n";
         }
+    } elsif (defined ($form->{'prependtotxt'})) {
+        $buffer = &l00httpd::l00getCB($ctrl);
+        if (defined ($form->{'buffer'})) {
+            $buffer = "$buffer$form->{'buffer'}";
+        }
     } elsif (defined ($form->{'edittotxt'})) {
         $buffer = &l00httpd::l00getCB($ctrl);
         if (defined ($form->{'buffer'})) {
@@ -459,7 +464,8 @@ sub l00http_edit_proc2 {
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"edittotxt\" value=\"CB append to edit\">\n";
+    print $sock "<input type=\"submit\" name=\"edittotxt\" value=\"append to edit\">\n";
+    print $sock "<input type=\"submit\" name=\"prependtotxt\" value=\"pre\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"submit\" name=\"txttoedit\" value=\"Append ||\">\n";
     print $sock "<input type=\"submit\" name=\"cut\" value=\"Cut\">\n";
