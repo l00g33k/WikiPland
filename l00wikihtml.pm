@@ -402,6 +402,21 @@ sub wikihtml {
         $lnno++;
 
 
+        # verbatim
+        if (/^%VERBATIM%/) {
+            # restart verbatim
+            $verbatimActive = 1;
+            next;
+        } elsif (/^%VERBATIMEND%/) {
+            # ends verbatim
+            $verbatimActive = 0;
+            next;
+        } elsif ($verbatimActive != 0) {
+            # verbatim
+            $oubuf .=  "$_\n";
+            next;
+        }
+
 
 
         # Twiki compatibility
