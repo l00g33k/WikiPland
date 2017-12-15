@@ -26,7 +26,7 @@ my ($el, $file, $fullpath, $gid, $hits, $hour, $ii);
 my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx);
-my ($fmatch, $fmatches, $content, $fullname, $lineno, $lineno0, $maxlines, $sock);
+my ($fmatch, $fmatches, $content, $pathregex, $fullname, $lineno, $lineno0, $maxlines, $sock);
 my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $filenameonly, $srcdoc, $sortoffset);
 
 my ($path);
@@ -40,7 +40,8 @@ $wraptext = '';
 $filenameonly = '';
 $srcdoc = '';
 $context = 0;
-$sortoffset = '';
+$sortoffset = 0;
+$pathregex = '';
 
 sub findsort {
     substr($b, $sortoffset, 9999) cmp substr($a, $sortoffset, 9999);
@@ -61,7 +62,7 @@ sub l00http_find_search {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $output, $output2,
 	 $size, $atime, $mtime, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
-    my ($contents);
+    my ($contents, $pathregex2);
 
     if ($content =~ /\(/) {
         $paren = 1;
@@ -82,6 +83,7 @@ sub l00http_find_search {
         if ((length ($fmatch) > 0) && defined ($mypath)) {
             my @allpaths = $mypath;
             # reference http://www.perlmonks.org/?node_id=489552
+            # is a stack. new ones are pushed into it. we pop until there is none.
             while (@allpaths) {
                 $mypath = pop (@allpaths);
 
@@ -93,14 +95,33 @@ sub l00http_find_search {
                         if (-d $fullname) {
                             # directory, recurse?
                             if ($recursive eq "checked") {
-                                push (@allpaths, $fullname.'/');
+                                # only or exclude path
+                                if (length($pathregex) > 0) {
+                                    # $pathregex defined
+                                    if ($pathregex =~ /^!!/) {
+                                        $pathregex2 = substr ($pathregex, 2, length ($pathregex) - 2);
+                                        # starts with ^!! so regex is skip if match found or search if no match
+                                        if (!($fullname =~ /$pathregex2/i)) {
+                                            # not a match, so don't skip
+                                            push (@allpaths, $fullname.'/');
+                                        }
+                                    } else {
+                                        # does not start with ^!! so regex search if match found
+                                        if ($fullname =~ /$pathregex/i) {
+                                            # a match, so search it
+                                            push (@allpaths, $fullname.'/');
+                                        }
+                                    }
+                                } else {
+                                    # no regex, so always search
+                                    push (@allpaths, $fullname.'/');
+                                }
                             }
                         } else {
                             if ($fullname =~ /$fmatch/i) {
                                 if (length ($content) > 0) {
                                     $contents = $content;
                                     foreach $content (split ('\|\|\|', $contents)) {
-#                                   if (1) {
                                         # find in files
                                         if (open (IN, "<$fullname")) {
                                             my $hit = 0;
@@ -325,9 +346,6 @@ sub l00http_find_proc {
     if (defined ($form->{'fmatch'})) {
         $fmatches = $form->{'fmatch'};
     }
-    if (defined ($form->{'cbclrname'})) {
-        $fmatches = '';
-    }
     if (defined ($form->{'cb2name'})) {
         $fmatches = &l00httpd::l00getCB($ctrl);
     }
@@ -335,6 +353,11 @@ sub l00http_find_proc {
         $content = $form->{'content'};
     } else {
         $content = '';
+	}
+    if (defined ($form->{'pathregex'})) {
+        $pathregex = $form->{'pathregex'};
+    } else {
+        $pathregex = '';
 	}
     if (defined ($form->{'cb2cont'})) {
         $content = &l00httpd::l00getCB($ctrl);
@@ -347,6 +370,12 @@ sub l00http_find_proc {
     }
     if (defined ($form->{'sortoffset'})) {
         $sortoffset = $form->{'sortoffset'};
+    }
+    if (defined ($form->{'cbclrname'})) {
+        $fmatches = '';
+        $content = '';
+        $pathregex = '';
+        $maxlines = 4000;
     }
 
     $dirlist = '';
@@ -449,6 +478,11 @@ sub l00http_find_proc {
     print $sock "        <tr>\n";
     print $sock "            <td>Content ((regex); !!):</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"content\" value=\"$content\"></td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>Path ((regex); !!):</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"pathregex\" value=\"$pathregex\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
