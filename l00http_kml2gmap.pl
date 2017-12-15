@@ -9,7 +9,7 @@ use l00httpd;
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
 my ($width, $height, $apikey, $satellite);
-my ($new, $selregex, $drawgrid);
+my ($new, $selregex, $drawgrid, $matched, $exclude);
 
 $new = 1;
 $myCenters = '';
@@ -23,6 +23,8 @@ $height = 380;
 $satellite = 0;
 
 $apikey = '';
+$matched = '';
+$exclude = '';
 
 $gmapscript0 = "<script\n";
 #src="http://maps.googleapis.com/maps/api/js?key=$apikey">
@@ -224,7 +226,7 @@ sub l00http_kml2gmap_proc {
     my ($tmp, $lon, $lat, $gpslon, $gpslat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
-    my ($sortothers, %sortentires, $sortphase, $matched, $exclude, $drawgriddo, $drawgriddo2);
+    my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
 
     $gpslon = '';
     $gpslat = '';
@@ -264,17 +266,19 @@ sub l00http_kml2gmap_proc {
     }
 
 
-    $matched = '';
-    $exclude = '';
-    if (defined($form->{'exclude'}) && ($form->{'exclude'} eq 'on')) {
-        $exclude = 'checked';
-    } elsif (defined($form->{'matched'}) && ($form->{'matched'} eq 'on')) {
-        $matched = 'checked';
-    }
-    if (defined($form->{'drawgrid'}) && ($form->{'drawgrid'} eq 'on')) {
-        $drawgrid = 'checked';
-    } else {
-        $drawgrid = '';
+    if (defined ($form->{'update'})) {
+        $matched = '';
+        $exclude = '';
+        if (defined($form->{'exclude'}) && ($form->{'exclude'} eq 'on')) {
+            $exclude = 'checked';
+        } elsif (defined($form->{'matched'}) && ($form->{'matched'} eq 'on')) {
+            $matched = 'checked';
+        }
+        if (defined($form->{'drawgrid'}) && ($form->{'drawgrid'} eq 'on')) {
+            $drawgrid = 'checked';
+        } else {
+            $drawgrid = '';
+        }
     }
 
     # delete waypoint
@@ -421,7 +425,7 @@ sub l00http_kml2gmap_proc {
     $labeltable .= "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
     $labeltable .= "Description: latitude,longitude ";
     $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
-    $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&selregex=\">all</a>. ";
+    $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&update=yes&matched=&exclude=&selregex=\">all</a>. ";
     $labeltable .= "<a href=\"#__end__\">end</a>. ";
     $labeltable .= "<a href=\"#__form__\">form</a>)";
     $labeltable .= "$_\n<pre>";
@@ -525,15 +529,13 @@ sub l00http_kml2gmap_proc {
 
             # select marker by regex
             if (defined($selregex) && (length($selregex) > 0)) {
-                if (defined($form->{'matched'}) && 
-                    ($form->{'matched'} eq 'on')) {
+                if ($matched eq 'checked') {
                     # select all matching
                     if (!($name =~ /$selregex/i)) {
                         # name not matching, skip
                         next;
                     }
-                } elsif (defined($form->{'exclude'}) && 
-                    ($form->{'exclude'} eq 'on')) {
+                } elsif ($exclude eq 'checked') {
                     # exclude all matching
                     if ($name =~ /$selregex/i) {
                         # name matched, skip
