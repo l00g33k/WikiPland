@@ -26,7 +26,12 @@ while (<STAT>) {
                     ($cpu[2] - $cpulst[$row * 10 + 2]) +
                     ($cpu[3] - $cpulst[$row * 10 + 3]);
              printf $sock ("%5d", $ttl);
-             printf $sock ("%3.0f%", ($ttl - ($cpu[3] - $cpulst[$row * 10 + 3])) / $ttl * 100);
+             if ($ttl > 0) {
+                 $pct = ($ttl - ($cpu[3] - $cpulst[$row * 10 + 3])) / $ttl * 100;
+             } else {
+                 $pct = 0;
+             }
+             printf $sock ("%3.0f%", $pct);
         }
     }
     for ($ii = 0; $ii < 10; $ii++) {
