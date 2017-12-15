@@ -73,7 +73,6 @@ sub l00http_find_search {
     if ($wraptext eq '') {
         $lineend = '';
         print $sock "<pre>\n";
-#        &l00httpd::l00fwriteBuf($ctrl, "<pre>\n");
     }
 
 
@@ -290,7 +289,6 @@ sub l00http_find_search {
 
     if ($wraptext eq '') {
         print $sock "</pre>\n";
-#        &l00httpd::l00fwriteBuf($ctrl, "</pre>\n");
     }
 
     ($mypath) = @_;
@@ -422,14 +420,7 @@ sub l00http_find_proc {
             $dirlist .= "<td>date/time</td>\n";
             $dirlist .= "</tr>\n";
 
-#           print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-
-#           print $sock "<tr>\n";
-#           print $sock "<td>names</td>\n";
-#           print $sock "<td>bytes</td>\n";
-#           print $sock "<td>date/time</td>\n";
-#           print $sock "</tr>\n";
-        
+       
             # 3) If the path is a directory, make a table with links
 
             foreach $file (sort {lc($a) cmp lc($b)} readdir (DIR)) {

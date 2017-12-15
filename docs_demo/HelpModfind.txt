@@ -15,6 +15,9 @@ field are listed.
 regular express match any single line in the content of the file. 
 The search logic may be inverted by prepending !! so that only 
 files having no match will be listed.
+* If parenthesis are used, only the parenthesis matches are 
+displayed. Multiple pairs of parenthesis may be used. The 
+results are concatenated together.
 ==Path==
 * This field may be blank. When it is blank, and when 'Recursive' 
 is checked, all sub-directories will be searched.
