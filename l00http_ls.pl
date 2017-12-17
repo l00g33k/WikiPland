@@ -211,7 +211,7 @@ sub l00http_ls_proc {
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
-    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw);
+    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2);
 
     $wikihtmlflags = 0;
 
@@ -222,6 +222,14 @@ sub l00http_ls_proc {
         $path = $form->{'path'};
     }
     $path =~ tr/\\/\//;     # converts all \ to /, which work on Windows too
+    $path =~ s/%20/ /g;
+
+    # http://127.0.0.1:20347/C:/x/ram/del/first-demo/index.html
+    # becomes
+    # ls: path >/C:/x/ram/del/first-demo/index.html<
+    # removes leading /
+    $path2 = $path;
+    $path2 =~ s/^\/([a-zA-Z]:\/)/$1/;
 
     if (!defined ($target)) {
         if (defined ($ctrl->{'lsset'})) {
@@ -281,7 +289,6 @@ sub l00http_ls_proc {
             }
         }
     }
-    $path =~ s/%20/ /g;
     print "ls: path after client restriction (noclinav $ctrl->{'noclinav'}) >$path<\n", if ($ctrl->{'debug'} >= 5);
 
     $read0raw1 = 0;     # always reset to reading mode
@@ -339,7 +346,7 @@ sub l00http_ls_proc {
     $htmlend = 1;
     # try to open as a directory
     print "ls: try open as directory >$path<\n", if ($ctrl->{'debug'} >= 5);
-    if (!opendir (DIR, $path)) {
+    if (!opendir (DIR, $path2)) {
         print "ls: it is not a directory >$path<\n", if ($ctrl->{'debug'} >= 5);
 
         # 2) If the path is not a directory:
@@ -554,14 +561,14 @@ sub l00http_ls_proc {
 #l00:
                 }
             }
-        } elsif (open (FILE, "<$path")) {
-            ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+        } elsif (open (FILE, "<$path2")) {
+            ($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/;
             print "ls: opened as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined ($form->{'bkvish'})) {
-                &l00backup::backupfile ($ctrl, $path, 1, 5);
+                &l00backup::backupfile ($ctrl, $path2, 1, 5);
                 if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
-                    #print OUT "$ctrl->{'bbox'}vi $path\n";
-                    print OUT "vim $path\n";
+                    #print OUT "$ctrl->{'bbox'}vi $path2\n";
+                    print OUT "vim $path2\n";
                     close (OUT);
                 }
             }
@@ -575,9 +582,9 @@ sub l00http_ls_proc {
                     } else {
                         # http://www.oreilly.com/openbook/cgi/ch10_10.html
                         # child process
-                        $_ = $path;
+                        $_ = $path2;
                         s/\//\\/g;
-                        system ("cmd /c \"start notepad ^\"$path^\"\"");
+                        system ("cmd /c \"start notepad ^\"$path2^\"\"");
                         exit (0);
                     }
                 }
@@ -621,7 +628,7 @@ sub l00http_ls_proc {
 
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
-                 = stat($path);
+                 = stat($path2);
 
                 ($httphdr, $urlraw) = &l00http_ls_conttype($path);
                 $httphdr .= "Content-Length: $size\r\n";
@@ -657,23 +664,23 @@ sub l00http_ls_proc {
                 print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
 
                 if ($bare ne 'checked') {
-                    if (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
+                    if (($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/) {
                         print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                         # not ending in / or \, not a dir
                         # clip.pl with \ on Windows
-                        $tmp = $path;
+                        $tmp = $path2;
                         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                             $tmp =~ s/\//\\/g;
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                     } else {
-                        print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
+                        print $sock $ctrl->{'htmlhead'} . "<title>$path2 ls</title>" .$ctrl->{'htmlhead2'};
                         # clip.pl with \ on Windows
-                        $tmp = $path;
+                        $tmp = $path2;
                         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path2<br>\n";
                     }
                     print $sock "$ctrl->{'home'} \n";
                     if ($path =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
@@ -684,20 +691,20 @@ sub l00http_ls_proc {
                     print $sock "<a href=\"#end\">end</a>\n";
                     print $sock "<a href=\"#__toc__\">TOC</a>\n";
                     if (defined ($form->{'bkvish'})) {
-                        print $sock "<a href=\"/ls.htm?path=$path\">view</a> \n";
+                        print $sock "<a href=\"/ls.htm?path=$path2\">view</a> \n";
                     } else {
-                        print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path\">bk&vi</a> \n";
+                        print $sock "<a href=\"/ls.htm?bkvish=bk&path=$path2\">bk&vi</a> \n";
                     }
-                    print $sock "<a href=\"/blog.htm?path=$path\">log</a> \n";
-                    print $sock "<a href=\"/edit.htm?path=$path\">Ed</a>/";
-                    print $sock "<a href=\"/ls.htm?path=$path&exteditor=on\">ext</a>\n";
-                    print $sock "<a href=\"/view.htm?path=$path\">Vw</a><hr>\n";
+                    print $sock "<a href=\"/blog.htm?path=$path2\">log</a> \n";
+                    print $sock "<a href=\"/edit.htm?path=$path2\">Ed</a>/";
+                    print $sock "<a href=\"/ls.htm?path=$path2&exteditor=on\">ext</a>\n";
+                    print $sock "<a href=\"/view.htm?path=$path2\">Vw</a><hr>\n";
                     if (defined ($form->{'bkvish'})) {
-                        print $sock &l00httpd::pcSyncCmdline($ctrl, "$path");
+                        print $sock &l00httpd::pcSyncCmdline($ctrl, "$path2");
                         print $sock "<hr>\n";
                     }
                 } else {
-                    ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
+                    ($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/;
                     print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                 }
 
@@ -731,7 +738,7 @@ sub l00http_ls_proc {
                 }
                 close (FILE);
 
-                open (FILE, "<$path");
+                open (FILE, "<$path2");
                 $bulvl = 0;
                 if ($hits >= 1) {
                     # rendering as wiki text
@@ -774,7 +781,7 @@ sub l00http_ls_proc {
                         if (defined ($form->{'editline'})) {
                             s/\r//;
                             s/\n//;
-                            $_ = "$_ <a href=\"/edit.htm?path=$path&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
+                            $_ = "$_ <a href=\"/edit.htm?path=$path2&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
                         }
 
                         # highlighting
@@ -786,7 +793,7 @@ sub l00http_ls_proc {
                         # path=./ substitution
                         s/path=\.\//path=$pname/g;
                         # path=$ substitution
-                        s/path=\$/path=$path/g;
+                        s/path=\$/path=$path2/g;
 
                         # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
                         if (/%L00HTTP<(.+?)>%/) {
@@ -945,17 +952,17 @@ sub l00http_ls_proc {
                         if ($bare ne 'checked') {
                             $found = "---\n<b><i>SHOWTAG directory</i></b>\n"; # borrow variable
                             $found .= "* :ALWAYS:";
-                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS\">SHOW</a>";
-                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
-                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on\">no header/footer</a>";
-                            $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=:ALWAYS&submit=Submit&bare=on&chno=on\">+ ch no</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=:ALWAYS\">SHOW</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=:ALWAYS&SHOWLINENO=\">with line#</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=:ALWAYS&submit=Submit&bare=on\">no header/footer</a>";
+                            $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=:ALWAYS&submit=Submit&bare=on&chno=on\">+ ch no</a>";
                             $found .= "\n";
                             foreach $_ (sort keys %showdir) {
                                 $found .= "* $_:";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_\">SHOW</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on\">no header/footer</a>";
-                                $found .= " <a href=\"/ls.htm?path=$path&SHOWTAG=$_&submit=Submit&bare=on&chno=on\">+ ch no</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=$_\">SHOW</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=$_&SHOWLINENO=\">with line#</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=$_&submit=Submit&bare=on\">no header/footer</a>";
+                                $found .= " <a href=\"/ls.htm?path=$path2&SHOWTAG=$_&submit=Submit&bare=on&chno=on\">+ ch no</a>";
                                 $found .= "\n";
                             }
                             $buf = "$found\n$buf";
@@ -991,7 +998,7 @@ sub l00http_ls_proc {
                                     if ($tmp2 < 1) {
                                         $tmp2 = 1;
                                     }
-                                    $_ = "<a href=\"/view.htm?path=$path&skip=$tmp2#line$1\">".sprintf("%05d", $1)."</a>: $_";
+                                    $_ = "<a href=\"/view.htm?path=$path2&skip=$tmp2#line$1\">".sprintf("%05d", $1)."</a>: $_";
                                 }
                                 $tmp .= "$_\n";
                             }
@@ -1083,7 +1090,7 @@ sub l00http_ls_proc {
     } else {
         #.dir
         # yes, it is a directory, read files in the directory
-        print "ls: it is a directory >$path<\n", if ($ctrl->{'debug'} >= 5);
+        print "ls: it is a directory >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
         if ((defined ($form->{'showbak'})) && ($form->{'showbak'} eq 'on')) {
             $showbak = 1;
@@ -1097,16 +1104,16 @@ sub l00http_ls_proc {
         }
 
         
-        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
+        print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$path2 ls</title>" .$ctrl->{'htmlhead2'};
         # clip.pl with \ on Windows
-        $tmp = $path;
+        $tmp = $path2;
         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             $tmp =~ s/\//\\/g;
         }
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path\n";
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path2\n";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
-        print $sock "<a href=\"/dirnotes.htm?path=$path"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
+        print $sock "<a href=\"/dirnotes.htm?path=$path2"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
         print $sock "<tr>\n";
@@ -1129,18 +1136,18 @@ sub l00http_ls_proc {
         #if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) 
         if ($sortkey1name2date == 2) {
             # sort by reverse time
-            $llspath = $path;
+            $llspath = $path2;
             @dirs = sort llsfn readdir (DIR);
         } else {
             @dirs = sort llstricmp readdir (DIR);
         }
         foreach $file (@dirs) {
-            if (-d $path.$file) {
+            if (-d $path2.$file) {
                 # it's a directory, print a link to a directory
                 if ($file =~ /^\.$/) {
                     next;
                 }
-                $fullpath = $path . $file;
+                $fullpath = $path2 . $file;
                 if ($file =~ /^\.\.$/) {
                     $fullpath =~ s!/[^/]+/\.\.!!;
                     if ($fullpath eq "/..") {
@@ -1167,7 +1174,7 @@ sub l00http_ls_proc {
                 $dirout .= "<tr>\n";
                 $dirout .= "<td><small><a href=\"/ls.htm?path=$fullpath/\">$file/</a></small></td>\n";
                 if ($file eq '..') {
-                    $dirout .= "<td><small><a href=\"/tree.htm?path=$path\">&lt;dir&gt;</a></small></td>\n";
+                    $dirout .= "<td><small><a href=\"/tree.htm?path=$path2\">&lt;dir&gt;</a></small></td>\n";
                 } else {
                     $dirout .= "<td><small><a href=\"/tree.htm?path=$fullpath/\">&lt;dir&gt;</a></small></td>\n";
                 }
@@ -1181,14 +1188,14 @@ sub l00http_ls_proc {
                 # it's not a directory, print a link to a file
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
-                 = stat($path.$file);
+                 = stat($path2.$file);
                 if (!defined($mtime)) {
                     $mtime = 0;
                 }
                 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                  = localtime($mtime);
 
-                $fullpath = $path . $file;
+                $fullpath = $path2 . $file;
                 $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
 
                 $buf = "<tr>\n";
@@ -1207,7 +1214,7 @@ sub l00http_ls_proc {
                 if ($docrc32) {
                     my ($crcbuf);
                     local $/ = undef;
-                    if(open(IN, "<$path$file")) {
+                    if(open(IN, "<$path2$file")) {
                         binmode (IN);
                         $crcbuf = <IN>;
                         close(IN);
@@ -1222,12 +1229,12 @@ sub l00http_ls_proc {
                     ."</small></td>\n";
                 $buf .= "</tr>\n";
 
-                $tmp = "$path$file";
+                $tmp = "$path2$file";
                 if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                     $tmp =~ s/\//\\/g;
                 }
                 $tmp2 = $file;
-                if ($path eq $ctrl->{'plpath'}) {
+                if ($path2 eq $ctrl->{'plpath'}) {
                     if ($clipfile eq '') {
                         $clipfile = 'shorten l00http_X.pl to X - ';
 					}
@@ -1264,7 +1271,7 @@ sub l00http_ls_proc {
         }
         print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
     }
-    print "ls: processed >$path<\n", if ($ctrl->{'debug'} >= 5);
+    print "ls: processed >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
     # 4) If not in raw mode, also display a control table
     if (!defined($pname)) {
@@ -1292,7 +1299,7 @@ sub l00http_ls_proc {
             print $sock "  <td>Descriptions</td>\n";
             print $sock "</tr> <tr>\n";
             print $sock "  <td>Path:</td>\n";
-            print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path\"></td>\n";
+            print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path2\"></td>\n";
             print $sock "</tr>\n";
 
 #           if ($read0raw1 == 0) {
@@ -1366,7 +1373,7 @@ sub l00http_ls_proc {
 
                 print $sock "<tr>\n";
                 print $sock "  <td>Path:</td>\n";
-                print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path\"></td>\n";
+                print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path2\"></td>\n";
                 print $sock "</tr>\n";
                 if ($ctrl->{'noclinav'}) {
                     $buf = "checked";
@@ -1428,7 +1435,7 @@ sub l00http_ls_proc {
                 print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/edit.htm\" method=\"get\">\n";
                 print $sock "<td><input type=\"submit\" name=\"edit\" value=\"Edit\"></td>\n";
-                print $sock "<td><input type=\"text\" size=\"7\" name=\"path\" value=\"$path\"></td>\n";
+                print $sock "<td><input type=\"text\" size=\"7\" name=\"path\" value=\"$path2\"></td>\n";
                 #print $sock "<td><input type=\"text\" size=\"4\" name=\"busybox\" value=\"busybox vi $path\"></td>\n";
                 print $sock "</form>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
@@ -1453,18 +1460,18 @@ sub l00http_ls_proc {
 
             print $sock "<hr><a name=\"end\"></a>\n";
             if (!defined ($file)) {
-                $dir = $path;
+                $dir = $path2;
                 $dir =~ s/\/[^\/]+$/\//;
                 print $sock "<p><a href=\"/find.htm?path=$dir&fmatch=%5C.txt%24\">find in files</a> in $dir\n";
-                print $sock "<p>Send $path to <a href=\"/launcher.htm?path=$path\">launcher</a>.\n";
-                print $sock "<a href=\"/ls.htm?path=$path&raw=on\">Raw</a>\n";
-                print $sock "<p><a href=\"/view.htm?path=$path\">View</a> $path\n";
+                print $sock "<p>Send $path2 to <a href=\"/launcher.htm?path=$path2\">launcher</a>.\n";
+                print $sock "<a href=\"/ls.htm?path=$path2&raw=on\">Raw</a>\n";
+                print $sock "<p><a href=\"/view.htm?path=$path2\">View</a> $path2\n";
                 print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
                 print $sock "<td><input type=\"submit\" name=\"altsendto\" value=\"'Size' send to\"></td>\n";
                 print $sock "<td><input type=\"text\" size=\"7\" name=\"sendto\" value=\"$ctrl->{'lssize'}\"></td>\n";
                 if (!defined ($form->{'path'})) {
-                    print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+                    print $sock "<input type=\"hidden\" name=\"path\" value=\"$path2\">\n";
                 } else {
                     print $sock "<input type=\"hidden\" name=\"path\"\">\n";
                 }
@@ -1472,11 +1479,11 @@ sub l00http_ls_proc {
                 print $sock "</tr></table>\n";
             }
         } else {
-            print $sock "<p><a href=\"/ls.htm?path=$path&submit=Submit&bare=&chno=\">form</a>\n";
+            print $sock "<p><a href=\"/ls.htm?path=$path2&submit=Submit&bare=&chno=\">form</a>\n";
         }
         print $sock $ctrl->{'htmlfoot'};
     }
-    print "ls: return after processed >$path<\n", if ($ctrl->{'debug'} >= 5);
+    print "ls: return after processed >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
 }
 
