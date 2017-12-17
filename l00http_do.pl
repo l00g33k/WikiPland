@@ -43,6 +43,10 @@ sub l00http_do_proc {
             $refreshtag = "<meta http-equiv=\"refresh\" content=\"$refresh\"> ";
         }
     }
+    if (defined ($form->{'stoprefresh'})) {
+        $refresh = '';
+        $refreshtag = '';
+    }
     if (defined ($form->{'arg1'})) {
         $arg1 = $form->{'arg1'};
     }
@@ -152,6 +156,9 @@ sub l00http_do_proc {
 
             print $sock "<form action=\"/do.htm\" method=\"get\">\n";
             print $sock "<input type=\"submit\" name=\"do\" value=\"Do more\">\n";
+            if ($refresh ne '') {
+                print $sock "<input type=\"submit\" name=\"stoprefresh\" value=\"Stop\">\n";
+            }
             print $sock "Path:<input type=\"text\" name=\"path\" size=\"6\" value=\"$mypath\"> \n";
             print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec.\n";
             print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide form.\n";

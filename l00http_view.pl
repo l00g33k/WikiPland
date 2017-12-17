@@ -185,7 +185,8 @@ sub l00http_view_proc {
         print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
         print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-        print $sock "<input type=\"checkbox\" name=\"hidelnno\">Hide line number.\n";
+        print $sock "<input type=\"checkbox\" name=\"hidelnno\">\n";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}&hidelnno=on\">Hide line number.</a>\n";
         print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
         print $sock "Auto-refresh (0=off) <input type=\"text\" size=\"3\" name=\"refresh\" value=\"\"> sec.\n";
 

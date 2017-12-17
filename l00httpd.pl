@@ -1192,6 +1192,7 @@ while(1) {
                 &readl00httpdcfg;
                 &loadmods($plpath);
                 &loadmods($ctrl{'extraplpath'});
+                &l00http_cron_when_next (\%ctrl);
             }
             if ($modcalled eq "shutdown") {
                 $shutdown++;

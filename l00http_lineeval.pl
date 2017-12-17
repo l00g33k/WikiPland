@@ -51,7 +51,7 @@ sub l00http_lineeval_proc (\%) {
         if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
             # not ending in / or \, not a dir
             print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
-            print $sock "<a href=\"/view.htm?path=$form->{'path'}\">$fname</a>\n";
+            print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a>\n";
         } else {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
