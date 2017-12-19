@@ -34,6 +34,8 @@ sub l00http_dash_proc {
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target);
 
+    $dbg = 0;
+
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
             $dash_all = 'all';
@@ -66,6 +68,9 @@ sub l00http_dash_proc {
         } else {
             $smallhead = '';
         }
+    }
+    if (defined ($form->{'dbg'})) {
+        $dbg = $form->{'dbg'};
     }
 
     $pname = '';
@@ -171,7 +176,6 @@ sub l00http_dash_proc {
         $timetoday = 0;
         $time_start = 0;
         $jmp = '';
-        $dbg = 0;
         if ($dbg) {
             print $sock "Collect newest and !!! entries\n";
         }

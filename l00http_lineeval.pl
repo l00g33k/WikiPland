@@ -90,6 +90,11 @@ sub l00http_lineeval_proc (\%) {
                 $lnno++;
             }
 
+            if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'rm') &&
+                defined($form->{'ln'}) && ($#newfile >= 0)) {
+                # delete line
+                splice (@newfile, $form->{'ln'} - 1, 1);
+            }
             if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mv') &&
                 defined($form->{'mvto'}) && defined($form->{'mvfrom'}) &&
                 ($#newfile >= 0)) {
@@ -154,7 +159,8 @@ sub l00http_lineeval_proc (\%) {
                 s/\r//;
                 s/\n//;
 
-                printf $sock ("%4d: ", $lnno);
+                printf $sock ("<a href=\"/lineeval.htm?path=$form->{'path'}\">%4d</a>: ", $lnno);
+                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=rm&ln=$lnno\">rm</a> ";
                 print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&cmd=mk&ln=$lnno\">mk</a> ";
                 if ($mvfrom ne '') {
                     print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=mv&mvto=$lnno$mvfrom\">mv</a> ";
