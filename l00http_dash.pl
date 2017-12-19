@@ -385,6 +385,9 @@ sub l00http_dash_proc {
                     }
                 }
             }
+            if ($dbg) {
+                print $sock "  disp $_\n";
+            }
 
             # ``tasksTime``
 #            s/``.+$//;
