@@ -243,10 +243,26 @@ sub l00http_view_proc {
         print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>.\n";
         print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$form->{'path'}&blklineno=$hilite\">single line edit mode</a>.\n";
         print $sock "Expand ";
-        print $sock sprintf ("<a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $hilite - 200, 600, $hilite);
-        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $hilite - 500, 2000, $hilite);
-        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $hilite - 1000, 3000, $hilite);
-        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $hilite - 2000, 5000, $hilite);
+        $tmp = $hilite - 200;
+        if ($tmp < 1) {
+            $tmp = 1;
+        }
+        print $sock sprintf ("<a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $tmp, 600, $hilite);
+        $tmp = $hilite - 500;
+        if ($tmp < 1) {
+            $tmp = 1;
+        }
+        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $tmp, 2000, $hilite);
+        $tmp = $hilite - 1000;
+        if ($tmp < 1) {
+            $tmp = 1;
+        }
+        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $tmp, 3000, $hilite);
+        $tmp = $hilite - 2000;
+        if ($tmp < 1) {
+            $tmp = 1;
+        }
+        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $tmp, 5000, $hilite);
         print $sock " lines of context.";
     }
 
