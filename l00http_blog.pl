@@ -238,9 +238,9 @@ if(0){
 
     foreach $_ (@blockquick) {
         $urlencode  = &l00httpd::urlencode ($_);
+        $urlencode =~ s/\%2A/asterisk/g;
         if (defined ($form->{$urlencode})) {
             $form->{'buffer'} .= $_;
-#           $form->{'save'} = 1;
             last;
         }
     }
@@ -417,7 +417,9 @@ if(0){
     print $sock "<p>";
 
     foreach $_ (@blockquick) {
-        print $sock "<input type=\"submit\" name=\"$_\"  value=\"$_\">\n";
+        $tmp = $_;
+        $tmp =~ s/\*/asterisk/g;
+        print $sock "<input type=\"submit\" name=\"$tmp\"  value=\"$_\">\n";
     }
 
     print $sock "</form>\n";

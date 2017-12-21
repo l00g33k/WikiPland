@@ -134,8 +134,9 @@ $tend = time + $timeout_mins * 60;
 $tstart = time + 0;
 $tickdelta = 1;
 $tick = time + $tickdelta;
+$loop = 1;
 
-while(1) {
+while($loop) {
     if (time >= $tend) {
         print STDERR "\n\n=== $timeout_mins minutes timeout occured, stop\n\n";
         last;
@@ -193,6 +194,10 @@ while(1) {
                 $params{$name} = $param;
             }
 
+			if (defined ($params{'quit'})) {
+                $loop = 0;
+                print "Quit requested\n";
+            }
 			if (defined ($params{'setconfig'})) {
 				if ($params{'statusonly'} eq "on") {
 					$statusonly = 1;
@@ -342,7 +347,8 @@ while(1) {
                 $buf = "";
             }
             $htmlout .= "        <tr>\n";
-            $htmlout .= "            <td><input type=\"submit\" name=\"setconfig\" value=\"Set Config\"></td>\n";
+            $htmlout .= "            <td><input type=\"submit\" name=\"setconfig\" value=\"Set Config\">\n";
+            $htmlout .= "                <input type=\"submit\" name=\"quit\" value=\"Quit\"></td>\n";
             $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update<input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
             $htmlout .= "        </tr>\n";
 
