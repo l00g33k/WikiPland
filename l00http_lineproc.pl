@@ -5,12 +5,13 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile);
+my ($arg, $eval, $sort, $sortdec, $wholefile, $nolnno);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
 $wholefile = '';
+$nolnno = '';
 
 my %config = (proc => "l00http_lineproc_proc",
               desc => "l00http_lineproc_desc");
@@ -76,6 +77,11 @@ sub l00http_lineproc_proc (\%) {
         } else {
             $sortdec = '';
         }
+        if (defined ($form->{'nolnno'}) && ($form->{'nolnno'} eq 'on')) {
+            $nolnno = 'checked';
+        } else {
+            $nolnno = '';
+        }
         if (defined ($form->{'wholefile'}) && ($form->{'wholefile'} eq 'on')) {
             $wholefile = 'checked';
         } else {
@@ -105,6 +111,7 @@ sub l00http_lineproc_proc (\%) {
     print $sock "            <br><input type=\"submit\" name=\"pasteeval\" value=\"CB to eval\">\n";
     print $sock "            <input type=\"checkbox\" name=\"sort\" $sort>Sort after processing; \n";
     print $sock "            <input type=\"checkbox\" name=\"sortdec\" $sortdec>in decresing order. \n";
+    print $sock "            <input type=\"checkbox\" name=\"nolnno\" $nolnno>no line number. \n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
@@ -218,7 +225,11 @@ sub l00http_lineproc_proc (\%) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/</&lt;/g;
                 s/>/&gt;/g;
-                printf $sock ("%04d: %s", $cnt, $_);
+                if ($nolnno eq '') {
+                    printf $sock ("%04d: %s", $cnt, $_);
+                } else {
+                    printf $sock ("%s", $_);
+                }
                 $cnt++;
                 if ($cnt > 1000) {
                     last;
@@ -240,7 +251,11 @@ sub l00http_lineproc_proc (\%) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/</&lt;/g;
                 s/>/&gt;/g;
-                printf $sock ("%04d: %s", $cnt, $_);
+                if ($nolnno eq '') {
+                    printf $sock ("%04d: %s", $cnt, $_);
+                } else {
+                    printf $sock ("%s", $_);
+                }
                 $cnt++;
                 if ($cnt > 1000) {
                     last;
