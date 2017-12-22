@@ -156,7 +156,7 @@ sub l00http_blog_proc {
         # fake a 'Save' click
         $form->{'save'} = 1;
         # and setup redirect after we have saved
-        print $sock "<meta http-equiv=\"refresh\" content=\"1; url=$urlonly\">";
+        print $sock "<meta http-equiv=\"refresh\" content=\"0; url=$urlonly\">";
     }
     print $sock $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>";
