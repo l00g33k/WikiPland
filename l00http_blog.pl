@@ -234,6 +234,7 @@ sub l00http_blog_proc {
 
     foreach $_ (@blockquick) {
         $urlencode  = &l00httpd::urlencode ($_);
+        $urlencode =~ s/\%2A/asterisk/g;
         if (defined ($form->{$urlencode})) {
             $form->{'buffer'} .= $_;
             last;
@@ -414,7 +415,9 @@ sub l00http_blog_proc {
     print $sock "<p>";
 
     foreach $_ (@blockquick) {
-        print $sock "<input type=\"submit\" name=\"$_\"  value=\"$_\">\n";
+        $tmp = $_;
+        $tmp =~ s/\*/asterisk/g;
+        print $sock "<input type=\"submit\" name=\"$tmp\"  value=\"$_\">\n";
     }
 
     print $sock "</form>\n";
