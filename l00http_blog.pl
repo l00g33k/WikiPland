@@ -109,7 +109,7 @@ sub l00http_blog_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
-    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url);
+    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly);
 
     undef @blockquick;
     undef @blocktime;
@@ -124,9 +124,9 @@ sub l00http_blog_proc {
                 s/\r//g;
                 s/\n//g;
                 if (/^%BLOGURL:<(.+?)>%/) {
-                    $url = $1;
-                    $url =~ s/path=\$/path=$form->{'path'}/;
-                    $url = "Quick URL: <a href=\"$url\">$url</a>";
+                    $urlonly = $1;
+                    $urlonly =~ s/path=\$/path=$form->{'path'}/;
+                    $url = "Quick URL: <a href=\"$urlonly\">$urlonly</a>";
                 }
                 if (/^%BLOGQUICK:(.+?)%/) {
                     push(@blockquick, $1);
@@ -151,7 +151,14 @@ sub l00http_blog_proc {
     }
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blog</title>" .$ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blog</title>";
+    if (($url ne '') && (defined ($form->{'savequick'}))) {
+        # fake a 'Save' click
+        $form->{'save'} = 1;
+        # and setup redirect after we have saved
+        print $sock "<meta http-equiv=\"refresh\" content=\"1; url=$urlonly\">";
+    }
+    print $sock $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
 
@@ -225,22 +232,10 @@ sub l00http_blog_proc {
     }
 
 
-if(0){
-    foreach $_ (@blocktime) {
-        $urlencode  = &l00httpd::urlencode ($_);
-        if (defined ($form->{$urlencode})) {
-            $form->{'buffer'} .= $_;
-#           $form->{'save'} = 1;
-            last;
-        }
-    }
-}
-
     foreach $_ (@blockquick) {
         $urlencode  = &l00httpd::urlencode ($_);
         if (defined ($form->{$urlencode})) {
             $form->{'buffer'} .= $_;
-#           $form->{'save'} = 1;
             last;
         }
     }
@@ -250,8 +245,6 @@ if(0){
             ((defined ($form->{'path'})) && 
             (length ($form->{'path'}) > 0))) {
             $buffer = $form->{'buffer'};
-#           if (($buffer ne $lastbuf) &&
-#               !($buffer =~ /^\d{8,8} \d{6,6} $/))
             if ($buffer ne $lastbuf) {
                 $lastbuf = $buffer;
                 # don't backup when just appending
@@ -379,6 +372,10 @@ if(0){
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
     print $sock "<p>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
+    if ($url ne '') {
+        # Quick URL provided in target file, make a button to redirect
+        print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&URL\">\n";
+    }
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
