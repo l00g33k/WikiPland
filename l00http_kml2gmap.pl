@@ -426,7 +426,7 @@ sub l00http_kml2gmap_proc {
     $labeltable .= "Description: latitude,longitude ";
     $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
     $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&update=yes&matched=&exclude=&selregex=\">all</a>. ";
-    $labeltable .= "<a href=\"#__end__\">end</a>. ";
+    $labeltable .= "<a href=\"#___end___\">end</a>. ";
     $labeltable .= "<a href=\"#__form__\">form</a>)";
     $labeltable .= "$_\n<pre>";
     if ($ctrl->{'os'} eq 'and') {
@@ -737,7 +737,7 @@ sub l00http_kml2gmap_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "<a href=\"#__toc__\">TOC</a> - \n";
     print $sock "<a href=\"#__form__\">form</a> - \n";
-    print $sock "<a href=\"#__end__\">end</a> - \n";
+    print $sock "<a href=\"#___end___\">end</a> - \n";
     print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a> - \n";
@@ -793,6 +793,7 @@ sub l00http_kml2gmap_proc {
         }
     }
 
+    print $sock "<a name=\"___end___\"></a>\n";
     print $sock "<form action=\"/kml2gmap.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
@@ -820,22 +821,23 @@ sub l00http_kml2gmap_proc {
     print $sock "<td>landscape</td>\n";
     print $sock "<td>portrait</td>\n";
     print $sock "</tr>\n";
-    foreach $_ (("300,200,200,300",
-                 "400,200,200,400", 
-                 "500,300,300,500",
-                 "600,300,300,600", 
-                 "700,400,400,700",
-                 "800,400,400,800", 
-                 "900,500,500,900",
-                 "1000,600,600,1000", 
-                 "1100,600,600,1100",
-                 "1200,700,700,1200", 
-                 "1300,700,700,1300",
-                 "1400,800,800,1400", 
-                 "1500,800,800,1500",
-                 "1600,900,900,1600", 
-                 "1700,1000,1000,1700",
-                 "1800,1000,1000,1800")) {
+    foreach $_ ((   
+            "300,200,350,350",
+            "400,200,350,400",
+            "500,300,350,450",
+            "600,300,350,500",
+            "700,400,450,450",
+            "800,400,450,600",
+            "900,500,450,750",
+            "1000,600,450,950",
+            "1100,600,600,600",
+            "1200,700,600,750",
+            "1300,700,600,950",
+            "1400,800,600,1200",
+            "1500,800,900,900",
+            "1600,900,900,1200",
+            "1700,1000,900,1500",
+            "1800,1000,900,1800")) {
         my ($w1, $h1, $w2, $h2) = split(',', $_);
         print $sock "<tr>";
         print $sock "<td><a href=\"/kml2gmap.htm?path=$form->{'path'}&makemap=Update&width=$w1&height=$h1\">${w1}x$h1</a></td>\n";
@@ -847,7 +849,6 @@ sub l00http_kml2gmap_proc {
     print $sock "</form>\n";
 
     # send HTML footer and ends
-    print $sock "<a name=\"__end__\"></a>\n";
     print $sock $ctrl->{'htmlfoot'};
 }
 
