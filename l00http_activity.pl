@@ -20,7 +20,7 @@ sub l00http_activity_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $htmlout, $localurl);
+    my ($path, $htmlout, $localurl, $mime);
 
     $htmlout = '';
     $localurl = '';
@@ -50,11 +50,32 @@ sub l00http_activity_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     print $sock "Path: <a href=\"/ls.htm?path=$path\">$path</a><p>\n";
 
+    $mime = '';
+    if (-f $path) {
+        # it's a local file
+            if (($path =~ /\.jpeg$/i) ||
+                ($path =~ /\.jpg$/i)) {
+            $mime = "image/jpeg";
+        } elsif ($path =~ /\.wma$/i) {
+            $mime = "audio/x-ms-wma";
+        } elsif ($path =~ /\.3gp$/i) {
+            $mime = "audio/3gp";
+        } elsif ($path =~ /\.mp3$/i) {
+            $mime = "audio/mpeg";
+        } elsif ($path =~ /\.mp4$/i) {
+            $mime = "video/mpeg";
+        } elsif ($path =~ /\.gif$/i) {
+            $mime = "image/gif";
+        } elsif ($path =~ /\.png$/i) {
+            $mime = "image/png";
+        }
+    }
     if (defined ($form->{'start'})) {
         if ($ctrl->{'os'} eq 'and') {
             if ($path ne '') {
                 if (-f $path) {
-                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
+#                   $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
+                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", $mime);
                 } else {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$path");
                 }
@@ -71,7 +92,8 @@ sub l00http_activity_proc {
         if ($ctrl->{'os'} eq 'and') {
             if ($localurl ne '') {
                 if (-f $localurl) {
-                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
+#                   $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
+                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", $mime);
                 } else {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$localurl");
                 }
