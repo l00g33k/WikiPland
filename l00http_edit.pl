@@ -57,7 +57,7 @@ sub l00http_edit_proc2 {
         }
     }
 
-    l00httpd::dbphash($config{'desc'}, 'FORM', $form);
+    l00httpd::dbphash($config{'desc'}, 'FORM', $form), if ($ctrl->{'debug'} >= 5);
 
     if ((defined($form->{'pathorg'})) &&
         ($contextln > 1) &&

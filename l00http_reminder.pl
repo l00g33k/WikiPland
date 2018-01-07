@@ -95,7 +95,7 @@ sub l00http_reminder_find {
                     ($st0, $it0, $vb0, $vs0, $mg0) = ($st, $it, $vb, $vs, $mg);
                 }
                 if (($st0 == 0) || (time - $utcoffsec >= $st)) {
-                    l00httpd::dbp($config{'desc'}, "ON: $_\n");
+                    l00httpd::dbp($config{'desc'}, "ON: $_\n"), if ($ctrl->{'debug'} >= 2);
                     if ($mgall eq '') {
                         $mgall = $mg;
                     } else {
@@ -108,7 +108,7 @@ sub l00http_reminder_find {
             $starttime = $st0;
             $interval = $it0;
             $msgtoast = $mgall;
-            l00httpd::dbp($config{'desc'}, sprintf("Found: $msgtoast, starttime $starttime, NOW %d\n", time - $utcoffsec));
+            l00httpd::dbp($config{'desc'}, sprintf("Found: $msgtoast, starttime $starttime, NOW %d\n", time - $utcoffsec)), if ($ctrl->{'debug'} >= 2);
             $vibra = $vb0;
             $vmsec = $vs0;
         }
