@@ -49,7 +49,8 @@ sub l00http_debug_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"></td>\n";
     print $sock "        <td>jump invertval: <input type=\"text\" size=\"6\" name=\"jmpintv\" value=\"$jmpintv\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"copy\" value=\"Copy to l00://debug.txt\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"copy\" value=\"Copy to\">\n";
+    print $sock "            <a href=\"/view.htm?path=l00://debug.txt\">l00://debug.txt</a>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "</table>\n";
@@ -68,21 +69,26 @@ sub l00http_debug_proc (\%) {
     $output = '';
     $lnno = 1;
     foreach $_ (split("\n", l00httpd::dbpget)) {
-        if (($lnno % $jmpintv) == 1) {
-            $output .= "</pre>\n";
-            $output .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a name=\"ln$lnno\"></a>jump: ";
-            $output .= "<a href=\"#top\">top</a>\n";
-            if ($lnno - $jmpintv > 0) {
-                $output .= sprintf ("<a href=\"#ln%d\">line %d</a>\n", $lnno - $jmpintv, $lnno - $jmpintv);
+        if ($lnno <= 2000) {
+            if (($lnno % $jmpintv) == 1) {
+                $output .= "</pre>\n";
+                $output .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a name=\"ln$lnno\"></a>jump: ";
+                $output .= "<a href=\"#top\">top</a>\n";
+                if ($lnno - $jmpintv > 0) {
+                    $output .= sprintf ("<a href=\"#ln%d\">line %d</a>\n", $lnno - $jmpintv, $lnno - $jmpintv);
+                }
+                $output .= sprintf ("<a href=\"#ln%d\">line %d</a>\n", $lnno + $jmpintv, $lnno + $jmpintv);
+                $output .= "<a href=\"#end\">end</a>\n";
+                $output .= "<pre>\n";
             }
-            $output .= sprintf ("<a href=\"#ln%d\">line %d</a>\n", $lnno + $jmpintv, $lnno + $jmpintv);
-            $output .= "<a href=\"#end\">end</a>\n";
-            $output .= "<pre>\n";
+            s/</&lt;/g;
+            s/>/&gt;/g;
+            $output .= sprintf ("%04d: %s\n", $lnno, $_);
         }
-        s/</&lt;/g;
-        s/>/&gt;/g;
-        $output .= sprintf ("%04d: %s\n", $lnno, $_);
         $lnno++;
+    }
+    if ($lnno > 2000) {
+        $output .= sprintf ("\nThere are %d lines. Some lines are skipped. Click 'Copy to' and view debug.txt \n", $lnno);
     }
 
     print $sock "System debug log (", $lnno-1, " lines): jump <a href=\"#end\">end</a>\n";
