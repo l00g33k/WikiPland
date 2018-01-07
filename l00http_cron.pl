@@ -221,7 +221,7 @@ sub l00http_cron_when_next {
             }
 
             if (($atboot) && (($cmd) = (/^\@boot +(.+)$/))) {
-                l00httpd::dbp($config{'desc'}, "CRON: (\@boot $cmd)\n"), if ($ctrl->{'debug'} >= 5);
+                l00httpd::dbp($config{'desc'}, "CRON: (\@boot $cmd)\n"), if ($ctrl->{'debug'} >= 2);
                 $secs = time + 0;
                 &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
 
@@ -234,7 +234,7 @@ sub l00http_cron_when_next {
                     $starttime0 = $secs;
                 }
             } elsif (($atshutdown) && (($cmd) = (/^\@shutdown +(.+)$/))) {
-                l00httpd::dbp($config{'desc'}, "CRON: (\@shutdown $cmd)\n"), if ($ctrl->{'debug'} >= 5);
+                l00httpd::dbp($config{'desc'}, "CRON: (\@shutdown $cmd)\n"), if ($ctrl->{'debug'} >= 2);
                 $secs = time + 0;
                 &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
 
@@ -248,7 +248,7 @@ sub l00http_cron_when_next {
                 }
             } elsif (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
-                l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 5);
+                l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 2);
                 # starting with current time
                 $secs = time;
                 $secs = &l00http_cron_nextEventJ ($ctrl, $secs, $mnly, $hrly, $dyly, $mhly, $wkly);
@@ -350,7 +350,7 @@ sub l00http_cron_perio {
     } else {
         if (time >= $starttime) {
             $_ = time;
-            l00httpd::dbp($config{'desc'}, "Now $_ is later than next start time $starttime\n"), if ($ctrl->{'debug'} >= 4);
+            l00httpd::dbp($config{'desc'}, "Now $_ is later than next start time $starttime\n"), if ($ctrl->{'debug'} >= 2);
 
             # do task
             $eventtime = 0x7fffffff;
@@ -359,7 +359,7 @@ sub l00http_cron_perio {
                 foreach $_ (split("\n", $crontab)) {
                     s/\n//;
                     s/\r//;
-                    l00httpd::dbp($config{'desc'}, "crontab.htm: >$_<\n"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, "crontab.htm: >$_<\n"), if ($ctrl->{'debug'} >= 2);
 
                     if (($lnno, $cronspec) = /# ORG\((\d+)\):([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+) /) {
                         # make l00 filename
@@ -381,7 +381,7 @@ sub l00http_cron_perio {
                             if (($tmp, $urlpath) = $cmd =~ m!^http://(localhost|127\.0\.0\.1):$ctrl->{'ctrl_port_first'}(.+)!) {
                                 # 1) wget self. Since we aren't multi-thread, we have to simulate by 
                                 # creating the %FORM and call the module directly
-                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; Simulate wget self >$urlpath<\n"), if ($ctrl->{'debug'} >= 4);
+                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; Simulate wget self >$urlpath<\n"), if ($ctrl->{'debug'} >= 2);
                                 # http://localhost:20337/shell.htm?buffer=msg+%25USERNAME%25+%2FTIME%3A1+WikiPland+says+ello&exec=Exec
                                 undef %FORM;
                                 if ($urlpath =~ /^\/(\w+)\.(pl|htm)[^?]*\?*(.*)$/) {
@@ -454,7 +454,7 @@ sub l00http_cron_perio {
                                 $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget http: $_";
 
                                 # 2) a normal HTTP. use l00http_wget.pl
-                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
+                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 2);
                                 # http://wikipland-l00g33k.rhcloud.com/httpd.htm
                                 ($hdr, $bdy) = &l00wget::wget ($ctrl, $cmd);
                                 &l00httpd::l00fwriteOpen($ctrl, "l00://$l00name.wget.hdr");
@@ -469,7 +469,7 @@ sub l00http_cron_perio {
                                 $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "shell command: $_";
 
                                 # 3) assume to be a shell command. user be warned
-                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; shell >$cmd<\n"), if ($ctrl->{'debug'} >= 4);
+                                l00httpd::dbp($config{'desc'}, "Time is $eventtime; shell >$cmd<\n"), if ($ctrl->{'debug'} >= 2);
                                 # msg %USERNAME% /TIME:1 Shell says hello
                                 $_ =`$cmd`;
                                 &l00httpd::l00fwriteOpen($ctrl, "l00://$l00name.shell.htm");
