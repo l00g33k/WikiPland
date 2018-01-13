@@ -32,7 +32,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
-    my ($lnnostr, $lnno, $hot, $hide, $key, $target);
+    my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip);
 
     $dbg = 0;
 
@@ -240,6 +240,11 @@ sub l00http_dash_proc {
                     $time_start = 0;
                 }
 
+                # convert desc||clip to clipboard link
+                if (($desc, $clip) = $dsc =~ /^(.+)\|\|(.+)$/) {
+                    $clip = &l00httpd::urlencode ($clip);
+                    $dsc = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                }
 
                 #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
                 #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
