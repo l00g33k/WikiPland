@@ -102,23 +102,30 @@ sub l00http_blogtag_proc {
                 $lastbuf = $buffer;
                 # don't backup when just appending
                 local $/ = undef;
-                if (open (IN, "<$form->{'path'}")) {
+                if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+#               if (open (IN, "<$form->{'path'}")) {
                     # http://www.perlmonks.org/?node_id=1952
                     local $/ = undef;
-                    $buforg = <IN>;
-                    close (IN);
+                    $buforg = &l00httpd::l00freadAll($ctrl);
+#                   $buforg = <IN>;
+#                   close (IN);
                 } else {
                     $buforg = '';
                     print $sock "Unable to read original '$form->{'path'}'<p>\n";
                 }
-                &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 9);
-                if (open (OUT, ">$form->{'path'}")) {
+                if (!($form->{'path'} =~ /^l00:\/\//)) {
+                    &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 9);
+                }
+                if (&l00httpd::l00fwriteOpen($ctrl, "$form->{'path'}")) {
+#               if (open (OUT, ">$form->{'path'}")) {
                     foreach $line (split ("\n", $buforg)) {
                         if ($line =~ /$tag/) {
-                            print OUT "$line\n";
+                            &l00httpd::l00fwriteBuf($ctrl, "$line\n");
+#                           print OUT "$line\n";
                             last;
                         }
-                        print OUT "$line\n";
+                        &l00httpd::l00fwriteBuf($ctrl, "$line\n");
+#                       print OUT "$line\n";
                     }
                     @alllines = split ("\n", $buffer);
                     foreach $line (@alllines) {
@@ -126,28 +133,34 @@ sub l00http_blogtag_proc {
                         $line =~ s/\n//g;
                         if (defined ($form->{'blog'})) {
                             if ($form->{'blog'} eq "on") {
-                                print OUT "$line\n";
+                                &l00httpd::l00fwriteBuf($ctrl, "$line\n");
+#                               print OUT "$line\n";
                             } else {
                                 # all on one line
-                                print OUT "$line ";
+                                &l00httpd::l00fwriteBuf($ctrl, "$line ");
+#                               print OUT "$line ";
                             }
                         } else {
                             # all on one line
-                            print OUT "$line ";
+                            &l00httpd::l00fwriteBuf($ctrl, "$line ");
+#                           print OUT "$line ";
                         }
                     }
                     if (!defined ($form->{'blog'}) || ($form->{'blog'} ne "on")) {
-                        print OUT "\n";
+                        &l00httpd::l00fwriteBuf($ctrl, "\n");
+#                       print OUT "\n";
                     }
                     $tagfound = 0;
                     foreach $line (split ("\n", $buforg)) {
                         if ($line =~ /$tag/) {
                             $tagfound = 1;
                         } elsif ($tagfound == 1) {
-                            print OUT "$line\n";
+                            &l00httpd::l00fwriteBuf($ctrl, "$line\n");
+#                          print OUT "$line\n";
                         }
                     }
-                    close (OUT);
+                    &l00httpd::l00fwriteClose($ctrl);
+#                   close (OUT);
                     $buffer = '';
                      $form->{'buffer'} = '';
                 } else {
@@ -218,10 +231,12 @@ sub l00http_blogtag_proc {
     print $sock "</form><br>Append '&blog=' to URL for bare style\n";
 
     # get submitted name and print greeting
-    if (open (IN, "<$form->{'path'}")) {
+    if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+#   if (open (IN, "<$form->{'path'}")) {
         $lineno = 1;
         print $sock "<pre>\n";
-        while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+#       while (<IN>) {
             s/\r//g;
             s/\n//g;
             # limit sneak preview to 'blogmaxln' lines and 'blogwd' wide
@@ -233,7 +248,7 @@ sub l00http_blogtag_proc {
             }
             $lineno++;
         }
-        close (IN);
+#       close (IN);
         if ($lineno >= $ctrl->{'blogmaxln'}) {
             print $sock sprintf ("(lines skipped)\n");
             print $sock sprintf ("%04d: ", $lineno) . "$line\n";
