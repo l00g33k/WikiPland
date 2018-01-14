@@ -126,7 +126,7 @@ sub l00http_blog_proc {
                 if (/^%BLOGURL:<(.+?)>%/) {
                     $urlonly = $1;
                     $urlonly =~ s/path=\$/path=$form->{'path'}/;
-                    $url = "Quick URL: <a href=\"$urlonly\">$urlonly</a>";
+                    $url = "Quick URL: <a href=\"$urlonly\">$urlonly</a><p>";
                 }
                 if (/^%BLOGQUICK:(.+?)%/) {
                     push(@blockquick, $1);
@@ -407,7 +407,7 @@ sub l00http_blog_proc {
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
 
-    print $sock "<p>";
+    print $sock "<p>$url";
     $tmp = 'style="height:1.4em; width:2.0em"';
     foreach $_ (@blocktime) {
         print $sock "<input type=\"submit\" name=\"newtime\"  value=\"$_\"  $tmp>\n";
@@ -422,7 +422,7 @@ sub l00http_blog_proc {
 
     print $sock "</form>\n";
 
-    print $sock "$url\n$output";
+    print $sock "$output";
 
     print $sock "<hr><a name=\"end\"></a>";
     print $sock "<a href=\"#__top__\">top</a>\n";
