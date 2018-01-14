@@ -81,7 +81,10 @@ sub makejavatoc {
         $jump =~ s/&nbsp;//g;
         $jump =~ s/<br>//g;
         $jump =~ s/\n//g;
-        $output .= '  ' x $thislvl . "<li>$jump\n";
+
+        # make an anchor as section jump target
+        $anchor =~ s/name="/name="toc_/;
+        $output .= '  ' x $thislvl . "<li>$jump$anchor\n";
         $needclose = 1;
         $order++;
     }
@@ -89,8 +92,6 @@ sub makejavatoc {
         $output .= '  ' x $thislvl . "</li>\n";
         $output .= '  ' x $thislvl . "</ul>\n";
     }
-#    $output .= "</li>\n";
-#    $output .= "</ul>\n";
 
     $output;
 }
@@ -840,7 +841,8 @@ sub wikihtml {
                          $_ .
                          " <a href=\"#$tag\">@</a>".
                          " <a href=\"#___top___\">^</a>" .
-                         " <a href=\"#__toc__\">toc</a>" .
+                        #" <a href=\"#__toc__\">toc</a>" .
+                         " <a href=\"#toc_$tag\">toc</a>" .   # jump to this entry in TOC
                          " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
                          " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">vw</a>" .
