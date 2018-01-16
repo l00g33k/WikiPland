@@ -241,11 +241,14 @@ sub l00http_dash_proc {
                 }
 
                 # convert desc||clip to clipboard link
-                if (($desc, $clip) = $dsc =~ /^ *(.+) *\|\|(.+)$/) {
-                    $clip = &l00httpd::urlencode ($clip);
-                    $dsc = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
-                } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
-                    $dsc = "<a href=\"$clip\" target=\"_blank\">$desc</a>";
+                if (!($dsc =~ /\[\[.+\|.+\]\]/)) {
+                    # do so only when we don't have [[URL|desc]] shortcuts
+                    if (($desc, $clip) = $dsc =~ /^ *(.+) *\|\|(.+)$/) {
+                        $clip = &l00httpd::urlencode ($clip);
+                        $dsc = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                    } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
+                        $dsc = "<a href=\"$clip\" target=\"_blank\">$desc</a>";
+                    }
                 }
 
                 #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
