@@ -38,7 +38,7 @@ sub l00http_tr_proc {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($blkln, $citydiff);
+    my ($blkln, $citydiff, $buffer, $bufinc, $incpath, $pathbase);
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
@@ -85,8 +85,27 @@ sub l00http_tr_proc {
     undef @db;
     $minoff = 0;
     $skip = 0;
-    if ((defined ($form->{'fname'}) && (open (IN, "<$form->{'fname'}")))) {
-        while (<IN>) {
+    if ((defined ($form->{'fname'}) && (&l00httpd::l00freadOpen($ctrl, $form->{'fname'})))) {
+        $bufinc = '';
+        $buffer = &l00httpd::l00freadAll($ctrl);
+        foreach $_ (split ("\n", $buffer)) {
+            s/[\r\n]//g;
+            if (/^%INCLUDE<(.+?)>%/) {
+                $incpath = $1;
+                $pathbase = '';
+                if ($incpath =~ /^\.\//) {
+                    # find base dir of input file
+                    $pathbase = $form->{'fname'};
+                    $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
+                }
+                if (&l00httpd::l00freadOpen($ctrl, "$pathbase$incpath")) {
+                    $bufinc .= &l00httpd::l00freadAll($ctrl);
+                }
+            } else {
+                $bufinc .= "$_\n";
+            }
+        }
+        foreach $_ (split ("\n", $bufinc)) {
             s/\r//g;     # get rid of CR/LF
             s/\n//g;
             if (/^\./) {
