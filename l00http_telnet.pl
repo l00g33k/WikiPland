@@ -50,6 +50,8 @@ sub l00http_telnet_proc (\%) {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
         print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a>\n";
+    } else {
+        $form->{'path'} = '';
     }
     print $sock "<p>\n";
 
@@ -69,6 +71,8 @@ sub l00http_telnet_proc (\%) {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    print $sock "<a href=\"/view.htm?path=l00://telnet_out.txt\">l00://telnet_out.txt</a>";
+
 
     if (defined ($form->{'execute'})) {
         $exec = 1;
@@ -82,12 +86,14 @@ sub l00http_telnet_proc (\%) {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             undef $server_socket;
             undef $readable;
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://telnet_out.txt');
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
                 print $sock "<font style=\"color:black;background-color:silver\">$_</font>\n";
+                &l00httpd::l00fwriteBuf($ctrl, "$_\n");
                 if (/^ADDR\.(\d+):(.+?):(\d+)/) {
-                    $to = $1;
+                    $to = $1 / 1000;
                     $addr = $2;
                     $port = $3;
                     &l00httpd::dbp($config{'desc'}, "ADDR:$addr:$port ${to}s\n");
@@ -101,8 +107,10 @@ sub l00http_telnet_proc (\%) {
                         if (defined($server_socket)) {
                             $readable = IO::Select->new;     # Create a new IO::Select object
                             $readable->add($server_socket);  # Add the lstnsock to it
+                            &l00httpd::dbp($config{'desc'}, "new socket $server_socket\n");
+                        } else {
+                            &l00httpd::dbp($config{'desc'}, "new socket failed\n");
                         }
-                        &l00httpd::dbp($config{'desc'}, "new socket $server_socket\n");
                     }
                 }
                 if (/^SEND:(.+)/) {
@@ -111,13 +119,14 @@ sub l00http_telnet_proc (\%) {
                     s/\\([\\rn])/&trans($1)/seg;
                     if ($exec && defined ($server_socket)) {
                         print $server_socket $_;
+                        &l00httpd::l00fwriteBuf($ctrl, "$_");
                         &l00httpd::dbp($config{'desc'}, "SENt:$_\n");
                     } else {
                         &l00httpd::dbp($config{'desc'}, "SEND:$_\n");
                     }
                 }
                 if (/^EXPECT\.(\d+):(.*)/) {
-                    $to = $1;
+                    $to = $1 / 1000;
                     $expect = $2;
                     if ($exec && defined ($server_socket)) {
                         $toend = time + $to;
@@ -134,6 +143,7 @@ sub l00http_telnet_proc (\%) {
                                 }
                                 &l00httpd::dbp($config{'desc'}, "EXPECTgot:$_\n");
                                 print $sock $_;
+                                &l00httpd::l00fwriteBuf($ctrl, "$_");
                                 if (($expect ne '') && (/$expect/)) {
                                     # match
                                     &l00httpd::dbp($config{'desc'}, "EXPECTmatch:$expect\n");
@@ -142,11 +152,13 @@ sub l00http_telnet_proc (\%) {
                             }
                         }
                         print $sock "\n";
+                        &l00httpd::l00fwriteBuf($ctrl, "\n");
                     } else {
                         &l00httpd::dbp($config{'desc'}, "EXPECT:$expect ${to}s\n");
                     }
                 }
             }
+            &l00httpd::l00fwriteClose($ctrl);
             if ($exec && defined ($server_socket)) {
                 $server_socket->close;
             }
