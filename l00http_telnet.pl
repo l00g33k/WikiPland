@@ -99,6 +99,9 @@ sub l00http_telnet_proc (\%) {
                     &l00httpd::dbp($config{'desc'}, "ADDR:$addr:$port ${to}s\n");
 
                     if ($exec) {
+                        if (defined ($server_socket)) {
+                            $server_socket->close;
+                        }
                         $server_socket = IO::Socket::INET->new(
                             PeerAddr => $addr,
                             PeerPort => $port,
@@ -113,7 +116,7 @@ sub l00http_telnet_proc (\%) {
                         }
                     }
                 }
-                if (/^SEND:(.+)/) {
+                if (defined($server_socket) && (/^SEND:(.+)/)) {
                     $_ = $1;
                     # translate \\, \r, \n
                     s/\\([\\rn])/&trans($1)/seg;
@@ -125,7 +128,7 @@ sub l00http_telnet_proc (\%) {
                         &l00httpd::dbp($config{'desc'}, "SEND:$_\n");
                     }
                 }
-                if (/^EXPECT\.(\d+):(.*)/) {
+                if (defined($server_socket) && (/^EXPECT\.(\d+):(.*)/)) {
                     $to = $1 / 1000;
                     $expect = $2;
                     if ($exec && defined ($server_socket)) {
