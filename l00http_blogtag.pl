@@ -211,7 +211,7 @@ sub l00http_blogtag_proc {
     }
 
     print $sock "<form action=\"/blogtag.htm\" method=\"get\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
+    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";

@@ -370,7 +370,7 @@ sub l00http_blog_proc {
     }
 
     print $sock "<form action=\"/blog.htm\" method=\"get\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
+    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
     if ($url ne '') {

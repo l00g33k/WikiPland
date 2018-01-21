@@ -419,9 +419,9 @@ sub l00http_edit_proc2 {
 
     print $sock "<form action=\"/edit.htm\" method=\"post\">\n";
     if ($editsz) {
-        print $sock "<textarea name=\"buffer\" cols=$editwd rows=$editht>$buffer</textarea>\n";
+        print $sock "<textarea name=\"buffer\" cols=$editwd rows=$editht accesskey=\"e\">$buffer</textarea>\n";
     } else{
-        print $sock "<textarea name=\"buffer\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$buffer</textarea>\n";
+        print $sock "<textarea name=\"buffer\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"e\">$buffer</textarea>\n";
     }
 
     if ($blklineno > 0) {

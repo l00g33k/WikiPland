@@ -101,10 +101,10 @@ sub l00http_scratch_proc {
 #    $tmp =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
     if ($notbare) {
         print $sock "<form action=\"/scratch.htm\" method=\"post\">\n";
-        print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$tmp</textarea>\n";
-        print $sock "<p><input type=\"submit\" name=\"update\" value=\"Set\"> \n";
+        print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$tmp</textarea>\n";
+        print $sock "<p><input type=\"submit\" name=\"update\" value=\"Set\" accesskey=\"s\"> \n";
         print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"paste CB\"> \n";
-        print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"cp2CB\"> \n";
+        print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"cp2CB\" accesskey=\"c\"> \n";
         print $sock "<input type=\"submit\" name=\"clear\" value=\"Clr\">\n";
         print $sock "<br>\n";
         print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
