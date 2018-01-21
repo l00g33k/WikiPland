@@ -103,7 +103,7 @@ sub l00http_scratch_proc {
         print $sock "<form action=\"/scratch.htm\" method=\"post\">\n";
         print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$tmp</textarea>\n";
         print $sock "<p><input type=\"submit\" name=\"update\" value=\"Set\" accesskey=\"s\"> \n";
-        print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"paste CB\" accesskey=\"e\"> \n";
+        print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"paste CB\" accesskey=\"p\"> \n";
         print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"cp2CB\" accesskey=\"c\"> \n";
         print $sock "<input type=\"submit\" name=\"clear\" value=\"Clr\">\n";
         print $sock "<br>\n";
