@@ -50,6 +50,7 @@ sub l00http_reminder_find {
     my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
     my ($vb, $vs, $vb0, $vs0, $secs, $found);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+    my ($pathbase, $incpath, $bufinc);
 
     # compute UTC and localtime offset in seconds
 	# Compute all times in UTC but the time to display is in local time
@@ -77,7 +78,26 @@ sub l00http_reminder_find {
         # "TIME:$form->{'starttime'}\nITV:$interval\nMSG:$msg\n";
         $st0 = 0;
         $mgall = '';
+        $bufinc = '';
         while (<IN>) {
+            s/[\r\n]//g;
+            if (/^%INCLUDE<(.+?)>%/) {
+                $incpath = $1;
+                $pathbase = '';
+                if ($incpath =~ /^\.\//) {
+                    # find base dir of input file
+                    $pathbase = "$ctrl->{'workdir'}l00_reminder.txt";
+                    $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
+                }
+                if (&l00httpd::l00freadOpen($ctrl, "$pathbase$incpath")) {
+                    $bufinc .= &l00httpd::l00freadAll($ctrl);
+                }
+            } else {
+                $bufinc .= "$_\n";
+            }
+        }
+#       while (<IN>) 
+        foreach $_ (split ("\n", $bufinc)) {
             chop;
             $found = 0;
             if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
@@ -133,6 +153,7 @@ sub l00http_reminder_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $temp, $timstr, $selected, $formmsg);
     my ($yr, $mo, $da, $hr, $mi, $se);
+    my ($pathbase, $incpath, $bufinc);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
 
@@ -387,10 +408,29 @@ sub l00http_reminder_proc {
 
     if (open (IN, "<$ctrl->{'workdir'}l00_reminder.txt")) {
         print $sock "<pre>\n";
+        $bufinc = '';
         while (<IN>) {
-            print $sock $_;
+            s/[\r\n]//g;
+            if (/^%INCLUDE<(.+?)>%/) {
+                $incpath = $1;
+                s/>/&gt;/g;
+                s/</&lt;/g;
+                $bufinc .= "$_\n";
+                $pathbase = '';
+                if ($incpath =~ /^\.\//) {
+                    # find base dir of input file
+                    $pathbase = "$ctrl->{'workdir'}l00_reminder.txt";
+                    $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
+                }
+                if (&l00httpd::l00freadOpen($ctrl, "$pathbase$incpath")) {
+                    $bufinc .= &l00httpd::l00freadAll($ctrl);
+                }
+            } else {
+                $bufinc .= "$_\n";
+            }
         }
         close (IN);
+        print $sock $bufinc;
         print $sock "</pre>\n";
     }
     print $sock "<a name=\"end\"></a>\n";
