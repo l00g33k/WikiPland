@@ -32,7 +32,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
-    my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip);
+    my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
     $dbg = 0;
 
@@ -176,6 +176,9 @@ sub l00http_dash_proc {
         $timetoday = 0;
         $time_start = 0;
         $jmp = '';
+        $cat1ln = -1;
+        $cat1font1 = '';
+        $cat1font2 = '';
         if ($dbg) {
             print $sock "Collect newest and !!! entries\n";
         }
@@ -206,8 +209,18 @@ sub l00http_dash_proc {
             }
 
             $hot = '';
-            if ($this =~ /^=([^=]+)=/) {
+            if ($this =~ /^%DASHCOLOR:(.+?):(.+?)%/) {
+                $cat1font1 = "<font style=\"color:$1;background-color:$2\">";
+                $cat1font2 = "<\/font>";
+                $cat1ln = $lnno;
+            } elsif ($this =~ /^=([^=]+)=/) {
                 $cat1 = $1;
+                $jmp1 = $1;
+                $jmp1 =~ s/[^0-9A-Za-z]/_/g;
+                if ($cat1ln + 1 != $lnno) {
+                    $cat1font1 = "<font style=\"color:$1;background-color:$2\">";
+                    $cat1font2 = "<\/font>";
+                }
             } elsif ($this =~ /^==([^=]+)==/) {
                 $cat2 = $1;
                 $jmp = $1;
@@ -223,7 +236,8 @@ sub l00http_dash_proc {
                 if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                     $time_start = &l00httpd::now_string2time($tim);
                 }
-                $key = "||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>||$cat2 ";
+#               $key = "||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>||$cat2 ";
+                $key = "||$cat1font1<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>$cat1font2||$cat2 ";
                 if (($time_start > 0) && ($dsc =~ /time\.start/)) {
                     $time_start -= &l00httpd::now_string2time($tim);
 

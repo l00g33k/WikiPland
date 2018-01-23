@@ -49,7 +49,7 @@ sub l00http_periocalrem_perio {
 
 
 
-    l00httpd::dbp($config{'desc'}, "CALREM $lastchkdate\n"), if ($ctrl->{'debug'} >= 5);
+    l00httpd::dbp($config{'desc'}, "CALREM $lastchkdate\n"), if ($ctrl->{'debug'} >= 2);
     if (!&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
         # rescan if extracted result was deleted
         $lastchkdate = '';
