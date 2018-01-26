@@ -32,7 +32,7 @@ my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
 my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
-my ($lfisbr, $chno, $bare);
+my ($lfisbr, $chno, $bare, $hilite);
 
 my $path;
 my $read0raw1 = 0;
@@ -48,6 +48,7 @@ $lastpname = '';
 $lfisbr = '';
 $chno = '';
 $bare = '';
+$hilite = '';
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -260,6 +261,9 @@ sub l00http_ls_proc {
         } else {
             $bare = '';
         }
+        if (defined ($form->{'hilite'})) {
+            $hilite = $form->{'hilite'};
+        }
     }
 
     if ($lfisbr eq 'checked') {
@@ -336,7 +340,7 @@ sub l00http_ls_proc {
     }
     if (defined ($form->{'timestamp'}) &&
         ($form->{'timestamp'} eq 'on')) {
-        $form->{'hilite'} = '^\d{8,8} \d{6,6} ';
+        $hilite = '^\d{8,8} \d{6,6} ';
     }
     if (defined($form->{'lineno'})) {
         $form->{'SHOWLINENO'} = 1;
@@ -525,8 +529,8 @@ sub l00http_ls_proc {
                             }
 
                             # highlighting
-                            if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-                                s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                            if (defined ($hilite) && (length($hilite) > 1)) {
+                                s/($hilite)/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
                             }
 
 						    # path=$ substitution
@@ -785,8 +789,8 @@ sub l00http_ls_proc {
                         }
 
                         # highlighting
-                        if (defined ($form->{'hilite'}) && (length($form->{'hilite'}) > 1)) {
-                            s/($form->{'hilite'})/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
+                        if (defined ($hilite) && (length($hilite) > 1)) {
+                            s/($hilite)/<font style=\"color:black;background-color:lime\">$1<\/font>/g;
                         }
 
 
@@ -1339,7 +1343,7 @@ sub l00http_ls_proc {
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"timestamp\">Hilite <a href=\"/ls.htm?path=$pname$fname&timestamp=on\">time-stamps</a></td>\n";
-            print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"\"></td>\n";
+            print $sock "        <td>Hilite: <input type=\"text\" size=\"10\" name=\"hilite\" value=\"$hilite\"></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";

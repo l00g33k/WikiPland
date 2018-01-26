@@ -299,7 +299,7 @@ sub l00http_view_proc {
             if (defined ($form->{'find'})) {
                 ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
                 $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>. ";
-                $found .= "View <a href=\"/view.htm?path=l00://find.txt\">l00://find.txt</a>; ";
+                $found .= "View <a href=\"/view.htm?path=l00://find.txt\" target=\"_blank\">l00://find.txt</a>; ";
                 $found .= "<a href=\"/filemgt.htm?path=l00://find.txt&path2=l00://find.txt.$fname\" target=\"_blank\">copy it to</a>...\n";
                 if (defined ($form->{'findtext'})) {
                     $findtext = $form->{'findtext'};
@@ -375,8 +375,8 @@ sub l00http_view_proc {
                 if ($foundcnt > $findmaxln) {
                     $tmp = $foundcnt - $findmaxln;
                     $found .= "There are $tmp more results: ".
-                        "<a href=\"/view.htm?path=l00://find.txt&update=Skip\">View l00://find.txt</a>. ".
-                        "<a href=\"/ls.htm?path=l00://find.txt\">Full page l00://find.txt</a>\n";
+                        "<a href=\"/view.htm?path=l00://find.txt&update=Skip\" target=\"_blank\">View l00://find.txt</a>. ".
+                        "<a href=\"/ls.htm?path=l00://find.txt\" target=\"_blank\">Full page l00://find.txt</a>\n";
                 }
                 $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.\n";
                 $found = "Found $foundcnt matches. $found";

@@ -166,7 +166,15 @@ sub findInBuf  {
     # $block    : text block marker
     # $buf      : find string in $buf
     my ($findtext, $block, $buf) = @_;
-    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno);
+    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno, $invertfind);
+
+    if ($findtext =~ /^!!/) {
+        # invert find logic
+        substr($findtext, 0, 2) = '';
+        $invertfind = 1;
+    } else {
+        $invertfind = 0;
+    }
 
  
     # find them
@@ -206,6 +214,9 @@ sub findInBuf  {
             if ($line =~ /$pattern/i) {
                 $hit = 1;
             }
+        }
+        if ($invertfind) {
+            $hit = 1 - $hit;
         }
         # insert a leading space to prevent special meaning for ^::
         $line =~ s/^::/ ::/;
