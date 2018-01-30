@@ -215,12 +215,13 @@ sub l00http_dash_proc {
                 $cat1ln = $lnno;
             } elsif ($this =~ /^=([^=]+)=/) {
                 $cat1 = $1;
-                $jmp1 = $1;
-                $jmp1 =~ s/[^0-9A-Za-z]/_/g;
                 if ($cat1ln + 1 != $lnno) {
-                    $cat1font1 = "<font style=\"color:$1;background-color:$2\">";
+                    #what is $1 and $2: $cat1font1 = "<font style=\"color:$1;background-color:$2\">";
+                    $cat1font1 = "<font style=\"color:black;background-color:white\">";
                     $cat1font2 = "<\/font>";
                 }
+                $jmp1 = $1;
+                $jmp1 =~ s/[^0-9A-Za-z]/_/g;
             } elsif ($this =~ /^==([^=]+)==/) {
                 $cat2 = $1;
                 $jmp = $1;
@@ -232,11 +233,12 @@ sub l00http_dash_proc {
                 if ($cat2 =~ /^INC: (.+)/) {
                     $hot = $1;
                 }
+                # make a link to lineeval at the target line
+                $cat2 = "<a href=\"/lineeval.htm?path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                     $time_start = &l00httpd::now_string2time($tim);
                 }
-#               $key = "||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>||$cat2 ";
                 $key = "||$cat1font1<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>$cat1font2||$cat2 ";
                 if (($time_start > 0) && ($dsc =~ /time\.start/)) {
                     $time_start -= &l00httpd::now_string2time($tim);
@@ -455,7 +457,6 @@ sub l00http_dash_proc {
             }
             $out .= "$_\n";
         }
-#       $out =~ s/path=\.\//path=$pname/gms;
         $out =~ s/\\n/<br>/gm;
         $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
                int($timetoday / 60 + 0.5)) . $out;
@@ -478,7 +479,6 @@ sub l00http_dash_proc {
         $out .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         $out .= "* Send shortcut [[/clip.htm?update=Copy+to+CB&clip=*+%5B%5B%2Fls.htm%3Ffind%3DFind%26findtext%3D%255E%255C%253D%253D%253D%26block%3D.%26prefmt%3Don%26path%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D%0D%0A&url=|to clipboard]]\n";
 
-#       print $sock &l00wikihtml::wikihtml ($ctrl, "", $out, 6);
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
         print $sock $out;
