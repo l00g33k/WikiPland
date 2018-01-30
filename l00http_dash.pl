@@ -263,7 +263,7 @@ sub l00http_dash_proc {
                         $clip = &l00httpd::urlencode ($clip);
                         $bang = '';
                         # preserve ! or !! as leading
-                        if ($desc =~ /^(!+)/) {
+                        if ($desc =~ /^(!+ *)/) {
                             $bang = $1;
                             $desc =~ s/^!+//;
                         }
@@ -271,7 +271,7 @@ sub l00http_dash_proc {
                     } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
                         $bang = '';
                         # preserve ! or !! as leading
-                        if ($desc =~ /^(!+)/) {
+                        if ($desc =~ /^(!+ *)/) {
                             $bang = $1;
                             $desc =~ s/^!+//;
                         }
