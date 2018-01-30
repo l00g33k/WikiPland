@@ -180,7 +180,7 @@ sub l00http_dash_proc {
         $cat1font1 = '';
         $cat1font2 = '';
         if ($dbg) {
-            print $sock "Collect newest and !!! entries\n";
+            print $sock "Read input file to collect newest and !!! entries\n";
         }
 
 
@@ -261,9 +261,21 @@ sub l00http_dash_proc {
                     # do so only when we don't have [[URL|desc]] shortcuts
                     if (($desc, $clip) = $dsc =~ /^ *(.+) *\|\|(.+)$/) {
                         $clip = &l00httpd::urlencode ($clip);
-                        $dsc = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                        $bang = '';
+                        # preserve ! or !! as leading
+                        if ($desc =~ /^(!+)/) {
+                            $bang = $1;
+                            $desc =~ s/^!+ *//;
+                        }
+                        $dsc = "$bang<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
                     } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
-                        $dsc = "<a href=\"$clip\" target=\"_blank\">$desc</a>";
+                        $bang = '';
+                        # preserve ! or !! as leading
+                        if ($desc =~ /^(!+)/) {
+                            $bang = $1;
+                            $desc =~ s/^!+ *//;
+                        }
+                        $dsc = "$bang<a href=\"$clip\" target=\"_blank\">$desc</a>";
                     }
                 }
 
@@ -276,14 +288,14 @@ sub l00http_dash_proc {
                              $tasksDesc{$key} = $dsc;
                              $countBang{$key} = 0;
                             if ($dbg) {
-                                print $sock "    TIME  $tim\n";
+                                print $sock "    TIME  $tim    $key\n";
                             }
                 }
                 # save timestamp of first (newest entered) entry
                 if (!defined($firstTime{$key})) {
                              $firstTime{$key} = $tim;
                             if ($dbg) {
-                                print $sock "    FIRST $cat1    $cat2    $tim\n";
+                                print $sock "    FIRST $cat1    $cat2    $tim    $this\n";
                             }
                              $tasksLine{$key} = $lnno - 1;
                 }
@@ -299,7 +311,7 @@ sub l00http_dash_proc {
                              $tasksSticky{$key} = '';
                 }
                 if ($listbang eq '') {
-                    # not listing all !, i.e. listing ! only
+                    # not listing all !, i.e. listing !! only
                     if ($dsc =~ /^!!/) {
                                  $tasksSticky{$key} .= " - $dsc";
                     }
@@ -312,8 +324,13 @@ sub l00http_dash_proc {
                 if ($dsc =~ /^![^!]/) {
                              $countBang{$key}++;
                 }
+                if ($dbg) {
+                    print $sock "          $cat1    $cat2    $tim    $this\n";
+                }
             } else {
-                #print $sock "$_\n";
+                if ($dbg) {
+                    print $sock "      Ignore: $this\n";
+                }
             }
             # Link from INC: filename
             if (($hot ne '') && defined($pname)) {
