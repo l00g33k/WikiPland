@@ -265,7 +265,7 @@ sub l00http_dash_proc {
                         # preserve ! or !! as leading
                         if ($desc =~ /^(!+)/) {
                             $bang = $1;
-                            $desc =~ s/^!+ *//;
+                            $desc =~ s/^!+//;
                         }
                         $dsc = "$bang<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
                     } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
@@ -273,7 +273,7 @@ sub l00http_dash_proc {
                         # preserve ! or !! as leading
                         if ($desc =~ /^(!+)/) {
                             $bang = $1;
-                            $desc =~ s/^!+ *//;
+                            $desc =~ s/^!+//;
                         }
                         $dsc = "$bang<a href=\"$clip\" target=\"_blank\">$desc</a>";
                     }
