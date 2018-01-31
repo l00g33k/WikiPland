@@ -96,7 +96,7 @@ sub l00http_reminder_find {
                 $bufinc .= "$_\n";
             }
         }
-#       while (<IN>) 
+
         foreach $_ (split ("\n", $bufinc)) {
             chop;
             $found = 0;
@@ -153,12 +153,16 @@ sub l00http_reminder_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $temp, $timstr, $selected, $formmsg);
     my ($yr, $mo, $da, $hr, $mi, $se);
-    my ($pathbase, $incpath, $bufinc);
+    my ($pathbase, $incpath, $bufinc, $bufall);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
 
     $formmsg = '';
 
+    if (!defined($form->{'path'}) || (length($form->{'path'}) < 3)) {
+        # 'path' not provided, use default.
+        $form->{'path'} = "$ctrl->{'workdir'}l00_reminder.txt";
+    }
     # get submitted name and print greeting
     if (defined ($form->{"vibra"})) {
         $vibra = $form->{"vibra"};
@@ -225,10 +229,20 @@ sub l00http_reminder_proc {
                 # see notes in l00http_reminder_find() about time + $utcoffsec
                 $temp = $starttime - time + $utcoffsec;
                 #print "Starting in $temp secs\n";
-                if (open (OU, ">>$ctrl->{'workdir'}l00_reminder.txt")) {
-                    print OU "$form->{'starttime'}:$interval:$vibra:$vmsec:$formmsg\n";
-                    close (OU);
+                if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                    $bufinc = &l00httpd::l00freadAll($ctrl);
+                } else {
+                    $bufinc = '';
                 }
+                $bufinc .= "$form->{'starttime'}:$interval:$vibra:$vmsec:$formmsg\n";
+                if (&l00httpd::l00fwriteOpen($ctrl, $form->{'path'})) {
+                    &l00httpd::l00fwriteBuf($ctrl, $bufinc);
+                    &l00httpd::l00fwriteClose($ctrl);
+                }
+                #if (open (OU, ">>$ctrl->{'workdir'}l00_reminder.txt")) {
+                #    print OU "$form->{'starttime'}:$interval:$vibra:$vmsec:$formmsg\n";
+                #    close (OU);
+                #}
             }
         }
         $formmsg = '';
@@ -269,7 +283,7 @@ sub l00http_reminder_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a> \n";
     print $sock "<a href=\"#manage\">Manage</a> \n";
     print $sock "<a href=\"#end\">Jump to end</a> \n";
-    print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_reminder.txt\">$ctrl->{'workdir'}l00_reminder.txt</a><p> \n";
+    print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p> \n";
 
     if ($bigbutton eq 'checked') {
         print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
@@ -343,6 +357,11 @@ sub l00http_reminder_proc {
     print $sock "    </tr>\n";
                                                 
     print $sock "        <tr>\n";
+    print $sock "            <td>Path (opt):</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\"></td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
     print $sock "            <td>Interval (sec):</td>\n";
     print $sock "            <td><input type=\"text\" size=\"6\" name=\"interval\" value=\"10\"></td>\n";
     print $sock "        </tr>\n";
@@ -373,7 +392,7 @@ sub l00http_reminder_proc {
     print $sock "</form></p>\n";
 
 
-    print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">Recedit</a> - \n";
+    print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$form->{'path'}&reminder=on\">Recedit</a> - \n";
     print $sock "<a href=\"/reminder.htm?reload=on\">Reload</a> - \n";
     print $sock "<a href=\"#top\">top</a></li>\n";
     print $sock "<li>Pause: <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - \n";
@@ -406,10 +425,11 @@ sub l00http_reminder_proc {
     print $sock sprintf ("Now: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
         $year+1900, $mon+1, $mday, $hour, $min, $sec);
 
-    if (open (IN, "<$ctrl->{'workdir'}l00_reminder.txt")) {
+    if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+        $bufall = &l00httpd::l00freadAll($ctrl);
         print $sock "<pre>\n";
         $bufinc = '';
-        while (<IN>) {
+        foreach $_ (split("\n", $bufall)) {
             s/[\r\n]//g;
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
