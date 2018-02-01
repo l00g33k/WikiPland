@@ -230,8 +230,10 @@ sub l00http_dash_proc {
                     print $sock "  $cat1  $cat2\n";
                 }
                 $time_start = 0;
-                if ($cat2 =~ /^INC: (.+)/) {
-                    $hot = $1;
+                # Make a hot item include if $cat2 is a wikiword 
+                # alone and target exist (to be checked later)
+                if ($cat2 =~ /^[A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*$/) {
+                    $hot = $cat2;
                 }
                 # make a link to lineeval at the target line
                 $cat2 = "<a href=\"/lineeval.htm?path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
@@ -332,9 +334,9 @@ sub l00http_dash_proc {
                     print $sock "      Ignore: $this\n";
                 }
             }
-            # Link from INC: filename
+            # Link from 'hot item include' filename
             if (($hot ne '') && defined($pname)) {
-                if (open(IN, "<${pname}$hot")) {
+                if (open(IN, "<${pname}$hot.txt")) {
                     $cnt = 0;
                     ($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
                     while (<IN>) {
