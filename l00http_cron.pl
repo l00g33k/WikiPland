@@ -167,7 +167,7 @@ sub l00http_cron_when_next {
     my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
     my ($vb, $vs, $vb0, $vs0, $secs, $lnno);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
-    my ($yr, $mo, $da, $hr, $mi, $se, $nstring);
+    my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $startin);
     my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0, $skip, $skipfilter);
 
     &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
@@ -221,7 +221,6 @@ sub l00http_cron_when_next {
             }
 
             if (($atboot) && (($cmd) = (/^\@boot +(.+)$/))) {
-                l00httpd::dbp($config{'desc'}, "CRON: (\@boot $cmd)\n"), if ($ctrl->{'debug'} >= 2);
                 $secs = time + 0;
                 &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
 
@@ -233,8 +232,9 @@ sub l00http_cron_when_next {
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
+                $startin = $starttime0 - time;
+                l00httpd::dbp($config{'desc'}, "CRON: (\@boot $cmd) in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
             } elsif (($atshutdown) && (($cmd) = (/^\@shutdown +(.+)$/))) {
-                l00httpd::dbp($config{'desc'}, "CRON: (\@shutdown $cmd)\n"), if ($ctrl->{'debug'} >= 2);
                 $secs = time + 0;
                 &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
 
@@ -246,11 +246,11 @@ sub l00http_cron_when_next {
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
+                $startin = $starttime0 - time;
+                l00httpd::dbp($config{'desc'}, "CRON: (\@shutdown $cmd) in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
             } elsif (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
-                l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd)\n"), if ($ctrl->{'debug'} >= 2);
                 # starting with current time
-                $secs = time;
                 $secs = &l00http_cron_nextEventJ ($ctrl, $secs, $mnly, $hrly, $dyly, $mhly, $wkly);
                 &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
 
@@ -262,6 +262,8 @@ sub l00http_cron_when_next {
                 if ($starttime0 > $secs) {
                     $starttime0 = $secs;
                 }
+                $startin = $starttime0 - time;
+                l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
             }
         }
     }
@@ -359,7 +361,7 @@ sub l00http_cron_perio {
                 foreach $_ (split("\n", $crontab)) {
                     s/\n//;
                     s/\r//;
-                    l00httpd::dbp($config{'desc'}, "crontab.htm: >$_<\n"), if ($ctrl->{'debug'} >= 2);
+                    l00httpd::dbp($config{'desc'}, "crontab.htm: >$_<\n"), if ($ctrl->{'debug'} >= 3);
 
                     if (($lnno, $cronspec) = /# ORG\((\d+)\):([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+) /) {
                         # make l00 filename
