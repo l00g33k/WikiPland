@@ -1576,11 +1576,19 @@ while(1) {
                     # with link control
                     print $sock "<tr><td>Client enabled</td><td>Plugins</td><td>Descriptions</td>\n";
 
+                    print $sock "<tr>";
+                    print $sock "<td><input type=\"checkbox\" name=\"allappson\">Apps on</td>\n";
+                    print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients.</td></tr>\n";
+
+                    print $sock "<tr>";
+                    print $sock "<td><input type=\"checkbox\" name=\"allappsoff\">Apps off</td>\n";
+                    print $sock "<td><a href=\"/shutdown.htm\">(Shutdown)</a></td><td>Disable all Applets for external clients</td></tr>\n";
+
                     # on server: display debug option
                     print $sock "<tr>";
                     print $sock "<td><input type=\"text\" size=\"2\" name=\"debuglvl\" value=\"$debug\"></td>\n";
                     print $sock "<td><a href=\"/view.htm?path=${plpath}l00httpd.pl\">l00httpd.pl</a></td>\n";
-                    print $sock "<td>Print debug messages to console</td>\n";
+                    print $sock "<td>Print debug messages to console</td></tr>\n";
 
                     if ($nopwtimeout =~ /^ *\d+ *$/) {
                         if ($nopwtimeout > time) {
@@ -1598,15 +1606,7 @@ while(1) {
                     print $sock "<tr>";
                     print $sock "<td><input type=\"text\" size=\"4\" name=\"nopw\" value=\"$tmp\"></td>\n";
                     print $sock "<td><a href=\"/httpd?allappson=on&timeout=1800&noclinavof=on\">wide open</a></td>\n";
-                    print $sock "<td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath'.) <a href=\"/httpd.htm?defaulton=on&allappoff=on&timeout=300&noclinavon=on\">Default only</a></td>\n";
-
-                    print $sock "<tr>";
-                    print $sock "<td><input type=\"checkbox\" name=\"allappson\">Apps on</td>\n";
-                    print $sock "<td><a href=\"/restart.htm\">(Restart)</a></td><td>Enable all Applets for external clients.\n";
-
-                    print $sock "<tr>";
-                    print $sock "<td><input type=\"checkbox\" name=\"allappsoff\">Apps off</td>\n";
-                    print $sock "<td><a href=\"/shutdown.htm\">(Shutdown)</a></td><td>Disable all Applets for external clients</td>\n";
+                    print $sock "<td>Suspends password protection for specified seconds, or ':modname: (always no password for 'nopwpath'.) <a href=\"/httpd.htm?defaulton=on&allappoff=on&timeout=300&noclinavon=on\">Default only</a></td></tr>\n";
 
                     $tmp = "stopped";
                     $buf = $ctrl{'timeout'};
