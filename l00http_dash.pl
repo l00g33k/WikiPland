@@ -437,24 +437,25 @@ sub l00http_dash_proc {
             # ``tasksTime``
 #            s/``.+$//;
 
-            if (/^\|\|!!(.+)/) {
-                # special with leading !! which are either iHot or !!!
-                # highlight this hour
-                /^(\|\|!!*)(\d\d\d\d \d\d)/;
-                if ($2 ne substr($ctrl->{'now_string'}, 4, 7)) {
-                    # highlight !!! because all iHot has current time
-                    s/^(\|\| *!*)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2_$3<\/strong>/;
-                }
-            }
-            if (/^\|\|\d/) {
-                # special with leading !! which are either iHot or !!!
-                # highlight this hour
-                /^\|\|(\d\d\d\d) \d\d/;
-                if ($1 eq substr($ctrl->{'now_string'}, 4, 4)) {
-                    # highlight !!! because all iHot has current time
-                    s/^(\|\|)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2 $3<\/strong>/;
-                }
-            }
+# do not high this hour or today date/time stamp
+#           if (/^\|\|!!(.+)/) {
+#               # special with leading !! which are either iHot or !!!
+#               # highlight this hour
+#               /^(\|\|!!*)(\d\d\d\d \d\d)/;
+#               if ($2 ne substr($ctrl->{'now_string'}, 4, 7)) {
+#                   # highlight !!! because all iHot has current time
+#                   s/^(\|\| *!*)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2_$3<\/strong>/;
+#               }
+#           }
+#           if (/^\|\|\d/) {
+#               # special with leading !! which are either iHot or !!!
+#               # highlight this hour
+#               /^\|\|(\d\d\d\d) \d\d/;
+#               if ($1 eq substr($ctrl->{'now_string'}, 4, 4)) {
+#                   # highlight !!! because all iHot has current time
+#                   s/^(\|\|)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2 $3<\/strong>/;
+#               }
+#           }
             push(@tops2, $_);
         }
         $anchor = '<a name="bangbang"></a>';

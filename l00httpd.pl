@@ -709,7 +709,8 @@ sub periodictask {
     &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
 
     if (($waketil != 0) &&
-        ($waketil < time)) {
+        ($waketil < time) &&
+        ($ctrl{'os'} eq 'and')) {
         # $waketil is active, turn it off
         $waketil = 0;
         # release wake lock

@@ -98,7 +98,7 @@ sub l00http_reminder_find {
         }
 
         foreach $_ (split ("\n", $bufinc)) {
-            chop;
+            chomp;
             $found = 0;
             if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
                 $found = 1;
