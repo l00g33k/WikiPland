@@ -251,6 +251,7 @@ sub l00http_cron_when_next {
             } elsif (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
                 # starting with current time
+                $secs = time;
                 $secs = &l00http_cron_nextEventJ ($ctrl, $secs, $mnly, $hrly, $dyly, $mhly, $wkly);
                 &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
 
@@ -269,6 +270,9 @@ sub l00http_cron_when_next {
     }
     &l00httpd::l00fwriteBuf($ctrl, "# End of cronjob\n");
     &l00httpd::l00fwriteClose($ctrl);
+
+    $startin = $starttime0 - time;
+    l00httpd::dbp($config{'desc'}, "CRON: final start in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
 
     $starttime0;
 }
@@ -494,6 +498,7 @@ sub l00http_cron_perio {
         }
         # time not due yet, compute how much more
         $retval = $starttime - time;
+        l00httpd::dbp($config{'desc'}, "cron_perio: next start in $retval sec\n"), if ($ctrl->{'debug'} >= 2);
     }
 
     $retval;
