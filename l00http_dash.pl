@@ -31,7 +31,7 @@ sub l00http_dash_proc {
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
-    my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim);
+    my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
     $dbg = 0;
@@ -164,6 +164,7 @@ sub l00http_dash_proc {
         undef %tasksDesc;
         undef %tasksSticky;
         undef %countBang;
+        undef %updateAge;
         undef %firstTime;
         undef %logedTime;
 
@@ -223,6 +224,9 @@ sub l00http_dash_proc {
                 $jmp1 = $1;
                 $jmp1 =~ s/[^0-9A-Za-z]/_/g;
             } elsif ($this =~ /^==([^=]+)==/) {
+                #statu age calculation
+                $updateLast = '';
+
                 $cat2 = $1;
                 $jmp = $1;
                 $jmp =~ s/[^0-9A-Za-z]/_/g;
@@ -238,6 +242,7 @@ sub l00http_dash_proc {
                 # make a link to lineeval at the target line
                 $cat2 = "<a href=\"/lineeval.htm?path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
+                # compute time.stop - time.start
                 if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                     $time_start = &l00httpd::now_string2time($tim);
                 }
@@ -256,6 +261,15 @@ sub l00http_dash_proc {
                     }
 
                     $time_start = 0;
+                }
+                #last update age
+                if (($updateLast eq '') && defined($dsc) && length($dsc)) {
+                    # calculate days since last entry
+                    $updateLast = int((time - &l00httpd::now_string2time($tim)) / (3600*24) + 0.5);
+                    if ($updateLast > 1) {
+                        # report only for 2 or more days old
+                        $updateAge{$key} = "<font style=\"color:black;background-color:silver\">${updateLast}d</font>";
+                    }
                 }
 
                 # convert desc||clip to clipboard link
@@ -363,19 +377,38 @@ sub l00http_dash_proc {
         if ($dbg) {
             print $sock "Sort by time\n";
         }
+        $cnt = 0;
         push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** || || ||``tasksTime``");
         foreach $_ (sort keys %tasksTime) {
+            $cnt++;
             if ($dbg) {
                 print $sock "    $_: $tasksTime{$_}  $tasksDesc{$_}\n";
             }
-            if (defined($countBang{$_}) &&($countBang{$_} > 0)) {
+            if (defined($countBang{$_}) && ($countBang{$_} > 0)) {
                 # if ($countBang{$_} > 0) {
-                $bang = " <font style=\"color:black;background-color:silver\">!#$countBang{$_}</font> ";
+                if ($listbang eq '') {
+                    # not listing all !, i.e. listing !! only
+                    $bang = "<font style=\"color:black;background-color:silver\">".
+                    "<a name=\"row$cnt\"></a><a href=\"/dash.htm?process=Process&path=$form->{'path'}&listbang=on#row$cnt\">!#$countBang{$_}</a></font>";
+                } else {
+                    # listing all !, i.e. listing ! and !!
+                    $bang = "<font style=\"color:black;background-color:silver\">".
+                    "<a name=\"row$cnt\"></a><a href=\"/dash.htm?process=Process&path=$form->{'path'}&listbang=#row$cnt\">!#$countBang{$_}</a></font>";
+                }
             } else {
                 $bang = '';
             }
+            if (defined($updateAge{$_})) {
+                if ($bang ne '') {
+                    $bang .= ' ';
+                }
+                $bang .= "$updateAge{$_}";
+            }
             if (defined($logedTime{$_})) {
-                $bang .= sprintf(" <font style=\"color:black;background-color:silver\">%3.1fh</font> ", 
+                if ($bang ne '') {
+                    $bang .= ' ';
+                }
+                $bang .= sprintf("<font style=\"color:black;background-color:silver\">%3.1fh</font>", 
                     int($logedTime{$_} / 3600 * 10 + 0.5) / 10);
             }
             if (defined($tasksSticky{$_})) {
