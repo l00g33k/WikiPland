@@ -33,6 +33,7 @@ $showalljava = "\n".
 
 
 my (%colorlu);
+# rylsafgode
 $colorlu{'r'} = 'red';
 $colorlu{'y'} = 'yellow';
 $colorlu{'l'} = 'lime';
@@ -41,6 +42,8 @@ $colorlu{'a'} = 'aqua';
 $colorlu{'f'} = 'fuchsia';
 $colorlu{'g'} = 'gray';
 $colorlu{'o'} = 'olive';
+$colorlu{'d'} = 'gold';
+$colorlu{'e'} = 'green';
 
 
 sub makejavatoc {
@@ -696,18 +699,23 @@ sub wikihtml {
         # lines ending in ??? gets a colored Highlight link before TOC
         # aka post it note
         # ???, ???r, ???y, ???l, ???s
-        if (/^(.*)\?\?\?([rylsafgo]*)$/) {
+        if (/^(.*)\?\?\?([rylsafgode]*)$/) {
             $tmp = $1;
-                 if ($2 eq 'r') { $color = 'red';
-            } elsif ($2 eq 'y') { $color = 'yellow';
-            } elsif ($2 eq 'l') { $color = 'lime';
-            } elsif ($2 eq 's') { $color = 'silver';
-            } elsif ($2 eq 'a') { $color = 'aqua';
-            } elsif ($2 eq 'f') { $color = 'fuchsia';
-            } elsif ($2 eq 'g') { $color = 'gray';
-            } elsif ($2 eq 'o') { $color = 'olive';
-            } else              { $color = 'white';
+            if (defined($colorlu{$tmp})) {
+                $color = $colorlu{$tmp};
+            } else {
+                $color = 'white';
             }
+#                if ($2 eq 'r') { $color = 'red';
+#           } elsif ($2 eq 'y') { $color = 'yellow';
+#           } elsif ($2 eq 'l') { $color = 'lime';
+#           } elsif ($2 eq 's') { $color = 'silver';
+#           } elsif ($2 eq 'a') { $color = 'aqua';
+#           } elsif ($2 eq 'f') { $color = 'fuchsia';
+#           } elsif ($2 eq 'g') { $color = 'gray';
+#           } elsif ($2 eq 'o') { $color = 'gold';
+#           } else              { $color = 'white';
+#           }
             
             # drops *
             $tmp =~ s/^\*+ +//;
@@ -962,10 +970,10 @@ sub wikihtml {
               s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
         s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
         # *l*color bold**
-              s/ \*([rylsafgo])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([rylsafgo])\*([^*]+?)\*\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([rylsafgo])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-        s/([ >|])\*([rylsafgo])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:black;background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
+              s/ \*([rylsafgode])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+              s/^\*([rylsafgode])\*([^*]+?)\*\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+              s/^\*([rylsafgode])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+        s/([ >|])\*([rylsafgode])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:black;background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
         # //italics// <em>italics</em>
               s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
               s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
