@@ -267,6 +267,8 @@ sub l00http_cron_when_next {
                 l00httpd::dbp($config{'desc'}, "CRON: ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
             }
         }
+    } else {
+        l00httpd::dbp($config{'desc'}, "Unable to read $ctrl->{'workdir'}l00_cron.txt\n"), if ($ctrl->{'debug'} >= 1);
     }
     &l00httpd::l00fwriteBuf($ctrl, "# End of cronjob\n");
     &l00httpd::l00fwriteClose($ctrl);

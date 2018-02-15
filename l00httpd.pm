@@ -276,7 +276,7 @@ sub l00fstat {
 #&l00httpd::l00freadOpen($ctrl, $fname);
 sub l00freadOpen {
     my ($ctrl, $fname) = @_;
-    my ($ret);
+    my ($ret, $numretry);
 
     $readName = $fname;
     $readIdx = -1;
@@ -293,18 +293,34 @@ sub l00freadOpen {
             $ret = 0;
 		}
     } else {
-	    if (open(IN, "<$fname")) {
-		    # disk file exist
-            binmode(IN);
-            local $/ = undef;
-            $readBuf = <IN>;
-			close (IN);
-            $ret = 1;
-		} else {
-		    # disk file doesn't exist
-            $readBuf = undef;
-            $ret = 0;
-		}
+        if ($ctrl->{'os'} eq 'and') {
+            # An Android device may be sleeping and file read 
+            # may fail. Try a few more times
+            $numretry = 5;
+        } else {
+            $numretry = 1;
+        }
+        while ($numretry > 0) {
+	        if (open(IN, "<$fname")) {
+		        # disk file exist
+                binmode(IN);
+                local $/ = undef;
+                $readBuf = <IN>;
+			    close (IN);
+                $ret = 1;
+                $numretry = 0;
+		    } else {
+		        # disk file doesn't exist
+                $readBuf = undef;
+                $ret = 0;
+                $numretry--;
+                if (($numretry > 0) &&
+                    ($ctrl->{'os'} eq 'and')) {
+                    # sleeps 10 msec before retry on Android
+                    select (undef, undef, undef, 0.01);
+                }
+		    }
+        }
     }
     $ret;
 }
