@@ -385,7 +385,7 @@ sub l00http_dash_proc {
                 print $sock "    $_: $tasksTime{$_}  $tasksDesc{$_}\n";
             }
             if (defined($countBang{$_}) && ($countBang{$_} > 0)) {
-                # if ($countBang{$_} > 0) {
+                # if ($countBang{$_} > 0)
                 if ($listbang eq '') {
                     # not listing all !, i.e. listing !! only
                     $bang = "<font style=\"color:black;background-color:silver\">".
@@ -432,8 +432,8 @@ sub l00http_dash_proc {
             if ($dbg) {
                 print $sock "    $_\n";
             }
-            # drop year and second
-            if (s/^(\|\| *!*)(20\d\d)(\d+ \d\d\d\d)(\d\d)(.+)``(.+)``$/$1$3$5``$6``/) {
+            # drop year
+            if (s/^(\|\| *!*)(20\d\d)(\d+ \d\d\d\d)(\d\d)(.+)``(.+)``$/$1$3$4$5``$6``/) {
                 $tim = "$2$3$4";
                 $fir = "$6";
             } else {
@@ -493,6 +493,8 @@ sub l00http_dash_proc {
         }
         $anchor = '<a name="bangbang"></a>';
         foreach $_ (sort {$b cmp $a} @tops2) {
+            # drop seconds
+            s/^(\|\|!*\d\d\d\d \d\d\d\d)\d\d\|\|/$1||/;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
