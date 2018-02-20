@@ -79,10 +79,10 @@ sub l00http_cal_proc {
         #            <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
         print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a>\n";
 
-        if (open (IN, "<$fullpathname")) {
+		if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
             $buf = '';
             $lnno = 0;
-            while (<IN>) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
 			    $lnno++;
 				if ($lnno == $form->{'lnno'}) {
                     ($date, $len, $todo) = split (',', $_);
@@ -91,11 +91,10 @@ sub l00http_cal_proc {
 				    $buf .= $_;
 				}
 			}
-            close (IN);
             &l00backup::backupfile ($ctrl, $fullpathname, 0, 0);
-            open (OU, ">$fullpathname");
-			print OU $buf;
-			close (OU);
+            &l00httpd::l00fwriteOpen($ctrl, $fullpathname);
+            &l00httpd::l00fwriteBuf($ctrl, $buf);
+            &l00httpd::l00fwriteClose($ctrl);
 		}
         print $sock "<p><a href=\"/cal.htm?path=$fullpathname\">Return to calendar</a>\n";
         print $sock $ctrl->{'htmlfoot'};
@@ -132,9 +131,9 @@ sub l00http_cal_proc {
     # 1) Read a description file
 
     undef %db;
-    if (open (IN, "<$fullpathname")) {
+	if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
         $lnno = 0;
-        while (<IN>) {
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
             chomp;
             $lnno++;
             if (/^#/) {
@@ -167,7 +166,6 @@ sub l00http_cal_proc {
                 @db{"$date`$len`$todo"} = 'x';
             }
         }
-        close (IN);
         if (defined ($form->{'today'}))  {
             @db{sprintf("%d/%d/%d",$year+1900,$mon,$mday)."`1`<font style=\"color:black;background-color:lime\">NOW</font>"} = 'x';
         }
