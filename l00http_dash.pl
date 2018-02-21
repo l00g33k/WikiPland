@@ -10,12 +10,13 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newwin, $freefmt, $smallhead);
+my ($dash_all, $listbang, $newwin, $freefmt, $smallhead, $catfil);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
 $freefmt = '';
 $smallhead = '';
+$catfil = '.';
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -68,6 +69,11 @@ sub l00http_dash_proc {
         } else {
             $smallhead = '';
         }
+        if ((defined ($form->{'catfil'})) && (length($form->{'catfil'}) > 0)) {
+            $catfil = $form->{'catfil'};
+        } else {
+            $catfil = '.';
+        }
     }
     if (defined ($form->{'dbg'})) {
         $dbg = $form->{'dbg'};
@@ -115,6 +121,7 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
+        print $sock "CatFil<input type=\"text\" size=\"4\" name=\"catfil\" value=\"$catfil\">\n";
         print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -242,106 +249,110 @@ sub l00http_dash_proc {
                 # make a link to lineeval at the target line
                 $cat2 = "<a href=\"/lineeval.htm?path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
-                # compute time.stop - time.start
-                if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
-                    $time_start = &l00httpd::now_string2time($tim);
-                }
-                $key = "||$cat1font1<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>$cat1font2||$cat2 ";
-                if (($time_start > 0) && ($dsc =~ /time\.start/)) {
-                    $time_start -= &l00httpd::now_string2time($tim);
+                if ($cat1 =~ /$catfil/i) {
+                    # only if match cat1 filter
 
-                    if (!defined($logedTime{$key})) {
-                                 $logedTime{$key}  = $time_start;
+                    # compute time.stop - time.start
+                    if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
+                        $time_start = &l00httpd::now_string2time($tim);
+                    }
+                    $key = "||$cat1font1<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>$cat1font2||$cat2 ";
+                    if (($time_start > 0) && ($dsc =~ /time\.start/)) {
+                        $time_start -= &l00httpd::now_string2time($tim);
+
+                        if (!defined($logedTime{$key})) {
+                                     $logedTime{$key}  = $time_start;
+                        } else {
+                                     $logedTime{$key} += $time_start;
+                        }
+                        if (substr($ctrl->{'now_string'}, 0, 8) eq 
+                            substr($tim                 , 0, 8)) {
+                            $timetoday += $time_start;
+                        }
+
+                        $time_start = 0;
+                    }
+                    #last update age
+                    if (($updateLast eq '') && defined($dsc) && length($dsc)) {
+                        # calculate days since last entry
+                        $updateLast = int((time - &l00httpd::now_string2time($tim)) / (3600*24) + 0.5);
+                        if ($updateLast > 1) {
+                            # report only for 2 or more days old
+                            $updateAge{$key} = "<font style=\"color:black;background-color:silver\">${updateLast}d</font>";
+                        }
+                    }
+
+                    # convert desc||clip to clipboard link
+                    if (!($dsc =~ /\[\[.+\|.+\]\]/)) {
+                        # do so only when we don't have [[URL|desc]] shortcuts
+                        if (($desc, $clip) = $dsc =~ /^ *(.+) *\|\|(.+)$/) {
+                            $clip = &l00httpd::urlencode ($clip);
+                            $bang = '';
+                            # preserve ! or !! as leading
+                            if ($desc =~ /^(!+ *)/) {
+                                $bang = $1;
+                                $desc =~ s/^!+//;
+                            }
+                            $dsc = "$bang<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                        } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
+                            $bang = '';
+                            # preserve ! or !! as leading
+                            if ($desc =~ /^(!+ *)/) {
+                                $bang = $1;
+                                $desc =~ s/^!+//;
+                            }
+                            $dsc = "$bang<a href=\"$clip\" target=\"_blank\">$desc</a>";
+                        }
+                    }
+
+                    #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
+                    #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
+                    if (!defined($tasksTime{$key}) ||
+                                ($tasksTime{$key} lt $tim)) {
+                                 $tasksTime{$key} = $tim;
+                                 $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
+                                 $tasksDesc{$key} = $dsc;
+                                 $countBang{$key} = 0;
+                                if ($dbg) {
+                                    print $sock "    TIME  $tim    $key\n";
+                                }
+                    }
+                    # save timestamp of first (newest entered) entry
+                    if (!defined($firstTime{$key})) {
+                                 $firstTime{$key} = $tim;
+                                if ($dbg) {
+                                    print $sock "    FIRST $cat1    $cat2    $tim    $this\n";
+                                }
+                                 $tasksLine{$key} = $lnno - 1;
+                    }
+                    if ($this =~ /!!!$/) {
+                                 $lnnostr = sprintf("%02d", $lnno);
+                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>|| $lnnostr $cat2 "} = "!!$tim";
+                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>|| $lnnostr $cat2 "} = $dsc;
+                                if ($dbg) {
+                                    print $sock "    !!! $this\n";
+                                }
+                    }
+                    if (!defined($tasksSticky{$key})) {
+                                 $tasksSticky{$key} = '';
+                    }
+                    if ($listbang eq '') {
+                        # not listing all !, i.e. listing !! only
+                        if ($dsc =~ /^!!/) {
+                                     $tasksSticky{$key} .= " - $dsc";
+                        }
                     } else {
-                                 $logedTime{$key} += $time_start;
-                    }
-                    if (substr($ctrl->{'now_string'}, 0, 8) eq 
-                        substr($tim                 , 0, 8)) {
-                        $timetoday += $time_start;
-                    }
-
-                    $time_start = 0;
-                }
-                #last update age
-                if (($updateLast eq '') && defined($dsc) && length($dsc)) {
-                    # calculate days since last entry
-                    $updateLast = int((time - &l00httpd::now_string2time($tim)) / (3600*24) + 0.5);
-                    if ($updateLast > 1) {
-                        # report only for 2 or more days old
-                        $updateAge{$key} = "<font style=\"color:black;background-color:silver\">${updateLast}d</font>";
-                    }
-                }
-
-                # convert desc||clip to clipboard link
-                if (!($dsc =~ /\[\[.+\|.+\]\]/)) {
-                    # do so only when we don't have [[URL|desc]] shortcuts
-                    if (($desc, $clip) = $dsc =~ /^ *(.+) *\|\|(.+)$/) {
-                        $clip = &l00httpd::urlencode ($clip);
-                        $bang = '';
-                        # preserve ! or !! as leading
-                        if ($desc =~ /^(!+ *)/) {
-                            $bang = $1;
-                            $desc =~ s/^!+//;
+                        # listing all !, i.e. listing ! and !!
+                        if ($dsc =~ /^!/) {
+                                     $tasksSticky{$key} .= "<br>$dsc";
                         }
-                        $dsc = "$bang<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
-                    } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
-                        $bang = '';
-                        # preserve ! or !! as leading
-                        if ($desc =~ /^(!+ *)/) {
-                            $bang = $1;
-                            $desc =~ s/^!+//;
-                        }
-                        $dsc = "$bang<a href=\"$clip\" target=\"_blank\">$desc</a>";
                     }
-                }
-
-                #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
-                #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
-                if (!defined($tasksTime{$key}) ||
-                            ($tasksTime{$key} lt $tim)) {
-                             $tasksTime{$key} = $tim;
-                             $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
-                             $tasksDesc{$key} = $dsc;
-                             $countBang{$key} = 0;
-                            if ($dbg) {
-                                print $sock "    TIME  $tim    $key\n";
-                            }
-                }
-                # save timestamp of first (newest entered) entry
-                if (!defined($firstTime{$key})) {
-                             $firstTime{$key} = $tim;
-                            if ($dbg) {
-                                print $sock "    FIRST $cat1    $cat2    $tim    $this\n";
-                            }
-                             $tasksLine{$key} = $lnno - 1;
-                }
-                if ($this =~ /!!!$/) {
-                             $lnnostr = sprintf("%02d", $lnno);
-                             $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>|| $lnnostr $cat2 "} = "!!$tim";
-                             $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>|| $lnnostr $cat2 "} = $dsc;
-                            if ($dbg) {
-                                print $sock "    !!! $this\n";
-                            }
-                }
-                if (!defined($tasksSticky{$key})) {
-                             $tasksSticky{$key} = '';
-                }
-                if ($listbang eq '') {
-                    # not listing all !, i.e. listing !! only
-                    if ($dsc =~ /^!!/) {
-                                 $tasksSticky{$key} .= " - $dsc";
+                    if ($dsc =~ /^![^!]/) {
+                                 $countBang{$key}++;
                     }
-                } else {
-                    # listing all !, i.e. listing ! and !!
-                    if ($dsc =~ /^!/) {
-                                 $tasksSticky{$key} .= "<br>$dsc";
+                    if ($dbg) {
+                        print $sock "          $cat1    $cat2    $tim    $this\n";
                     }
-                }
-                if ($dsc =~ /^![^!]/) {
-                             $countBang{$key}++;
-                }
-                if ($dbg) {
-                    print $sock "          $cat1    $cat2    $tim    $this\n";
                 }
             } else {
                 if ($dbg) {
