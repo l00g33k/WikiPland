@@ -307,8 +307,9 @@ sub l00http_dash_proc {
 
                     #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
                     #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
-                    if (!defined($tasksTime{$key}) ||
-                                ($tasksTime{$key} lt $tim)) {
+    #               if (!defined($tasksTime{$key}) ||
+    #                           ($tasksTime{$key} lt $tim)) 
+                    if (!defined($tasksTime{$key})) {
                                  $tasksTime{$key} = $tim;
                                  $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                                  $tasksDesc{$key} = $dsc;
