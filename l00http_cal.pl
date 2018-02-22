@@ -163,6 +163,19 @@ sub l00http_cal_proc {
                     }
                 }
                 print "cal: >$todo<>$len<>$date<\n", if ($ctrl->{'debug'} >= 3);
+                if ($len < -1) {
+                    # negative length means given date is the last day.
+                    # adjust $date backward so duration ends on the given date
+                    $len = -$len;
+                    ($year,$mon, $mday,) = split ('/', $date);
+                    $year -= 1900;
+                    ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+                    ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                   gmtime (($julian - $len + 1) * 3600 * 24);
+                    $gsmon++;
+                    $gsyear += 1900;
+                    $date = "$gsyear/$gsmon/$gsmday";
+                }
                 @db{"$date`$len`$todo"} = 'x';
             }
         }
