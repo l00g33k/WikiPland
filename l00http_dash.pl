@@ -506,7 +506,7 @@ sub l00http_dash_proc {
         $anchor = '<a name="bangbang"></a>';
         foreach $_ (sort {$b cmp $a} @tops2) {
             # drop seconds
-            s/^(\|\|!*\d\d\d\d \d\d\d\d)\d\d\|\|/$1||/;
+            s/^(\|\|!*\d\d\d\d) (\d\d\d\d)\d\d\|\|/${1}_$2||/;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
