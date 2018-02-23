@@ -126,6 +126,7 @@ sub l00http_scratch_proc {
         print $sock "Refresh as:<br>\n";
         print $sock "<input type=\"submit\" name=\"mobi\" value=\"Mobilize\">\n";
         print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
+        print $sock "<input type=\"submit\" name=\"wikitize\" value=\"Wikitize\">\n";
         print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
         print $sock "<input type=\"submit\" name=\"formatted\" value=\"Formatted\">\n";
         print $sock "<input type=\"checkbox\" name=\"bare\">Bare";
@@ -153,6 +154,8 @@ sub l00http_scratch_proc {
         $scratchhtml =~ s/\r\n/\n/g;
         $scratchhtml =~ s/\r/\n/g;
         $scratchhtml = "<pre>\n$scratchhtml\n</pre>\n";
+    } elsif (defined ($form->{'wikitize'})) {
+        $scratchhtml = &l00wikihtml::wikihtml ($ctrl, '', $scratch, 0);
     } else {
         $scratchhtml = $scratch;
         $scratchhtml =~ s/\r//g;
