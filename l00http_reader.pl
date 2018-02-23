@@ -134,7 +134,7 @@ sub l00http_reader_proc (\%) {
     if (defined($ctrl->{'readerjumpurl'})) {
         $tmp .= "&url=$ctrl->{'readerjumpurl'}";
     }
-    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">clipboard</a>\n";
+    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&jumpurl=yes&clip=$tmp\" target=\"_blank\">clipboard</a>\n";
     print $sock "<input type=\"submit\" name=\"markread\" value=\"Mark read\">\n";
     print $sock "<input type=\"hidden\" name=\"readln\" value=\"$readln\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";

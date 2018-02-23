@@ -1,5 +1,4 @@
-use strict;
-use warnings;
+use strict; use warnings;
 use l00wikihtml;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
@@ -26,7 +25,17 @@ sub l00http_clip_proc {
     my (@alllines, $line, $clip, $tmp, $words);
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>clip</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>clip</title>";
+    if (defined ($form->{'update'}) && defined ($form->{'url'})) {
+        $url = $form->{'url'};
+    }
+    if (($url ne '') && (defined ($form->{'jumpurl'}))) {
+        # fake a 'Save' click
+        $form->{'update'} = 1;
+        # and setup redirect after we have saved
+        print $sock "<meta http-equiv=\"refresh\" content=\"0; url=$url\">";
+    }
+    print $sock $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "Go to <a href=\"/scratch.htm\">scratch</a> - \n";
     print $sock "<a href=\"/httpd.htm#ram\">RAM files</a><br>\n";
@@ -80,13 +89,14 @@ sub l00http_clip_proc {
     }
     print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\">$clip</textarea>\n";
     print $sock "<br>Jump URL: <input type=\"text\" size=\"10\" name=\"url\" value=\"$url\">\n";
-    print $sock "</form>\n";
 
     print $sock "View <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>, \n";
     print $sock "<a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>.\n";
     if ($url ne '') {
-        print $sock "<br>Jump URL: <a href=\"$url\">$url</a>.\n";
+        print $sock "<br><input type=\"submit\" name=\"jumpurl\" value=\"2CB&URL\"> \n";
+        print $sock "<a href=\"$url\">$url</a>.\n";
     }
+    print $sock "</form>\n";
     print $sock "<p>\n";
 
     print $sock "<p>\n";
