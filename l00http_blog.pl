@@ -134,6 +134,9 @@ sub l00http_blog_proc {
                 if (/^%BLOGTIME:(.+?)%/) {
                     $tmp = $1;
                     $addtimeval{$tmp} = 0;
+                    if ($tmp =~ /(\d+)m/) {
+                        $addtimeval{$tmp} = 60 * $1;
+                    }
                     if ($tmp =~ /(\d+)h/) {
                         $addtimeval{$tmp} = 3600 * $1;
                     }

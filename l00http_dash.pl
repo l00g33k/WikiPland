@@ -364,7 +364,8 @@ sub l00http_dash_proc {
             if (($hot ne '') && defined($pname)) {
                 if (open(IN, "<${pname}$hot.txt")) {
                     $cnt = 0;
-                    ($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
+#                   ($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
+                    ($tim) = $ctrl->{'now_string'} =~ /20\d\d\d\d(\d+ \d\d\d\d)\d\d/;
                     while (<IN>) {
                         s/[\n\r]//g;
                         $cnt++;
@@ -506,7 +507,8 @@ sub l00http_dash_proc {
         $anchor = '<a name="bangbang"></a>';
         foreach $_ (sort {$b cmp $a} @tops2) {
             # drop seconds
-            s/^(\|\|!*\d\d\d\d) (\d\d\d\d)\d\d\|\|/${1}_$2||/;
+#           s/^(\|\|!*\d\d\d\d) (\d\d\d\d)\d\d\|\|/${1}_$2||/;
+            s/^(\|\|!*)\d\d(\d\d) (\d\d\d\d)\d\d\|\|/${1}${2}_$3||/;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
