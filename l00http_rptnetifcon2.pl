@@ -8,21 +8,21 @@ use l00svg;
 
 # this is a simple template, a good starting point to make your own modules
 
-my %config = (proc => "l00http_rptnetifcon_proc",
-              desc => "l00http_rptnetifcon_desc");
+my %config = (proc => "l00http_rptnetifcon2_proc",
+              desc => "l00http_rptnetifcon2_desc");
 my ($buffer, $lastbuf, $timeslot, $taillen);
 $lastbuf = '';
 $timeslot = 60 * 1; # seconds
 $taillen = 20;
 
-sub l00http_rptnetifcon_desc {
+sub l00http_rptnetifcon2_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    "rptnetifcon: perionetifcon.pl reporter";
+    "rptnetifcon2: perionetifcon2.pl reporter";
 }
 
-sub l00http_rptnetifcon_proc {
+sub l00http_rptnetifcon2_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
@@ -47,7 +47,7 @@ sub l00http_rptnetifcon_proc {
     }
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname rptnetifcon</title>" .$ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname rptnetifcon2</title>" .$ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
         $tmp = $path;
@@ -231,7 +231,7 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a><p>\n";
 
-        print $sock "<form action=\"/rptnetifcon.htm\" method=\"get\">\n";
+        print $sock "<form action=\"/rptnetifcon2.htm\" method=\"get\">\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
         print $sock "    <tr>\n";
@@ -253,10 +253,10 @@ sub l00http_rptnetifcon_proc {
         }
         print $sock "</pre>\n";
 
-        print $sock "Poor man's whois look-up: <a href=\"/ls.htm?path=$ctrl->{'workdir'}rptnetifcon.cfg\">$ctrl->{'workdir'}rptnetifcon.cfg</a><br>\n";
+        print $sock "Poor man's whois look-up: <a href=\"/ls.htm?path=$ctrl->{'workdir'}rptnetifcon2.cfg\">$ctrl->{'workdir'}rptnetifcon2.cfg</a><br>\n";
 
 #l00httpd::dbpclr();
-        $tmp = &l00httpd::l00npoormanrdns($ctrl, $config{'desc'}, "$ctrl->{'workdir'}rptnetifcon.cfg");
+        $tmp = &l00httpd::l00npoormanrdns($ctrl, $config{'desc'}, "$ctrl->{'workdir'}rptnetifcon2.cfg");
         if ($tmp ne '') {
             print $sock "<pre>\n";
             print $sock "$tmp";

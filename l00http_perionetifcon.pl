@@ -278,26 +278,34 @@ sub l00http_perionetifcon_proc {
     }
     # save path
     if (defined ($form->{"save"}) && defined ($form->{'savepath'}) && (length ($form->{'savepath'}) > 0)) {
-        if (open (OU, ">$form->{'savepath'}")) {
+#       if (open (OU, ">$form->{'savepath'}")) 
+        if (&l00httpd::l00fwriteOpen($ctrl, "$form->{'savepath'}")) {
             foreach $_ (keys %alwayson) {
                 if ($alwayson{$_} ne '') {
-                    print OU "$alwayson{$_}\n";
+#                   print OU "$alwayson{$_}\n";
+                    &l00httpd::l00fwriteBuf($ctrl, "$alwayson{$_}\n");
                 }
             }
-            print OU $marks.$netiflog;
-            close (OU);
+#           print OU $marks.$netiflog;
+            &l00httpd::l00fwriteBuf($ctrl, $marks.$netiflog);
+#           close (OU);
+            &l00httpd::l00fwriteClose($ctrl);
             $savedpath = $form->{'savepath'};
         }
     }
     if (defined ($form->{"overwrite"}) && defined ($form->{'owpath'}) && (length ($form->{'owpath'}) > 0)) {
-        if (open (OU, ">$form->{'owpath'}")) {
+#       if (open (OU, ">$form->{'owpath'}"))
+        if (&l00httpd::l00fwriteOpen($ctrl, "$form->{'owpath'}")) {
             foreach $_ (keys %alwayson) {
                 if ($alwayson{$_} ne '') {
-                    print OU "$alwayson{$_}\n";
+#                   print OU "$alwayson{$_}\n";
+                    &l00httpd::l00fwriteBuf($ctrl, "$alwayson{$_}\n");
                 }
             }
-            print OU $marks.$netiflog;
-            close (OU);
+#           print OU $marks.$netiflog;
+            &l00httpd::l00fwriteBuf($ctrl, $marks.$netiflog);
+#           close (OU);
+            &l00httpd::l00fwriteClose($ctrl);
             $savedpath = $form->{'owpath'};
         }
     }
@@ -388,14 +396,15 @@ sub l00http_perionetifcon_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"save\" value=\"Save new\"></td>\n";
-    $tmp = "$ctrl->{'workdir'}tmp/$ctrl->{'now_string'}_netifcon.csv";
+#   $tmp = "$ctrl->{'workdir'}tmp/$ctrl->{'now_string'}_netifcon.csv";
+    $tmp = "l00://$ctrl->{'now_string'}_netifcon.csv.txt";
     $tmp =~ s/ /_/g;
-    print $sock "        <td><input type=\"text\" size=\"12\" name=\"savepath\" value=\"$tmp\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"16\" name=\"savepath\" value=\"$tmp\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"overwrite\" value=\"Overwrite\"></td>\n";
-    print $sock "        <td><input type=\"text\" size=\"12\" name=\"owpath\" value=\"$savedpath\"></td>\n";
+    print $sock "        <td><input type=\"text\" size=\"16\" name=\"owpath\" value=\"$savedpath\"></td>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
@@ -410,6 +419,11 @@ sub l00http_perionetifcon_proc {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    if (length ($savedpath) > 5) {
+        print $sock "View: <a href=\"/view.htm?path=$savedpath\" target=\"_blank\">$savedpath</a><br>\n";
+    } else {
+        print $sock "View: <a href=\"/view.htm?path=$tmp\" target=\"_blank\">$tmp</a><br>\n";
+    }
 
     print $sock "<form action=\"/perionetifcon.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
@@ -513,7 +527,6 @@ sub l00http_perionetifcon_perio {
         $lastcalled = time;
         $retval = $interval;
 
-
         if (($ctrl->{'os'} eq 'and') ||
             ($ctrl->{'os'} eq 'lin') ||
             ($ctrl->{'os'} eq 'tmx')) {
@@ -532,6 +545,15 @@ sub l00http_perionetifcon_perio {
 #tcp6       0      0 ::ffff:127.0.0.1:8182  :::*                   LISTEN
 #tcp6       0      0 ::ffff:127.0.0.1:53171 ::ffff:127.0.0.1:53033 ESTABLISHED
             foreach $_ (split ("\n", `netstat`)) {
+                if (/UNIX domain sockets/) {
+                    # Active UNIX domain sockets (w/o servers)
+                    # ignore UNIX sockets
+                    last;
+                }
+                if (/Active Internet/ || /Proto /) {
+                    # ignore header
+                    next;
+                }
                 if (($proto, $RxQ, $TxQ, $local, $remote, $sta) = split (' ', $_)) {
                     #LISTEN
                     #SYN_SENT
