@@ -7,11 +7,12 @@ use warnings;
 my %config = (proc => "l00http_perionetifcon2_proc",
               desc => "l00http_perionetifcon2_desc",
               perio => "l00http_perionetifcon2_perio");
-my ($lastcalled, $interval);
+my ($lastcalled, $interval, $cnt, $history);
 my (%iftx0, %iftx1, %ifrx0, %ifrx1);
 $interval = 0, 
 $lastcalled = 0;
-
+$cnt = 0;
+$history = '';
 
 
 sub l00http_perionetifcon2_desc {
@@ -29,7 +30,7 @@ sub l00http_perionetifcon2_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($tmp, $buf, $key, $val, $poorwhois);
+    my ($buf, $key, $val, $poorwhois);
  
     # get submitted name and print greeting
     if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
@@ -43,13 +44,20 @@ sub l00http_perionetifcon2_proc {
         undef %iftx1;
         undef %ifrx0;
         undef %ifrx1;
+        $history = '';
+        $cnt = 0;
+        $ctrl->{'l00file'}->{'l00://perionetifcon2.txt'} = '';
     }
 
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'};
+    if (defined ($form->{"refresh"})) {
+        print $sock "<meta http-equiv=\"refresh\" content=\"2\"> ";
+    }
+    print $sock $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>\n";
-    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/perionetifcon2.htm\">Refresh</a><br>\n";
+    print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/perionetifcon2.htm\">Reload</a><br>\n";
 
     print $sock "<form action=\"/perionetifcon2.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n";
@@ -60,9 +68,11 @@ sub l00http_perionetifcon2_proc {
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"> \n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Set\"> \n";
+    print $sock "         <input type=\"submit\" name=\"refresh\" value=\"Refresh\">\n";
     print $sock "         <input type=\"submit\" name=\"stop\" value=\"Stop\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"Clr\"> ";
+    print $sock "            <input type=\"submit\" name=\"mark\" value=\"Mk\"> </td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -70,20 +80,27 @@ sub l00http_perionetifcon2_proc {
 
     print $sock "View: <a href=\"/view.htm?path=l00://perionetifcon2.txt\" target=\"_blank\">l00://perionetifcon2.txt</a><br>\n";
 
-    printf $sock "<pre>\n";
+    $cnt++;
+    $buf = "$cnt ($ctrl->{'now_string'}) Rx/Tx:\n";
     foreach $_ (sort keys %ifrx0) {
-        printf $sock ("%-12s: %7.2f MB tx %7.2f MB\n", $_, 
-            ($ifrx1{$_} - $ifrx0{$_}) / 1000000,
-            ($iftx1{$_} - $iftx0{$_}) / 1000000);
+        $buf .= sprintf ("%6.2f MB/%6.2f MB %9d/%9d %-12s\n", 
+                    ($ifrx1{$_} - $ifrx0{$_}) / 1000000,
+                    ($iftx1{$_} - $iftx0{$_}) / 1000000,
+                    $ifrx1{$_} - $ifrx0{$_},
+                    $iftx1{$_} - $iftx0{$_},
+                    $_);
     }
     printf $sock "\n";
 
-    foreach $_ (sort keys %ifrx0) {
-        printf $sock ("%-12s: rx %10d tx %10d\n", $_, 
-            $ifrx1{$_} - $ifrx0{$_},
-            $iftx1{$_} - $iftx0{$_});
+    if (defined ($form->{"mark"})) {
+        $history = "$buf$history";
+        $ctrl->{'l00file'}->{'l00://perionetifcon2.txt'} .= $buf;
+        foreach $_ (sort keys %ifrx0) {
+            $ifrx0{$_} = $ifrx1{$_};
+            $iftx0{$_} = $iftx1{$_};
+        }
     }
-    printf $sock "</pre>\n";
+    printf $sock "<pre>$buf\n$history</pre>\n";
 
     print $sock "<p><a href=\"#top\">Jump to top</a><p>\n";
 
@@ -108,8 +125,6 @@ sub l00http_perionetifcon2_perio {
             ($ctrl->{'os'} eq 'tmx')) {
             $tempe = "TIME,$lastcalled,$ctrl->{'now_string'}\n";
             # netstat
-#print "prionet start\n";
-
 #netstat
 #Proto Recv-Q Send-Q Local Address          Foreign Address        State
 # tcp       0      0 127.0.0.1:55555        0.0.0.0:*              LISTEN
@@ -175,7 +190,7 @@ if(0){
                         @val = split (' ', $vals);
                         if (($val[0] > 0) && ($val[8] > 0)) {
                             $tempe .=
-                               sprintf("net,%s: %d,%d,%d,%d\n", 
+                               sprintf("net,%s: %.0f,%.0f,%.0f,%.0f\n", 
                                    $if, $val[0], $val[1], $val[8], $val[9]);
                             if (!defined($ifrx0{$if})) {
                                 $ifrx0{$if} = $val[0];
@@ -192,7 +207,6 @@ if(0){
             }
             $ctrl->{'l00file'}->{'l00://perionetifcon2.txt'} .= $tempe;
         }
-#print "prionet end\n";
     } elsif ($interval > 0) {
         # remaining time to firing
         $retval = ($lastcalled + $interval) - time;
