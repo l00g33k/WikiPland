@@ -1,5 +1,5 @@
 print $sock "<pre>\n";
-print $sock "/proc/stat";
+print $sock "<a href=\"view.htm?path=/proc/stat\">/proc/stat</a>";
 
 if (defined($procstatlastcalltime)) {
     print $sock "; since last call: ", time - $procstatlastcalltime, " seconds ago";
