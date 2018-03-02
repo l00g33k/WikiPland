@@ -701,8 +701,8 @@ sub wikihtml {
         # ???, ???r, ???y, ???l, ???s
         if (/^(.*)\?\?\?([rylsafgode]*)$/) {
             $tmp = $1;
-            if (defined($colorlu{$tmp})) {
-                $color = $colorlu{$tmp};
+            if (defined($colorlu{$2})) {
+                $color = $colorlu{$2};
             } else {
                 $color = 'white';
             }
@@ -728,7 +728,7 @@ sub wikihtml {
             $postsit .= $tmp;
             $oubuf .=  "<a name=\"lnno$lnno\">";
             # remove !!!
-            s/\?\?\?[rylsafg]*$//;
+            s/\?\?\?[rylsafgode]*$//;
             if (/^=.+=$/) {
                 # '=' interferes with heading shorthand, global replace ____EqSg____ = later
                 s/^(=+)([^=]+)(=+)$/$1<font style____EqSg____"color:black;background-color:$color">$2<\/font>$3/g;
