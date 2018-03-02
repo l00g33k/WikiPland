@@ -83,7 +83,7 @@ sub l00http_perionetifcon2_proc {
     $cnt++;
     $buf = "$cnt ($ctrl->{'now_string'}) Rx/Tx:\n";
     foreach $_ (sort keys %ifrx0) {
-        $buf .= sprintf ("%6.2f MB/%6.2f MB %9d/%9d %-12s\n", 
+        $buf .= sprintf ("%6.3fM/%6.3fM %8d/%8d %-12s\n", 
                     ($ifrx1{$_} - $ifrx0{$_}) / 1000000,
                     ($iftx1{$_} - $iftx0{$_}) / 1000000,
                     $ifrx1{$_} - $ifrx0{$_},
