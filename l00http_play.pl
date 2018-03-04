@@ -77,6 +77,9 @@ sub l00http_play_proc (\%) {
             if ($path =~ /\.mp3$/) {
                 $type = 'audio/mp3';
             }
+            if ($path =~ /\.m4a$/) {
+                $type = 'audio/m4a';
+            }
             if ($path =~ /\.wma$/) {
                 $type = 'audio/x-ms-wma';
             }

@@ -231,6 +231,7 @@ $ctrl{'blogwd'}  = 64;
 $ctrl{'blogmaxln'}  = 50;
 $ctrl{'noclinav'}  = 1;
 $ctrl{'l00file'}->{'l00://_notes.txt'} = "A sample ram file.\nContent is lost when shutdown\nChange 'ram' for a separate ram file";
+$ctrl{'iamsleeping'} = 'no';
 
 $nopwtimeout = 0;
 

@@ -56,12 +56,18 @@ sub l00http_activity_proc {
             if (($path =~ /\.jpeg$/i) ||
                 ($path =~ /\.jpg$/i)) {
             $mime = "image/jpeg";
+        } elsif ($path =~ /\.pdf$/i) {
+            $mime = "application/pdf";
         } elsif ($path =~ /\.wma$/i) {
             $mime = "audio/x-ms-wma";
+        } elsif ($path =~ /\.wav$/i) {
+            $mime = "audio/wav";
         } elsif ($path =~ /\.3gp$/i) {
             $mime = "audio/3gp";
         } elsif ($path =~ /\.mp3$/i) {
             $mime = "audio/mpeg";
+        } elsif ($path =~ /\.m4a$/i) {
+            $mime = "video/m4a";
         } elsif ($path =~ /\.mp4$/i) {
             $mime = "video/mpeg";
         } elsif ($path =~ /\.gif$/i) {
@@ -74,8 +80,11 @@ sub l00http_activity_proc {
         if ($ctrl->{'os'} eq 'and') {
             if ($path ne '') {
                 if (-f $path) {
-#                   $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
-                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", $mime);
+                    if ($mime eq '') {
+                        $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
+                    } else {
+                        $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", $mime);
+                    }
                 } else {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$path");
                 }
@@ -92,8 +101,11 @@ sub l00http_activity_proc {
         if ($ctrl->{'os'} eq 'and') {
             if ($localurl ne '') {
                 if (-f $localurl) {
-#                   $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
-                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", $mime);
+                    if ($mime eq '') {
+                        $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path");
+                    } else {
+                        $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", $mime);
+                    }
                 } else {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$localurl");
                 }

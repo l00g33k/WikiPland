@@ -1,5 +1,5 @@
 print $sock "<pre>\n";
-print $sock "/proc/stat";
+print $sock "<a href=\"view.htm?path=/proc/stat\">/proc/stat</a>";
 
 if (defined($procstatlastcalltime)) {
     print $sock "; since last call: ", time - $procstatlastcalltime, " seconds ago";
@@ -10,7 +10,12 @@ print $sock "\n\n";
 open(STAT, '/proc/stat') or die "WTF: $!";
 print $sock "     user nice sytm idle  ttl  %% iowt  irq sirq stea gues gtnice\n\n";
 $row = 0;
+undef @allstat;
+# cache in RAm before processing
 while (<STAT>) {
+    push(@allstat, $_);
+}
+foreach $_ (@allstat) {
     next unless /^cpu[0-9]*/;
     ($cpu, @cpu) = split(' ', $_);
     if ($cpu =~ /cpu(\d)/) {
