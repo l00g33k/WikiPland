@@ -10,13 +10,54 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newwin, $freefmt, $smallhead, $catfil);
+my ($dash_all, $listbang, $newwin, $freefmt, $smallhead, $catfil, $outputsort);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
 $freefmt = '';
 $smallhead = '';
 $catfil = '.';
+$outputsort = '';
+
+sub l00http_dash_outputsort {
+    my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
+
+    if ($outputsort eq '') {
+        $retval = $b cmp $a;
+    } else {
+        ($acat1, $acat2) = $a =~ /^\|\|.+?\|\|(.+?)\|\|(.+?)\|\|/;
+        ($bcat1, $bcat2) = $b =~ /^\|\|.+?\|\|(.+?)\|\|(.+?)\|\|/;
+        $acat1 =~ s/<.+?>//g;
+        $bcat1 =~ s/<.+?>//g;
+        $acat1 =~ s/^ //;
+        $bcat1 =~ s/^ //;
+        $acat1 =~ s/!//g;
+        $bcat1 =~ s/!//g;
+        $acat1 =~ s/\*\*//g;
+        $bcat1 =~ s/\*\*//g;
+        $acat1 =~ s/\*[a-z]\*//g;
+        $bcat1 =~ s/\*[a-z]\*//g;
+
+        $acat2 =~ s/<.+?>//g;
+        $bcat2 =~ s/<.+?>//g;
+        $acat2 =~ s/^ //;
+        $bcat2 =~ s/^ //;
+        $acat2 =~ s/!//g;
+        $bcat2 =~ s/!//g;
+        $acat2 =~ s/\*\*//g;
+        $bcat2 =~ s/\*\*//g;
+        $bcat2 =~ s/\*[a-z]\*//g;
+        $acat2 =~ s/\*[a-z]\*//g;
+
+        $aa = CORE::fc("$acat1 $acat2");
+        $bb = CORE::fc("$bcat1 $bcat2");
+       #print "$aa  cmp  $bb\n";
+
+        $retval = $aa cmp $bb;
+    }
+
+    $retval;
+}
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -62,6 +103,11 @@ sub l00http_dash_proc {
         $freefmt = 'checked';
     } else {
         $freefmt = '';
+    }
+    if ((defined ($form->{'outputsort'})) && ($form->{'outputsort'} eq 'on')) {
+        $outputsort = 'checked';
+    } else {
+        $outputsort = '';
     }
     if (defined ($form->{'process'})) {
         if ((defined ($form->{'smallhead'})) && ($form->{'smallhead'} eq 'on')) {
@@ -152,6 +198,12 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
         } else {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">free format</a>.\n";
+        }
+        print $sock "<input type=\"checkbox\" name=\"outputsort\" $outputsort>";
+        if ($outputsort ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on\">cat1 sort</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">cat1 sort</a>.\n";
         }
         print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
         if ($smallhead ne 'checked') {
@@ -505,9 +557,9 @@ sub l00http_dash_proc {
             push(@tops2, $_);
         }
         $anchor = '<a name="bangbang"></a>';
-        foreach $_ (sort {$b cmp $a} @tops2) {
+#       foreach $_ (sort {$b cmp $a} @tops2) {
+        foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds
-#           s/^(\|\|!*\d\d\d\d) (\d\d\d\d)\d\d\|\|/${1}_$2||/;
             s/^(\|\|!*)\d\d(\d\d) (\d\d\d\d)\d\d\|\|/${1}${2}_$3||/;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
@@ -592,6 +644,12 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
         } else {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">free format</a>.\n";
+        }
+        print $sock "<input type=\"checkbox\" name=\"outputsort\" $outputsort>";
+        if ($outputsort ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on\">cat1 sort</a>.\n";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">cat1 sort</a>.\n";
         }
         print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
         if ($smallhead ne 'checked') {
