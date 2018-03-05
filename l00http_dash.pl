@@ -49,8 +49,8 @@ sub l00http_dash_outputsort {
         $bcat2 =~ s/\*[a-z]\*//g;
         $acat2 =~ s/\*[a-z]\*//g;
 
-        $aa = CORE::fc("$acat1 $acat2");
-        $bb = CORE::fc("$bcat1 $bcat2");
+        $aa = lc("$acat1 $acat2");
+        $bb = lc("$bcat1 $bcat2");
        #print "$aa  cmp  $bb\n";
 
         $retval = $aa cmp $bb;
