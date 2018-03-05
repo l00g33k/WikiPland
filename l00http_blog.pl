@@ -375,10 +375,10 @@ sub l00http_blog_proc {
     print $sock "<form action=\"/blog.htm\" method=\"get\">\n";
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
-    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\" accesskey=\"s\">\n";
     if ($url ne '') {
         # Quick URL provided in target file, make a button to redirect
-        print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&URL\">\n";
+        print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&URL\" accesskey=\"u\">\n";
     }
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
