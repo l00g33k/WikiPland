@@ -33,7 +33,7 @@ $showalljava = "\n".
 
 
 my (%colorlu);
-# rylsafgode
+$colorlukeys = 'rylsafgodGDbSpLT';
 $colorlu{'r'} = 'red';
 $colorlu{'y'} = 'yellow';
 $colorlu{'l'} = 'lime';
@@ -43,7 +43,14 @@ $colorlu{'f'} = 'fuchsia';
 $colorlu{'g'} = 'gray';
 $colorlu{'o'} = 'olive';
 $colorlu{'d'} = 'gold';
-$colorlu{'e'} = 'green';
+$colorlu{'G'} = 'green';
+$colorlu{'D'} = 'DeepPink';
+$colorlu{'b'} = 'Brown';
+$colorlu{'S'} = 'DeepSkyBlue';
+$colorlu{'p'} = 'Purple';
+$colorlu{'L'} = 'LightGray';
+$colorlu{'T'} = 'Teal';
+
 
 
 sub makejavatoc {
@@ -699,23 +706,13 @@ sub wikihtml {
         # lines ending in ??? gets a colored Highlight link before TOC
         # aka post it note
         # ???, ???r, ???y, ???l, ???s
-        if (/^(.*)\?\?\?([rylsafgode]*)$/) {
+        if (/^(.*)\?\?\?([$colorlukeys]*)$/) {
             $tmp = $1;
             if (defined($colorlu{$2})) {
                 $color = $colorlu{$2};
             } else {
                 $color = 'white';
             }
-#                if ($2 eq 'r') { $color = 'red';
-#           } elsif ($2 eq 'y') { $color = 'yellow';
-#           } elsif ($2 eq 'l') { $color = 'lime';
-#           } elsif ($2 eq 's') { $color = 'silver';
-#           } elsif ($2 eq 'a') { $color = 'aqua';
-#           } elsif ($2 eq 'f') { $color = 'fuchsia';
-#           } elsif ($2 eq 'g') { $color = 'gray';
-#           } elsif ($2 eq 'o') { $color = 'gold';
-#           } else              { $color = 'white';
-#           }
             
             # drops *
             $tmp =~ s/^\*+ +//;
@@ -728,7 +725,7 @@ sub wikihtml {
             $postsit .= $tmp;
             $oubuf .=  "<a name=\"lnno$lnno\">";
             # remove !!!
-            s/\?\?\?[rylsafgode]*$//;
+            s/\?\?\?[$colorlukeys]*$//;
             if (/^=.+=$/) {
                 # '=' interferes with heading shorthand, global replace ____EqSg____ = later
                 s/^(=+)([^=]+)(=+)$/$1<font style____EqSg____"color:black;background-color:$color">$2<\/font>$3/g;
@@ -853,7 +850,7 @@ sub wikihtml {
                           "<a href=\"#__toc__\">^</a>" .
                          " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
-                         " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">vw</a>" .
+                         " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">$lnnoinfo</a>" .
                          sprintf("</h%d>",length($el[2])) .
                          "<a name=\"${tag}_\"></a>".
                          $el[3];
@@ -970,10 +967,10 @@ sub wikihtml {
               s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
         s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
         # *l*color bold**
-              s/ \*([rylsafgode])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([rylsafgode])\*([^*]+?)\*\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([rylsafgode])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-        s/([ >|])\*([rylsafgode])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:black;background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
+              s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+              s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+              s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+        s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:black;background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
         # //italics// <em>italics</em>
               s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
               s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL

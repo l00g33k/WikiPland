@@ -94,15 +94,19 @@ preceeded by a blank line. For example:
 * An example of posts-it note???
 * Color may be specified for posts-it notes
 ** Note '???' are entered twice because the feature removes the action '???'
-** red____ when ending in ???r (not done) ???r
-** yellow_ when ending in ???y (working on it) ???y
-** lime___ when ending in ???l (done) ???l
-** silver_ when ending in ???s (keep notes) ???s
-** aqua___ when ending in ???a (KIV ok) ???a
-** fuchsia when ending in ???f (KIV next) ???f
-** gray___ when ending in ???g (put away) ???g
-** olive__ when ending in ???o (higher than put away) ???o
-** silver_ when ending in ??? ???
+** red          when ending in ???r (not done) ???r
+** yellow       when ending in ???y (working on it) ???y
+** lime         when ending in ???l (done) ???l
+** silver       when ending in ???s (keep notes) ???s
+** aqua         when ending in ???a (KIV ok) ???a
+** fuchsia      when ending in ???f (KIV next) ???f
+** gray         when ending in ???g (put away) ???g
+** olive        when ending in ???o (higher than put away) ???o
+** deepPink     when ending in ???D ???D
+** brown        when ending in ???b ???b
+** deepSkyBlue  when ending in ???S ???S
+** lightGray    when ending in ???L ???L
+** teal         when ending in ???T ???T
 =Special URLs=
 * There should be no space between [ and [, and ] and ]. The spaces are to avoid triggering conversion in this help text
 * This allows a URL to delete a file with backup
