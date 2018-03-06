@@ -113,7 +113,7 @@ sub l00http_perionetifcon2_proc {
 sub l00http_perionetifcon2_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($buf, $tempe, $proto, $RxQ, $TxQ, $local, $remote, $sta, $key);
-    my ($tmp, $thisif, $rxb, $txb, $if, $vals, @val, $total, $ifoutput, $retval);
+    my ($thisif, $rxb, $txb, $if, $vals, @val, $total, $ifoutput, $retval);
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
