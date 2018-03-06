@@ -1,0 +1,29 @@
+%TOC%
+
+=Color Scheme=
+* 'Now' queues: highest priority
+** ==*r*red**== ???r
+
+* 'do at' queues: do at specific times
+** ==*f*fuchsia**==  ???f
+
+* 'KIV' queues: keep in view
+** ==*S*deepSkyBlue**== ???S
+
+* '5min' queues: do something quick
+** ==*T*teal**== ???T
+
+* 'project' queues: projects
+** ==*l*lime**==  ???l
+** ==*a*aqua**== ???a
+** ==*y*yellow**== ???y
+** ==*G*green**== ???G
+** ==*D*deepPink**== ???D
+
+* 'structural' queues: making things work
+** ==*L*lightGray**== ???L
+** ==*s*silver**== ???s
+** ==*g*gray**== ???g
+** ==*o*olive**== ???o
+** ==*b*brown**== ???b
+** ==*d*gold**== ???d
