@@ -1,29 +1,46 @@
 %TOC%
 
 =Color Scheme=
-* 'Now' queues: highest priority
-** ==*r*red**== ???r
+* Hot color for priority actions:
+** 'Now' queues: highest priority
+*** ==*r*red**== ???r
 
-* 'do at' queues: do at specific times
-** ==*f*fuchsia**==  ???f
+** 'KIV' queues: keep in view
+*** ==*D*deepPink**== ???D
 
-* 'KIV' queues: keep in view
-** ==*S*deepSkyBlue**== ???S
+** 'do at' queues: do at specific times
+*** ==*f*fuchsia**==  ???f
 
-* '5min' queues: do something quick
-** ==*T*teal**== ???T
+* Neutral colors for keep watching
+** '5min' queues: do something quick
+*** ==*T*teal**== ???T
 
-* 'project' queues: projects
-** ==*l*lime**==  ???l
-** ==*a*aqua**== ???a
-** ==*y*yellow**== ???y
-** ==*G*green**== ???G
-** ==*D*deepPink**== ???D
+** 'watch me' queues: pay attention to me
+*** ==*G*green**== ???G
 
-* 'structural' queues: making things work
-** ==*L*lightGray**== ???L
-** ==*s*silver**== ???s
-** ==*g*gray**== ???g
-** ==*o*olive**== ???o
-** ==*b*brown**== ???b
-** ==*d*gold**== ???d
+
+* Bright color for projects
+** 'Pay attention':
+*** ==*d*gold**== ???d
+** 'project' queues: projects
+*** ==*l*lime**==  ???l
+*** ==*a*aqua**== ???a
+*** ==*y*yellow**== ???y
+*** ==*S*deepSkyBlue**== ???S
+
+* Grayish colors for less important but not to be ignored
+** 'structural' queues: making things work
+*** ==*L*lightGray**== ???L
+*** ==*s*silver**== ???s
+*** ==*g*gray**== ???g
+*** ==*o*olive**== ???o
+
+* Dark color to skip visually
+** 'hide' queues: hide in plain sight
+*** ==*b*brown**== ???b
+
+=Special Keywords=
+* %DASHHIDE:ON% and %DASHHIDE:OFF% will cause the dash module to ignore content 
+between these two keywords.
+
+
