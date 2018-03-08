@@ -46,7 +46,8 @@ sub l00http_scratch_proc {
         if (defined ($form->{'scratchbuf'})) {
             $scratch = "$form->{'scratchbuf'} $scratch";
         }
-    } elsif (defined ($form->{'update'})) {
+    } elsif ((defined ($form->{'cbcopy'})) ||
+             (defined ($form->{'update'}))) {
         if (defined ($form->{'scratchbuf'})) {
             $scratch = $form->{'scratchbuf'};
         } else {
@@ -56,6 +57,9 @@ sub l00http_scratch_proc {
             $newwin = 'target="newwin"';
         } else {
             $newwin = '';
+        }
+        if (defined ($form->{'cbcopy'})) {
+            &l00httpd::l00setCB($ctrl, $scratch);
         }
     } elsif (defined ($form->{'clear'})) {
         $scratch = "";
@@ -91,9 +95,6 @@ sub l00http_scratch_proc {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://clipboard.txt');
         &l00httpd::l00fwriteBuf($ctrl, $scratch);
         &l00httpd::l00fwriteClose($ctrl);
-    }
-    if (defined ($form->{'cbcopy'})) {
-        &l00httpd::l00setCB($ctrl, $scratch);
     }
 
     print "scratch: >$scratch<\n", if ($ctrl->{'debug'} >= 5);
