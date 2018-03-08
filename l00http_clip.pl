@@ -80,6 +80,7 @@ sub l00http_clip_proc {
     print $sock "<input type=\"submit\" name=\"update\" value=\"Copy to CB\"> \n";
     print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
     print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+
     if (defined ($form->{'clip'}) && defined ($form->{'update'})) {
         # we actually set clipboard
         # now present button to send text [[/clip.pl?...|show text]] to clipboard
@@ -92,6 +93,9 @@ sub l00http_clip_proc {
 
     print $sock "View <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>, \n";
     print $sock "<a href=\"/launcher.htm?path=l00://clipboard.txt\">launcher</a>.\n";
+    if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg') || ($ctrl->{'os'} eq 'and')) {
+        print $sock "<a href=\"/activity.htm?paste=yes\">Activity</a>.\n";
+    }
     if ($url ne '') {
         print $sock "<br><input type=\"submit\" name=\"jumpurl\" value=\"2CB&URL\"> \n";
         print $sock "<a href=\"$url\">$url</a>.\n";

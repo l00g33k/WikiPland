@@ -92,7 +92,7 @@ sub l00http_activity_proc {
         }
         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             if ($path ne '') {
-                `start \"$path\"`;
+                `cmd /c start \"$path\"`;
             }
         }
     }
