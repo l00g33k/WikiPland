@@ -35,8 +35,8 @@ sub l00http_dash_outputsort {
         $bcat1 =~ s/!//g;
         $acat1 =~ s/\*\*//g;
         $bcat1 =~ s/\*\*//g;
-        $acat1 =~ s/\*[a-z]\*//g;
-        $bcat1 =~ s/\*[a-z]\*//g;
+        $acat1 =~ s/\*[a-zA-Z]\*//g;
+        $bcat1 =~ s/\*[a-zA-Z]\*//g;
 
         $acat2 =~ s/<.+?>//g;
         $bcat2 =~ s/<.+?>//g;
@@ -46,8 +46,8 @@ sub l00http_dash_outputsort {
         $bcat2 =~ s/!//g;
         $acat2 =~ s/\*\*//g;
         $bcat2 =~ s/\*\*//g;
-        $bcat2 =~ s/\*[a-z]\*//g;
-        $acat2 =~ s/\*[a-z]\*//g;
+        $bcat2 =~ s/\*[a-zA-Z]\*//g;
+        $acat2 =~ s/\*[a-zA-Z]\*//g;
 
         $aa = lc("$acat1 $acat2");
         $bb = lc("$bcat1 $bcat2");
