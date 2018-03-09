@@ -9,9 +9,9 @@ use l00httpd;
 
 my %config = (proc => "l00http_blog_proc",
               desc => "l00http_blog_desc");
-my ($buffer, $lastbuf);
+my ($buffer, $lastbuf, $quicktimesave);
 $lastbuf = '';
-
+$quicktimesave = '';
 
 
 sub blog_make_hdr {
@@ -155,7 +155,18 @@ sub l00http_blog_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blog</title>";
-    if (($url ne '') && (defined ($form->{'savequick'}))) {
+
+
+    if (defined ($form->{'newtime'})) {
+        if (defined ($form->{'saveurl'}) && ($form->{'saveurl'} eq 'on')) {
+            $quicktimesave = 'checked';
+        } else {
+            $quicktimesave = '';
+        }
+    }
+
+    if (($url ne '') && (defined ($form->{'savequick'})
+                      || (defined ($form->{'newtime'}) && ($quicktimesave eq 'checked')))) {
         # fake a 'Save' click
         $form->{'save'} = 1;
         # and setup redirect after we have saved
@@ -414,6 +425,9 @@ sub l00http_blog_proc {
     $tmp = 'style="height:1.4em; width:2.0em"';
     foreach $_ (@blocktime) {
         print $sock "<input type=\"submit\" name=\"newtime\"  value=\"$_\"  $tmp>\n";
+    }
+    if ($#blocktime >= 0) {
+        print $sock "<input type=\"checkbox\" name=\"saveurl\" $quicktimesave>Save&URL\n";
     }
     print $sock "<p>";
 
