@@ -28,7 +28,7 @@ sub l00http_lineeval_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@newfile, $lnno, $mvfrom, $tmp, @evals);
-    my ($pname, $fname);
+    my ($pname, $fname, $anchor);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -37,6 +37,11 @@ sub l00http_lineeval_proc (\%) {
     print $sock "<a href=\"#__end__\">Jump to end</a>\n";
     print $sock "<a name=\"__top__\"></a>\n";
 
+
+    $anchor = '';
+    if (defined ($form->{'anchor'})) {
+        $anchor = $form->{'anchor'};
+    }
 
     $pname = '';
     $fname = '';
@@ -55,6 +60,7 @@ sub l00http_lineeval_proc (\%) {
         } else {
             print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
         }
+        print $sock " - <a href=\"/view.htm?path=$form->{'path'}\">view</a>";
         print $sock " - <a href=\"/lineeval.htm?path=$form->{'path'}\">refresh</a>";
     }
 
@@ -159,16 +165,16 @@ sub l00http_lineeval_proc (\%) {
                 s/\r//;
                 s/\n//;
 
-                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?path=$form->{'path'}\">%4d</a>: ", $lnno);
-                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=rm&ln=$lnno\">rm</a> ";
-                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&cmd=mk&ln=$lnno\">mk</a> ";
+                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?path=$form->{'path'}&anchor=$anchor#$anchor\">%4d</a>: ", $lnno);
+                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
+                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";
                 if ($mvfrom ne '') {
-                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=mv&mvto=$lnno$mvfrom\">mv</a> ";
+                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=mv&mvto=$lnno$mvfrom&anchor=$anchor#$anchor\">mv</a> ";
                 } else {
                     print $sock "mv ";
                 }
                 for ($tmp = 0; $tmp <= $#evals; $tmp++) {
-                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno\">$evals[$tmp]</a> ";
+                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
                 }
                 if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {

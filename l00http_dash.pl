@@ -299,7 +299,7 @@ sub l00http_dash_proc {
                     $hot = $cat2;
                 }
                 # make a link to lineeval at the target line
-                $cat2 = "<a href=\"/lineeval.htm?path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
+                $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 if ($cat1 =~ /$catfil/i) {
                     # only if match cat1 filter
