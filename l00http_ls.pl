@@ -162,6 +162,9 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.mp4$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: video/mp4\r\n";
+    } elsif ($fname =~ /\.bmp$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/bmp\r\n";
     } elsif ($fname =~ /\.gif$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/gif\r\n";

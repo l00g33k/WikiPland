@@ -846,8 +846,8 @@ sub wikihtml {
                          $_ .
                         #" <a href=\"#$tag\">@</a>".
                          " <a href=\"#___top___\">^</a>" .
-                         " <a href=\"#toc_$tag\">toc</a>" .   # jump to this entry in TOC
-                          "<a href=\"#__toc__\">^</a>" .
+                         " <a href=\"#__toc__\">toc</a>" .
+                          "<a href=\"#toc_$tag\">@</a>" .   # jump to this entry in TOC
                          " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
                          " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
                          " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">$lnnoinfo</a>" .

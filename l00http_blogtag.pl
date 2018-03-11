@@ -37,7 +37,8 @@ sub l00http_blogtag_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blogtag</title>" .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
+        print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\">+ #</a><br>";
     }
 
     if (defined ($form->{'tag'})) {
