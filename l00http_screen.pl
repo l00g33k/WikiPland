@@ -57,6 +57,17 @@ sub l00http_screen_proc (\%) {
         $vol = 'N/A';
     }
 
+    print $sock "<a href=\"/screen.htm?inc10=\">++</a> - \n";
+    print $sock "<a href=\"/screen.htm?dec10=\">--</a> - \n";
+    for ($ii = 0; $ii < 255; $ii += 5) {
+        if ($ii == $vol) {
+            print $sock "[$ii] - \n";
+        } else {
+            print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
+        }
+    }
+    print $sock "<p>\n";
+
     print $sock "<form action=\"/screen.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
@@ -77,12 +88,6 @@ sub l00http_screen_proc (\%) {
     print $sock "</table>\n";
     print $sock "</form><br>\n";
 
-    print $sock "<a href=\"/screen.htm?inc10=\">++</a> - \n";
-    print $sock "<a href=\"/screen.htm?dec10=\">--</a> - \n";
-    for ($ii = 0; $ii < 255; $ii += 5) {
-        print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
-    }
-    print $sock "<p><hr><p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

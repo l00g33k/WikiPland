@@ -21,7 +21,7 @@ sub l00http_play_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $type, $vol);
+    my ($path, $type, $vol, $ii);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>play</title>" . $ctrl->{'htmlhead2'};
@@ -46,7 +46,14 @@ sub l00http_play_proc (\%) {
     }
 
     print $sock "<form action=\"/play.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    for ($ii = 0; $ii < 16; $ii++) {
+        if ($ii == $vol) {
+            print $sock "=[$vol]\n";
+        } else {
+            print $sock "<a href=\"/play.htm?vol=$ii&newvol=Set+vol\">=$ii</a>\n";
+        }
+    }
+    print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
     print $sock "            <td>New vol:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"vol\" value=\"$vol\"></td>\n";
@@ -57,9 +64,6 @@ sub l00http_play_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"midvol\" value=\"Mute\"> <input type=\"submit\" name=\"maxvol\" value=\"Max vol\"></td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>Vol: \n";
-    for ($vol = 0; $vol < 16; $vol++) {
-        print $sock "<a href=\"/play.htm?vol=$vol&newvol=Set+vol\">=$vol</a>\n";
-    }
     print $sock "</form>\n";
 
 
