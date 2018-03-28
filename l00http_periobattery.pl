@@ -176,7 +176,7 @@ sub l00http_periobattery_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $tmp2, $lnno, $keep, $noln, $ii, $lnnoold);
-    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep, $svgscr, $svgblife);
+    my ($svgperc, $svgvolt, $svgtemp, $svgmA, $svgmAAvg, $svgsleep, $svgscr, $svgblife, $svgmah, $svgmahsum);
     my ($yr, $mo, $da, $hr, $mi, $se, $now, $lastnow);
     my ($level, $vol, $temp, $curr, $dis_curr, $chg_src, $chg_en, $over_vchg, $batt_state, $timestamp);
     my ($mAsum, $scrbrgt, $backlight, $skipnow);
@@ -361,6 +361,8 @@ sub l00http_periobattery_proc {
         $svgmA = '';
         $svgmAAvg = '';
         $svgsleep = '';
+        $svgmah = '';
+        $svgmahsum = 0;
         $svgscr = '';
         $svgblife = '';
         if ($skip >= 0) {
@@ -406,9 +408,13 @@ sub l00http_periobattery_proc {
             $svgmAAvg .= "$times[$lnno],$tmp ";
             if ($lnno == 0) {
                 $svgsleep .= "$times[$lnno],0 ";
+                $svgmah .= "$times[$lnno],0 ";
             } else {
                 $tmp = $times[$lnno] - $times[$lnno - 1];
                 $svgsleep .= "$times[$lnno],$tmp ";
+                $svgmahsum += ($times[$lnno] - $times[$lnno - 1]) * $currs[$lnno] / 3600;
+                $tmp = int($svgmahsum);
+                $svgmah .= "$times[$lnno],$tmp ";
             }
             $svgscr .= "$times[$lnno],$scrbrgts[$lnno] ";
         }
@@ -416,6 +422,11 @@ sub l00http_periobattery_proc {
             &l00svg::plotsvg ('battpercentage', $svgperc, $graphwd, $graphht);
             print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
             print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
+        }
+        if ($svgmah ne '') {
+            &l00svg::plotsvg ('svgmah', $svgmah, $graphwd, $graphht);
+            $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
+            print $sock "<p>mAh:<br><a href=\"/svg.htm?graph=svgmah&view=\"><img src=\"/svg.htm?graph=svgmah\" alt=\"mAh readings\"></a>\n";
         }
         if ($svgsleep ne '') {
             &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
