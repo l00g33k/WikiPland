@@ -386,10 +386,10 @@ sub l00http_blog_proc {
     print $sock "<form action=\"/blog.htm\" method=\"get\">\n";
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
-    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\" accesskey=\"s\">\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
     if ($url ne '') {
         # Quick URL provided in target file, make a button to redirect
-        print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&URL\" accesskey=\"u\">\n";
+        print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&U&#818;RL\" accesskey=\"u\">\n";
     }
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
@@ -399,7 +399,7 @@ sub l00http_blog_proc {
     }
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"NewTime\">\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
     # display button to switch style
 
     print $sock "<input type=\"hidden\" name=\"stylecurr\" value=\"$stylenew\">\n";
