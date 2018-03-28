@@ -10,13 +10,13 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newwin, $freefmt, $smallhead, $catfil, $outputsort);
+my ($dash_all, $listbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
 $freefmt = '';
 $smallhead = '';
-$catfil = '.';
+$catflt = '.';
 $outputsort = '';
 
 sub l00http_dash_outputsort {
@@ -115,10 +115,10 @@ sub l00http_dash_proc {
         } else {
             $smallhead = '';
         }
-        if ((defined ($form->{'catfil'})) && (length($form->{'catfil'}) > 0)) {
-            $catfil = $form->{'catfil'};
+        if ((defined ($form->{'catflt'})) && (length($form->{'catflt'}) > 0)) {
+            $catflt = $form->{'catflt'};
         } else {
-            $catfil = '.';
+            $catflt = '.';
         }
     }
     if (defined ($form->{'dbg'})) {
@@ -167,7 +167,7 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-        print $sock "CatFil<input type=\"text\" size=\"4\" name=\"catfil\" value=\"$catfil\">\n";
+        print $sock "CatFlt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\">\n";
         print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -301,7 +301,7 @@ sub l00http_dash_proc {
                 # make a link to lineeval at the target line
                 $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
-                if ($cat1 =~ /$catfil/i) {
+                if ($cat1 =~ /$catflt/i) {
                     # only if match cat1 filter
 
                     # compute time.stop - time.start
