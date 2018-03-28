@@ -116,7 +116,7 @@ sub l00http_tree_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $nolinks, $nodirs, $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
     my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums, $base, $partpath);
-    my ($fil0no1exclu2inclu);
+    my ($fil0no1exclu2inclu, $scriptout, $outdir);
 
 
     $time0 = time;
@@ -495,22 +495,39 @@ sub l00http_tree_proc {
 
     my ($logname);
     $logname = "m5_\${DTSTAMP}\${DESC}.m5sz";
-    print $sock "<pre>\n";
-    print $sock "# md5sum computation can be accelerated by using bash commands as follow:\n";
-    print $sock "cd <a href=\"/clip.htm?update=Copy+to+CB&clip=$form->{'path'}.txt\">$form->{'path'}</a>\n";
-    print $sock "du -h\n";
+
+    # output dir
+    if (defined($ctrl->{'tmp'})) {
+        $outdir = $ctrl->{'tmp'};
+    } else {
+        $outdir = './';
+    }
+
+    $scriptout = '';
+    $scriptout .= "# md5sum computation can be accelerated by using bash commands as follow:\n";
+   #$scriptout .= "cd <a href=\"/clip.htm?update=Copy+to+CB&clip=$form->{'path'}.txt\">$form->{'path'}</a>\n";
+    $scriptout .= "cd $form->{'path'}\n";
+    $scriptout .= "du -h\n";
     $_ = $ctrl->{'now_string'};
     s/ /_/g;
-    print $sock "DTSTAMP=$_\n";
-    print $sock "OUTDIR=./\n";
-    print $sock "DESC=_\n";
-    print $sock "pwd > \${OUTDIR}$logname\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname\n";
-    print $sock "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname\n";
-    print $sock "# and send $logname to <a href=\"/ls.htm?path=$form->{'path'}\">tree.htm</a> for processing\n";
-    print $sock "#speed is approximately 12-26 secs/GB<p>\n";
-    print $sock "</pre>\n";
+    $scriptout .= "DTSTAMP=$_\n";
+    $scriptout .= "OUTDIR=$outdir\n";
+    $scriptout .= "DESC=_\n";
+    $scriptout .= "pwd > \${OUTDIR}$logname\n";
+    $scriptout .= "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname\n";
+    $scriptout .= "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname\n";
+    $scriptout .= "# and send $logname to <a href=\"/ls.htm?path=$form->{'path'}\">tree.htm</a> for processing\n";
+    $scriptout .= "# speed is approximately 12-26 secs/GB<p>\n";
 
+    if (open(OUT, ">${outdir}m5sz.sh")) {
+        print OUT $scriptout;
+        close(OUT);
+        print $sock "<a href=\"/clip.htm?update=Copy+to+CB&clip=source+${outdir}m5sz.sh\" target=\"_blank\">2CB</a>:".
+            " source <a href=\"/view.htm?path=${outdir}m5sz.sh&hidelnno=on\" target=\"_blank\">${outdir}m5sz.sh</a><br>\n";
+    }
+    print $sock "dir <a href=\"/ls.htm?path=$form->{'path'}\" target=\"_blank\">$form->{'path'}</a>\n";
+
+    print $sock "<pre>$scriptout\n</pre>\n";
 
     print $sock "<a name=\"__end__\"></a>\n";
     print $sock "<a href=\"#__top__\">jump to top</a>\n";
