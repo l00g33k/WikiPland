@@ -512,7 +512,12 @@ sub l00http_tree_proc {
     s/ /_/g;
     $scriptout .= "DTSTAMP=$_\n";
     $scriptout .= "OUTDIR=$outdir\n";
-    $scriptout .= "DESC=_\n";
+    if ($form->{'path'} =~ /[\\\/]([^\\\/]+)[\\\/]$/) {
+        $_ = "_$1";
+    } else {
+        $_ = '_';
+    }
+    $scriptout .= "DESC=$_\n";
     $scriptout .= "pwd > \${OUTDIR}$logname\n";
     $scriptout .= "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname\n";
     $scriptout .= "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname\n";
