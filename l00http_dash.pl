@@ -10,10 +10,11 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort);
+my ($dash_all, $listbang, $newbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
+$newbang = '';
 $freefmt = '';
 $smallhead = '';
 $catflt = '.';
@@ -98,6 +99,11 @@ sub l00http_dash_proc {
     } else {
         $newwin = '';
         $target = '';
+    }
+    if ((defined ($form->{'newbang'})) && ($form->{'newbang'} eq 'on')) {
+        $newbang = 'checked';
+    } else {
+        $newbang = '';
     }
     if ((defined ($form->{'freefmt'})) && ($form->{'freefmt'} eq 'on')) {
         $freefmt = 'checked';
@@ -212,6 +218,7 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
         }
         print $sock "$out.\n";
+print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>newbang\n";
     
         print $sock "</form>\n";
     }
@@ -389,17 +396,31 @@ sub l00http_dash_proc {
                     if (!defined($tasksSticky{$key})) {
                                  $tasksSticky{$key} = '';
                     }
+if ($newbang eq 'checked') {
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
-                        if ($dsc =~ /^!!/) {
+                        if ($dsc =~ /^[^!]/) {
                                      $tasksSticky{$key} .= " - $dsc";
                         }
                     } else {
                         # listing all !, i.e. listing ! and !!
-                        if ($dsc =~ /^!/) {
+                        if ($dsc =~ /^!{0,1}[^!]/) {
                                      $tasksSticky{$key} .= "<br>$dsc";
                         }
                     }
+} else {
+if ($listbang eq '') {
+    # not listing all !, i.e. listing !! only
+    if ($dsc =~ /^!!/) {
+                 $tasksSticky{$key} .= " - $dsc";
+    }
+} else {
+    # listing all !, i.e. listing ! and !!
+    if ($dsc =~ /^!/) {
+                 $tasksSticky{$key} .= "<br>$dsc";
+    }
+}
+}
                     if ($dsc =~ /^![^!]/) {
                                  $countBang{$key}++;
                     }
@@ -588,7 +609,7 @@ sub l00http_dash_proc {
         $out .= "<a href=\"/txtdopl.htm?runbare=RunBare&arg=&sel=&path=$form->{'path'}\">old only</a>\n";
         $out .= "* ===chapter=== to hide low priority tasks\n";
         $out .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
-        $out .= "* !! at start to also show in the latest\n";
+        $out .= "* !! at start to hide in the latest\n";
         $out .= "* ! at start to add to !# count\n";
         $out .= "* Make comment date in the future to hide it\n";
         $out .= "** arg eq 'new' displays only future dates\n";
