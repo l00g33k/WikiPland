@@ -1,8 +1,8 @@
 * Poor man's TCP port scanner. It takes 1 second to scan each port.
 ** This Perl one liner program produces the script for telnet.pl:
-    perl -e 'foreach $_ (1..254) {print "ADDR.1:192.168.0.$_:22\nSEND:\\n\nEXPECT.0:login:\n";}'
+    perl -e 'foreach $_ (1..254) {print "ADDR.300:192.168.1.$_:22\nSEND:\\n\nEXPECT.300:login:\n";}'
 ** To run, generate the script and save to a file and telnet execute the file
-* Or try this [[/eval.htm?submit=Eval&eval=%24o%3D%22%5Cn%22%3Bforeach+%24a+%28100..120%29%7B%24o.%3D%22ADDR.1%3A192.168.0.%24a%3A22%5CnSEND%3A%5C%5Cn%5CnEXPECT.0%3Alogin%3A%5Cn%22%3B%7D%0D%0A%24ctrl-%3E%7B%27l00file%27%7D-%3E%7B%27l00%3A%2F%2Ftelnet.txt%27%7D%3D%24o%0D%0A|eval expression]]
+* Or try this [[/eval.htm?submit=Eval&eval=%24o%3D%22%5Cn%22%3Bforeach+%24a+%28100..120%29%7B%24o.%3D%22ADDR.300%3A192.168.1.%24a%3A22%5CnSEND%3A%5C%5Cn%5CnEXPECT.300%3Alogin%3A%5Cn%22%3B%7D%0D%0A%24ctrl-%3E%7B%27l00file%27%7D-%3E%7B%27l00%3A%2F%2Ftelnet.txt%27%7D%3D%24o%0D%0A|eval expression]]
 and send l00://telnet.txt to [[/telnet.htm?execute=Execute&path=l00%3A%2F%2Ftelnet.txt|telnet]]
 * Script file format:
 ** The address to connect to is specified to the right of the first ':'. The '400' is timeout in msec:
