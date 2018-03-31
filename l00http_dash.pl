@@ -218,7 +218,7 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
         }
         print $sock "$out.\n";
-print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>newbang\n";
+print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
     
         print $sock "</form>\n";
     }
@@ -396,7 +396,7 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>newbang\n";
                     if (!defined($tasksSticky{$key})) {
                                  $tasksSticky{$key} = '';
                     }
-if ($newbang eq 'checked') {
+if ($newbang ne 'checked') {
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
                         if ($dsc =~ /^[^!]/) {
