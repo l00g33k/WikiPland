@@ -554,7 +554,6 @@ sub l00http_md5sizediff_proc {
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     # is there more than one file name recorded?
                     # count match
-                    $matchcnt = 0;
                     if ($#_ > 0) {
                         $matchlist = '';
                         # count match
@@ -566,6 +565,10 @@ sub l00http_md5sizediff_proc {
                                     $matchcnt++;
                                     if ($mode eq 'unix') {
                                         $matchlist .= "  \"$_[$ii]\"";
+                                    } elsif ($mode eq 'dos') {
+                                        $_ = $_[$ii];
+                                        tr/\//\\/;
+                                        $matchlist .= "     del \"$_\"\n";
                                     } else {
                                         $matchlist .= "         \"$_[$ii]\"\n";
                                     }
@@ -583,6 +586,10 @@ sub l00http_md5sizediff_proc {
                                 if (!($_[$ii] =~ /$match/)) {
                                     if ($mode eq 'unix') {
                                         $matchlist .= "  \"$_[$ii]\"";
+                                    } elsif ($mode eq 'dos') {
+                                        $_ = $_[$ii];
+                                        tr/\//\\/;
+                                        $matchlist .= "     rem \"$_\"\n";
                                     } else {
                                         $matchlist .= "         \"$_[$ii]\"\n";
                                     }
@@ -624,10 +631,8 @@ sub l00http_md5sizediff_proc {
                             for ($ii = 0; $ii <= $#_; $ii++) {
                                 $_[$ii] =~ s/^\.[\\\/]//;
                             }
-                            if ($matchcnt != 1) {
-                                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                                    "        # matchcnt: $matchcnt\n";
-                            }
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                "        # matchcnt: $matchcnt\n";
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 sprintf ("        #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n",   $cnt{$sname}).
                                 "        source \$SCRIPT  $md5sum $matchlist\n";
@@ -638,15 +643,15 @@ sub l00http_md5sizediff_proc {
                         } elsif ($mode eq 'dos') {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 sprintf ("rem %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt{$sname}).
-                                "$matchlist\n";
+                                "$matchlist";
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                     "     rem matchcnt: $matchcnt\n\n";
                         } else {
-                            if ($matchcnt != 1) {
-                                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                                         "    # matchcnt: $matchcnt\n";
-                            }
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 sprintf ("    %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt{$sname}).
-                                "$matchlist\n";
+                                "$matchlist";
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
+                                     "    # matchcnt: $matchcnt\n\n";
                         }
                         #print $sock "md5sum $sname: $#_ md5sum $md5sum:\n   ".join("\n   ", @_)."\n";
                         $cnt{$sname}++;
@@ -677,9 +682,13 @@ sub l00http_md5sizediff_proc {
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "fi\n";
                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "\n# Match = >$match<\n# $_\n";
             } elsif ($mode eq 'dos') {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "\nrem Match = >$match<\nrem $_\n";
+#               $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "\nrem Match = >$match<\nrem $_\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "rem Match = >$match<\nrem $_\n\n" . 
+                                                                                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"};
             } else {
-                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "\nMatch = >$match<\n$_\n";
+#               $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= "\nMatch = >$match<\n$_\n";
+                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} = "Match = >$match<\n$_\n\n" . 
+                                                                                $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"};
             }
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname self duplicated: $cnt{$sname} files\n\n";
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "%INCLUDE<l00://md5sizediff.$sname.self_dup.htm>%\n";
