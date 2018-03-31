@@ -732,10 +732,17 @@ sub l00http_blockfilter_proc {
         &l00httpd::l00fwriteBuf($ctrl, "<a href=\"#__top__\">jump to top</a><p>\n");
         &l00httpd::l00fwriteClose($ctrl);
 
+        # make no tag version of output
+        $_ = $ctrl->{'l00file'}->{"l00://blockfilter_output.txt"};
+        s/<.+?>//gms;
+        s/^\d+: //gms;
+        $ctrl->{'l00file'}->{"l00://blockfilter_output_notag.txt"} = $_;
+
         print $sock "<br>Processed $cnt lines. ".
-            "Output $noblkfound blocks and $hitlines lines to ".
-            "<a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a>; ".
-            "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a>...".
+            "Output $noblkfound blocks and $hitlines lines to:<br>".
+            "View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a>; ".
+            "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a> ... ".
+            "View <a href=\"/view.htm?path=l00://blockfilter_output_notag.txt\" target=\"_blank\">l00://blockfilter_output_notag.txt</a>".
             "<p>\n";
         print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         print $sock "<pre>$output</pre>\n";
