@@ -65,8 +65,8 @@ sub l00http_eval_proc {
     }
 
     print $sock "<form action=\"/eval.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"submit\" value=\"Eval\">\n";
-    print $sock "<br><textarea name=\"eval\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$eval</textarea><br>\n";
+    print $sock "<input type=\"submit\" name=\"submit\" value=\"Ev&#818;al\" accesskey=\"v\">\n";
+    print $sock "<br><textarea name=\"eval\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$eval</textarea><br>\n";
     print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "</form>\n";

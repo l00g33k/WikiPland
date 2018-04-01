@@ -71,9 +71,9 @@ sub l00http_dash_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii);
+    my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
-    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt);
+    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
@@ -259,6 +259,7 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
         $buffer =~ s/\r//g;
         @alllines = split ("\n", $buffer);
         $hide = 0;
+        $eqlvl = 0;
         foreach $this (@alllines) {
             $lnno++;
 
@@ -276,6 +277,9 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
             }
 
             $hot = '';
+            if ($this =~ /^(=+)[^=]/) {
+                $eqlvl = length($1);
+            }
             if ($this =~ /^%DASHCOLOR:(.+?):(.+?)%/) {
                 $cat1font1 = "<font style=\"color:$1;background-color:$2\">";
                 $cat1font2 = "<\/font>";
@@ -308,8 +312,10 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
                 # make a link to lineeval at the target line
                 $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
-                if ($cat1 =~ /$catflt/i) {
+                if (($cat1 =~ /$catflt/i) && 
+                    ($eqlvl == 2)) {
                     # only if match cat1 filter
+                    # and ^==cat2==
 
                     # compute time.stop - time.start
                     if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
@@ -603,23 +609,8 @@ if ($listbang eq '') {
         $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
                int($timetoday / 60 + 0.5)) . $out;
 
-        $out .= "* Color in section: *l*now** , *s*next** , *g*near** . Last updated first.\n";
-        $out .= "* List: <a href=\"/txtdopl.htm?runbare=RunBare&arg=&sel=&path=$form->{'path'}&arg=all\">all</a>; ";
-        $out .= "<a href=\"/txtdopl.htm?runbare=RunBare&arg=&sel=&path=$form->{'path'}&arg=new\">new only</a>; ";
-        $out .= "<a href=\"/txtdopl.htm?runbare=RunBare&arg=&sel=&path=$form->{'path'}\">old only</a>\n";
-        $out .= "* ===chapter=== to hide low priority tasks\n";
-        $out .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
-        $out .= "* !! at start to hide in the latest\n";
-        $out .= "* ! at start to add to !# count\n";
-        $out .= "* Make comment date in the future to hide it\n";
-        $out .= "** arg eq 'new' displays only future dates\n";
-        $out .= "** arg eq 'old' displays only older dates (default)\n";
-        $out .= "* \\n are converted to newlines\n";
-        $out .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
-        $out .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
-        $out .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
-        $out .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        $out .= "* Send shortcut [[/clip.htm?update=Copy+to+CB&clip=*+%5B%5B%2Fls.htm%3Ffind%3DFind%26findtext%3D%255E%255C%253D%253D%253D%26block%3D.%26prefmt%3Don%26path%3D%24%7C%3D%3D%3Dhidden+%3D%3D%3D%5D%5D+-+%5B%5B%2Fdash.htm%3Fpath%3D%24%7CProcessed+table%5D%5D%0D%0A&url=|to clipboard]]\n";
+
+        $out .= "* \n";
 
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
@@ -628,6 +619,34 @@ if ($listbang eq '') {
         if ($freefmt ne 'checked') {
             print $sock "</pre>\n";
         }
+
+        $help  = '';
+        $help .= "* Suggested color scheme (you don't have to use all):\n";
+        $help .= "** Highest priority: review these first\n";
+        $help .= "*** *r*r: red** : Preempts all\n";
+        $help .= "*** *D*D: deepPink** : KIV Q\n";
+        $help .= "*** *f*fuchsia** : Do @\n";
+        $help .= "** Filler tasks: something to do to fill time\n";
+        $help .= "*** *T*teal** *G*green**\n";
+        $help .= "** Projects: when you are ready for project work\n";
+        $help .= "*** *d*gold** : priority project\n";
+        $help .= "*** *l*lime**  *a*aqua**  *y*yellow**  *S*deepSkyBlue**\n";
+        $help .= "** Visual markers:\n";
+        $help .= "*** *L*lightGray**  *s*silver**  *g*gray**  *o*olive**\n";
+        $help .= "** To be ignored:\n";
+        $help .= "*** *b*brown**\n";
+        $help .= "* ===chapter=== to hide low priority tasks\n";
+        $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
+        $help .= "* !! at start to hide in the latest\n";
+        $help .= "* ! at start to hide but add to !# count\n";
+        $help .= "* Make comment date in the future to hide it\n";
+        $help .= "* \\n are converted to newlines\n";
+        $help .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
+        $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
+        $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
+        $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $help, 6);
+
         print $sock "<hr><a name=\"end\"></a>";
 
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
