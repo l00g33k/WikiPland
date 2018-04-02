@@ -165,6 +165,9 @@ sub l00http_lineeval_proc (\%) {
                 s/\r//;
                 s/\n//;
 
+                if (($lnno & 1) == 0) {
+                    print $sock "<font style=\"color:black;background-color:lightGray\">";
+                }
                 printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a>: ", $lnno);
                 print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
                 print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";
@@ -175,6 +178,9 @@ sub l00http_lineeval_proc (\%) {
                 }
                 for ($tmp = 0; $tmp <= $#evals; $tmp++) {
                     print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
+                }
+                if (($lnno & 1) == 0) {
+                    print $sock "</font>";
                 }
                 if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {
