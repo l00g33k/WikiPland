@@ -73,7 +73,7 @@ sub l00http_dash_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
-    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help);
+    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
@@ -406,7 +406,16 @@ if ($newbang ne 'checked') {
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
                         if ($dsc =~ /^[^!]/) {
+                            if ($dsc =~ /^\+(\d+) /) {
+                                # hide for +# days
+                                $tmp = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
+                                       &l00httpd::now_string2time($tim)) / (24 * 3600));
+                                if ($tmp >= $1) {
                                      $tasksSticky{$key} .= " - $dsc";
+                                }
+                            } else {
+                                     $tasksSticky{$key} .= " - $dsc";
+                            }
                         }
                     } else {
                         # listing all !, i.e. listing ! and !!
@@ -639,6 +648,7 @@ if ($listbang eq '') {
         $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
         $help .= "* !! at start to hide in the latest\n";
         $help .= "* ! at start to hide but add to !# count\n";
+        $help .= "* +# hides for # days from timestamp\n";
         $help .= "* Make comment date in the future to hide it\n";
         $help .= "* \\n are converted to newlines\n";
         $help .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
