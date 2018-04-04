@@ -10,7 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort);
+my ($dash_all, $listbang, $newbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort, $dashwidth);
 $dash_all = 'past';
 $listbang = '';
 $newwin = '';
@@ -19,6 +19,7 @@ $freefmt = '';
 $smallhead = '';
 $catflt = '.';
 $outputsort = '';
+$dashwidth = 50;;
 
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
@@ -62,6 +63,7 @@ sub l00http_dash_outputsort {
 
 sub l00http_dash_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
     "dash: color text file";
@@ -78,6 +80,10 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
     $dbg = 0;
+    if (defined($ctrl->{'dashwidth'})) {
+        $dashwidth = $ctrl->{'dashwidth'};
+    }
+
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
@@ -298,6 +304,7 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
                 $updateLast = '';
 
                 $cat2 = $1;
+                l00httpd::dbp($config{'desc'}, "cat2 >$cat2<\n"), if ($ctrl->{'debug'} >= 5);;
                 $jmp = $1;
                 $jmp =~ s/[^0-9A-Za-z]/_/g;
                 if ($dbg) {
@@ -406,15 +413,38 @@ if ($newbang ne 'checked') {
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
                         if ($dsc =~ /^[^!]/) {
+                            l00httpd::dbp($config{'desc'}, "dsc >$dsc<\n"), if ($ctrl->{'debug'} >= 5);
                             if ($dsc =~ /^\+(\d+) /) {
                                 # hide for +# days
                                 $tmp = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
                                        &l00httpd::now_string2time($tim)) / (24 * 3600));
                                 if ($tmp >= $1) {
-                                     $tasksSticky{$key} .= " - $dsc";
+                                    $tasksSticky{$key} .= " - $dsc";
+                                    if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/) {
+                                        if (length($1) > $dashwidth) {
+                                           l00httpd::dbp($config{'desc'}, "1: \$1=>$1<\n"), if ($ctrl->{'debug'} >= 5);;
+                                            $tasksSticky{$key} .= '\\n';
+                                        }
+                                    } else {
+                                        if (length($tasksSticky{$key}) > $dashwidth) {
+                                            l00httpd::dbp($config{'desc'}, "2:\n"), if ($ctrl->{'debug'} >= 5);;
+                                            $tasksSticky{$key} .= '\\n';
+                                        }
+                                    }
                                 }
                             } else {
-                                     $tasksSticky{$key} .= " - $dsc";
+                                    $tasksSticky{$key} .= " - $dsc";
+                                    if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/) {
+                                        if (length($1) > $dashwidth) {
+                                            l00httpd::dbp($config{'desc'}, "3: \$1=>$1<\n"), if ($ctrl->{'debug'} >= 5);;
+                                            $tasksSticky{$key} .= '\\n';
+                                        }
+                                    } else {
+                                        if (length($tasksSticky{$key}) > $dashwidth) {
+                                            l00httpd::dbp($config{'desc'}, "4:\n"), if ($ctrl->{'debug'} >= 5);;
+                                            $tasksSticky{$key} .= '\\n';
+                                        }
+                                    }
                             }
                         }
                     } else {
@@ -513,11 +543,12 @@ if ($listbang eq '') {
                     int($logedTime{$_} / 3600 * 10 + 0.5) / 10);
             }
             if (defined($tasksSticky{$_})) {
+                $tmp = $tasksSticky{$_};
                 if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
                     # current is also sticky, skip current
-                    push (@tops, "||$tasksTime{$_}$_||".           "$bang$tasksSticky{$_} ||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||".           "$bang$tmp ||``$_``");
                 } else {
-                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}$tasksSticky{$_} ||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}$tmp ||``$_``");
                 }
             } else {
                 push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
@@ -655,6 +686,7 @@ if ($listbang eq '') {
         $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
         $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
         $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+        $help .= "* Change 'dashwidth' using <a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D\">eval</a> = 50\n";
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $help, 6);
 
         print $sock "<hr><a name=\"end\"></a>";
