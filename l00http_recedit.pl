@@ -11,7 +11,7 @@ my %config = (proc => "l00http_recedit_proc",
 my ($record1, $displen, $add4h);
 $record1 = '^\d{8,8} \d{6,6} ';
 $displen = 50;
-$add4h = 6;
+$add4h = 5;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf) = @_;

@@ -107,7 +107,7 @@ sub l00http_blockfilter_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound, $blkexclufound);
+    my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound, $requiredfound_currln, $blkexclufound);
     my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $original);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
     my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2);
@@ -384,6 +384,7 @@ sub l00http_blockfilter_proc {
             ## read a new line
 
             $_ = &l00httpd::l00freadLine($ctrl);
+            $requiredfound_currln = 0;
             $lnno++;    # count line number
             # end of file yet?
             if ((!defined($_)) || $stopreadingfile) {
@@ -546,6 +547,7 @@ sub l00http_blockfilter_proc {
                             $inblk = 1;     # flag we are inside a found block
                             $blkstartfound = 1;
                             $blkendfound = 1;   # when no end provided
+#print "START: $_\n";
                             last;
                         }
                     }
@@ -579,8 +581,10 @@ sub l00http_blockfilter_proc {
                     # search for required
                     foreach $condition (@blkrequired) {
                         if (/$condition/i) {
+#print "find required: FOUND: >$condition< $_\n";
                             # found
                             $requiredfound = 1;
+                            $requiredfound_currln = 1;
                             last;
                         }
                     }
@@ -662,8 +666,11 @@ sub l00http_blockfilter_proc {
 
             # after scanned a line or after end of file
             # output if we have found a block with required
+#print __LINE__ . " (blkendfound=$blkendfound && (outputed=$outputed == 0))\n";
             if ($blkendfound && ($outputed == 0)) {
+#print __LINE__ . " ((requiredfound=$requiredfound) && (blkexclufound=$blkexclufound == 0))\n";
                 if (($requiredfound) && ($blkexclufound == 0)) {
+#print __LINE__ . " thisblockram=$thisblockram\n";
                     # found end of block
                     # do post blk eval
                     foreach $condition (@postblkeval) {
@@ -703,7 +710,11 @@ sub l00http_blockfilter_proc {
                 }
 
                 $outputed = 0;
-                $requiredfound = 0;
+                # $requiredfound_currln is reset to 0 for each new line
+                # When $requiredfound_currln is 1 it means the required 
+                # condition is found on the current line which is also 
+                # the start line, so remember it as found.
+                $requiredfound = $requiredfound_currln;
                 $blkexclufound = 0;
 
                 $hitlines = 1;

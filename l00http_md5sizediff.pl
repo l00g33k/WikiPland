@@ -634,7 +634,8 @@ sub l00http_md5sizediff_proc {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                 "        # matchcnt: $matchcnt\n";
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                                sprintf ("        #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n",   $cnt{$sname}).
+                                sprintf ("        #   %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n",   
+                                    $cnt{$sname}, $_[0]).
                                 "        source \$SCRIPT  $md5sum $matchlist\n";
                             if (($cnt{$sname} > 0) && ($cnt{$sname} % $progressstep) == 0) {
                                 $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
@@ -642,13 +643,15 @@ sub l00http_md5sizediff_proc {
                             }
                         } elsif ($mode eq 'dos') {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                                sprintf ("rem %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt{$sname}).
+                                sprintf ("rem %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n",   
+                                    $cnt{$sname}, $_[0]).
                                 "$matchlist";
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                      "     rem matchcnt: $matchcnt\n\n";
                         } else {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
-                                sprintf ("    %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt{$sname}).
+                                sprintf ("    %03d: dup: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n",   
+                                    $cnt{$sname}, $_[0]).
                                 "$matchlist";
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.self_dup.htm"} .= 
                                      "    # matchcnt: $matchcnt\n\n";
@@ -830,7 +833,7 @@ sub l00http_md5sizediff_proc {
                 foreach $pfname (sort keys %out) {
                     if ($mode eq 'unix') {
                         $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
-                            sprintf ("    #   %03d: ${sname}.only: $pfname $sizebymd5sum{$out{$pfname}} $out{$pfname}\n", $cnt);
+                            sprintf ("    #   %03d: ${sname}.only: %s %d %s\n", $pfname, $sizebymd5sum{$out{$pfname}}, $out{$pfname}, $cnt);
                         $pfname =~ s/^\.[\\\/]//;
                         $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.only.htm"} .= 
                             "    source \$SCRIPT  \"$pfname\"\n";
@@ -968,7 +971,7 @@ sub l00http_md5sizediff_proc {
                     ($#rmd5sum > 0) ||             # more than one md5sum in that, or
                     ($lmd5sum[0] ne $rmd5sum[0])) {# they are not equal
                     if ($mode eq 'unix') {
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: %s --- ", $cnt, $fname);
                         for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                             ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
                             if ($idx == 0) {
@@ -981,7 +984,7 @@ sub l00http_md5sizediff_proc {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
                         }
                     } elsif ($mode eq 'dos') {
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: %s --- ", $cnt, $fname);
                         for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                             ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
                             if ($idx == 0) {
@@ -994,7 +997,7 @@ sub l00http_md5sizediff_proc {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
                         }
                     } else {
-                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: $fname --- ", $cnt);
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: %s --- ", $cnt, $fname);
                         for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                             ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
                             if ($idx == 0) {
@@ -1102,7 +1105,7 @@ sub l00http_md5sizediff_proc {
                 # not a directory and is there
                 if ($mode eq 'unix') {
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        sprintf ("        #   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt);
+                        sprintf ("        #   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n", $cnt, $_[0]);
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $_[0] =~ s/^\.[\\\/]//;
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
@@ -1114,7 +1117,7 @@ sub l00http_md5sizediff_proc {
                 } elsif ($mode eq 'dos') {
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n", $cnt, $_[0]).
                         "        $_[0]\n";
                     @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
@@ -1122,7 +1125,7 @@ sub l00http_md5sizediff_proc {
                 } else {
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- $_[0]\n", $cnt).
+                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n", $cnt, $_[0]).
                         "        $_[0]\n";
                     @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
