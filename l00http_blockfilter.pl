@@ -108,7 +108,7 @@ sub l00http_blockfilter_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound, $blkexclufound);
-    my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $bare);
+    my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $original);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
     my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2);
     my ($cntsum, $valsum, $blockfilterstatfmt, $noblkstartOneTime, $stopreadingfile, $hitlinesoutputed);
@@ -278,7 +278,7 @@ sub l00http_blockfilter_proc {
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> target file.\n";
+    print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> target file.\n";
     print $sock "<input type=\"checkbox\" name=\"invert\" $inverexclu>Invert EXCLUDE\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"24\" name=\"path\" value=\"$form->{'path'}\">\n";
@@ -366,9 +366,25 @@ sub l00http_blockfilter_proc {
             eval $condition;
         }
 
+        ## Theory of operation
+            ## read a new line
+            ## process new line if we are not pass end of file
+                ## file exclude (may exclude block start)
+                ## honor skipto or scanuntil
+                ## do eval's
+                ## colorize
+                ## search for block start
+                ## in block processing
+            ## if we have found a new block, output last result
+            ## if we have found a new block, prepare for the new block
+            ## end of processing
+
         while (1) {
+
+            ## read a new line
+
             $_ = &l00httpd::l00freadLine($ctrl);
-            $lnno++;
+            $lnno++;    # count line number
             # end of file yet?
             if ((!defined($_)) || $stopreadingfile) {
                 # end of file
@@ -381,7 +397,8 @@ sub l00http_blockfilter_proc {
                 }
             }
 
-            # processing input lines
+            ## process new line if we are not pass end of file
+
             #   skip to/scan until search
             #   colorize
             #   search for block start/end/required
@@ -391,10 +408,11 @@ sub l00http_blockfilter_proc {
                 s/\n//;
                 $cnt++;
                 if (($cnt % 1000) == 0) {
-                    print $sock " .";
+                    print $sock " .";   # progress indicator
                 }
 
-                # file exclude (may exclude block start)
+                ## file exclude (may exclude block start)
+
                 # exclude (!! to include only) lines
                 $found = 0;
                 foreach $condition (@fileexclude) {
@@ -427,7 +445,8 @@ sub l00http_blockfilter_proc {
                     }
                 }
 
-                # skipto or scanuntil
+                ## honor skipto or scanuntil
+
                 if ($skip0scan1done2 == 0) {
                     # skip to mode
                     if (($#skipto == 0) && 
@@ -474,10 +493,9 @@ sub l00http_blockfilter_proc {
                     }
                 }
 
-                # exclude (!! to include only) lines
+                ## do eval's
 
-
-                $bare = $_;
+                $original = $_;
                 # do eval
                 foreach $condition (@eval) {
                     eval $condition;
@@ -485,9 +503,11 @@ sub l00http_blockfilter_proc {
                 $link = $_;
                 $link =~ s/</&lt;/g;
                 $link =~ s/>/&gt;/g;
-                $_ = $bare;
+                $_ = $original;
 
-                # colorize
+
+                ## colorize
+
                 foreach $condition (@color) {
                     if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
                         $link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i;
@@ -499,10 +519,11 @@ sub l00http_blockfilter_proc {
                 }
 
 
+                ## search for block start
+
                 $blkendfound = 0;
                 $blkstartfound = 0;
 
-                # search for block start
                 if (($#blkstart < 0) && $noblkstartOneTime) {
                     # blkstart condition not defined, simulate hitting at the start once
                     $noblkstartOneTime = 0;
@@ -529,6 +550,9 @@ sub l00http_blockfilter_proc {
                         }
                     }
                 }
+
+                ## in block processing
+
                 if ($inblk != 0) {
                     # search for block end but not on the starting line
                     if ($blkstartfound == 0) {
@@ -634,6 +658,8 @@ sub l00http_blockfilter_proc {
                 }
             }
 
+            ## if we have found a new block, output last result
+
             # after scanned a line or after end of file
             # output if we have found a block with required
             if ($blkendfound && ($outputed == 0)) {
@@ -666,6 +692,8 @@ sub l00http_blockfilter_proc {
 
                 $outputed = 1;
             }
+
+            ## if we have found a new block, prepare for the new block
 
             # found new start
             if ($blkstartfound) {
@@ -715,6 +743,9 @@ sub l00http_blockfilter_proc {
                     $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                 }
             }
+
+            ## end of processing
+
         }
         ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
         if ($hitlines > $maxlines) {

@@ -525,14 +525,14 @@ sub l00http_view_proc {
     print $sock "<form action=\"/view.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"find\" value=\"Find\">\n";
+    print $sock "<input type=\"submit\" name=\"find\" value=\"F&#818;ind\" accesskey=\"f\">\n";
     print $sock "</td><td>\n";
     print $sock "Find in this file\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "RegEx:\n";
+    print $sock "RegE&#818;x:\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\"> <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
+    print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\" accesskey=\"e\"> <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Block mark:\n";
