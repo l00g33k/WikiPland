@@ -367,17 +367,33 @@ sub l00http_blockfilter_proc {
         }
 
         ## Theory of operation
+        # 
+        # There will always be block start search hit
+        # There may or may not be a block end search hit. Where there 
+        #   is no expression, or no hit, the next block start search hit 
+        #   serves as block end hit
+        # Block start and block end are included in the required search, 
+        #   except when the next block start hit serves as the last block end hit,
+        #   then block end won't be included in the required search and display
+        # 
             ## read a new line
-            ## process new line if we are not pass end of file
-                ## file exclude (may exclude block start)
-                ## honor skipto or scanuntil
-                ## do eval's
+            ## process new line if we are not passed end of file
+                ## line exclusion (may exclude block start)
+                ## processing skipto or scanuntil
+                ## do eval's on all remaining lines in this block
                 ## colorize
                 ## search for block start
-                ## in block processing
+                ## in block processing: block end search, required/exclude, output
+                    ## in block: search for block end
+                    ## in block: search for required
+                    ## in block: search for block exclusion
+                    ## in block: gather stats
+                    ## in block: hide line
+                    ## in block: output
             ## if we have found a new block, output last result
             ## if we have found a new block, prepare for the new block
             ## end of processing
+        ## end of theory of operation
 
         while (1) {
 
@@ -398,7 +414,7 @@ sub l00http_blockfilter_proc {
                 }
             }
 
-            ## process new line if we are not pass end of file
+            ## process new line if we are not passed end of file
 
             #   skip to/scan until search
             #   colorize
@@ -412,12 +428,12 @@ sub l00http_blockfilter_proc {
                     print $sock " .";   # progress indicator
                 }
 
-                ## file exclude (may exclude block start)
+                ## line exclusion (may exclude block start)
 
                 # exclude (!! to include only) lines
                 $found = 0;
                 foreach $condition (@fileexclude) {
-                    if (substr($condition, 0, 2) eq '!!') {
+                    if ($condition =~ /^!!/) {
                         $tmp = $condition;
                         substr($tmp, 0, 2) = '';
                         if (!/$tmp/i) {
@@ -446,7 +462,7 @@ sub l00http_blockfilter_proc {
                     }
                 }
 
-                ## honor skipto or scanuntil
+                ## processing skipto or scanuntil
 
                 if ($skip0scan1done2 == 0) {
                     # skip to mode
@@ -494,7 +510,7 @@ sub l00http_blockfilter_proc {
                     }
                 }
 
-                ## do eval's
+                ## do eval's on all remaining lines in this block
 
                 $original = $_;
                 # do eval
@@ -547,15 +563,17 @@ sub l00http_blockfilter_proc {
                             $inblk = 1;     # flag we are inside a found block
                             $blkstartfound = 1;
                             $blkendfound = 1;   # when no end provided
-#print "START: $_\n";
                             last;
                         }
                     }
                 }
 
-                ## in block processing
+                ## in block processing: block end search, required/exclude, output
 
                 if ($inblk != 0) {
+
+                    ## in block: search for block end
+
                     # search for block end but not on the starting line
                     if ($blkstartfound == 0) {
                         if (($#blkstop == 0) && 
@@ -578,10 +596,10 @@ sub l00http_blockfilter_proc {
                         }
                     }
 
-                    # search for required
+                    ## in block: search for required
+
                     foreach $condition (@blkrequired) {
                         if (/$condition/i) {
-#print "find required: FOUND: >$condition< $_\n";
                             # found
                             $requiredfound = 1;
                             $requiredfound_currln = 1;
@@ -589,7 +607,8 @@ sub l00http_blockfilter_proc {
                         }
                     }
 
-                    # block exclude
+                    ## in block: search for block exclusion
+
                     $found = 0;
                     foreach $condition (@blkexclude) {
                         if (substr($condition, 0, 2) eq '!!') {
@@ -615,8 +634,8 @@ sub l00http_blockfilter_proc {
                     }
 
 
+                    ## in block: gather stats
 
-                    # gather stats
                     $statsidx = 0;
                     foreach $condition (@stats) {
                         ($evalName, $evalVals) = eval $condition;
@@ -635,7 +654,8 @@ sub l00http_blockfilter_proc {
                         $statsidx++;
                     }
 
-                    # hide line
+                    ## in block: hide line
+
                     $found = 0;
                     foreach $condition (@hide) {
                         if (/$condition/i) {
@@ -649,6 +669,7 @@ sub l00http_blockfilter_proc {
                         next;
                     }
 
+                    ## in block: collect output in this block
 
                     $viewskip = $cnt - 10;
                     if ($viewskip < 0) {
@@ -666,11 +687,8 @@ sub l00http_blockfilter_proc {
 
             # after scanned a line or after end of file
             # output if we have found a block with required
-#print __LINE__ . " (blkendfound=$blkendfound && (outputed=$outputed == 0))\n";
             if ($blkendfound && ($outputed == 0)) {
-#print __LINE__ . " ((requiredfound=$requiredfound) && (blkexclufound=$blkexclufound == 0))\n";
                 if (($requiredfound) && ($blkexclufound == 0)) {
-#print __LINE__ . " thisblockram=$thisblockram\n";
                     # found end of block
                     # do post blk eval
                     foreach $condition (@postblkeval) {
