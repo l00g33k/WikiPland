@@ -19,7 +19,7 @@ $freefmt = '';
 $smallhead = '';
 $catflt = '.';
 $outputsort = '';
-$dashwidth = 40;;
+$dashwidth = 35;;
 
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
@@ -73,7 +73,7 @@ sub l00http_dash_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl);
+    my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
@@ -239,6 +239,7 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
         undef %updateAge;
         undef %firstTime;
         undef %logedTime;
+        undef @wikiword;
 
         if ($freefmt ne 'checked') {
             print $sock "<pre>";
@@ -319,6 +320,15 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
                 # make a link to lineeval at the target line
                 $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
+                # find wikiwords. make a copy to zap [] and <> and http
+                $tmp = $dsc;
+                $tmp =~ s/\[\[.+?\]\]//g;
+                $tmp =~ s/<.+?>//g;
+                $tmp =~ s/https*:\/\/[^ ]+//g;
+                if (@_ = $tmp =~ /([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/g) {
+                    # save them
+                    push(@wikiword, @_);
+                }
                 if (($cat1 =~ /$catflt/i) && 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
@@ -668,6 +678,19 @@ if ($listbang eq '') {
             print $sock "</pre>\n";
         }
 
+        $out = '';
+        if ($#wikiword >= 0) {
+            $tmp = '';
+            $out .= "* Wikiwords found on this page: ";
+            foreach $_ (sort @wikiword) {
+                if ($tmp ne $_) {
+                    $out .= " - $_";
+                }
+                $tmp = $_;
+            }
+            $out .= "<p>\n";
+        }
+
         $help  = '';
         $help .= "* Suggested color scheme (you don't have to use all):\n";
         $help .= "** Highest priority: review these first\n";
@@ -700,8 +723,8 @@ if ($listbang eq '') {
         $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D50\" target=\"_blank\">50</a> - ";
         $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D80\" target=\"_blank\">80</a> - ";
         $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D120\" target=\"_blank\">120</a> - ";
-        $help .= "Now $ctrl->{'dashwidth'}\n";
-        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $help, 6);
+        $help .= "Now $dashwidth\n";
+        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
 
         print $sock "<hr><a name=\"end\"></a>";
 
