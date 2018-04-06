@@ -28,7 +28,7 @@ sub l00http_lineeval_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@newfile, $lnno, $mvfrom, $tmp, @evals);
-    my ($pname, $fname, $anchor);
+    my ($pname, $fname, $anchor, $clipurl, $clipexp);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -182,11 +182,13 @@ sub l00http_lineeval_proc (\%) {
                 if (($lnno & 1) == 0) {
                     print $sock "</font>";
                 }
+                $clipexp =  &l00httpd::urlencode ($_);
+                $clipurl = "<a href=\"/clip.htm?update=Copy+to+CB&clip=$clipexp\" target=\"_blank\">:</a>";
                 if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {
-                    print $sock ": <font style=\"color:black;background-color:lime\">$_</font>\n";
+                    print $sock "$clipurl <font style=\"color:black;background-color:lime\">$_</font>\n";
                 } else {
-                    print $sock ": $_\n";
+                    print $sock "$clipurl $_\n";
                 }
 
                 $lnno++;

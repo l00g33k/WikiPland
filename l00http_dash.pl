@@ -19,7 +19,7 @@ $freefmt = '';
 $smallhead = '';
 $catflt = '.';
 $outputsort = '';
-$dashwidth = 50;;
+$dashwidth = 40;;
 
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
@@ -75,7 +75,7 @@ sub l00http_dash_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
-    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp);
+    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
@@ -421,12 +421,16 @@ if ($newbang ne 'checked') {
                                 if ($tmp >= $1) {
                                     $tasksSticky{$key} .= " - $dsc";
                                     if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/) {
-                                        if (length($1) > $dashwidth) {
+                                        $tmpbuf = $1;
+                                        $tmpbuf =~ s/<.+?>//g;
+                                        if (length($tmpbuf) > $dashwidth) {
                                            l00httpd::dbp($config{'desc'}, "1: \$1=>$1<\n"), if ($ctrl->{'debug'} >= 5);;
                                             $tasksSticky{$key} .= '\\n';
                                         }
                                     } else {
-                                        if (length($tasksSticky{$key}) > $dashwidth) {
+                                        $tmpbuf = $tasksSticky{$key};
+                                        $tmpbuf =~ s/<.+?>//g;
+                                        if (length($tmpbuf) > $dashwidth) {
                                             l00httpd::dbp($config{'desc'}, "2:\n"), if ($ctrl->{'debug'} >= 5);;
                                             $tasksSticky{$key} .= '\\n';
                                         }
@@ -435,12 +439,16 @@ if ($newbang ne 'checked') {
                             } else {
                                     $tasksSticky{$key} .= " - $dsc";
                                     if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/) {
-                                        if (length($1) > $dashwidth) {
+                                        $tmpbuf = $1;
+                                        $tmpbuf =~ s/<.+?>//g;
+                                        if (length($tmpbuf) > $dashwidth) {
                                             l00httpd::dbp($config{'desc'}, "3: \$1=>$1<\n"), if ($ctrl->{'debug'} >= 5);;
                                             $tasksSticky{$key} .= '\\n';
                                         }
                                     } else {
-                                        if (length($tasksSticky{$key}) > $dashwidth) {
+                                        $tmpbuf = $tasksSticky{$key};
+                                        $tmpbuf =~ s/<.+?>//g;
+                                        if (length($tmpbuf) > $dashwidth) {
                                             l00httpd::dbp($config{'desc'}, "4:\n"), if ($ctrl->{'debug'} >= 5);;
                                             $tasksSticky{$key} .= '\\n';
                                         }
@@ -686,7 +694,13 @@ if ($listbang eq '') {
         $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
         $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
         $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        $help .= "* Change 'dashwidth' using <a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D\">eval</a> = 50\n";
+        $help .= "* Change 'dashwidth' using eval: ";
+        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D30\" target=\"_blank\">30</a> - ";
+        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D40\" target=\"_blank\">40</a> - ";
+        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D50\" target=\"_blank\">50</a> - ";
+        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D80\" target=\"_blank\">80</a> - ";
+        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D120\" target=\"_blank\">120</a> - ";
+        $help .= "Now $ctrl->{'dashwidth'}\n";
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $help, 6);
 
         print $sock "<hr><a name=\"end\"></a>";
