@@ -174,7 +174,7 @@ sub l00http_blockfilter_proc {
     }
 
 
-    if (defined ($form->{'clear'})) {
+    if (defined ($form->{'reset'})) {
         @skipto = ();
         @scanuntil = ();
         @fileexclude = ();
@@ -316,7 +316,7 @@ sub l00http_blockfilter_proc {
     print $sock "Maximum lines to display:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"8\" name=\"maxlines\" value=\"$maxlines\"> \n";
-    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+    print $sock "<input type=\"submit\" name=\"reset\" value=\"Reset\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table><br>\n";
@@ -396,11 +396,12 @@ sub l00http_blockfilter_proc {
         ## end of theory of operation
 
         while (1) {
+            $blkendfound = 0;
+            $requiredfound_currln = 0;
 
             ## read a new line
 
             $_ = &l00httpd::l00freadLine($ctrl);
-            $requiredfound_currln = 0;
             $lnno++;    # count line number
             # end of file yet?
             if ((!defined($_)) || $stopreadingfile) {
@@ -408,6 +409,7 @@ sub l00http_blockfilter_proc {
                 if ($eofoutput == 0) {
                     $eofoutput = 1;
                     $_ = '';
+                    $inblk = 1;     # flag we are inside a found block
                     $blkendfound = 1;   # simulate end found
                 } else {
                     last;
@@ -538,7 +540,10 @@ sub l00http_blockfilter_proc {
 
                 ## search for block start
 
-                $blkendfound = 0;
+                # There are 2 cases:
+                # 1) START, ... EN, ..., START, ... EN, ...
+                # 2) START, ... START, ...
+
                 $blkstartfound = 0;
 
                 if (($#blkstart < 0) && $noblkstartOneTime) {
@@ -546,14 +551,12 @@ sub l00http_blockfilter_proc {
                     $noblkstartOneTime = 0;
                     $inblk = 1;     # flag we are inside a found block
                     $blkstartfound = 1;
-                    $blkendfound = 1;   # when no end provided
                 } elsif (($#blkstart == 0) && 
                     ($blkstart[0] =~ /^(\d+)$/)) {
                     # only one condition and it is a number, take it as a line number
                     if ($1 == $lnno) {
                         $inblk = 1;     # flag we are inside a found block
                         $blkstartfound = 1;
-                        $blkendfound = 1;   # when no end provided
                     }
                 } else {
                     # regex search
@@ -562,7 +565,6 @@ sub l00http_blockfilter_proc {
                             # found
                             $inblk = 1;     # flag we are inside a found block
                             $blkstartfound = 1;
-                            $blkendfound = 1;   # when no end provided
                             last;
                         }
                     }
@@ -595,6 +597,38 @@ sub l00http_blockfilter_proc {
                             }
                         }
                     }
+
+
+                    ## if we have found a new block, or current end of block, output last result
+
+                    if (($blkendfound || $blkstartfound)
+                        && ($outputed == 0)) {
+                        if (($requiredfound) && ($blkexclufound == 0)) {
+                            # found end of block
+                            # do post blk eval
+                            foreach $condition (@postblkeval) {
+                                eval $condition;
+                            }
+
+                            $viewskip = $cnt - 10;
+                            if ($viewskip < 0) {
+                                $viewskip = 0;
+                            }
+                            $hitlines++;
+
+                            $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
+                            $noblkfound++;
+                            $output .= $thisblockdsp;
+                            $outram .= $thisblockram;
+
+                            # displayed line accounting
+                            $hitlinesoutputed += $hitlines;
+                            $hitlines = 0;
+                        }
+
+                        $outputed = 1;
+                    }
+
 
                     ## in block: search for required
 
@@ -681,41 +715,6 @@ sub l00http_blockfilter_proc {
                         $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     }
                 }
-            }
-
-            ## if we have found a new block, output last result
-
-            # after scanned a line or after end of file
-            # output if we have found a block with required
-            if ($blkendfound && ($outputed == 0)) {
-                if (($requiredfound) && ($blkexclufound == 0)) {
-                    # found end of block
-                    # do post blk eval
-                    foreach $condition (@postblkeval) {
-                        eval $condition;
-                    }
-
-                    $viewskip = $cnt - 10;
-                    if ($viewskip < 0) {
-                        $viewskip = 0;
-                    }
-                    $hitlines++;
-                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                    if ($hitlines + $hitlinesoutputed < $maxlines) {
-                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                    }
-
-                    $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
-                    $noblkfound++;
-                    $output .= $thisblockdsp;
-                    $outram .= $thisblockram;
-
-                    # displayed line accounting
-                    $hitlinesoutputed += $hitlines;
-                    $hitlines = 0;
-                }
-
-                $outputed = 1;
             }
 
             ## if we have found a new block, prepare for the new block
