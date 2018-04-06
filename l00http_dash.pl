@@ -78,6 +78,7 @@ sub l00http_dash_proc {
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
+    my (%addtimeval, @blocktime, $modified, $addtime);
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -240,39 +241,56 @@ sub l00http_dash_proc {
         undef %logedTime;
         undef @wikiword;
         undef %lineevallns;
+        undef @blocktime;
 
-        if (defined($form->{'add1hr'}) || defined($form->{'add1dy'})) {
-            if (defined($form->{'add1hr'})) {
-                $tmp = 3600;
-            } elsif (defined($form->{'add8hr'})) {
-                $tmp = 3600 * 8;
-            } elsif (defined($form->{'add1dy'})) {
-                $tmp = 3600 * 24;
-            } elsif (defined($form->{'add3dy'})) {
-                $tmp = 3600 * 24 * 3;
-            } else {
-                $tmp = 3600 * 24 * 7;
-            }
-            # 
-            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-                $buffer = &l00httpd::l00freadAll($ctrl);
-            }
-            $buffer =~ s/\r//g;
-            @alllines = split ("\n", $buffer);
+        # read BLOGTIME tags    
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+        }
+        $buffer =~ s/\r//g;
+        @alllines = split ("\n", $buffer);
 
+        undef %addtimeval;
+        for ($ii = 0; $ii <= $#alllines; $ii++) {
+            if ($alllines[$ii] =~ /^%BLOGTIME:(.+?)%/) {
+                $tmp = $1;
+                $addtimeval{$tmp} = 0;
+                if ($tmp =~ /(\d+)m/) {
+                    $addtimeval{$tmp} = 60 * $1;
+                }
+                if ($tmp =~ /(\d+)h/) {
+                    $addtimeval{$tmp} = 3600 * $1;
+                }
+                if ($tmp =~ /(\d+)d/) {
+                    $addtimeval{$tmp} = 24 * 3600 * $1;
+                }
+                push(@blocktime, $tmp);
+            }
+        }
+
+        if (defined ($form->{'newtime'})) {
+            # new time
+            $addtime = $addtimeval{$form->{'newtime'}};
+        }
+
+        $out = '';
+        $modified = 0;
+        for ($ii = 0; $ii <= $#alllines; $ii++) {
+            if (defined($form->{"ln$ii"})) {
+                my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
+                    localtime (time + $addtime);
+                $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
+                    $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+                $modified++;
+            }
+            $out .= "$alllines[$ii]\n";
+        }
+        if ($modified) {
+            # modify, backup and write update
             &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
             &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
-            for ($ii = 0; $ii <= $#alllines; $ii++) {
-                if (defined($form->{"ln$ii"})) {
-                    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time + $tmp);
-                    &l00httpd::l00fwriteBuf($ctrl, 
-                        sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
-                        $year + 1900, $mon+1, $mday, $hour, $min, $sec));
-                }
-                &l00httpd::l00fwriteBuf($ctrl, "$alllines[$ii]\n");
-            }
+            &l00httpd::l00fwriteBuf($ctrl, $out);
             &l00httpd::l00fwriteClose($ctrl);
-
         }
 
 
@@ -672,11 +690,10 @@ sub l00http_dash_proc {
 
         $out = "<form action=\"/dash.htm\" method=\"get\">\n$out\n";
         $out .= "Add ";
-        $out .= "<input type=\"submit\" name=\"add1hr\" value=\"1hr\"> ";
-        $out .= "<input type=\"submit\" name=\"add8hr\" value=\"8hr\"> ";
-        $out .= "<input type=\"submit\" name=\"add1dy\" value=\"1day\"> ";
-        $out .= "<input type=\"submit\" name=\"add3dy\" value=\"3day\"> ";
-        $out .= "<input type=\"submit\" name=\"add1wk\" value=\"1wk\"> ";
+        $tmp = 'style="height:1.4em; width:2.0em"';
+        foreach $_ (@blocktime) {
+            $out .= "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
+        }
         $out .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
         $out .= "to checked items</form>\n";
 
