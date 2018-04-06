@@ -139,6 +139,7 @@ sub wikihtml {
     #        4=bare, no header/footer
     #        8=open link in 'newwin'
     #       16=newline is always <br>
+    #       32=if link is graphics, embedded instead of linking to it
     # $ctrl: system variables
     # $pname: current path for relateive wikiword links
     my ($ctrl, $pname, $inbuf, $flags, $fname) = @_;
@@ -883,7 +884,7 @@ sub wikihtml {
         s/\n//g;
         s/\r//g;
         # Make [[[http://...jpg]]] <img src...>
-        s/\[\[\[(https*:\/\/[^ ]+\.)(jpg|png|bmp|gif|svg|jpeg)\]\]\]/<img src=\"$1$2\">/g;
+        s/\[\[\[(https*:\/\/[^ ]+\.)(jpg|png|bmp|gif|svg|jpeg|wmf)\]\]\]/<img src=\"$1$2\">/g;
         # Makes http links a [[wikilink]]
         # For http(s) not preceeded by [|" becomes whatever [[http...]]
         s|([^\[\|"])(https*://[^ ]+)|$1\[\[$2\]\]|g;
@@ -929,16 +930,18 @@ sub wikihtml {
 #d612                        $http = "/ls.htm/$tmp?path=".$pname.$http;
                         $http = "/ls.htm/$tmp.htm?path=".$pname.$http;
                     }
-                    # no longer automatically make links to image embedded
-                    # as it bloats the page
-                    $_ .= $tx . "<a href=\"$http\">$desc</a>";
-#                   if (($url !~ /\|/) && 
-#                       ($http =~ /(\.jpg|\.png|\.bmp|\.gif|\.svg|\.jpeg)/i)) {
-#                       # make [[*.jpg]
-#                       $_ .= $tx . "<img src=\"$http\">";
-#                   } else {
-#                       $_ .= $tx . "<a href=\"$http\">$desc</a>";
-#                   }
+                    # 32=if link is graphics, embedded instead of linking to it
+                    if ($flags & 32) {
+                        if (($url !~ /\|/) && 
+                            ($http =~ /(\.jpg|\.png|\.bmp|\.gif|\.svg|\.jpeg|\.wmf)/i)) {
+                            # make [[*.jpg]]
+                            $_ .= $tx . "<img src=\"$http\">";
+                        } else {
+                            $_ .= $tx . "<a href=\"$http\">$desc</a>";
+                        }
+                    } else {
+                        $_ .= $tx . "<a href=\"$http\">$desc</a>";
+                    }
                 }
             } else {
                 # just a bare line without [[wikilink]]

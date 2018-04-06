@@ -32,7 +32,7 @@ my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
 my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
-my ($lfisbr, $chno, $bare, $hilite);
+my ($lfisbr, $embedpic, $chno, $bare, $hilite);
 
 my $path;
 my $read0raw1 = 0;
@@ -46,6 +46,7 @@ $showpage = 'checked';
 $sortkey1name2date = 1;
 $lastpname = '';
 $lfisbr = '';
+$embedpic = '';
 $chno = '';
 $bare = '';
 $hilite = '';
@@ -254,6 +255,11 @@ sub l00http_ls_proc {
         } else {
             $lfisbr = '';
         }
+        if (defined ($form->{'embedpic'}) && ($form->{'embedpic'} eq 'on')) {
+            $embedpic = 'checked';
+        } else {
+            $embedpic = '';
+        }
         if (defined ($form->{'chno'}) && ($form->{'chno'} eq 'on')) {
             $chno = 'checked';
         } else {
@@ -271,6 +277,9 @@ sub l00http_ls_proc {
 
     if ($lfisbr eq 'checked') {
         $wikihtmlflags += 16;      # flags for &l00wikihtml::wikihtml for 16=newline is always <br>
+    }
+    if ($embedpic eq 'checked') {
+        $wikihtmlflags += 32;      # flags for &l00wikihtml::wikihtml for 32=to embed pictures<br>
     }
 
     print "ls: path >$path<\n", if ($ctrl->{'debug'} >= 3);
@@ -1362,7 +1371,8 @@ sub l00http_ls_proc {
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"crc32\">Compute crc32</td>\n";
-            print $sock "        <td><input type=\"checkbox\" name=\"lfisbr\" $lfisbr>Newline is paragraph</td>\n";
+            print $sock "        <td><input type=\"checkbox\" name=\"lfisbr\" $lfisbr>Newline is paragraph<br>\n";
+            print $sock "            <input type=\"checkbox\" name=\"embedpic\" $embedpic>Embed picstures</td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
