@@ -78,7 +78,7 @@ sub l00http_dash_proc {
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
-    my (%addtimeval, @blocktime, $modified, $addtime);
+    my (%addtimeval, @blocktime, $modified, $addtime, $checked);
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -271,6 +271,8 @@ sub l00http_dash_proc {
         if (defined ($form->{'newtime'})) {
             # new time
             $addtime = $addtimeval{$form->{'newtime'}};
+        } else {
+            $addtime = 0;
         }
 
         $out = '';
@@ -296,6 +298,7 @@ sub l00http_dash_proc {
         }
 
 
+        print $sock "<form action=\"/dash.htm\" method=\"post\">\n";
         if ($freefmt ne 'checked') {
             print $sock "<pre>";
         }
@@ -570,6 +573,13 @@ sub l00http_dash_proc {
         if ($dbg) {
             print $sock "Sort by time\n";
         }
+
+        if (defined ($form->{'chkall'})) {
+            $checked = 'checked';
+        } else {
+            $checked = '';
+        }
+
         $cnt = 0;
         push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** || || ||``tasksTime``");
         foreach $_ (sort keys %tasksTime) {
@@ -606,7 +616,7 @@ sub l00http_dash_proc {
             }
             if (defined($tasksSticky{$_})) {
                 $tmp = $tasksSticky{$_};
-                $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\">";
+                $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>";
                 if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
                     # current is also sticky, skip current
                     push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
@@ -688,26 +698,30 @@ sub l00http_dash_proc {
         $out =~ s/\\n/<br>/gm;
         $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
                int($timetoday / 60 + 0.5)) . $out;
-
-
-        $out = "<form action=\"/dash.htm\" method=\"post\">\n$out\n";
-        $out .= "Add ";
-        $tmp = 'style="height:1.4em; width:2.0em"';
-        foreach $_ (@blocktime) {
-            $out .= "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
-        }
-        $out .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
-        $out .= "to checked items</form>\n";
-
-        #$out .= "* \n";
-
+        $out .= " \n";
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
         print $sock $out;
 
+
         if ($freefmt ne 'checked') {
             print $sock "</pre>\n";
         }
+
+        # form elements
+        print $sock "Add ";
+        $tmp = 'style="height:1.4em; width:2.0em"';
+        foreach $_ (@blocktime) {
+            print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
+        }
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
+        print $sock "to checked items<p>\n";
+        $tmp = 'style="height:1.4em; width:6.0em"';
+        print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check All\" $tmp> ";
+        print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check None\" $tmp> ";
+        print $sock "</form>\n";
+
+
 
         $out = '';
         if ($#wikiword >= 0) {
