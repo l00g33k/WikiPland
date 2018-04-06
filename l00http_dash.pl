@@ -688,7 +688,7 @@ sub l00http_dash_proc {
                int($timetoday / 60 + 0.5)) . $out;
 
 
-        $out = "<form action=\"/dash.htm\" method=\"get\">\n$out\n";
+        $out = "<form action=\"/dash.htm\" method=\"post\">\n$out\n";
         $out .= "Add ";
         $tmp = 'style="height:1.4em; width:2.0em"';
         foreach $_ (@blocktime) {
