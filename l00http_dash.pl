@@ -276,7 +276,9 @@ sub l00http_dash_proc {
         $out = '';
         $modified = 0;
         for ($ii = 0; $ii <= $#alllines; $ii++) {
-            if (defined($form->{"ln$ii"})) {
+            if ((defined($form->{"ln$ii"})) &&          # selected line
+                ($ii > 0) &&                            # there is a line before this
+                ($alllines[$ii - 1] =~ /^==[^=]/)) {     # and is level 2 ==
                 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
                     localtime (time + $addtime);
                 $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
