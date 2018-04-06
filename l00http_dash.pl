@@ -73,9 +73,9 @@ sub l00http_dash_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword);
+    my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword, $lineevalln, %lineevallns);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
-    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmpbuf);
+    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
 
@@ -224,7 +224,6 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
         }
         print $sock "$out.\n";
-print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
     
         print $sock "</form>\n";
     }
@@ -240,6 +239,42 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
         undef %firstTime;
         undef %logedTime;
         undef @wikiword;
+        undef %lineevallns;
+
+        if (defined($form->{'add1hr'}) || defined($form->{'add1dy'})) {
+            if (defined($form->{'add1hr'})) {
+                $tmp = 3600;
+            } elsif (defined($form->{'add8hr'})) {
+                $tmp = 3600 * 8;
+            } elsif (defined($form->{'add1dy'})) {
+                $tmp = 3600 * 24;
+            } elsif (defined($form->{'add3dy'})) {
+                $tmp = 3600 * 24 * 3;
+            } else {
+                $tmp = 3600 * 24 * 7;
+            }
+            # 
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                $buffer = &l00httpd::l00freadAll($ctrl);
+            }
+            $buffer =~ s/\r//g;
+            @alllines = split ("\n", $buffer);
+
+            &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            for ($ii = 0; $ii <= $#alllines; $ii++) {
+                if (defined($form->{"ln$ii"})) {
+                    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time + $tmp);
+                    &l00httpd::l00fwriteBuf($ctrl, 
+                        sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
+                        $year + 1900, $mon+1, $mday, $hour, $min, $sec));
+                }
+                &l00httpd::l00fwriteBuf($ctrl, "$alllines[$ii]\n");
+            }
+            &l00httpd::l00fwriteClose($ctrl);
+
+        }
+
 
         if ($freefmt ne 'checked') {
             print $sock "<pre>";
@@ -318,6 +353,7 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
                     $hot = $cat2;
                 }
                 # make a link to lineeval at the target line
+                $lineevalln = $lnno;    # next entry line number but it's zero based
                 $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 # find wikiwords. make a copy to zap [] and <> and http
@@ -418,8 +454,9 @@ print $sock "<input type=\"checkbox\" name=\"newbang\" $newbang>oldbang\n";
                     }
                     if (!defined($tasksSticky{$key})) {
                                  $tasksSticky{$key} = '';
+                                 $lineevallns{$key} = $lineevalln;
                     }
-if ($newbang ne 'checked') {
+
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
                         if ($dsc =~ /^[^!]/) {
@@ -471,19 +508,6 @@ if ($newbang ne 'checked') {
                                      $tasksSticky{$key} .= "<br>$dsc";
                         }
                     }
-} else {
-if ($listbang eq '') {
-    # not listing all !, i.e. listing !! only
-    if ($dsc =~ /^!!/) {
-                 $tasksSticky{$key} .= " - $dsc";
-    }
-} else {
-    # listing all !, i.e. listing ! and !!
-    if ($dsc =~ /^!/) {
-                 $tasksSticky{$key} .= "<br>$dsc";
-    }
-}
-}
                     if ($dsc =~ /^![^!]/) {
                                  $countBang{$key}++;
                     }
@@ -500,7 +524,7 @@ if ($listbang eq '') {
             if (($hot ne '') && defined($pname)) {
                 if (open(IN, "<${pname}$hot.txt")) {
                     $cnt = 0;
-#                   ($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
+                   #($tim) = $ctrl->{'now_string'} =~ /20\d\d(\d+ \d\d\d\d)\d\d/;
                     ($tim) = $ctrl->{'now_string'} =~ /20\d\d\d\d(\d+ \d\d\d\d)\d\d/;
                     while (<IN>) {
                         s/[\n\r]//g;
@@ -562,11 +586,12 @@ if ($listbang eq '') {
             }
             if (defined($tasksSticky{$_})) {
                 $tmp = $tasksSticky{$_};
+                $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\">";
                 if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
                     # current is also sticky, skip current
-                    push (@tops, "||$tasksTime{$_}$_||".           "$bang$tmp ||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
                 } else {
-                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}$tmp ||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang$tasksDesc{$_}$tmp ||``$_``");
                 }
             } else {
                 push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
@@ -617,32 +642,9 @@ if ($listbang eq '') {
                 print $sock "  disp $_\n";
             }
 
-            # ``tasksTime``
-#            s/``.+$//;
-
-# do not high this hour or today date/time stamp
-#           if (/^\|\|!!(.+)/) {
-#               # special with leading !! which are either iHot or !!!
-#               # highlight this hour
-#               /^(\|\|!!*)(\d\d\d\d \d\d)/;
-#               if ($2 ne substr($ctrl->{'now_string'}, 4, 7)) {
-#                   # highlight !!! because all iHot has current time
-#                   s/^(\|\| *!*)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2_$3<\/strong>/;
-#               }
-#           }
-#           if (/^\|\|\d/) {
-#               # special with leading !! which are either iHot or !!!
-#               # highlight this hour
-#               /^\|\|(\d\d\d\d) \d\d/;
-#               if ($1 eq substr($ctrl->{'now_string'}, 4, 4)) {
-#                   # highlight !!! because all iHot has current time
-#                   s/^(\|\|)(\d\d\d\d) (\d\d\d\d)/$1<strong>$2 $3<\/strong>/;
-#               }
-#           }
             push(@tops2, $_);
         }
         $anchor = '<a name="bangbang"></a>';
-#       foreach $_ (sort {$b cmp $a} @tops2) {
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds
             s/^(\|\|!*)\d\d(\d\d) (\d\d\d\d)\d\d\|\|/${1}${2}_$3||/;
@@ -668,7 +670,17 @@ if ($listbang eq '') {
                int($timetoday / 60 + 0.5)) . $out;
 
 
-        $out .= "* \n";
+        $out = "<form action=\"/dash.htm\" method=\"get\">\n$out\n";
+        $out .= "Add ";
+        $out .= "<input type=\"submit\" name=\"add1hr\" value=\"1hr\"> ";
+        $out .= "<input type=\"submit\" name=\"add8hr\" value=\"8hr\"> ";
+        $out .= "<input type=\"submit\" name=\"add1dy\" value=\"1day\"> ";
+        $out .= "<input type=\"submit\" name=\"add3dy\" value=\"3day\"> ";
+        $out .= "<input type=\"submit\" name=\"add1wk\" value=\"1wk\"> ";
+        $out .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
+        $out .= "to checked items</form>\n";
+
+        #$out .= "* \n";
 
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
