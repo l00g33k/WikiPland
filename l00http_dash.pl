@@ -670,7 +670,7 @@ sub l00http_dash_proc {
                int($timetoday / 60 + 0.5)) . $out;
 
 
-        $out = "<form action=\"/dash.htm\" method=\"get\">\n$out\n";
+        $out = "<form action=\"/dash.htm\" method=\"post\">\n$out\n";
         $out .= "Add ";
         $out .= "<input type=\"submit\" name=\"add1hr\" value=\"1hr\"> ";
         $out .= "<input type=\"submit\" name=\"add8hr\" value=\"8hr\"> ";
