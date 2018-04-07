@@ -176,12 +176,12 @@ sub l00http_dash_proc {
         }
         print $sock "$out.\n";
     
-        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
+        print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
         print $sock "CatFlt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\">\n";
-        print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
+        print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
             $_ = 'checked';

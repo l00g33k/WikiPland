@@ -287,7 +287,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "<hr><a name=\"end\"></a>\n";
 
     print $sock "<form action=\"/crypt.htm\" method=\"post\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
+    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
