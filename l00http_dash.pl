@@ -555,6 +555,16 @@ sub l00http_dash_proc {
                         if (/^#/) {
                             next;
                         }
+
+                        # convert || shortcut to clip.htm link
+                        # convert | shortcut to HTTP link
+                        if (($desc, $clip) = /^ *(.+) *\|\|(.+)$/) {
+                            $clip = &l00httpd::urlencode ($clip);
+                            $_ = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                        } elsif (($desc, $clip) = /^ *(.+) *\| *(.+) *$/) {
+                            $_ = "<a href=\"$clip\" target=\"_blank\">$desc</a>";
+                        }
+
                         $lnnostr = sprintf("%02d", $cnt);
                         #[[/ls.htm?path=$form->{'path'}#$jmp|iHot]]
                         #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a>
