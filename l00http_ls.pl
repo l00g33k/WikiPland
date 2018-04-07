@@ -801,7 +801,7 @@ sub l00http_ls_proc {
                         if (($skipto ne '') && ($lnno < $skipto)) {
                             next;
                         }
-                        if (($stopat ne '') && ($lnno > $stopat)) {
+                        if ($stopat ne '') {
                             my ($length, $start, $end);
                             $skiptohdr  = "Content limited to between line $skipto-$lnno. Show: ";
                             $length = $lnno - $skipto;
@@ -825,6 +825,8 @@ sub l00http_ls_proc {
                             $end = $start + $length;
                             $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
                             $skiptohdr .= "<br>\n";
+                        }
+                        if (($stopat ne '') && ($lnno > $stopat)) {
                             last;
                         }
 
@@ -1428,8 +1430,8 @@ sub l00http_ls_proc {
             if ($form->{'path'} !~ /^l00:\/\/.+/) {
                 # not RAM file, print entry fields
                 print $sock "    <tr>\n";
-                print $sock "        <td>Skip to: <input type=\"text\" size=\"10\" name=\"skipto\"></td>\n";
-                print $sock "        <td>Stop at: <input type=\"text\" size=\"10\" name=\"stopat\"></td>\n";
+                print $sock "        <td>Skip to: <input type=\"text\" size=\"10\" name=\"skipto\" value=\"$skipto\"></td>\n";
+                print $sock "        <td>Stop at: <input type=\"text\" size=\"10\" name=\"stopat\" value=\"$stopat\"></td>\n";
                 print $sock "    </tr>\n";
 
             }
