@@ -215,10 +215,12 @@ sub l00http_ls_proc {
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs, $showbak, $dir, @dirs);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
-    my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata);
-    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2);
+    my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
+    my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
+
 
     $wikihtmlflags = 0;
+    $skiptohdr = '';
 
     # 1) Determine operating path and mode
 
@@ -243,6 +245,9 @@ sub l00http_ls_proc {
             $target = "blog";
         }
     }
+
+    $skipto = '';
+    $stopat = '';
     if ((defined ($form->{'submit'})) && ($form->{'submit'} eq 'Submit')) {
         if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
             $sortkey1name2date = 2;
@@ -272,6 +277,20 @@ sub l00http_ls_proc {
         }
         if (defined ($form->{'hilite'})) {
             $hilite = $form->{'hilite'};
+        }
+
+        if (defined ($form->{'skipto'}) && ($form->{'skipto'} =~ /(\d+)/)) {
+            $skipto = $1;
+            $stopat = $skipto + 10;
+        }
+        if (defined ($form->{'stopat'}) && ($form->{'stopat'} =~ /(\d+)/)) {
+            $stopat = $1;
+            if ($skipto >= $stopat) {
+                $skipto  = $stopat - 10;
+                if ($skipto < 0) {
+                    $skipto = 0;
+                }
+            }
         }
     }
 
@@ -779,6 +798,36 @@ sub l00http_ls_proc {
                     }
                     while (<FILE>) {
                         $lnno++;
+                        if (($skipto ne '') && ($lnno < $skipto)) {
+                            next;
+                        }
+                        if (($stopat ne '') && ($lnno > $stopat)) {
+                            my ($length, $start, $end);
+                            $skiptohdr  = "Content limited to between line $skipto-$lnno. Show: ";
+                            $length = $lnno - $skipto;
+
+                            $start = $skipto - $length;
+                            if ($start < 1) {
+                                $start = 1;
+                            }
+                            $end = $start + $length;
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $start = $skipto - int($length/2);
+                            if ($start < 1) {
+                                $start = 1;
+                            }
+                            $end = $start + $length;
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $start = $skipto + int($length/2);
+                            $end = $start + $length;
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $start = $skipto + $length;
+                            $end = $start + $length;
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $skiptohdr .= "<br>\n";
+                            last;
+                        }
+
                         # special case for wikispaces
                         # images has the form:
                         # [[image:rear_medium.jpg width="560" height="261" caption="caption text"]]
@@ -1037,6 +1086,7 @@ sub l00http_ls_proc {
                         # find without displaying page
                     } else {
                         $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
+                        $buf = "$skiptohdr$buf<br>\n$skiptohdr\n";
                         if (defined ($form->{'hiliteln'})) {
                             foreach $_ (split ("\n", $buf)) {
                                 if (/<a name=\"line$form->{'hiliteln'}\"><\/a>/) {
@@ -1375,6 +1425,14 @@ sub l00http_ls_proc {
             print $sock "            <input type=\"checkbox\" name=\"embedpic\" $embedpic>Embed picstures</td>\n";
             print $sock "    </tr>\n";
 
+            if ($form->{'path'} !~ /^l00:\/\/.+/) {
+                # not RAM file, print entry fields
+                print $sock "    <tr>\n";
+                print $sock "        <td>Skip to: <input type=\"text\" size=\"10\" name=\"skipto\"></td>\n";
+                print $sock "        <td>Stop at: <input type=\"text\" size=\"10\" name=\"stopat\"></td>\n";
+                print $sock "    </tr>\n";
+
+            }
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"showbak\">Show .bak files</td>\n";
