@@ -1424,7 +1424,7 @@ sub l00http_ls_proc {
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"crc32\">Compute crc32</td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"lfisbr\" $lfisbr>Newline is paragraph<br>\n";
-            print $sock "            <input type=\"checkbox\" name=\"embedpic\" $embedpic>Embed picstures</td>\n";
+            print $sock "            <input type=\"checkbox\" name=\"embedpic\" $embedpic>Embed pictures</td>\n";
             print $sock "    </tr>\n";
 
             if ($form->{'path'} !~ /^l00:\/\/.+/) {
