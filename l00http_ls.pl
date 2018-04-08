@@ -178,6 +178,9 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.png$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/png\r\n";
+    } elsif ($fname =~ /\.wmf$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/wmf\r\n";
     } elsif (($fname =~ /\.bin$/i) ||
              ($fname =~ /\.exe$/i) ||
              ($fname =~ /\.dat$/i)) {
