@@ -161,6 +161,16 @@ sub l00http_lineeval_proc (\%) {
                 $mvfrom = '';
             }
 
+            # compose $ctrl->{'ymddCODE'}
+            my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+            $mon++;
+            $year = $year % 20;
+            if ($year >= 10) {
+                $year = 'a' + ($year - 10);
+            }
+            $ctrl->{'ymddCODE'} = sprintf ("$year%1x%02d", $mon, $mday);
+            #printf $sock ("$ctrl->{'ymddCODE'}\n");
+
             foreach $_ (@newfile) {
                 s/\r//;
                 s/\n//;
