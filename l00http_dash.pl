@@ -19,7 +19,7 @@ $freefmt = '';
 $smallhead = '';
 $catflt = '.';
 $outputsort = '';
-$dashwidth = 35;;
+$dashwidth = 30;;
 
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
@@ -388,6 +388,8 @@ sub l00http_dash_proc {
                     # save them
                     push(@wikiword, @_);
                 }
+                # ^ color fushcia/yellow for do now
+                $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                 if (($cat1 =~ /$catflt/i) && 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
@@ -452,7 +454,7 @@ sub l00http_dash_proc {
     #                           ($tasksTime{$key} lt $tim)) 
                     if (!defined($tasksTime{$key})) {
                                  $tasksTime{$key} = $tim;
-                                 $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
+#                                 $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                                  $tasksDesc{$key} = $dsc;
                                  $countBang{$key} = 0;
                                 if ($dbg) {
@@ -480,6 +482,7 @@ sub l00http_dash_proc {
                                  $lineevallns{$key} = $lineevalln;
                     }
 
+
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
                         if ($dsc =~ /^[^!]/) {
@@ -489,40 +492,28 @@ sub l00http_dash_proc {
                                 $tmp = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
                                        &l00httpd::now_string2time($tim)) / (24 * 3600));
                                 if ($tmp >= $1) {
-                                    $tasksSticky{$key} .= " - $dsc";
-                                    if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/) {
-                                        $tmpbuf = $1;
-                                        $tmpbuf =~ s/<.+?>//g;
-                                        if (length($tmpbuf) > $dashwidth) {
-                                           l00httpd::dbp($config{'desc'}, "1: \$1=>$1<\n"), if ($ctrl->{'debug'} >= 5);;
-                                            $tasksSticky{$key} .= '\\n';
-                                        }
-                                    } else {
-                                        $tmpbuf = $tasksSticky{$key};
-                                        $tmpbuf =~ s/<.+?>//g;
-                                        if (length($tmpbuf) > $dashwidth) {
-                                            l00httpd::dbp($config{'desc'}, "2:\n"), if ($ctrl->{'debug'} >= 5);;
-                                            $tasksSticky{$key} .= '\\n';
-                                        }
-                                    }
+                                    $tmp = 1;
+                                } else {
+                                    $tmp = 0;
                                 }
                             } else {
-                                    $tasksSticky{$key} .= " - $dsc";
-                                    if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/) {
-                                        $tmpbuf = $1;
-                                        $tmpbuf =~ s/<.+?>//g;
-                                        if (length($tmpbuf) > $dashwidth) {
-                                            l00httpd::dbp($config{'desc'}, "3: \$1=>$1<\n"), if ($ctrl->{'debug'} >= 5);;
-                                            $tasksSticky{$key} .= '\\n';
-                                        }
-                                    } else {
-                                        $tmpbuf = $tasksSticky{$key};
-                                        $tmpbuf =~ s/<.+?>//g;
-                                        if (length($tmpbuf) > $dashwidth) {
-                                            l00httpd::dbp($config{'desc'}, "4:\n"), if ($ctrl->{'debug'} >= 5);;
-                                            $tasksSticky{$key} .= '\\n';
-                                        }
-                                    }
+                                $tmp = 1;
+                            }
+                            if ($tmp) {
+                                $tasksSticky{$key} .= " - $dsc";
+                                if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/m) {
+                                    $tmpbuf = $1;
+                                } else {
+                                    $tmpbuf = $tasksSticky{$key};
+                                }
+                                $tmpbuf =~ s/<.+?>//g;
+                                $tmpbuf =~ s/\[\[.+?\|(.+?)\]\]/$1/g;
+                                $tmpbuf =~ s/\*\*$//;
+                                $tmpbuf =~ s/\*\* //g;
+                                $tmpbuf =~ s/\*.{0,1}\*//g;
+                                if (length($tmpbuf) > $dashwidth) {
+                                    $tasksSticky{$key} .= '\\n';
+                                }
                             }
                         }
                     } else {
@@ -601,11 +592,11 @@ sub l00http_dash_proc {
                 # if ($countBang{$_} > 0)
                 if ($listbang eq '') {
                     # not listing all !, i.e. listing !! only
-                    $bang = "<font style=\"color:black;background-color:silver\">".
+                    $bang = "<font style=\"color:black;background-color:gold\">".
                     "<a name=\"row$cnt\"></a><a href=\"/dash.htm?process=Process&path=$form->{'path'}&listbang=on#row$cnt\">!#$countBang{$_}</a></font>";
                 } else {
                     # listing all !, i.e. listing ! and !!
-                    $bang = "<font style=\"color:black;background-color:silver\">".
+                    $bang = "<font style=\"color:black;background-color:gold\">".
                     "<a name=\"row$cnt\"></a><a href=\"/dash.htm?process=Process&path=$form->{'path'}&listbang=#row$cnt\">!#$countBang{$_}</a></font>";
                 }
             } else {
@@ -749,18 +740,18 @@ sub l00http_dash_proc {
         $help  = '';
         $help .= "* Suggested color scheme (you don't have to use all):\n";
         $help .= "** Highest priority: review these first\n";
-        $help .= "*** *r*r: red** : Preempts all\n";
-        $help .= "*** *D*D: deepPink** : KIV Q\n";
-        $help .= "*** *f*f: fuchsia** : Do @\n";
+        $help .= "*** *r*r: red** : Preempts all, not recommended for project\n";
+        $help .= "*** *f*f: fuchsia** : KIV Q\n";
+        $help .= "*** *h*h: hotPink** : Do @\n";
         $help .= "** Filler tasks: something to do to fill time\n";
         $help .= "*** *T*T: teal** *G*G: green**\n";
         $help .= "** Projects: when you are ready for project work\n";
         $help .= "*** *d*d: gold** : priority project\n";
-        $help .= "*** *l*l: lime**  *a*a: aqua**  *y*y: yellow**  *S*S: deepSkyBlue**\n";
+        $help .= "*** *l*l: lime**  *a*a: aqua**  *y*y: yellow**  *S*S: deepSkyBlue**  *B*B: sandyBrown** \n";
         $help .= "** Visual markers:\n";
-        $help .= "*** *L*L: lightGray**  *s*s: silver**  *g*g: gray**  *o*o: olive**\n";
+        $help .= "*** *L*L: lightGray**  *s*s: silver**  *g*g: gray**\n";
         $help .= "** To be ignored:\n";
-        $help .= "*** *b*b: brown**\n";
+        $help .= "*** *b*b: brown**  *o*o: olive**\n";
         $help .= "* ===chapter=== to hide low priority tasks\n";
         $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
         $help .= "* !! at start to hide in the latest\n";

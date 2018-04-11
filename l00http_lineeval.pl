@@ -28,7 +28,7 @@ sub l00http_lineeval_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@newfile, $lnno, $mvfrom, $tmp, @evals);
-    my ($pname, $fname, $anchor, $clipurl, $clipexp);
+    my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -37,6 +37,7 @@ sub l00http_lineeval_proc (\%) {
     print $sock "<a href=\"#__end__\">Jump to end</a>\n";
     print $sock "<a name=\"__top__\"></a>\n";
 
+    $copy2clipboard = '^(.+)$';
 
     $anchor = '';
     if (defined ($form->{'anchor'})) {
@@ -90,7 +91,10 @@ sub l00http_lineeval_proc (\%) {
 
                 # %LINEEVAL~#~s/^(.)/#$1/%
                 if (/^\%LINEEVAL~(.+?)~(.+)\%$/) {
-                    push(@evals, $2);
+                    if ($1 ne 'copy2clipboard') {
+                        # don't list the user copy2clipboard regex
+                        push(@evals, $2);
+                    }
                 }
 
                 $lnno++;
@@ -148,7 +152,13 @@ sub l00http_lineeval_proc (\%) {
 
                 # %LINEEVAL~#~s/^(.)/#$1/%
                 if (/^\%LINEEVAL~(.+?)~(.+)\%$/) {
-                    push(@evals, $1);
+                    if ($1 eq 'copy2clipboard') {
+                        # remember the user copy2clipboard regex
+                        $copy2clipboard = $2;
+                    } else {
+                        # don't list the user copy2clipboard regex
+                        push(@evals, $1);
+                    }
                 }
             }
 
@@ -166,7 +176,7 @@ sub l00http_lineeval_proc (\%) {
             $mon++;
             $year = $year % 20;
             if ($year >= 10) {
-                $year = 'a' + ($year - 10);
+                $year = chr(0x61 + ($year - 10));
             }
             $ctrl->{'ymddCODE'} = sprintf ("$year%1x%02d", $mon, $mday);
             #printf $sock ("$ctrl->{'ymddCODE'}\n");
@@ -192,7 +202,12 @@ sub l00http_lineeval_proc (\%) {
                 if (($lnno & 1) == 0) {
                     print $sock "</font>";
                 }
-                $clipexp =  &l00httpd::urlencode ($_);
+                if (/$copy2clipboard/) {
+                    # paste the user regex string
+                    $clipexp =  &l00httpd::urlencode ($1);
+                } else {
+                    $clipexp =  &l00httpd::urlencode ($_);
+                }
                 $clipurl = "<a href=\"/clip.htm?update=Copy+to+CB&clip=$clipexp\" target=\"_blank\">:</a>";
                 if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {

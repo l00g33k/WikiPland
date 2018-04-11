@@ -1,5 +1,4 @@
-package l00wikihtml;
-
+package l00wikihtml; 
 use l00httpd;
 my (@toclist, $java, $showalljava);
 
@@ -33,7 +32,7 @@ $showalljava = "\n".
 
 
 my (%colorlu);
-$colorlukeys = 'rylsafgodGDbSpLT';
+$colorlukeys = 'rylsafgodGDbSpLTBhu';
 $colorlu{'r'} = 'red';
 $colorlu{'y'} = 'yellow';
 $colorlu{'l'} = 'lime';
@@ -50,6 +49,9 @@ $colorlu{'S'} = 'DeepSkyBlue';
 $colorlu{'p'} = 'Purple';
 $colorlu{'L'} = 'LightGray';
 $colorlu{'T'} = 'Teal';
+$colorlu{'B'} = 'SandyBrown';
+$colorlu{'h'} = 'HotPink';
+$colorlu{'u'} = 'blue';
 
 
 
