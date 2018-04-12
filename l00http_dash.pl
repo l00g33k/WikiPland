@@ -697,8 +697,10 @@ sub l00http_dash_proc {
             $out .= "$_\n";
         }
         $out =~ s/\\n/<br>/gm;
-        $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
-               int($timetoday / 60 + 0.5)) . $out;
+        if ($smallhead ne 'checked') {
+            $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
+                   int($timetoday / 60 + 0.5)) . $out;
+        }
         $out .= " \n";
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
