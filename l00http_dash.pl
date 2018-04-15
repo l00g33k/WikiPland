@@ -727,7 +727,7 @@ sub l00http_dash_proc {
 
 
         $out = '';
-        if ($#wikiword >= 0) {
+        if (($#wikiword >= 0) && ($smallhead ne 'checked')) {
             $tmp = '';
             $out .= "* Wikiwords found on this page: ";
             foreach $_ (sort @wikiword) {
@@ -740,38 +740,40 @@ sub l00http_dash_proc {
         }
 
         $help  = '';
-        $help .= "* Suggested color scheme (you don't have to use all):\n";
-        $help .= "** Highest priority: review these first\n";
-        $help .= "*** *r*r: red** : Preempts all, not recommended for project\n";
-        $help .= "*** *f*f: fuchsia** : KIV Q\n";
-        $help .= "*** *h*h: hotPink** : Do @\n";
-        $help .= "** Filler tasks: something to do to fill time\n";
-        $help .= "*** *T*T: teal** *G*G: green**\n";
-        $help .= "** Projects: when you are ready for project work\n";
-        $help .= "*** *d*d: gold** : priority project\n";
-        $help .= "*** *l*l: lime**  *a*a: aqua**  *y*y: yellow**  *S*S: deepSkyBlue**  *B*B: sandyBrown** \n";
-        $help .= "** Visual markers:\n";
-        $help .= "*** *L*L: lightGray**  *s*s: silver**  *g*g: gray**\n";
-        $help .= "** To be ignored:\n";
-        $help .= "*** *b*b: brown**  *o*o: olive**\n";
-        $help .= "* ===chapter=== to hide low priority tasks\n";
-        $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
-        $help .= "* !! at start to hide in the latest\n";
-        $help .= "* ! at start to hide but add to !# count\n";
-        $help .= "* +# hides for # days from timestamp\n";
-        $help .= "* Make comment date in the future to hide it\n";
-        $help .= "* \\n are converted to newlines\n";
-        $help .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
-        $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
-        $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
-        $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
-        $help .= "* Change 'dashwidth' using eval: ";
-        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D30\" target=\"_blank\">30</a> - ";
-        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D40\" target=\"_blank\">40</a> - ";
-        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D50\" target=\"_blank\">50</a> - ";
-        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D80\" target=\"_blank\">80</a> - ";
-        $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D120\" target=\"_blank\">120</a> - ";
-        $help .= "Now $dashwidth\n";
+        if ($smallhead ne 'checked') {
+            $help .= "* Suggested color scheme (you don't have to use all):\n";
+            $help .= "** Highest priority: review these first\n";
+            $help .= "*** *r*r: red** : Preempts all, not recommended for project\n";
+            $help .= "*** *f*f: fuchsia** : KIV Q\n";
+            $help .= "*** *h*h: hotPink** : Do @\n";
+            $help .= "** Filler tasks: something to do to fill time\n";
+            $help .= "*** *T*T: teal** *G*G: green**\n";
+            $help .= "** Projects: when you are ready for project work\n";
+            $help .= "*** *d*d: gold** : priority project\n";
+            $help .= "*** *l*l: lime**  *a*a: aqua**  *y*y: yellow**  *S*S: deepSkyBlue**  *B*B: sandyBrown** \n";
+            $help .= "** Visual markers:\n";
+            $help .= "*** *L*L: lightGray**  *s*s: silver**  *g*g: gray**\n";
+            $help .= "** To be ignored:\n";
+            $help .= "*** *b*b: brown**  *o*o: olive**\n";
+            $help .= "* ===chapter=== to hide low priority tasks\n";
+            $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
+            $help .= "* !! at start to hide in the latest\n";
+            $help .= "* ! at start to hide but add to !# count\n";
+            $help .= "* +# hides for # days from timestamp\n";
+            $help .= "* Make comment date in the future to hide it\n";
+            $help .= "* \\n are converted to newlines\n";
+            $help .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
+            $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
+            $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
+            $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+            $help .= "* Change 'dashwidth' using eval: ";
+            $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D30\" target=\"_blank\">30</a> - ";
+            $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D40\" target=\"_blank\">40</a> - ";
+            $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D50\" target=\"_blank\">50</a> - ";
+            $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D80\" target=\"_blank\">80</a> - ";
+            $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D120\" target=\"_blank\">120</a> - ";
+            $help .= "Now $dashwidth\n";
+        }
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
 
         print $sock "<hr><a name=\"end\"></a>";

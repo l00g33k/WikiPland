@@ -214,9 +214,9 @@ sub l00http_blogtag_proc {
     print $sock "<form action=\"/blogtag.htm\" method=\"get\">\n";
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
-    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
-    print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
-    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
+    print $sock "<input type=\"submit\" name=\"pastesave\" value=\"Pa&#818;steSave\" accesskey=\"a\">\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"P&#818;aste\" accesskey=\"p\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     if (defined ($form->{'blog'})) {
         print $sock "<input type=\"hidden\" name=\"blog\" value=\"$form->{'blog'}\">\n";
