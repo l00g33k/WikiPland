@@ -436,7 +436,7 @@ sub l00http_dash_proc {
                                 $bang = $1;
                                 $desc =~ s/^!+//;
                             }
-                            $dsc = "$bang<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                            $dsc = "$bang<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc&#8227;</a>";
                         } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
                             $bang = '';
                             # preserve ! or !! as leading
@@ -551,7 +551,7 @@ sub l00http_dash_proc {
                         # convert | shortcut to HTTP link
                         if (($desc, $clip) = /^ *(.+) *\|\|(.+)$/) {
                             $clip = &l00httpd::urlencode ($clip);
-                            $_ = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc</a>";
+                            $_ = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">$desc&#8227;</a>";
                         } elsif (($desc, $clip) = /^ *(.+) *\| *(.+) *$/) {
                             $_ = "<a href=\"$clip\" target=\"_blank\">$desc</a>";
                         }

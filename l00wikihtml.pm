@@ -285,7 +285,7 @@ sub wikihtml {
                 #%3A%2F
                 $clip = &l00httpd::urlencode ($clip);
                 $url = "/clip.htm?update=Copy+to+clipboard&clip=$clip";
-                $url = "[[$url|$desc]]";
+                $url = "[[$url|$desc&#8227;]]";
                 if ($bareclip) {
                     #$url = "&lt;$url&gt;";
 		        }
@@ -541,7 +541,7 @@ sub wikihtml {
         # password/ID clipboard
         if (/\* (ID|PW): (\S+) *$/) {
             $clip = &l00httpd::urlencode ($2);
-            $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"_blank\">%s</a>", $clip, $2);
+            $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"_blank\">%s&#8227;</a>", $clip, $2);
             $_ .= " ($tmp)";
         }
 

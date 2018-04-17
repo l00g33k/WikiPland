@@ -468,7 +468,7 @@ sub l00http_find_proc {
 
     print $sock "        <tr>\n";
     print $sock "            <td>Content ((regex); !!):</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"content\" value=\"$content\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"content\" value=\"$content\" accesskey=\"e\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
@@ -487,7 +487,7 @@ sub l00http_find_proc {
     print $sock "        </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"> <input type=\"submit\" name=\"cbclrname\" value=\"Clr\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"> <input type=\"submit\" name=\"cbclrname\" value=\"Clr\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"wraptext\" $wraptext>Wrapped text</td>\n";
     print $sock "    </tr>\n";
 

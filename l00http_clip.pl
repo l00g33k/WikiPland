@@ -77,9 +77,9 @@ sub l00http_clip_proc {
     }
 
     print $sock "<form action=\"/clip.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"update\" value=\"Copy to CB\"> \n";
-    print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
-    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+    print $sock "<input type=\"submit\" name=\"update\" value=\"C&#818;opy to CB\" accesskey=\"c\"> \n";
+    print $sock "<input type=\"submit\" name=\"append\" value=\"A&#818;ppend\" accesskey=\"a\"> \n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"Cl&#818;ear\" accesskey=\"l\">\n";
 
     if (defined ($form->{'clip'}) && defined ($form->{'update'})) {
         # we actually set clipboard
@@ -88,7 +88,7 @@ sub l00http_clip_proc {
     } else {
         print $sock "<br>\n";
     }
-    print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\">$clip</textarea>\n";
+    print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\" accesskey=\"e\">$clip</textarea>\n";
     print $sock "<br>Jump URL: <input type=\"text\" size=\"10\" name=\"url\" value=\"$url\">\n";
 
     print $sock "View <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>, \n";
