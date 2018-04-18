@@ -127,7 +127,7 @@ sub l00http_scratch_proc {
         print $sock "Refresh as:<br>\n";
         print $sock "<input type=\"submit\" name=\"mobi\" value=\"Mobilize\">\n";
         print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
-        print $sock "<input type=\"submit\" name=\"wikitize\" value=\"Wikitize\">\n";
+        print $sock "<input type=\"submit\" name=\"wikitize\" value=\"W&#818;ikitize\" accesskey=\"w\">\n";
         print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
         print $sock "<input type=\"submit\" name=\"formatted\" value=\"Formatted\">\n";
         print $sock "<input type=\"checkbox\" name=\"bare\">Bare";
