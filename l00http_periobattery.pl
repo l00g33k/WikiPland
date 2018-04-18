@@ -72,9 +72,9 @@ sub l00http_periobattery_suspend {
     l00httpd::dbp($config{'desc'}, "firstdmesg=$firstdmesg");
     l00httpd::dbp($config{'desc'}, "lastdmesg=$lastdmesg");
     l00httpd::dbp($config{'desc'}, "battlog:\n");
-    l00httpd::dbp($config{'desc'}, $battlog);
+   #l00httpd::dbp($config{'desc'}, $battlog);
     l00httpd::dbp($config{'desc'}, "table:\n");
-    l00httpd::dbp($config{'desc'}, $table);
+   #l00httpd::dbp($config{'desc'}, $table);
 }
 
 sub l00http_periobattery_resume {
@@ -133,9 +133,9 @@ sub l00http_periobattery_resume {
         }
 
         l00httpd::dbp($config{'desc'}, "battlog:\n");
-        l00httpd::dbp($config{'desc'}, $battlog);
+       #l00httpd::dbp($config{'desc'}, $battlog);
         l00httpd::dbp($config{'desc'}, "table:\n");
-        l00httpd::dbp($config{'desc'}, $table);
+       #l00httpd::dbp($config{'desc'}, $table);
         l00httpd::dbp($config{'desc'}, "Resumed from sdcard:\n");
         l00httpd::dbp($config{'desc'}, "interval=$interval\n");
         l00httpd::dbp($config{'desc'}, "battcnt=$battcnt\n");
