@@ -581,8 +581,33 @@ sub l00http_dash_proc {
             $checked = '';
         }
 
+        # insert from RAM file
+        $tmpbuf = '';
+        if (&l00httpd::l00freadOpen($ctrl, "l00://dash.txt")) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/[\r\n]//g;
+                if ($tmpbuf eq '') {
+                    $tmpbuf = $_;
+                } else {
+                    if ($tmpbuf =~ /\\n([^\\]+?)$/m) {
+                        $tmp = $1;
+                    } else {
+                        $tmp = $tmpbuf;
+                    }
+                    if (length($tmp) > $dashwidth) {
+                        $tmpbuf .= '\\n';
+                    }
+
+                    $tmpbuf .= " - $_";
+                }
+            }
+        }
+
+        push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
+            "|| [[/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare|R:dash]] ".
+            "|| $tmpbuf ||``tasksTime``");
+
         $cnt = 0;
-        push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** || || ||``tasksTime``");
         foreach $_ (sort keys %tasksTime) {
             $cnt++;
             if ($dbg) {
