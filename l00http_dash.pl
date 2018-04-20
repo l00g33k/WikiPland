@@ -598,6 +598,7 @@ sub l00http_dash_proc {
                         $tmpbuf .= '\\n';
                     }
 
+                    s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                     $tmpbuf .= " - $_";
                 }
             }
