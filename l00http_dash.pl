@@ -598,14 +598,15 @@ sub l00http_dash_proc {
                         $tmpbuf .= '\\n';
                     }
 
+                    s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                     $tmpbuf .= " - $_";
                 }
             }
         }
 
         push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
-            "|| [[/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare|R:dash]] ".
-            "|| $tmpbuf ||``tasksTime``");
+            "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
+            "||$tmpbuf ||``tasksTime``");
 
         $cnt = 0;
         foreach $_ (sort keys %tasksTime) {
