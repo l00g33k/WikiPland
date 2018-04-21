@@ -21,6 +21,8 @@ use l00wget;
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
 my ($url, $zoom, $para, $here, $prolog, $freeimgsize, $imgsrclink, $backurl, $forcetarget);
+my ($mobiz_wget, $mobiz_sig);
+$mobiz_sig = '';
 $url = '';
 $zoom = 150;
 $para = 1;
@@ -732,22 +734,26 @@ sub l00http_mobizoom_proc {
         } else {
             # $mode1online2offline4download != 2
             # fetch for active reading or caching automation
-            ($hdr, $wget, $domain, $journal) = &wgetfollow2($ctrl, $url);
+            if ($mobiz_sig ne "$url:$imgsrclink") {
+                ($hdr, $mobiz_wget, $domain, $journal) = &wgetfollow2($ctrl, $url);
+            }
+            $mobiz_sig = "$url:$imgsrclink";
+
 
             # save file
             if ($mode1online2offline4download == 4) {
                 &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
                 # download too small, delete it by not writing
-                if (length ($wget) > 2000) {
-                    &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$wget");
+                if (length ($mobiz_wget) > 2000) {
+                    &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$mobiz_wget");
                 }
                 &l00httpd::l00fwriteClose($ctrl);
             } else {
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://mobizoom_wget.htm');
-                &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$wget");
+                &l00httpd::l00fwriteBuf($ctrl, "<!-- ::mobizoom::orgurl::$url -->\n$mobiz_wget");
                 &l00httpd::l00fwriteClose($ctrl);
             }
-            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $wget,
+            $wget = &l00http_mobizoom_mobilize ($ctrl, $url, $zoom, $mobiz_wget,
                 ((defined ($form->{'saveinternal'})) && ($form->{'saveinternal'} eq 'on')));
 
             if ($mode1online2offline4download & 3) {
