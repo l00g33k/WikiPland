@@ -245,7 +245,7 @@ sub l00http_filemgt_proc {
     if (!defined ($form->{'path'})) {
         $form->{'path'} = '';
     }
-    print $sock "<form action=\"/filemgt.htm\" method=\"post\">\n";
+    print $sock "<form action=\"/filemgt.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"delete\" value=\"Delete\">\n";
