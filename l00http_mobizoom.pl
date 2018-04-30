@@ -506,7 +506,7 @@ sub l00http_mobizoom_part1 {
     print $sock "<form action=\"/mobizoom.htm\" method=\"get\">\n";
     $tmp = &l00httpd::urlencode ($url);
     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">URL</a> ";
-    print $sock "<input type=\"text\" size=\"16\" name=\"url\" value=\"$url\"></td>\n";
+    print $sock "<input type=\"text\" size=\"16\" name=\"url\" value=\"$url\" accesskey=\"e\"></td>\n";
     print $sock "<input type=\"submit\" name=\"fetch\" value=\"Fetch\">\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\"></td>\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";

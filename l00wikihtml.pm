@@ -31,27 +31,27 @@ $showalljava = "\n".
 "</script>\n\n";
 
 
-my (%colorlu);
+my (%colorlu, %colorfg);
 $colorlukeys = 'rylsafgodGDbSpLTBhu';
-$colorlu{'r'} = 'red';
-$colorlu{'y'} = 'yellow';
-$colorlu{'l'} = 'lime';
-$colorlu{'s'} = 'silver';
-$colorlu{'a'} = 'aqua';
-$colorlu{'f'} = 'fuchsia';
-$colorlu{'g'} = 'gray';
-$colorlu{'o'} = 'olive';
-$colorlu{'d'} = 'gold';
-$colorlu{'G'} = 'green';
-$colorlu{'D'} = 'DeepPink';
-$colorlu{'b'} = 'Brown';
-$colorlu{'S'} = 'DeepSkyBlue';
-$colorlu{'p'} = 'Purple';
-$colorlu{'L'} = 'LightGray';
-$colorlu{'T'} = 'Teal';
-$colorlu{'B'} = 'SandyBrown';
-$colorlu{'h'} = 'HotPink';
-$colorlu{'u'} = 'blue';
+$colorlu{'r'} = 'red';              $colorfg{'r'} = 'yellow';
+$colorlu{'y'} = 'yellow';           $colorfg{'y'} = 'black';
+$colorlu{'l'} = 'lime';             $colorfg{'l'} = 'black';
+$colorlu{'s'} = 'silver';           $colorfg{'s'} = 'black';
+$colorlu{'a'} = 'aqua';             $colorfg{'a'} = 'black';
+$colorlu{'f'} = 'fuchsia';          $colorfg{'f'} = 'yellow';
+$colorlu{'g'} = 'gray';             $colorfg{'g'} = 'black';
+$colorlu{'o'} = 'olive';            $colorfg{'o'} = 'black';
+$colorlu{'d'} = 'gold';             $colorfg{'d'} = 'black';
+$colorlu{'G'} = 'green';            $colorfg{'G'} = 'LightGray';
+$colorlu{'D'} = 'DeepPink';         $colorfg{'D'} = 'black';
+$colorlu{'b'} = 'Brown';            $colorfg{'b'} = 'black';
+$colorlu{'S'} = 'DeepSkyBlue';      $colorfg{'S'} = 'black';
+$colorlu{'p'} = 'Purple';           $colorfg{'p'} = 'black';
+$colorlu{'L'} = 'LightGray';        $colorfg{'L'} = 'black';
+$colorlu{'T'} = 'Teal';             $colorfg{'T'} = 'LightGray';
+$colorlu{'B'} = 'SandyBrown';       $colorfg{'B'} = 'black';
+$colorlu{'h'} = 'HotPink';          $colorfg{'h'} = 'black';
+$colorlu{'u'} = 'blue';             $colorfg{'u'} = 'black';
 
 
 
@@ -147,7 +147,7 @@ sub wikihtml {
     my ($ctrl, $pname, $inbuf, $flags, $fname) = @_;
     my ($oubuf, $bulvl, $tx, $lvn, $desc, $http, $toc, $toccol);
     my ($intbl, @cols, $ii, $lv, $el, $url, @el, @els, $__lineno__);
-    my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $tag, $bareclip);
+    my ($jump, $anchor, $last, $tmp, $ahead, $tbuf, $color, $colorfg, $tag, $bareclip);
     my ($desc, $url, $bullet, $bkmking, $clip, $bookmarkkeyfound);
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
     my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx, $seenEqualStar);
@@ -713,8 +713,10 @@ sub wikihtml {
             $tmp = $1;
             if (defined($colorlu{$2})) {
                 $color = $colorlu{$2};
+                $colorfg = $colorfg{$2};
             } else {
                 $color = 'white';
+                $colorfg = 'black';
             }
             
             # drops *
@@ -724,16 +726,16 @@ sub wikihtml {
             $tmp =~ s/=+$//;
 
             # make a sortable TOC entry
-            $tmp = "<!-- $tmp --><font style=\"color:black;background-color:$color\"><a href=\"#lnno$lnno\">$tmp</a></font><br>\n";
+            $tmp = "<!-- $tmp --><font style=\"color:$colorfg;background-color:$color\"><a href=\"#lnno$lnno\">$tmp</a></font><br>\n";
             $postsit .= $tmp;
             $oubuf .=  "<a name=\"lnno$lnno\">";
             # remove !!!
             s/\?\?\?[$colorlukeys]*$//;
             if (/^=.+=$/) {
                 # '=' interferes with heading shorthand, global replace ____EqSg____ = later
-                s/^(=+)([^=]+)(=+)$/$1<font style____EqSg____"color:black;background-color:$color">$2<\/font>$3/g;
+                s/^(=+)([^=]+)(=+)$/$1<font style____EqSg____"color:$colorfg;background-color:$color">$2<\/font>$3/g;
             } else {
-                $_ = "<font style=\"color:black;background-color:$color\">$_</font>";
+                $_ = "<font style=\"color:$colorfg;background-color:$color\">$_</font>";
             }
             $_ .= " <a href=\"#___top___\">^</a>" .
                   " <a href=\"#__toc__\">toc</a>";
@@ -972,10 +974,10 @@ sub wikihtml {
               s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
         s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
         # *l*color bold**
-              s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:black;background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-        s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:black;background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
+              s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+              s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+              s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+        s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
         # //italics// <em>italics</em>
               s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
               s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL

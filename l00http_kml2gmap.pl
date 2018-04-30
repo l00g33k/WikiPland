@@ -761,7 +761,7 @@ sub l00http_kml2gmap_proc {
         print $sock "Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"$desc\">\n";
+        print $sock "Description:</td><td><input type=\"text\" name=\"desc\" size=\"12\" value=\"$desc\" accesskey=\"e\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "Path:</td><td><input type=\"text\" name=\"path\" size=\"12\" value=\"$form->{'path'}\">\n";

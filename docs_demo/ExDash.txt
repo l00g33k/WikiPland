@@ -1,0 +1,118 @@
+* [[/ls.htm?find=Find&findtext=%5E%5C%3D%3D%3D%2B&block=.&prefmt=on&path=$|===hidden ===]] - [[/dash.htm?path=$|Processed table]] - [[/clip.htm|clip]] - [[/lineeval.htm?path=$|lineeval]]
+%TOC%
+
+
+
+%DASHCOLOR:black:yellow%
+=*o*----**=
+==*o*do above**==
+* 20180401 120000 *l*=============================**
+==*o*above new**==
+* 20180401 120000 *l*=============================**
+
+
+
+%DASHCOLOR:black:silver%
+=*T*5min**=
+==*G*5min**==
+* 20180401 120000 
+==*T*30min**==
+* 20180401 120000 
+
+
+
+%DASHCOLOR:black:yellow%
+=*h*Do @**=
+==*r*do now**==
+* 20180401 120000 
+==*L*future date**==
+* 20180401 120000 
+
+
+
+%DASHCOLOR:black:olive%
+=*f*KIV**=
+==*f*Goals**==
+* 20180401 120000 
+==*r*Inbox**==
+* 20180401 120000 
+==*r*KIV**==
+* 20180401 120000 
+
+
+
+%DASHCOLOR:black:silver%
+=*S*Proj 1**=
+==*S*Project 1**==
+* 20180401 120000 
+===Hide proj 1===
+* 20180401 120000 
+
+
+
+%DASHCOLOR:black:aqua%
+=*a*Proj 2**=
+==*a*Project 2**==
+* 20180401 120000 
+==*a*weekend**==
+* 20180401 120000 
+===Hide proj 2===
+* 20180401 120000 
+
+
+
+
+
+
+%DASHCOLOR:#000000:#c0c0c0%
+=End Of Queues=
+
+
+---
+
+%BLOGQUICK:time.start%
+%BLOGQUICK:time.stop%
+%BLOGQUICK:^do%
+%BLOGQUICK:did%
+%BLOGQUICK:! %
+%BLOGQUICK:!! %
+%BLOGQUICK:!! did%
+%BLOGQUICK:!! \n*o*::roll::**%
+
+%BLOGTIME:0%
+%BLOGTIME:10m%
+%BLOGTIME:20m%
+%BLOGTIME:1h%
+%BLOGTIME:2h%
+%BLOGTIME:5h%
+%BLOGTIME:10h%
+%BLOGTIME:21h%
+%BLOGTIME:44h%
+%BLOGTIME:1d%
+%BLOGTIME:2d%
+%BLOGTIME:3d%
+%BLOGTIME:5d%
+%BLOGTIME:28d%
+
+%LINEEVAL~*@~s/^\* [0-9 ]{15,15} /* $ctrl->{'now_string'} /%
+%LINEEVAL~##~s/^(.)/#$1/%
+%LINEEVAL~X~s/^#//%
+%LINEEVAL~!~s/^(\* [0-9 ]{15,15}) /$1 !/%
+%LINEEVAL~X~s/^(\* [0-9 ]{15,15}) !/$1 /%
+%LINEEVAL~^~s/^(\* [0-9 ]{15,15}) /$1 ^/%
+%LINEEVAL~X~s/^(\* [0-9 ]{15,15}) \^/$1 /%
+%LINEEVAL~_X~s/^(\* [0-9 ]{15,15})  /$1 /%
+%LINEEVAL~+7~s/^(\* [0-9 ]{15,15}) /$1 +7 /%
+%LINEEVAL~+14~s/^(\* [0-9 ]{15,15}) /$1 +14 /%
+%LINEEVAL~+28~s/^(\* [0-9 ]{15,15}) /$1 +30 /%
+%LINEEVAL~X~s/^(\* [0-9 ]{15,15}) \+\d+ /$1 /%
+%LINEEVAL~+(@)~s/(.)$/$1  *L*($ctrl->{'ymddCODE'})**/%
+%LINEEVAL~^~s/( +\*.{0,1}\*)\([0-9a-j][0-9a-c][0-3][0-9]\)\*\*$/$1($ctrl->{'ymddCODE'})**/%
+%LINEEVAL~copy2clipboard~^\* [0-9 ]{15,15} +(.+)$%
+
+
+%BLOGURL:</dash.htm?path=$>%
+
+** [[#disp]] [[/ls.htm?find=Find&findtext=%5E%5C%3D%3D%3D&block=.&prefmt=on&path=$|===hidden ===]] - [[/txtdopl.htm?runbare=RunBare&path=$|Processed table]]
+
+
