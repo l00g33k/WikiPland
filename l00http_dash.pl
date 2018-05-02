@@ -214,9 +214,11 @@ sub l00http_dash_proc {
         }
         print $sock "<input type=\"checkbox\" name=\"outputsort\" $outputsort>";
         if ($outputsort ne 'checked') {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on\">cat1 sort</a>.\n";
+            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on\">cat1 sort</a>,\n";
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all\">all</a>).\n";
         } else {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">cat1 sort</a>.\n";
+            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">cat1 sort</a>,\n";
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">all</a>).\n";
         }
         print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
         if ($smallhead ne 'checked') {
