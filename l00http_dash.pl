@@ -391,7 +391,12 @@ sub l00http_dash_proc {
                     push(@wikiword, @_);
                 }
                 # ^ color fushcia/yellow for do now
-                $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
+                if ($dsc =~ /^\^(.+)(\|+.+)$/) {
+                    # special case : "desc | URL" and "desc ||clipboard"
+                    $dsc = "^<strong><font style=\"color:yellow;background-color:fuchsia\">$1<\/font><\/strong>$2";
+                } else {
+                    $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
+                }
                 if (($cat1 =~ /$catflt/i) && 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
@@ -600,7 +605,13 @@ sub l00http_dash_proc {
                         $tmpbuf .= '\\n';
                     }
 
-                    s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
+                    # ^ color fushcia/yellow for do now
+                    if ($dsc =~ /^\^(.+)(\|+.+)$/) {
+                        # special case : "desc | URL" and "desc ||clipboard"
+                        $dsc = "^<strong><font style=\"color:yellow;background-color:fuchsia\">$1<\/font><\/strong>$2";
+                    } else {
+                        $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
+                    }
                     $tmpbuf .= " - $_";
                 }
             }
