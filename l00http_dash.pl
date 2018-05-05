@@ -370,8 +370,7 @@ sub l00http_dash_proc {
                 $jmp =~ s/[^0-9A-Za-z]/_/g;
                 if ($dbg) {
                     print $sock "  $cat1  $cat2\n";
-                }
-                $time_start = 0;
+                } $time_start = 0;
                 # Make a hot item include if $cat2 is a wikiword 
                 # alone and target exist (to be checked later)
                 if ($cat2 =~ /^[A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*$/) {
@@ -389,6 +388,9 @@ sub l00http_dash_proc {
                 if (@_ = $tmp =~ /([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/g) {
                     # save them
                     push(@wikiword, @_);
+                    if ($dsc =~ /@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/) {
+                        $dsc =~ s/@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/$1|\/dash.htm?path=.\/$1.txt/;
+                    }
                 }
                 # ^ color fushcia/yellow for do now
                 if ($dsc =~ /^\^(.+)(\|+.+)$/) {
