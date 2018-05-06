@@ -465,7 +465,7 @@ sub l00http_dash_proc {
                     if (!defined($tasksTime{$key})) {
                                  $tasksTime{$key} = $tim;
 #                                 $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
-                                 $tasksDesc{$key} = $dsc;
+                                 $tasksDesc{$key} = "AAA $dsc";
                                  $countBang{$key} = 0;
                                 if ($dbg) {
                                     print $sock "    TIME  $tim    $key\n";
@@ -511,18 +511,69 @@ sub l00http_dash_proc {
                             }
                             if ($tmp) {
                                 $tasksSticky{$key} .= " - $dsc";
-                                if ($tasksSticky{$key} =~ /\\n([^\\]+?)$/m) {
-                                    $tmpbuf = $1;
-                                } else {
-                                    $tmpbuf = $tasksSticky{$key};
-                                }
-                                $tmpbuf =~ s/<.+?>//g;
-                                $tmpbuf =~ s/\[\[.+?\|(.+?)\]\]/$1/g;
-                                $tmpbuf =~ s/\*\*$//;
-                                $tmpbuf =~ s/\*\* //g;
-                                $tmpbuf =~ s/\*.{0,1}\*//g;
-                                if (length($tmpbuf) > $dashwidth) {
-                                    $tasksSticky{$key} .= '\\n';
+                                my ($buffer, $idx, $len, $newbuf, $inangle, $insquare, $width);
+                                # save current line and length
+                                $buffer = $tasksSticky{$key};
+                                $len = length($buffer);
+                                if ($len > 2) {
+                                    # looking from the tail for '\n' or start (hence at least 3 bytes)
+                                    for($idx = $len - 2; $idx >= 0; $idx--) {
+                                        if (substr($buffer, $idx, 2) eq '\n') {
+                                            # found last '\n'
+                                            last;
+                                        }
+                                    }
+
+                                    if ($idx > 0) {
+                                        # found '\n' from the end, skip pass this '\n'
+                                        $idx += 2;
+                                    } else {
+                                        # else $idx is 0 at the start
+                                        $idx = 0;
+                                    }
+                                    if ($idx > 0) {
+                                        # copy content before '\n'
+                                        $newbuf .= substr($buffer, 0, $idx);
+                                    }
+
+                                    $inangle = 0;   # flag to exclude counting <tags>
+                                    $insquare = 0;  # flag to exclude counting [[url|desc]]
+                                    $width = 0;     # currently accumulated width
+                                    for ($ii = $idx; $ii < $len; $ii++) {
+                                        if (substr($buffer, $ii, 1) eq '<') {
+                                            # found '<', to skip to '>'
+                                            $inangle = 1;
+                                        }
+                                        if (substr($buffer, $ii, 2) eq '[[') {
+                                            # found '[[', to skip to ']]'
+                                            $insquare = 1;
+                                        }
+                                        if (($inangle == 0) && ($insquare == 0)) {
+                                            # not in <> nor [[]], accounting width
+                                            $width++;
+                                            if (($width > $dashwidth) && 
+                                                (substr($buffer, $ii, 1) eq ' ')) {
+                                                # too wide, add newline
+                                                $newbuf .= ' \n';
+                                                $width = 1;
+                                            }
+                                        }
+                                        if ($insquare) {
+                                            if (substr($buffer, $ii - 1, 2) eq ']]') {
+                                                # in '[[' and found ']]', reset
+                                                $insquare = 0;
+                                            }
+                                        }
+                                        if ($inangle) {
+                                            if (substr($buffer, $ii, 1) eq '>') {
+                                                # in '<' and found '>', reset
+                                                $inangle = 0;
+                                            }
+                                        }
+                                        # accumulate line
+                                        $newbuf .= substr($buffer, $ii, 1);
+                                    }
+                                    $tasksSticky{$key} = $newbuf;
                                 }
                             }
                         }
@@ -661,12 +712,12 @@ sub l00http_dash_proc {
             if (defined($tasksSticky{$_})) {
                 $tmp = $tasksSticky{$_};
                 $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>";
-                if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
+                #if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
                     # current is also sticky, skip current
                     push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
-                } else {
-                    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang$tasksDesc{$_}$tmp ||``$_``");
-                }
+                #} else {
+                #    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang$tasksDesc{$_}$tmp ||``$_``");
+                #}
             } else {
                 push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
             }
