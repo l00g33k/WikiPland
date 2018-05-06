@@ -103,11 +103,11 @@ sub l00http_lineproc_proc (\%) {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
     print $sock "            <input type=\"checkbox\" name=\"wholefile\" $wholefile>whole file.\n";
-    print $sock "            <input type=\"submit\" name=\"run\" value=\"Process\"></td>\n";
+    print $sock "            <input type=\"submit\" name=\"run\" value=\"P&#818;rocess\" accesskey=\"p\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><textarea name=\"eval\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$eval</textarea>\n";
+    print $sock "        <td><textarea name=\"eval\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"e\">$eval</textarea>\n";
     print $sock "            <br><input type=\"submit\" name=\"pasteeval\" value=\"CB to eval\">\n";
     print $sock "            <input type=\"checkbox\" name=\"sort\" $sort>Sort after processing; \n";
     print $sock "            <input type=\"checkbox\" name=\"sortdec\" $sortdec>in decresing order. \n";
