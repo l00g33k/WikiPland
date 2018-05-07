@@ -11,11 +11,12 @@ my %config = (proc => "l00http_view_proc",
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
-my ($findmaxln, $findskip, $eval, $evalbox);
+my ($findmaxln, $findskip, $eval, $evalbox, $literal);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
 $wraptext = '';
+$literal = '';
 $nohdr = '';
 $skip = 0;
 $maxln = 1000;
@@ -315,6 +316,11 @@ sub l00http_view_proc {
                 } else {
                     $wraptext = '';
                 }
+                if (defined ($form->{'literal'})) {
+                    $literal = 'checked';
+                } else {
+                    $literal = '';
+                }
                 $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer);
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
@@ -337,6 +343,11 @@ sub l00http_view_proc {
 						    $tmptop = $tmpno - 20;
                             if ($tmptop < 0) {
                                 $tmptop = 0;
+                            }
+                            if ($literal eq 'checked') {
+                                # show < and > as literal and not HTML tags
+                                $tmpln =~ s/</&lt;/g;
+                                $tmpln =~ s/>/&gt;/g;
                             }
 						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>".
                                 " <a href=\"/view.htm?path=$pname$fname&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
@@ -543,6 +554,11 @@ sub l00http_view_proc {
     print $sock "Formatted:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"wraptext\" $wraptext>wrap text\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Literal:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"literal\" $literal>show '&lt;' &amp; '&gt;'\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "File:\n";
