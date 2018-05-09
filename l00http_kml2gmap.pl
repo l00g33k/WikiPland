@@ -757,7 +757,7 @@ sub l00http_kml2gmap_proc {
             print $sock "No clipboard\n";
         }
         print $sock "</td><td>\n";
-        print $sock "<input type=\"submit\" name=\"addway\" value=\"Add waypoint\">\n";
+        print $sock "<input type=\"submit\" name=\"addway\" value=\"A&#818;dd waypoint\" accesskey=\"a\">\n";
         print $sock "Click on map for coor\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
