@@ -228,9 +228,12 @@ sub l00http_lineeval_proc (\%) {
                 }
                 for ($tmp = 0; $tmp <= $#evals; $tmp++) {
                     if ($useform eq 'checked') {
-                        print $sock "<input type=\"checkbox\" name=\"chk_evalid_${tmp}__ln_${lnno}\">";
+                        # no 
+                        print $sock "<input type=\"checkbox\" name=\"chk_evalid_${tmp}__ln_${lnno}\">$evals[$tmp] ";
+                    } else {
+                        # no checkbox
+                        print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
                     }
-                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
                 }
                 if (($lnno & 1) == 0) {
                     print $sock "</font>";
