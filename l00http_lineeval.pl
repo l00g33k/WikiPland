@@ -28,7 +28,7 @@ sub l00http_lineeval_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@newfile, $lnno, $mvfrom, $tmp, @evals);
+    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard);
 
     # Send HTTP and HTML headers
@@ -228,8 +228,9 @@ sub l00http_lineeval_proc (\%) {
                 }
                 for ($tmp = 0; $tmp <= $#evals; $tmp++) {
                     if ($useform eq 'checked') {
-                        # no 
-                        print $sock "<input type=\"checkbox\" name=\"chk_evalid_${tmp}__ln_${lnno}\">$evals[$tmp] ";
+                        # use checkbox
+                        $tabindex = $tmp + 1;
+                        print $sock "<input type=\"checkbox\" name=\"chk_evalid_${tmp}__ln_${lnno}\" tabindex=\"$tabindex\">$evals[$tmp] ";
                     } else {
                         # no checkbox
                         print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
