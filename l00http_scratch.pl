@@ -54,7 +54,7 @@ sub l00http_scratch_proc {
             $scratch = "";
         }
         if ((defined ($form->{'newwin'})) && ($form->{'newwin'} eq 'on')) {
-            $newwin = 'target="newwin"';
+            $newwin = 'target="_blank"';
         } else {
             $newwin = '';
         }

@@ -5,14 +5,14 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile, $useform, $longgray);
+my ($arg, $eval, $sort, $sortdec, $wholefile, $useform);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
 $wholefile = '';
 $useform = '';
-$longgray = '';
+
 my %config = (proc => "l00http_lineeval_proc",
               desc => "l00http_lineeval_desc");
 
@@ -51,11 +51,6 @@ sub l00http_lineeval_proc (\%) {
         } else {
             $useform = '';
         }
-        if (defined ($form->{'longgray'}) && ($form->{'longgray'} eq 'on')) {
-            $longgray = 'checked';
-        } else {
-            $longgray = '';
-        }
     }
 
     $pname = '';
@@ -85,8 +80,7 @@ sub l00http_lineeval_proc (\%) {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
     print $sock "            <input type=\"submit\" name=\"run\" value=\"Set\">\n";
-    print $sock "            <input type=\"checkbox\" name=\"useform\" $useform>Use form\n";
-    print $sock "            <input type=\"checkbox\" name=\"longgray\" $longgray>Long gray</td>\n";
+    print $sock "            <input type=\"checkbox\" name=\"useform\" $useform>Use form</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -250,7 +244,7 @@ sub l00http_lineeval_proc (\%) {
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {
                     print $sock "$clipurl <font style=\"color:black;background-color:lime\">$_</font>\n";
                 } else {
-                    if (($longgray eq 'checked') && (($lnno & 1) == 0)) {
+                    if (($lnno & 1) == 0) {
                         print $sock "<font style=\"color:black;background-color:WhiteSmoke\">";
                         print $sock "$clipurl $_\n";
                         print $sock "</font>";

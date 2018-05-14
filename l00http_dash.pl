@@ -881,6 +881,8 @@ sub l00http_dash_proc {
             $help .= "*** *L*L: lightGray**  *s*s: silver**  *g*g: gray**\n";
             $help .= "** To be ignored:\n";
             $help .= "*** *b*b: brown**  *o*o: olive**\n";
+            $help .= "* Custom category color:\n";
+            $help .= "** %DASHCOLOR:black:Gold% for black on gold; use web color\n";
             $help .= "* ===chapter=== to hide low priority tasks\n";
             $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
             $help .= "* !! at start to hide in the latest\n";
@@ -890,7 +892,8 @@ sub l00http_dash_proc {
             $help .= "* \\n are converted to newlines\n";
             $help .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
             $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
-            $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
+            $help .= "* ^text, to mark a hot item, in yellow on fuchsia\n";
+            $help .= "* ~text, to mark a item, in black on yellow\n";
             $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
             $help .= "* Change 'dashwidth' using eval: ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D24\" target=\"_blank\">24</a> - ";
