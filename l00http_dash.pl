@@ -390,7 +390,7 @@ sub l00http_dash_proc {
                     # save them
                     push(@wikiword, @_);
                     if ($dsc =~ /@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/) {
-                        $dsc =~ s/@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/$1|\/dash.htm?path=.\/$1.txt/;
+                        $dsc =~ s/@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*).*$/$1|\/dash.htm?path=.\/$1.txt/;
                     }
                 }
                 # ^ color fushcia/yellow for do now
