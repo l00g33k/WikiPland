@@ -398,13 +398,14 @@ sub l00http_ls_proc {
             if ($path !~ /[\\\/]/) {
                 # $path is filename only without path, append last pname
                 $path = "$lastpname$path";
+                $path2 = $path;
             } elsif (($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/) {
                 # $path has pathname, save it
                 $lastpname= $pname;
             }
         }
         undef $filedata;
-#l00:
+        #l00:
         if (($pname, $fname) = $form->{'path'} =~ /^(l00:\/\/)(.+)/) {
             print "ls: it is l00:// >$path<\n", if ($ctrl->{'debug'} >= 5);
             if (defined($ctrl->{'l00file'})) {

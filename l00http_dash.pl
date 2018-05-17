@@ -156,6 +156,7 @@ sub l00http_dash_proc {
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
             print $sock " <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
+            print $sock "- <a href=\"#bangbang\">sticky items</a> \n";
         }
     }
     print $sock "<p>\n";
@@ -389,7 +390,7 @@ sub l00http_dash_proc {
                     # save them
                     push(@wikiword, @_);
                     if ($dsc =~ /@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/) {
-                        $dsc =~ s/@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/$1|\/dash.htm?path=.\/$1.txt/;
+                        $dsc =~ s/@@([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*).*$/$1|\/dash.htm?path=.\/$1.txt/;
                     }
                 }
                 # ^ color fushcia/yellow for do now
@@ -407,6 +408,14 @@ sub l00http_dash_proc {
                     $dsc = "~<strong><font style=\"color:black;background-color:yellow\">$1<\/font><\/strong>$2";
                 } else {
                     $dsc =~ s/^~(.+)$/~<strong><font style="color:black;background-color:yellow">$1<\/font><\/strong>/;
+                }
+                # . color gray/black for do now
+                if ($dsc =~ /^\.([^\[\]]+)(\|+[^\[\]]+)$/) {
+                    # special case : "desc | URL" and "desc ||clipboard"
+                    # but not [[URL|desc]]
+                    $dsc = ".<strong><font style=\"color:black;background-color:gray\">$1<\/font><\/strong>$2";
+                } else {
+                    $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:gray">$1<\/font><\/strong>/;
                 }
                 if (($cat1 =~ /$catflt/i) && 
                     ($eqlvl == 2)) {
@@ -683,6 +692,14 @@ sub l00http_dash_proc {
                     } else {
                         $dsc =~ s/^~(.+)$/~<strong><font style="color:black;background-color:yellow">$1<\/font><\/strong>/;
                     }
+                    # . color gray/black for do now
+                    if ($dsc =~ /^\.([^\[\]]+)(\|+[^\[\]]+)$/) {
+                        # special case : "desc | URL" and "desc ||clipboard"
+                        # but not [[URL|desc]]
+                        $dsc = ".<strong><font style=\"color:black;background-color:gray\">$1<\/font><\/strong>$2";
+                    } else {
+                        $dsc =~ s/^\.(.+)$/~<strong><font style="color:black;background-color:gray">$1<\/font><\/strong>/;
+                    }
                     $tmpbuf .= " - $_";
                 }
             }
@@ -865,6 +882,8 @@ sub l00http_dash_proc {
             $help .= "*** *L*L: lightGray**  *s*s: silver**  *g*g: gray**\n";
             $help .= "** To be ignored:\n";
             $help .= "*** *b*b: brown**  *o*o: olive**\n";
+            $help .= "* Custom category color:\n";
+            $help .= "** %DASHCOLOR:black:Gold% for black on gold; use web color\n";
             $help .= "* ===chapter=== to hide low priority tasks\n";
             $help .= "* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)\n";
             $help .= "* !! at start to hide in the latest\n";
@@ -874,7 +893,8 @@ sub l00http_dash_proc {
             $help .= "* \\n are converted to newlines\n";
             $help .= "* Just timestamp is ok to mark new date, e.g. * 20171005 001200\n";
             $help .= "* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent\n";
-            $help .= "* ^now, to mark a hot KIV item, until newer entry is posted\n";
+            $help .= "* ^text, to mark a hot item, in yellow on fuchsia\n";
+            $help .= "* ~text, to mark a item, in black on yellow\n";
             $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
             $help .= "* Change 'dashwidth' using eval: ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D24\" target=\"_blank\">24</a> - ";
@@ -895,6 +915,7 @@ sub l00http_dash_proc {
         print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
         print $sock " <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
+        print $sock "- <a href=\"#bangbang\">sticky items</a> \n";
         print $sock "<p>\n";
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
         print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";

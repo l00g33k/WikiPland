@@ -5,12 +5,13 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile);
+my ($arg, $eval, $sort, $sortdec, $wholefile, $useform);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
 $wholefile = '';
+$useform = '';
 
 my %config = (proc => "l00http_lineeval_proc",
               desc => "l00http_lineeval_desc");
@@ -27,7 +28,7 @@ sub l00http_lineeval_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@newfile, $lnno, $mvfrom, $tmp, @evals);
+    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard);
 
     # Send HTTP and HTML headers
@@ -42,6 +43,14 @@ sub l00http_lineeval_proc (\%) {
     $anchor = '';
     if (defined ($form->{'anchor'})) {
         $anchor = $form->{'anchor'};
+    }
+
+    if (defined ($form->{'run'})) {
+        if (defined ($form->{'useform'}) && ($form->{'useform'} eq 'on')) {
+            $useform = 'checked';
+        } else {
+            $useform = '';
+        }
     }
 
     $pname = '';
@@ -70,11 +79,15 @@ sub l00http_lineeval_proc (\%) {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
-    print $sock "            <input type=\"submit\" name=\"run\" value=\"Set\"></td>\n";
+    print $sock "            <input type=\"submit\" name=\"run\" value=\"Set\">\n";
+    print $sock "            <input type=\"checkbox\" name=\"useform\" $useform>Use form</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
-    print $sock "</form>\n";
+
+    if ($useform ne 'checked') {
+        print $sock "</form>\n";
+    }
 
 
     if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
@@ -123,12 +136,23 @@ sub l00http_lineeval_proc (\%) {
                 }
             }
 
-            if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'eval') &&
-                defined($form->{'ln'}) && defined($form->{'evalid'})) {
-#print $sock "subst with $form->{'evalid'} $evals[$form->{'evalid'}] on line $form->{'ln'}<br>\n";
-                $_ = $newfile[$form->{'ln'} - 1];
-                eval $evals[$form->{'evalid'}];
-                $newfile[$form->{'ln'} - 1] = $_;
+            # find form checkbox
+            if ($useform eq 'checked') {
+                foreach $_ (keys %$form) {
+                    # chk_evalid_3__ln_44
+                    if (/chk_evalid_(\d+)__ln_(\d+)$/) {
+                        $_ = $newfile[$2 - 1];
+                        eval $evals[$1];
+                        $newfile[$2 - 1] = $_;
+                    }
+                }
+            } else {
+                if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'eval') &&
+                    defined($form->{'ln'}) && defined($form->{'evalid'})) {
+                    $_ = $newfile[$form->{'ln'} - 1];
+                    eval $evals[$form->{'evalid'}];
+                    $newfile[$form->{'ln'} - 1] = $_;
+                }
             }
 
             &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 9);
@@ -197,7 +221,14 @@ sub l00http_lineeval_proc (\%) {
                     print $sock "mv ";
                 }
                 for ($tmp = 0; $tmp <= $#evals; $tmp++) {
-                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
+                    if ($useform eq 'checked') {
+                        # use checkbox
+                        $tabindex = $tmp + 1;
+                        print $sock "<input type=\"checkbox\" name=\"chk_evalid_${tmp}__ln_${lnno}\" tabindex=\"$tabindex\">$evals[$tmp] ";
+                    } else {
+                        # no checkbox
+                        print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
+                    }
                 }
                 if (($lnno & 1) == 0) {
                     print $sock "</font>";
@@ -213,13 +244,23 @@ sub l00http_lineeval_proc (\%) {
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {
                     print $sock "$clipurl <font style=\"color:black;background-color:lime\">$_</font>\n";
                 } else {
-                    print $sock "$clipurl $_\n";
+                    if (($lnno & 1) == 0) {
+                        print $sock "<font style=\"color:black;background-color:WhiteSmoke\">";
+                        print $sock "$clipurl $_\n";
+                        print $sock "</font>";
+                    } else {
+                        print $sock "$clipurl $_\n";
+                    }
                 }
 
                 $lnno++;
             }
             print $sock "</pre>\n";
         }
+    }
+
+    if ($useform eq 'checked') {
+        print $sock "</form>\n";
     }
 
 
