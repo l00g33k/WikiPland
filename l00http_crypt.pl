@@ -329,7 +329,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "<form action=\"/crypt.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"password\" size=\"10\" name=\"pass1\" value=\"$pass\">\n";
+    print $sock "<input type=\"password\" size=\"10\" name=\"pass1\" value=\"$pass\" accesskey=\"p\">>\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"submit\" name=\"decrypt\" value=\"Decrypt file\">\n";
     print $sock "</td></tr>\n";
