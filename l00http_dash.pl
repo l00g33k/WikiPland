@@ -519,7 +519,8 @@ sub l00http_dash_proc {
                                 # hide for +# days
                                 $tmp = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
                                        &l00httpd::now_string2time($tim)) / (24 * 3600));
-                                if ($tmp >= $1) {
+                                if (($tmp >= $1) || ($dash_all eq 'all')) {
+                                    # but don't hide if displaying all
                                     $tmp = 1;
                                 } else {
                                     $tmp = 0;
