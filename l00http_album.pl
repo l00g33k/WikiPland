@@ -43,7 +43,7 @@ $newestpicstamp = 0;
 sub album_web {
     my ($ctrl, $sock, %album) = @_;
     my ($matchdate, $anchor, $tmp, $utc, $path, @gpsdates);
-    my ($gpsdate, $lat, $lon, $sh, $bat);
+    my ($gpsdate, $lat, $lon, $sh, $bat, $caption);
 
     $anchor = 0;
     $sh = '';
@@ -54,7 +54,8 @@ sub album_web {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\" style=\"width: 100%;\">\n";
 
 
-    foreach $matchdate (sort keys %album) {
+    foreach $utc (sort keys %album) {
+        ($matchdate, $caption) = split('\|', $album{$utc});
         print $sock "<tr><td style=\"width: 100%;\">\n";
 
         $anchor++;
@@ -97,8 +98,8 @@ sub album_web {
         &l00httpd::l00fwriteClose($ctrl);
 
         print $sock "<a href=\"/kml2gmap.htm?path=l00://album_$anchor.txt\" target=\"_blank\">GPS $tmp</a><br>\n";
-        if ($album{$matchdate} ne '') {
-            print $sock "$album{$matchdate}<br>\n";
+        if ($caption ne '') {
+            print $sock "$caption<br>\n";
         }
 
         print $sock "<a href=\"/activity.htm?start=Start&path=$path\" target=\"_blank\">".
@@ -475,7 +476,9 @@ sub l00http_album_proc {
                         next;
                     }
                     $output .= "$_\n";
-                    $album{$matchdate} = $caption;
+
+                    ($utc, $path) = split('\|', $picbystamp{$matchdate});
+                    $album{$utc} = "$matchdate|$caption";
 
 
                     
@@ -483,7 +486,6 @@ sub l00http_album_proc {
                     $tmp = $anchor - 1;
                     $tmp = $anchor + 1;
 
-                    ($utc, $path) = split('\|', $picbystamp{$matchdate});
                     $tmp = &l00httpd::time2now_string ($utc);
 
                     $tmp = &l00httpd::time2now_string ($matchdate);
