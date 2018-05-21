@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 use l00wikihtml;
+use l00mktime;
+use POSIX;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -8,9 +10,304 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_album_proc",
               desc => "l00http_album_desc");
-my ($width, $height, $llspath);
-$width = '50%';
+my ($width, $height, $llspath, %album_mon2nm);
+my (%gpsbydate, @gpsbydateidx, %picbystamp, $picbystampcnt, $noGps, $oldestpicstamp, $newestpicstamp);
+my (@srcdir, $srcdirsig, @gpsdir, $gpsdirsig, $posixoffset);
+$width = '100%';
 $height = '';
+$noGps = 2;
+undef %gpsbydate;
+@gpsbydateidx = ();
+undef %picbystamp;
+$srcdirsig = '';
+$gpsdirsig = '';
+$oldestpicstamp = 0;
+$newestpicstamp = 0;
+
+%album_mon2nm = (
+    Jan => 0,
+    Feb => 1,
+    Mar => 2,
+    Apr => 3,
+    May => 4,
+    Jun => 5,
+    Jul => 6,
+    Aug => 7,
+    Sep => 8,
+    Oct => 9,
+    Nov => 10,
+    Dec => 11
+);
+
+
+sub album_web {
+    my ($ctrl, $sock, %album) = @_;
+    my ($matchdate, $anchor, $tmp, $utc, $path, @gpsdates);
+    my ($gpsdate, $lat, $lon, $sh, $bat);
+
+    $anchor = 0;
+    $sh = '';
+    $bat = '';
+
+    print $sock "<a name=\"pictop\"></a>\n";
+    print $sock "<a name=\"pic$anchor\"></a>\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\" style=\"width: 100%;\">\n";
+
+
+    foreach $matchdate (sort keys %album) {
+        print $sock "<tr><td style=\"width: 100%;\">\n";
+
+        $anchor++;
+        print $sock "<a name=\"pic$anchor\"></a> ";
+        print $sock "<a href=\"#pictop\">top</a> - ";
+        $tmp = $anchor - 1;
+        print $sock "<a href=\"#pic$tmp\">last #$tmp</a> - ";
+        print $sock "<a href=\"#pic$anchor\">#$anchor</a> - ";
+        $tmp = $anchor + 1;
+        print $sock "<a href=\"#pic$tmp\">next #$tmp</a> - \n";
+        print $sock "<a href=\"#picbot\">bottom</a> \n";
+
+        ($utc, $path) = split('\|', $picbystamp{$matchdate});
+        if ($ctrl->{'debug'} >= 4) {
+            $tmp = &l00httpd::time2now_string ($matchdate);
+            print $sock "<br>(dbg: file stamp $matchdate $tmp utc of file stamp $utc) ";
+        }
+        $tmp = &l00httpd::time2now_string ($utc);
+        print $sock "Picture date: $tmp\n";
+
+        $sh  .= "cp \"$path\" .\n";
+        $bat .= "copy \"$path\" .\n";
+
+        $tmp = &l00httpd::time2now_string ($matchdate);
+
+        @gpsdates = &album_findgps($ctrl, $utc);
+
+        if ($#gpsdates == 0) {
+            $tmp = &l00httpd::time2now_string ($gpsdates[0]);
+        } else {
+            $tmp = &l00httpd::time2now_string ($gpsdates[$noGps]);
+        }
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://album_$anchor.txt");
+        foreach $gpsdate (@gpsdates) {
+            ($lat, $lon) = split(",", $gpsbydate{$gpsdate});
+            $gpsdate = &l00httpd::time2now_string ($gpsdate);
+            &l00httpd::l00fwriteBuf($ctrl, "* $gpsdate\n$lat,$lon $gpsdate\n");
+        }
+        &l00httpd::l00fwriteClose($ctrl);
+
+        print $sock "<a href=\"/kml2gmap.htm?path=l00://album_$anchor.txt\" target=\"_blank\">GPS $tmp</a><br>\n";
+        if ($album{$matchdate} ne '') {
+            print $sock "$album{$matchdate}<br>\n";
+        }
+
+        print $sock "<a href=\"/activity.htm?start=Start&path=$path\" target=\"_blank\">".
+                    "<img src=\"/ls.htm?path=$path\" ".
+                    "alt=\"$path\" ".
+                    "width=\"$width\" height=\"$height\">".
+                    "</a>\n";
+
+        print $sock "</td></tr>\n";
+
+    }
+    print $sock "</table>\n";
+
+
+    &l00httpd::l00fwriteOpen($ctrl, "l00://album_sh.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $sh);
+    &l00httpd::l00fwriteClose($ctrl);
+    &l00httpd::l00fwriteOpen($ctrl, "l00://album_bat.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $bat);
+    &l00httpd::l00fwriteClose($ctrl);
+
+    print $sock "<br><a name=\"picbot\"></a>Jump to picture: \n";
+    for $_ (1..$anchor) {
+        if ($_ > 1) {
+            print $sock " - ";
+        }
+        print $sock "<a href=\"#pic$_\">#$_</a>";
+    }
+    print $sock "<br>\n";
+}
+
+
+sub album_findgps {
+    my ($ctrl, $picdate) = @_;
+    my (@gpsdates, $ii);
+
+
+    @gpsdates = ();
+
+    for ($ii = 0; $ii <= $#gpsbydateidx; $ii++) {
+        if ($picdate < $gpsbydateidx[$ii]) {
+            if ($ctrl->{'debug'} >= 4) {
+                my ($buf, $tmp);
+                $tmp = &l00httpd::time2now_string ($picdate);
+                $buf = "album_findgps: file date $picdate $tmp; closest GPS $gpsbydateidx[$ii] ";
+                $tmp = &l00httpd::time2now_string ($gpsbydateidx[$ii]);
+                $buf .= "$tmp\n";
+                l00httpd::dbp($config{'desc'}, $buf);
+            }
+            if (($ii > $noGps) && ($ii < ($#gpsbydateidx - $noGps))) {
+                @gpsdates = @gpsbydateidx[$ii-$noGps .. $ii+$noGps];
+            } else {
+                @gpsdates = ($gpsbydateidx[$ii]);
+            }
+            last;
+        }
+    }
+
+    @gpsdates;
+}
+
+
+# album_scanjpg: search the array of directories for .jpg and .off2utc
+# filenames of .jpg is expected to have the date/time stamp of the picture as a prefix
+# _+#.off2utc: # is the value to be added to picture time to arrive at UTC time
+
+sub album_scanjpg {
+    my ($ctrl, @srcdir) = @_;
+    my ($path, $file, $tmp, $ii);
+    my ($nopics, $nodirs, $stamp);
+    my ($year, $mon, $mday, $hour, $min, $sec);
+    my (@subdirs, $off2utc);
+
+    $nopics = 0;
+    $nodirs = 0;
+    $off2utc = 0;
+    @subdirs = ();
+    foreach $path (@srcdir) {
+        print "Scan JPG in $path ";
+        if (opendir (JPG, $path)) {
+            $nodirs++;
+            if ($ctrl->{'debug'} >= 4) {
+                l00httpd::dbp($config{'desc'}, "DIR : $path\n");
+            }
+            foreach $file (sort readdir (JPG)) {
+                print ".", if (($nopics % 1000) == 0);
+                if (-d "$path$file") {
+                    if ($file !~ /^\.+$/) {
+                        push(@subdirs, "$path$file/");
+                    }
+                } elsif (($year, $mon, $mday, $hour, $min, $sec) =
+                    $file =~ /^(\d\d\d\d)_(\d\d)_(\d\d) (\d\d)_(\d\d)_(\d\d)(.+\.jpg)$/i) {
+                    $nopics++;
+                    $mon--;
+                    $year -= 1900;
+                    #$stamp = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
+                    $stamp = mktime($sec, $min, $hour, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
+                    $tmp = $stamp + ($off2utc * 3600);
+                    $picbystamp{$stamp} = "$tmp|$path$file";
+                    if ($ctrl->{'debug'} >= 4) {
+                        l00httpd::dbp($config{'desc'}, "$file : off2utc=$off2utc filestamp=$stamp utc=$tmp\n");
+                    }
+                } elsif ($file =~ /_([+\-]\d+)\.off2utc$/i) {
+                    $off2utc = $1;
+                    if ($ctrl->{'debug'} >= 4) {
+                        l00httpd::dbp($config{'desc'}, "$file : off2utc=$off2utc\n");
+                    }
+                }
+            }
+        }
+        print "\n";
+    }        
+
+    if ($#subdirs >= 0) {
+        ($_, $tmp) = &album_scanjpg($ctrl, @subdirs);
+        $nodirs += $_;
+        $nopics += $tmp;
+    }
+
+    ($nodirs, $nopics);
+}
+
+
+sub album_readgps {
+    my (@gpsdir) = @_;
+    my ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $gpsstamp, $l00stamp);
+    my ($nofiles, $nopoints, $time0, $lon, $lat);
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
+    my ($path, $file, $tmp, $ii, $stamp);
+
+    $nofiles = 0;
+    $nopoints = 0;
+    foreach $path (@gpsdir) {
+        print "Scan GPS records in $path ";
+        if (opendir (GPS, $path)) {
+            foreach $file (sort readdir (GPS)) {
+                # gps_20141225.trk
+                if (($year, $mon, $mday) =
+                    $file =~ /gps_(\d\d\d\d)(\d\d)(\d\d)\.trk$/) {
+                    $mon--;
+                    $year -= 1900;
+                    #$stamp = &l00mktime::mktime ($year, $mon, $mday, 0, 0, 0);
+                    $stamp = mktime(0, 0, 0, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
+
+                    # only scan for GPS records withing 1 day of oldest and newest
+                    if (($stamp > ($oldestpicstamp - 86400)) && 
+                        ($stamp < ($newestpicstamp + 86400)) &&
+                        open(TRK, "<$path$file")) {
+                        print ".";
+                        $nofiles++;
+                        $tmp = 0;
+                        #T  N4315.84286 W00255.66779 12-Mar-18 11:14:45   73 ; gps 20180312 121552
+                        #                            GPS time in UTC           log time in localtime
+                        while (<TRK>) {
+                            if (($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $gpsstamp, $l00stamp) 
+                                = /T +([NS])(\d\d)([\d.]+) ([WE])(\d\d\d)([\d.]+) (\d\d-...-\d\d \d\d:\d\d:\d\d) *-*\d+ ; gps ([ 0-9]+)/) {
+                                $lat = $lat_d + $lad_m / 60.0;
+                                if ($ns eq 'S') {
+                                    $lat = -$lat;
+                                }
+                                $lon = $lon_d + $lon_m / 60.0;
+                                if ($ew eq 'W') {
+                                    $lon = -$lon;
+                                }
+                                # convert GPS UTC time
+                                if (($mday, $mon, $year, $hour, $min, $sec) =
+                                    $gpsstamp =~ /(\d\d)-(...)-(\d\d) (\d\d):(\d\d):(\d\d)/) {
+                                    #print "($mday, $mon, $year, $hour, $min, $sec) ", if(($nofiles ==1)&&($tmp<5));
+                                    $mon = $album_mon2nm{$mon};
+                                    $year += 100;
+                                    #print "$mon ", if(($nofiles ==1)&&($tmp<5));
+                                    #$gpsstamp = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
+                                    $gpsstamp = mktime($sec, $min, $hour, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
+                                    #print "$gpsstamp ", if(($nofiles ==1)&&($tmp<5));
+                                    #$_ = &l00httpd::time2now_string ($gpsstamp);
+                                    #print "$_ ", if(($nofiles ==1)&&($tmp<5));
+
+                                    # convert local log time
+                                    if (($year, $mon, $mday, $hour, $min, $sec) =
+                                        $l00stamp =~ /(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/) {
+                                        #print "($mday, $mon, $year, $hour, $min, $sec) ", if(($nofiles ==1)&&($tmp<5));
+                                        $mon--;
+                                        $year -= 1900;
+                                        #print "$mon ", if(($nofiles ==1)&&($tmp<5));
+                                        #$l00stamp = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
+                                        $l00stamp = mktime($sec, $min, $hour, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
+                                        #print "$l00stamp ", if(($nofiles ==1)&&($tmp<5));
+                                        #$_ = &l00httpd::time2now_string ($l00stamp);
+                                        #print "$_ ", if(($nofiles ==1)&&($tmp<5));
+
+                                        if (!defined($gpsbydate{$gpsstamp})) {
+                                            $nopoints++;
+                                            $gpsbydate{$gpsstamp} = "$lat,$lon,$l00stamp";
+                                        }
+                                    }
+                                }
+                                #print "$lat $lon ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $gpsstamp, $l00stamp)\n", if(($nofiles ==1)&&($tmp<5));
+                            }
+                        }
+                        close(TRK);
+                    }
+                }
+            }
+        }
+        print "\n";
+    }
+
+    ($nofiles, $nopoints);
+}
 
 
 sub l00http_album_desc {
@@ -24,20 +321,23 @@ sub l00http_album_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $file, @allpics, $last, $next, $phase, $outbuf, $ii, $tmp);
-    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $file, $target, 
-        %pics, %notes, @srcdir, $srcfile, %allpics, $dir, $regex, $output, 
-        $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
-    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
+    my ($path, $file, $last, $next, $phase, $outbuf, $ii, $tmp);
+    my ($srcfile, $dir, $regex, $output, $time0, $stamp, $utc, $date, $match, $anchor,
+        $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks, $caption);
+    my ($year, $mon, $mday, $hour, $min, $sec);
+    my ($matchdate, $stats, $unmatched, $warnings, $gpsdate, @gpsdates, $lat, $lon);
+    my (%album);
 
 
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>album</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a>\n";
+    print $sock " - <a href=\"/album.htm?path=$form->{'path'}\">Refresh</a>\n";
     if (defined ($form->{'path'})) {
-        print $sock " - <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p>\n";
+        print $sock " - <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
     }
+    print $sock "<p>\n";
 
     if (defined ($form->{'set'})) {
         if (defined ($form->{'width'})) {
@@ -48,16 +348,27 @@ sub l00http_album_proc {
         }
     }
 
+    if (defined ($form->{'clearcache'})) {
+        $srcdirsig = '';
+        $gpsdirsig = '';
+    }
 
     if (defined ($form->{'path'})) {
         ($path) = $form->{'path'} =~ /^(.+\/)[^\/]+$/;
-
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-            undef %pics;
-            undef %notes;
             undef @srcdir;
+            undef @gpsdir;
+            $time0 = time;
+            $stats = '';
 
-            # read srcdir
+            # my mktime
+            $stamp = &l00mktime::mktime (110, 0, 1, 0, 0, 0);
+            # POSIX
+            $tmp = mktime(0, 0, 0, 1, 0, 110, 0, 0, -1);
+            $posixoffset = $stamp - $tmp;
+            $stats .= "Add $posixoffset secs to POSIX::mktime() for time\n";
+
+            # scan album source
             $srcfile = &l00httpd::l00freadAll($ctrl);
             foreach $_ (split("\n", $srcfile)) {
                 s/\n//;
@@ -65,68 +376,166 @@ sub l00http_album_proc {
                 if (/^DIR:(.+)/) {
                     push(@srcdir, $1);
                 }
-            }
-
-            # scan for all pictures
-            undef %allpics;
-            foreach $dir (@srcdir) {
-                if (opendir (DIR, $dir)) {
-                    print $sock "Searching: <a href=\"/ls.htm?path=$dir\">$dir</a><br>\n";
-                    foreach $file (readdir (DIR)) {
-                        if (($file =~ /\.jpg/i)) {
-                            $allpics{$file} = $dir;
-                        }
-                    }
-                    closedir (DIR);
+                if (/^GPS:(.+)/) {
+                    push(@gpsdir, $1);
                 }
             }
 
+            $_ = join('::', @srcdir);
+            if ($srcdirsig ne $_) {
+                $srcdirsig = $_;
+                print $sock "Scanning JPG pictures...<br>\n";
+                $time0 = time;
+                ($_, $tmp) = &album_scanjpg($ctrl, @srcdir);
+                $stats .= "Read $tmp pictures from $_ directories in ";
+                $stats .= sprintf("%.1f secs", time - $time0);
+                $stats .= "\n";
+            } else {
+                $stats .= "Using cached picture list of $picbystampcnt pictures: $srcdirsig\n";
+            }
+
+            $oldestpicstamp = 0;
+            $picbystampcnt = 0;
+            foreach $_ (sort keys %picbystamp) {
+                $picbystampcnt++;
+                if ($oldestpicstamp == 0) {
+                    $oldestpicstamp = $_;
+                }
+                $newestpicstamp = $_;
+            }
+            if ($oldestpicstamp > 0) {
+                $tmp = &l00httpd::time2now_string ($oldestpicstamp);
+                $stats .= "    Oldest picture date stamp is $tmp ($oldestpicstamp)\n";
+                $tmp = &l00httpd::time2now_string ($newestpicstamp);
+                $stats .= "    Newest picture date stamp is $tmp ($newestpicstamp)\n";
+            } else {
+                $stats .= "    no pictures found\n";
+            }
+
+            $_ = join('::', @gpsdir);
+            if ($gpsdirsig ne $_) {
+                $gpsdirsig = $_;
+                print $sock "Scanning GPS records...<br>\n";
+                $time0 = time;
+                ($_, $tmp) = &album_readgps(@gpsdir);
+
+                foreach $_ (sort keys %gpsbydate) {
+                    push(@gpsbydateidx, $_);
+                }
+
+                $stats .= "Read $tmp GPS locations from $_ files in ";
+                $stats .= sprintf("%.1f secs", time - $time0);
+                $stats .= "\n";
+            } else {
+                $tmp = $#gpsbydateidx + 1;
+                $stats .= "Using cached GPS list of $tmp locations: $gpsdirsig\n";
+            }
+            if ($#gpsbydateidx >= 0) {
+                $tmp = &l00httpd::time2now_string ($gpsbydateidx[0]);
+                $stats .= "    oldest GPS: $tmp ($gpsbydateidx[0])\n";
+                $tmp = &l00httpd::time2now_string ($gpsbydateidx[$#gpsbydateidx]);
+                $stats .= "    latest GPS: $tmp ($gpsbydateidx[$#gpsbydateidx])\n";
+            } else {
+                $stats .= "    no GPS records found\n";
+            }
+            $stats .= "Note: 2017_11_15 23_00_00_+8.off2utc adds 8 hours to picture time stamp for UTC for time after the time in filename\n";
+
+
+
             # generate web view
+            $unmatched = 0;
+            $warnings = '';
+            $anchor = 0;
             $output = '';
+            $caption = '';
+            undef %album;
+
             foreach $_ (split("\n", $srcfile)) {
                 s/\n//;
                 s/\r//;
-                if (/^DIR:(.+)/) {
-                    next;
-                }
-                if (/^PIC:(.+)/) {
-                    $regex = $1;
-                    foreach $file (keys %allpics) {
-                        if ($file =~ /$regex/i) {
-                            $tmp = $allpics{"$file"}.$file;
-                            $output .= "\n<a href=\"/ls.htm?path=$tmp\">".
-                                "<img src=\"/ls.htm/$file?path=$tmp\" width=\"$width\" height=\"$height\"></a>".
-                                "<br><small>$file</small>".
-                                "\n";
+                if (($tmp) = /^\* (.+)$/) {
+                    $caption = $1;
+                } elsif (($tmp) = /^\*\* (.+)$/) {
+                    if (($path, $file) = $tmp !~ /^(.*[\\\/])([^\\\/]+)$/) {
+                        $path = '';
+                        $file = $tmp;
+                    }
+
+                    $match = 0;
+                    foreach $date (sort keys %picbystamp) {
+                        if ($picbystamp{$date} =~ /$file/) {
+                            $match++;
+                            $matchdate = $date;
                         }
                     }
-                    next;
-                }
-                $output .= "$_\n";
-            }
-            print $sock &l00wikihtml::wikihtml ($ctrl, "", $output, 0);;
+                    if ($match != 1) {
+                        $unmatched++;
+                        $warnings .= "There are $match matches for $file<br>\n";
+                        $output .= "$_\n";
+                        next;
+                    }
+                    $output .= "$_\n";
+                    $album{$matchdate} = $caption;
 
+
+                    
+                    $anchor++;
+                    $tmp = $anchor - 1;
+                    $tmp = $anchor + 1;
+
+                    ($utc, $path) = split('\|', $picbystamp{$matchdate});
+                    $tmp = &l00httpd::time2now_string ($utc);
+
+                    $tmp = &l00httpd::time2now_string ($matchdate);
+                    $output .= "    pic date is $matchdate aka $tmp\n";
+
+                    @gpsdates = &album_findgps($ctrl, $utc);
+                    $output .= "    gps date is " . join(' ', @gpsdates);
+
+                    if ($#gpsdates == 0) {
+                        $tmp = &l00httpd::time2now_string ($gpsdates[0]);
+                    } else {
+                        $tmp = &l00httpd::time2now_string ($gpsdates[$noGps]);
+                    }
+                    $output .= " aka $tmp\n";
+
+                    $caption = '';
+                } else {
+                    $output .= "$_\n";
+                }
+            }
+
+            &album_web($ctrl, $sock, %album);
+
+            $stats .= "View generated shell script to copy to .: <a href=\"/view.htm?path=l00://album_sh.txt\" target=\"_blank\">l00://album_sh.txt</a>\n";
+            $stats .= "View generated batch file to copy to .: <a href=\"/view.htm?path=l00://album_bat.txt\" target=\"_blank\">l00://album_bat.txt</a>\n";
+
+            print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats\n$output", 0);;
         }
     }
 
-    print $sock "<p>\n";
-    for ($ii = 1; $ii < $#allpics; $ii++) {
-        $file = $allpics[$#allpics - $ii + 1];
-        print $sock "<a href=\"/album.htm?path=$path$file\">$ii</a>\n";
-    }
+
     print $sock "<p>\n";
 
     print $sock "<a name=\"end\"><a/>";
     print $sock "<a/><form action=\"/album.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"><br>Image size, e.g.: 1024 or 100%\n";
+    print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"> Image size, e.g.: 1024 or 100%\n";
+    print $sock "<a href=\"/album.htm?set=Set&width=100%25&path=$form->{'path'}\">100</a>\n";
+    print $sock "<a href=\"/album.htm?set=Set&width=67%25&path=$form->{'path'}\">67</a>\n";
+    print $sock "<a href=\"/album.htm?set=Set&width=50%25&path=$form->{'path'}\">50</a>\n";
+    print $sock "<a href=\"/album.htm?set=Set&width=33%25&path=$form->{'path'}\">33</a>\n";
+    print $sock "<a href=\"/album.htm?set=Set&width=25%25&path=$form->{'path'}\">25</a>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Height: <input type=\"text\" size=\"4\" name=\"height\" value=\"$height\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"clearcache\" value=\"Clear cache\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
