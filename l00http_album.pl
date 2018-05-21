@@ -522,14 +522,14 @@ sub l00http_album_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"> Image size, e.g.: 1024 or 100%\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "<a href=\"/album.htm?set=Set&width=100%25&path=$form->{'path'}\">100</a>\n";
     print $sock "<a href=\"/album.htm?set=Set&width=67%25&path=$form->{'path'}\">67</a>\n";
     print $sock "<a href=\"/album.htm?set=Set&width=50%25&path=$form->{'path'}\">50</a>\n";
     print $sock "<a href=\"/album.htm?set=Set&width=33%25&path=$form->{'path'}\">33</a>\n";
     print $sock "<a href=\"/album.htm?set=Set&width=25%25&path=$form->{'path'}\">25</a>\n";
-    print $sock "</td></tr>\n";
-    print $sock "<tr><td>\n";
-    print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Height: <input type=\"text\" size=\"4\" name=\"height\" value=\"$height\">\n";
