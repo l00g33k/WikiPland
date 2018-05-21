@@ -12,8 +12,8 @@ my %config = (proc => "l00http_album_proc",
               desc => "l00http_album_desc");
 my ($width, $height, $llspath, %album_mon2nm);
 my (%gpsbydate, @gpsbydateidx, %picbystamp, $picbystampcnt, $noGps, $oldestpicstamp, $newestpicstamp);
-my (@srcdir, $srcdirsig, @gpsdir, $gpsdirsig, $posixoffset);
-$width = '100%';
+my (@srcdir, $srcdirsig, @gpsdir, $gpsdirsig, $warnings, $posixoffset);
+$width = '67%';
 $height = '';
 $noGps = 2;
 undef %gpsbydate;
@@ -186,27 +186,44 @@ sub album_scanjpg {
             }
             foreach $file (sort readdir (JPG)) {
                 print ".", if (($nopics % 1000) == 0);
+                $stamp = 0;
                 if (-d "$path$file") {
                     if ($file !~ /^\.+$/) {
                         push(@subdirs, "$path$file/");
                     }
                 } elsif (($year, $mon, $mday, $hour, $min, $sec) =
+                    # 2018_03_11 20_21_31_IMG_0539.jpg
                     $file =~ /^(\d\d\d\d)_(\d\d)_(\d\d) (\d\d)_(\d\d)_(\d\d)(.+\.jpg)$/i) {
                     $nopics++;
                     $mon--;
                     $year -= 1900;
                     #$stamp = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
                     $stamp = mktime($sec, $min, $hour, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
-                    $tmp = $stamp + ($off2utc * 3600);
-                    $picbystamp{$stamp} = "$tmp|$path$file";
-                    if ($ctrl->{'debug'} >= 4) {
-                        l00httpd::dbp($config{'desc'}, "$file : off2utc=$off2utc filestamp=$stamp utc=$tmp\n");
-                    }
+                } elsif (($year, $mon, $mday, $hour, $min, $sec) =
+                    # IMG_20180310_180333.jpg
+                    $file =~ /^IMG_(\d\d\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)(.*\.jpg)$/i) {
+                    $nopics++;
+                    $mon--;
+                    $year -= 1900;
+                    #$stamp = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
+                    $stamp = mktime($sec, $min, $hour, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
+                } elsif (($year, $mon, $mday, $hour, $min, $sec) =
+                    # 20171115_232451.jpg    
+                    $file =~ /^(\d\d\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)(.*\.jpg)$/i) {
+                    $nopics++;
+                    $mon--;
+                    $year -= 1900;
+                    #$stamp = &l00mktime::mktime ($year, $mon, $mday, $hour, $min, $sec);
+                    $stamp = mktime($sec, $min, $hour, $mday, $mon, $year, 0, 0, -1) + $posixoffset;
                 } elsif ($file =~ /_([+\-]\d+)\.off2utc$/i) {
                     $off2utc = $1;
-                    if ($ctrl->{'debug'} >= 4) {
-                        l00httpd::dbp($config{'desc'}, "$file : off2utc=$off2utc\n");
-                    }
+                    $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "off2utc $off2utc $stamp $file $path\n";
+                }
+
+                if ($stamp) {
+                    $tmp = $stamp + ($off2utc * 3600);
+                    $picbystamp{$stamp} = "$tmp|$path$file";
+                    $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "$stamp $tmp $off2utc $file $path\n";
                 }
             }
         }
@@ -326,7 +343,7 @@ sub l00http_album_proc {
     my ($srcfile, $dir, $regex, $output, $time0, $stamp, $utc, $date, $match, $anchor,
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks, $caption);
     my ($year, $mon, $mday, $hour, $min, $sec);
-    my ($matchdate, $stats, $unmatched, $warnings, $gpsdate, @gpsdates, $lat, $lon);
+    my ($matchdate, $stats, $unmatched, $gpsdate, @gpsdates, $lat, $lon);
     my (%album);
 
 
@@ -361,6 +378,19 @@ sub l00http_album_proc {
             undef @gpsdir;
             $time0 = time;
             $stats = '';
+            $warnings = '';
+
+            $ctrl->{'l00file'}->{"l00://album_warnings.txt"} = '';
+            $ctrl->{'l00file'}->{"l00://album_pics.txt"} = "filestamp UTC off2utc name path\nSearch off2utc for UTC offset\n";
+            $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "Note: current design will mix up multiple files with same timestamp\n";
+            $ctrl->{'l00file'}->{"l00://album_gps.txt"} = "UTC lat lon\n";
+
+            $warnings .= "See <a href=\"/view.htm?path=l00://album_warnings.txt\" target=\"_blank\">".
+                "l00://album_warnings.txt</a> for full list of warnings\n";
+            $warnings .= "See <a href=\"/view.htm?path=l00://album_pics.txt\" target=\"_blank\">".
+                "l00://album_pics.txt</a> for list of all pictures\n";
+            $warnings .= "See <a href=\"/view.htm?path=l00://album_gps.txt\" target=\"_blank\">".
+                "l00://album_gps.txt</a> for list of all GPS positions\n";
 
             # my mktime
             $stamp = &l00mktime::mktime (110, 0, 1, 0, 0, 0);
@@ -421,6 +451,7 @@ sub l00http_album_proc {
                 ($_, $tmp) = &album_readgps(@gpsdir);
 
                 foreach $_ (sort keys %gpsbydate) {
+                    $ctrl->{'l00file'}->{"l00://album_gps.txt"} .= "$_ $gpsbydate{$_}\n";
                     push(@gpsbydateidx, $_);
                 }
 
@@ -445,7 +476,6 @@ sub l00http_album_proc {
 
             # generate web view
             $unmatched = 0;
-            $warnings = '';
             $anchor = 0;
             $output = '';
             $caption = '';
@@ -471,7 +501,15 @@ sub l00http_album_proc {
                     }
                     if ($match != 1) {
                         $unmatched++;
-                        $warnings .= "There are $match matches for $file<br>\n";
+                        if ($unmatched <= 3) {
+                            $warnings .= "There are $match matches for $file\n";
+                            if ($unmatched == 3) {
+                                $warnings .= "See <a href=\"/view.htm?path=l00://album_warnings.txt\" target=\"_blank\">".
+                                "l00://album_warnings.txt</a> for additional possible mismatch\n";
+                            }
+                        }
+                        $ctrl->{'l00file'}->{"l00://album_warnings.txt"} .= 
+                            "$match matches for $file\n";
                         $output .= "$_\n";
                         next;
                     }
@@ -512,7 +550,8 @@ sub l00http_album_proc {
             $stats .= "View generated shell script to copy to .: <a href=\"/view.htm?path=l00://album_sh.txt\" target=\"_blank\">l00://album_sh.txt</a>\n";
             $stats .= "View generated batch file to copy to .: <a href=\"/view.htm?path=l00://album_bat.txt\" target=\"_blank\">l00://album_bat.txt</a>\n";
 
-            print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats\n$output", 0);;
+            #print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats\n$output", 0);;
+            print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats", 0);;
         }
     }
 
