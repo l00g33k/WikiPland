@@ -171,11 +171,12 @@ sub album_scanjpg {
     my ($path, $file, $tmp, $ii);
     my ($nopics, $nodirs, $stamp);
     my ($year, $mon, $mday, $hour, $min, $sec);
-    my (@subdirs, $off2utc);
+    my (@subdirs, $off2utc, $newday);
 
     $nopics = 0;
     $nodirs = 0;
     $off2utc = 0;
+    $newday = '';
     @subdirs = ();
     foreach $path (@srcdir) {
         print "Scan JPG in $path ";
@@ -221,6 +222,14 @@ sub album_scanjpg {
                 }
 
                 if ($stamp) {
+                    if ($newday ne "$year:$mon$mday") {
+                        $newday =  "$year:$mon$mday";
+                        $tmp = &l00httpd::time2now_string ($stamp - 1);
+                        if (($year, $mon, $mday, $hour, $min, $sec) = $tmp =~ /(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/) {
+                            $tmp = "${year}_${mon}_${mday} ${hour}_${min}_${sec}_x_+0.off2utc";
+                            $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "* Edit <a href=\"/edit.htm?path=$path$tmp\">$path$tmp<a/>???\n/n";
+                        }
+                    }
                     $tmp = $stamp + ($off2utc * 3600);
                     $picbystamp{$stamp} = "$tmp|$path$file";
                     $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "$stamp $tmp $off2utc $file $path\n";
@@ -381,8 +390,9 @@ sub l00http_album_proc {
             $warnings = '';
 
             $ctrl->{'l00file'}->{"l00://album_warnings.txt"} = '';
-            $ctrl->{'l00file'}->{"l00://album_pics.txt"} = "filestamp UTC off2utc name path\nSearch off2utc for UTC offset\n";
-            $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "Note: current design will mix up multiple files with same timestamp\n";
+            $ctrl->{'l00file'}->{"l00://album_pics.txt"}  = "%TOC%\n";
+            $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "filestamp UTC off2utc name path\nSearch off2utc for UTC offset\n";
+            $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "* Note: current implementation will only present one of many pictures with the same timestamp\n";
             $ctrl->{'l00file'}->{"l00://album_gps.txt"} = "UTC lat lon\n";
 
             $warnings .= "See <a href=\"/view.htm?path=l00://album_warnings.txt\" target=\"_blank\">".
@@ -466,7 +476,7 @@ sub l00http_album_proc {
                 $tmp = &l00httpd::time2now_string ($gpsbydateidx[0]);
                 $stats .= "    oldest GPS: $tmp ($gpsbydateidx[0])\n";
                 $tmp = &l00httpd::time2now_string ($gpsbydateidx[$#gpsbydateidx]);
-                $stats .= "    latest GPS: $tmp ($gpsbydateidx[$#gpsbydateidx])\n";
+                $stats .= "    newest GPS: $tmp ($gpsbydateidx[$#gpsbydateidx])\n";
             } else {
                 $stats .= "    no GPS records found\n";
             }
