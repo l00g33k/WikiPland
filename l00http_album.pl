@@ -55,7 +55,7 @@ sub album_web {
 
 
     foreach $utc (sort keys %album) {
-        ($matchdate, $caption) = split('\|', $album{$utc});
+        ($matchdate, $caption) = $album{$utc} =~ /^(.+?)\|(.+)$/;
         print $sock "<tr><td style=\"width: 100%;\">\n";
 
         $anchor++;
@@ -74,10 +74,15 @@ sub album_web {
             print $sock "<br>(dbg: file stamp $matchdate $tmp utc of file stamp $utc) ";
         }
         $tmp = &l00httpd::time2now_string ($utc);
-        print $sock "Picture date: $tmp\n";
+        print $sock " - <a href=\"/ls.htm?path=$path\" target=\"_blank\">Picture</a> UTC: $tmp\n";
 
-        $sh  .= "cp \"$path\" .\n";
-        $bat .= "copy \"$path\" .\n";
+
+        $tmp = $path;
+        $tmp =~ s/\\/\//g;
+        $sh  .= "cp \"$tmp\" .\n";
+        $tmp = $path;
+        $tmp =~ s/\//\\/g;
+        $bat .= "copy \"$tmp\" .\n";
 
         $tmp = &l00httpd::time2now_string ($matchdate);
 
@@ -99,7 +104,8 @@ sub album_web {
 
         print $sock "<a href=\"/kml2gmap.htm?path=l00://album_$anchor.txt\" target=\"_blank\">GPS $tmp</a><br>\n";
         if ($caption ne '') {
-            print $sock "$caption<br>\n";
+           #print $sock "$caption<br>\n";
+            print $sock &l00wikihtml::wikihtml ($ctrl, "", "$caption<br>\n", 0);;
         }
 
         print $sock "<a href=\"/activity.htm?start=Start&path=$path\" target=\"_blank\">".
@@ -226,7 +232,7 @@ sub album_scanjpg {
                         $newday =  "$year:$mon$mday";
                         $tmp = &l00httpd::time2now_string ($stamp - 1);
                         if (($year, $mon, $mday, $hour, $min, $sec) = $tmp =~ /(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/) {
-                            $tmp = "${year}_${mon}_${mday} ${hour}_${min}_${sec}_x_+0.off2utc";
+                            $tmp = "${year}_${mon}_${mday} ${hour}_${min}_${sec}_x_-0.off2utc";
                             $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "* Edit <a href=\"/edit.htm?path=$path$tmp\">$path$tmp<a/>???\n/n";
                         }
                     }
@@ -378,6 +384,8 @@ sub l00http_album_proc {
     if (defined ($form->{'clearcache'})) {
         $srcdirsig = '';
         $gpsdirsig = '';
+        undef %picbystamp;
+        undef %gpsbydate;
     }
 
     if (defined ($form->{'path'})) {
@@ -497,7 +505,9 @@ sub l00http_album_proc {
                 if (($tmp) = /^\* (.+)$/) {
                     $caption = $1;
                 } elsif (($tmp) = /^\*\* (.+)$/) {
-                    if (($path, $file) = $tmp !~ /^(.*[\\\/])([^\\\/]+)$/) {
+                    if (($path, $file) = $tmp =~ /^(.*[\\\/])([^\\\/]+)$/) {
+                        # now we have ($path, $file)
+                    } else {
                         $path = '';
                         $file = $tmp;
                     }
@@ -560,7 +570,7 @@ sub l00http_album_proc {
             $stats .= "View generated shell script to copy to .: <a href=\"/view.htm?path=l00://album_sh.txt\" target=\"_blank\">l00://album_sh.txt</a>\n";
             $stats .= "View generated batch file to copy to .: <a href=\"/view.htm?path=l00://album_bat.txt\" target=\"_blank\">l00://album_bat.txt</a>\n";
 
-            #print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats\n$output", 0);;
+           #print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats\n$output", 0);;
             print $sock &l00wikihtml::wikihtml ($ctrl, "", "$warnings\n$stats", 0);;
         }
     }
