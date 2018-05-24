@@ -11,7 +11,7 @@ use POSIX;
 my %config = (proc => "l00http_album_proc",
               desc => "l00http_album_desc");
 my ($width, $height, $llspath, %album_mon2nm);
-my (%gpsbydate, @gpsbydateidx, %picbystamp, $picbystampcnt, $noGps, $oldestpicstamp, $newestpicstamp);
+my (%gpsbydate, %gpsfilebydate, @gpsbydateidx, %picbystamp, $picbystampcnt, $noGps, $oldestpicstamp, $newestpicstamp);
 my (@srcdir, $srcdirsig, @gpsdir, $gpsdirsig, $warnings, $posixoffset);
 $width = '67%';
 $height = '';
@@ -90,8 +90,10 @@ sub album_web {
 
         if ($#gpsdates == 0) {
             $tmp = &l00httpd::time2now_string ($gpsdates[0]);
+            print $sock "<a href=\"/view.htm?path=$gpsfilebydate{$gpsdates[0]}\" target=\"_blank\">GPS</a> ";
         } else {
             $tmp = &l00httpd::time2now_string ($gpsdates[$noGps]);
+            print $sock "<a href=\"/view.htm?path=$gpsfilebydate{$gpsdates[$noGps]}\" target=\"_blank\">GPS</a> ";
         }
 
         &l00httpd::l00fwriteOpen($ctrl, "l00://album_$anchor.txt");
@@ -102,7 +104,7 @@ sub album_web {
         }
         &l00httpd::l00fwriteClose($ctrl);
 
-        print $sock "<a href=\"/kml2gmap.htm?path=l00://album_$anchor.txt\" target=\"_blank\">GPS $tmp</a><br>\n";
+        print $sock "<a href=\"/kml2gmap.htm?path=l00://album_$anchor.txt\" target=\"_blank\">$tmp</a><br>\n";
         if ($caption ne '') {
            #print $sock "$caption<br>\n";
             print $sock &l00wikihtml::wikihtml ($ctrl, "", "$caption<br>\n", 0);;
@@ -233,7 +235,7 @@ sub album_scanjpg {
                         $tmp = &l00httpd::time2now_string ($stamp - 1);
                         if (($year, $mon, $mday, $hour, $min, $sec) = $tmp =~ /(\d\d\d\d)(\d\d)(\d\d) (\d\d)(\d\d)(\d\d)/) {
                             $tmp = "${year}_${mon}_${mday} ${hour}_${min}_${sec}_x_-0.off2utc";
-                            $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "* Edit <a href=\"/edit.htm?path=$path$tmp\">$path$tmp<a/>???\n/n";
+                            $ctrl->{'l00file'}->{"l00://album_off2utc.txt"} .= "* Edit <a href=\"/edit.htm?path=$path$tmp\">$path$tmp<a/>???\n/n";
                         }
                     }
                     $tmp = $stamp + ($off2utc * 3600);
@@ -325,6 +327,7 @@ sub album_readgps {
                                         if (!defined($gpsbydate{$gpsstamp})) {
                                             $nopoints++;
                                             $gpsbydate{$gpsstamp} = "$lat,$lon,$l00stamp";
+                                            $gpsfilebydate{$gpsstamp} = "$path$file";
                                         }
                                     }
                                 }
@@ -401,12 +404,16 @@ sub l00http_album_proc {
             $ctrl->{'l00file'}->{"l00://album_pics.txt"}  = "%TOC%\n";
             $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "filestamp UTC off2utc name path\nSearch off2utc for UTC offset\n";
             $ctrl->{'l00file'}->{"l00://album_pics.txt"} .= "* Note: current implementation will only present one of many pictures with the same timestamp\n";
+            $ctrl->{'l00file'}->{"l00://album_off2utc.txt"}  = "* To create .off2utc files\n\n";
             $ctrl->{'l00file'}->{"l00://album_gps.txt"} = "UTC lat lon\n";
+
 
             $warnings .= "See <a href=\"/view.htm?path=l00://album_warnings.txt\" target=\"_blank\">".
                 "l00://album_warnings.txt</a> for full list of warnings\n";
             $warnings .= "See <a href=\"/view.htm?path=l00://album_pics.txt\" target=\"_blank\">".
                 "l00://album_pics.txt</a> for list of all pictures\n";
+            $warnings .= "See <a href=\"/ls.htm?path=l00://album_off2utc.txt\" target=\"_blank\">".
+                "l00://album_pics.txt</a> to create .off2utc for UTC time conversion\n";
             $warnings .= "See <a href=\"/view.htm?path=l00://album_gps.txt\" target=\"_blank\">".
                 "l00://album_gps.txt</a> for list of all GPS positions\n";
 
