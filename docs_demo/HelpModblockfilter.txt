@@ -48,7 +48,14 @@ start the processing.
 * 
 
 ==Colorize ()==
-* 
+* Colors matched expressions. There are three syntax:
+** The first syntax is simply a regex. The matching patterns is colored with lime background
+** The second syntax has background color prefix bracketted by !!.
+Here green is the background is the background and android is the search term:
+    !!green!!android
+** The third syntax has foreground and background color prefix bracketted by !!. 
+Here red is the foreground and yellow is the background color and com is the search term:
+    !!red!!yellow!!com
 
 ==Perl eval==
 * These expressions are eval'd for each input lines
