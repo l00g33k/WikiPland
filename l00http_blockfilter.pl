@@ -545,11 +545,17 @@ sub l00http_blockfilter_proc {
 
                 foreach $condition (@color) {
                     if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
-                        $link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i;
+                        if ($link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i) {
+                            last; # stops at first hit
+                        }
                     } elsif (($bg, $regex) = $condition =~ /^!!([a-z]+?)!!(.+)/) {
-                        $link =~ s/($regex)/<font style="color:black;background-color:$bg">$1<\/font>/i;
+                        if ($link =~ s/($regex)/<font style="color:black;background-color:$bg">$1<\/font>/i) {
+                            last; # stops at first hit
+                        }
                     } else {
-                        $link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i;
+                        if ($link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i) {
+                            last; # stops at first hit
+                        }
                     }
                 }
 
