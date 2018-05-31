@@ -89,10 +89,14 @@ sub l00http_activity_proc {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$path");
                 }
             }
-        }
-        if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+        } elsif ($ctrl->{'os'} eq 'win') {
             if ($path ne '') {
-                `cmd /c start \"$path\"`;
+                $path =~ s/\//\\/g;
+                `cmd /c start \"\" \"$path\"`;
+            }
+        } elsif ($ctrl->{'os'} eq 'cyg') {
+            if ($path ne '') {
+                `cmd /c start \"\" \"$path\"`;
             }
         }
     }

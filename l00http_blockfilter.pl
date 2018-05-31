@@ -10,12 +10,13 @@ my %config = (proc => "l00http_blockfilter_proc",
 my (@skipto, @scanuntil, @fileexclude, @blkstart, @blkstop, 
     @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats,
     @preblkeval, @postblkeval);
-my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, @hide, $statsidx);
+my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, $maxblklines, @hide, $statsidx);
 
 $inverexclu = '';
 $reloadcfg = '';
 $blockfiltercfg = '';
 $maxlines = 1000;
+$maxblklines = 200;
 $statsidx = 0;
 
 sub l00http_blockfilter_paste {
@@ -161,6 +162,15 @@ sub l00http_blockfilter_proc {
 
         if ((defined ($form->{'maxlines'})) && ($form->{'maxlines'} =~ /(\d+)/)) {
             $maxlines = $1;
+        }
+        if (defined ($form->{'maxblklines'})) {
+            if ($form->{'maxblklines'} =~ /(\d+)/) {
+                # specified
+                $maxblklines = $1;
+            } else {
+                # no, set to 0
+                $maxblklines = 0;
+            }
         }
     }
 
@@ -311,6 +321,12 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'postblkeval', 'Post blk eval',     \@postblkeval);
     &l00http_blockfilter_form($sock, $form, 'stats',       'Statistics',        \@stats);
     &l00http_blockfilter_form($sock, $form, 'hide',        'Hide line',         \@hide);
+
+    print $sock "<tr><td>\n";
+    print $sock "Maximum lines per block display:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"8\" name=\"maxblklines\" value=\"$maxblklines\"> \n";
+    print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "Maximum lines to display:\n";
@@ -622,7 +638,13 @@ sub l00http_blockfilter_proc {
                             $outram .= $thisblockram;
 
                             # displayed line accounting
-                            $hitlinesoutputed += $hitlines;
+                            if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
+                                # if block length is unlimited or greater than displayed
+                                $hitlinesoutputed += $hitlines;
+                            } else {
+                                # if only partial block was displayed
+                                $hitlinesoutputed += $maxblklines;
+                            }
                             $hitlines = 0;
                         }
 
@@ -711,7 +733,8 @@ sub l00http_blockfilter_proc {
                     }
                     $hitlines++;
                     $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                    if ($hitlines + $hitlinesoutputed < $maxlines) {
+                    if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
+#                   if ($hitlines + $hitlinesoutputed < $maxlines) 
                         $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
                     }
                 }

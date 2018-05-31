@@ -64,6 +64,7 @@ sub l00http_eval_proc {
         print $sock "</pre>\n";
     }
 
+    print $sock "<a name=\"form\"></a>\n";
     print $sock "<form action=\"/eval.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Ev&#818;al\" accesskey=\"v\">\n";
     print $sock "<br><textarea name=\"eval\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$eval</textarea><br>\n";
@@ -107,7 +108,7 @@ sub l00http_eval_proc {
     }
 
     print $sock "<a name=\"end\"></a>\n";
-    print $sock "<a href=\"#top\">Jump to top</a><p>\n";
+    print $sock "<a href=\"#top\">Jump to top</a>, <a href=\"#form\">form</a><p>\n";
  
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};

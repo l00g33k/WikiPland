@@ -156,7 +156,8 @@ sub l00http_dash_proc {
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
             print $sock " <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
-            print $sock "- <a href=\"#bangbang\">sticky items</a> \n";
+            print $sock "- <a href=\"#quickcut\">quickcut</a> \n";
+            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"#bangbang\">sticky items</a></font> \n";
         }
     }
     print $sock "<p>\n";
@@ -518,7 +519,8 @@ sub l00http_dash_proc {
                                 # hide for +# days
                                 $tmp = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
                                        &l00httpd::now_string2time($tim)) / (24 * 3600));
-                                if ($tmp >= $1) {
+                                if (($tmp >= $1) || ($dash_all eq 'all')) {
+                                    # but don't hide if displaying all
                                     $tmp = 1;
                                 } else {
                                     $tmp = 0;
@@ -839,7 +841,7 @@ sub l00http_dash_proc {
         }
 
         # form elements
-        print $sock "Add ";
+        print $sock "<a name=\"quickcut\"></a>Add ";
         $tmp = 'style="height:1.4em; width:2.0em"';
         foreach $_ (@blocktime) {
             print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
@@ -915,7 +917,8 @@ sub l00http_dash_proc {
         print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
         print $sock " <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
-        print $sock "- <a href=\"#bangbang\">sticky items</a> \n";
+        print $sock "- <a href=\"#quickcut\">quickcut</a> \n";
+        print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"#bangbang\">sticky items</a></font> \n";
         print $sock "<p>\n";
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
         print $sock "<input type=\"submit\" name=\"process\" value=\"Process\"> \n";
