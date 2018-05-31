@@ -744,7 +744,7 @@ sub l00http_dash_proc {
             }
             if (defined($tasksSticky{$_})) {
                 $tmp = $tasksSticky{$_};
-                $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>";
+                $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
                 #if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
                     # current is also sticky, skip current
                     push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
