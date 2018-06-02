@@ -70,7 +70,7 @@ sub l00http_scratch_proc {
     }
     if (defined ($form->{'cburl'})) {
         if ($ctrl->{'os'} eq 'and') {
-            if (($tmp) = $scratch =~ /(http:\/\/[^ \n\r\t]+)/) {
+            if (($tmp) = $scratch =~ /(https*:\/\/[^ \n\r\t]+)/) {
                 &l00httpd::l00setCB($ctrl, $tmp);
             }
         }
@@ -184,6 +184,12 @@ sub l00http_scratch_proc {
 
     $scratchhtml =~ s/<a href/<a $newwin href/g;
     print $sock "$scratchhtml\n";
+    if (($tmp) = $scratch =~ /(https*:\/\/[^ \n\r\t]+)/) {
+        # we have an URL
+        print $sock "<form action=\"$tmp\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"null\" value=\"J&#818;ump to URL\" accesskey=\"j\"> \n";
+        print $sock "</form><p>\n";
+    }
 
     if ($notbare) {
         print $sock "<p><p><hr>\n";
