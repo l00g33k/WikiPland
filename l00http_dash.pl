@@ -498,9 +498,9 @@ sub l00http_dash_proc {
                                  $tasksLine{$key} = $lnno - 1;
                     }
                     if ($this =~ /!!!$/) {
-                                 $lnnostr = sprintf("%02d", $lnno);
-                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>|| $lnnostr $cat2 "} = "!!$tim";
-                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>|| $lnnostr $cat2 "} = $dsc;
+                                 $lnnostr = sprintf("%3d", $lnno);
+                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
+                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = $dsc;
                                 if ($dbg) {
                                     print $sock "    !!! $this\n";
                                 }
@@ -636,11 +636,11 @@ sub l00http_dash_proc {
                             $_ = "<a href=\"$clip\" target=\"_blank\">$desc</a>";
                         }
 
-                        $lnnostr = sprintf("%02d", $cnt);
+                        $lnnostr = sprintf("%3d", $cnt);
                         #[[/ls.htm?path=$form->{'path'}#$jmp|iHot]]
                         #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a>
-                        $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> || $lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "!!$tim";
-                        $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> || $lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "$_";
+                        $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "!!$tim";
+                        $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "$_";
                     }
                     close(IN);
                 }
@@ -899,6 +899,7 @@ sub l00http_dash_proc {
             $help .= "* ~text, to mark a item, in black on yellow\n";
             $help .= "* View <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
             $help .= "* Change 'dashwidth' using eval: ";
+            $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D18\" target=\"_blank\">18</a> - ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D24\" target=\"_blank\">24</a> - ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D30\" target=\"_blank\">30</a> - ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D40\" target=\"_blank\">40</a> - ";
