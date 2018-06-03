@@ -239,7 +239,7 @@ sub l00http_lineeval_proc (\%) {
                 } else {
                     $clipexp =  &l00httpd::urlencode ($_);
                 }
-                $clipurl = "<a href=\"/clip.htm?update=Copy+to+CB&clip=$clipexp\" target=\"_blank\">:</a>";
+                $clipurl = "<a href=\"/edit.htm?path=$form->{'path'}&clip=${lnno}_1\" target=\"_blank\">:</a>";
                 if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {
                     print $sock "$clipurl <font style=\"color:black;background-color:lime\">$_</font>\n";
