@@ -54,6 +54,45 @@ $colorlu{'h'} = 'HotPink';          $colorfg{'h'} = 'black';
 $colorlu{'u'} = 'blue';             $colorfg{'u'} = 'black';
 
 
+sub l00wikihtml_fontsty {
+    my ($_) = @_;
+
+    # **bold**    <strong>bold</strong>
+          s/ \*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
+          s/^\*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /;# at EOL
+          s/^\*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
+          s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
+    s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
+    # *l*color bold**
+          s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+          s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+          s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+    s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
+    # //italics// <em>italics</em>
+          s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
+          s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
+          s/^\/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
+    s/([ >|])\/\/([^ \/][^\/]+[^ \/])\/\/([ <\]])/$1<em> $2 <\/em>$3/g;
+    # __underline__   <u>underline</u>
+          s/ __([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
+          s/^__([^ _][^_]+[^ _])__ / <u> $1 <\/u> /;           # at EOL
+          s/^__([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
+    s/([ >|])__([^ _][^_]+[^ _])__([ <\]])/$1<u>$2<\/u>$3/g;
+    # --strike-- <strike>strike</strike>
+          s/ --([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
+          s/^--([^ \-][^\-]+[^ \-])-- / <strike> $1 <\/strike> /;    # at EOL
+          s/^--([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
+    s/([ >|])--([^ \-][^\-]+[^ \-])--([ <\]])/$1<strike> $2 <\/strike>$3/g;
+    # {{monospace}}   <tt>monospace</tt>
+    # {{{{{{{{{{{{ match in search pattern so editor match works
+          s/ \{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
+          s/^\{\{([^ \}][^\}]+[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
+          s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
+    s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
+
+    $_;
+}
+
 
 sub makejavatoc {
     my ($lvl,$ttl, $lvltop, $order, %treetop, $thislvl, $needclose);
@@ -782,6 +821,9 @@ sub wikihtml {
                     }
                     $oubuf .= "\n";
                 }
+                # process font style in headings
+                $el[1] = &l00wikihtml_fontsty($el[1]);
+
                 if ($flags & 2) {
                     $thischlvl = length($el[0]);
                     if (defined ($lastchlvl)) {
@@ -967,38 +1009,8 @@ sub wikihtml {
         #}
 
         # process font styles
-        # **bold**    <strong>bold</strong>
-              s/ \*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
-              s/^\*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /;# at EOL
-              s/^\*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
-              s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
-        s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
-        # *l*color bold**
-              s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-              s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-        s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
-        # //italics// <em>italics</em>
-              s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
-              s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
-              s/^\/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
-        s/([ >|])\/\/([^ \/][^\/]+[^ \/])\/\/([ <\]])/$1<em> $2 <\/em>$3/g;
-        # __underline__   <u>underline</u>
-              s/ __([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
-              s/^__([^ _][^_]+[^ _])__ / <u> $1 <\/u> /;           # at EOL
-              s/^__([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
-        s/([ >|])__([^ _][^_]+[^ _])__([ <\]])/$1<u>$2<\/u>$3/g;
-        # --strike-- <strike>strike</strike>
-              s/ --([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
-              s/^--([^ \-][^\-]+[^ \-])-- / <strike> $1 <\/strike> /;    # at EOL
-              s/^--([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
-        s/([ >|])--([^ \-][^\-]+[^ \-])--([ <\]])/$1<strike> $2 <\/strike>$3/g;
-        # {{monospace}}   <tt>monospace</tt>
-        # {{{{{{{{{{{{ match in search pattern so editor match works
-              s/ \{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
-              s/^\{\{([^ \}][^\}]+[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
-              s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
-        s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
+        $_ = &l00wikihtml_fontsty($_);
+
 
         # table
         if (/^\|\|/) {
