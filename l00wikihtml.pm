@@ -55,42 +55,42 @@ $colorlu{'u'} = 'blue';             $colorfg{'u'} = 'black';
 
 
 sub l00wikihtml_fontsty {
-    my ($_) = @_;
+    my ($buf) = @_;
 
     # **bold**    <strong>bold</strong>
-          s/ \*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
-          s/^\*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /;# at EOL
-          s/^\*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
-          s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
-    s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
+    $buf =~       s/ \*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
+    $buf =~       s/^\*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /;# at EOL
+    $buf =~       s/^\*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
+    $buf =~       s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
+    $buf =~ s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
     # *l*color bold**
-          s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-          s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-          s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
-    s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
+    $buf =~       s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+    $buf =~       s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+    $buf =~       s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+    $buf =~ s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
     # //italics// <em>italics</em>
-          s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
-          s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
-          s/^\/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
-    s/([ >|])\/\/([^ \/][^\/]+[^ \/])\/\/([ <\]])/$1<em> $2 <\/em>$3/g;
+    $buf =~       s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
+    $buf =~       s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
+    $buf =~       s/^\/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
+    $buf =~ s/([ >|])\/\/([^ \/][^\/]+[^ \/])\/\/([ <\]])/$1<em> $2 <\/em>$3/g;
     # __underline__   <u>underline</u>
-          s/ __([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
-          s/^__([^ _][^_]+[^ _])__ / <u> $1 <\/u> /;           # at EOL
-          s/^__([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
-    s/([ >|])__([^ _][^_]+[^ _])__([ <\]])/$1<u>$2<\/u>$3/g;
+    $buf =~       s/ __([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
+    $buf =~       s/^__([^ _][^_]+[^ _])__ / <u> $1 <\/u> /;           # at EOL
+    $buf =~       s/^__([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
+    $buf =~ s/([ >|])__([^ _][^_]+[^ _])__([ <\]])/$1<u>$2<\/u>$3/g;
     # --strike-- <strike>strike</strike>
-          s/ --([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
-          s/^--([^ \-][^\-]+[^ \-])-- / <strike> $1 <\/strike> /;    # at EOL
-          s/^--([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
-    s/([ >|])--([^ \-][^\-]+[^ \-])--([ <\]])/$1<strike> $2 <\/strike>$3/g;
+    $buf =~       s/ --([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
+    $buf =~       s/^--([^ \-][^\-]+[^ \-])-- / <strike> $1 <\/strike> /;    # at EOL
+    $buf =~       s/^--([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
+    $buf =~ s/([ >|])--([^ \-][^\-]+[^ \-])--([ <\]])/$1<strike> $2 <\/strike>$3/g;
     # {{monospace}}   <tt>monospace</tt>
     # {{{{{{{{{{{{ match in search pattern so editor match works
-          s/ \{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
-          s/^\{\{([^ \}][^\}]+[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
-          s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
-    s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
+    $buf =~       s/ \{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
+    $buf =~       s/^\{\{([^ \}][^\}]+[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
+    $buf =~       s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
+    $buf =~ s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
 
-    $_;
+    $buf;
 }
 
 
