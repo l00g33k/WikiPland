@@ -19,7 +19,7 @@ $freefmt = '';
 $smallhead = '';
 $catflt = '.';
 $outputsort = '';
-$dashwidth = 24;;
+$dashwidth = 18;;
 
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
