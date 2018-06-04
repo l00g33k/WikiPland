@@ -79,6 +79,10 @@ sub l00http_dash_proc {
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
+    my ($jumpcnt, @jumpname);
+
+    $jumpcnt = 0;
+    undef @jumpname;
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -363,7 +367,7 @@ sub l00http_dash_proc {
                 $jmp1 = $1;
                 $jmp1 =~ s/[^0-9A-Za-z]/_/g;
             } elsif ($this =~ /^==([^=]+)==/) {
-                #statu age calculation
+                #status age calculation
                 $updateLast = '';
 
                 $cat2 = $1;
@@ -381,6 +385,15 @@ sub l00http_dash_proc {
                 # make a link to lineeval at the target line
                 $lineevalln = $lnno;    # next entry line number but it's zero based
                 $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
+
+                # jump mark
+                if ($this =~ /\?\?\?$/) {
+                    $tmp = $cat2;
+                    $tmp =~ s/<.+?>//g;
+                    push (@jumpname, $tmp);
+                    $cat2 .= "<a name=\"jump$jumpcnt\"></a>";
+                    $jumpcnt++;
+                }
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 # find wikiwords. make a copy to zap [] and <> and http
                 $tmp = $dsc;
@@ -840,8 +853,22 @@ sub l00http_dash_proc {
             print $sock "</pre>\n";
         }
 
+        # jump mark
+        print $sock "<a name=\"quickcut\"></a>";
+        if ($jumpcnt > 0) {
+            $tmp = 'Jump marks: ';
+            for ($ii = 0; $ii <= $#jumpname; $ii++) {
+                if ($ii > 0) {
+                    $tmp .= " - ";
+                }
+                $tmp .= "<a href=\"#jump$ii\">@jumpname[$ii]</a>";
+            }
+            $tmp = &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);
+            print $sock "$tmp<p>\n";
+        }
+
         # form elements
-        print $sock "<a name=\"quickcut\"></a>Add ";
+        print $sock "Add ";
         $tmp = 'style="height:1.4em; width:2.0em"';
         foreach $_ (@blocktime) {
             print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
