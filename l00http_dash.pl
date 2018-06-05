@@ -76,7 +76,7 @@ sub l00http_dash_proc {
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword, $lineevalln, %lineevallns);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
-    my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge);
+    my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname);
@@ -245,6 +245,7 @@ sub l00http_dash_proc {
         undef %tasksSticky;
         undef %countBang;
         undef %updateAge;
+        undef %updateAgeVal;
         undef %firstTime;
         undef %logedTime;
         undef @wikiword;
@@ -368,7 +369,7 @@ sub l00http_dash_proc {
                 $jmp1 =~ s/[^0-9A-Za-z]/_/g;
             } elsif ($this =~ /^==([^=]+)==/) {
                 #status age calculation
-                $updateLast = '';
+                $updateLast = undef;
 
                 $cat2 = $1;
                 l00httpd::dbp($config{'desc'}, "cat2 >$cat2<\n"), if ($ctrl->{'debug'} >= 5);;
@@ -457,12 +458,20 @@ sub l00http_dash_proc {
                         $time_start = 0;
                     }
                     #last update age
-                    if (($updateLast eq '') && defined($dsc) && length($dsc)) {
+                    if (defined($dsc) && length($dsc)) {
                         # calculate days since last entry
                         $updateLast = int((time - &l00httpd::now_string2time($tim)) / (3600*24) + 0.5);
-                        if ($updateLast > 1) {
-                            # report only for 2 or more days old
-                            $updateAge{$key} = "<font style=\"color:black;background-color:silver\">${updateLast}d</font>";
+                        if (!defined($updateAgeVal{$key}) || 
+                            ($updateAgeVal{$key} > $updateLast)) {
+                            # no age or age is older the current age
+                            $updateAgeVal{$key} = $updateLast;
+                            if ($updateLast > 1) {
+                                # report only for 2 or more days old
+                                $updateAge{$key} = "<font style=\"color:black;background-color:silver\">${updateLast}d</font>";
+                            } else {
+                                # no age field
+                                undef $updateAge{$key};
+                            }
                         }
                     }
 
