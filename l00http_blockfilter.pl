@@ -10,7 +10,8 @@ my %config = (proc => "l00http_blockfilter_proc",
 my (@skipto, @scanuntil, @fileexclude, @blkstart, @blkstop, 
     @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats,
     @preblkeval, @postblkeval, @colors);
-my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, $maxblklines, @hide, $statsidx);
+my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, $maxblklines, @hide, 
+    $statsidx, $smallform);
 
 $inverexclu = '';
 $reloadcfg = '';
@@ -18,6 +19,7 @@ $blockfiltercfg = '';
 $maxlines = 1000;
 $maxblklines = 200;
 $statsidx = 0;
+$smallform = '';
 @colors = (
     'lime', 
     'aqua', 
@@ -64,14 +66,20 @@ sub l00http_blockfilter_form {
     my ($sock, $form, $name, $label, $array) = @_;
     my ($tmp);
 
-    print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"${name}paste\" value=\"$label\">\n";
-    print $sock "pattern (1 per line)\n";
-    print $sock "</td><td>\n";
-    $tmp = join("\n", @$array);
-    print $sock "<textarea name=\"${name}\" cols=24 rows=2>$tmp</textarea>\n";
-    print $sock "</td></tr>\n";
-
+    if ($smallform eq '') {
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"${name}paste\" value=\"$label\">\n";
+        print $sock "pattern (1 per line)\n";
+        print $sock "</td><td>\n";
+        $tmp = join("\n", @$array);
+        print $sock "<textarea name=\"${name}\" cols=24 rows=2>$tmp</textarea>\n";
+        print $sock "</td></tr>\n";
+    } else {
+        print $sock "<input type=\"hidden\" name=\"${name}paste\" value=\"$label\">\n";
+        $tmp = join("\n", @$array);
+# this is wrong, todo
+        print $sock "<input type=\"hidden\" name=\"${name}\" value=\"$tmp\">\n";
+    }
 }
 
 sub l00http_blockfilter_print {
@@ -292,6 +300,12 @@ sub l00http_blockfilter_proc {
         } else {
             $reloadcfg = '';
         }
+
+        if (defined ($form->{'smallform'}) && ($form->{'smallform'} eq 'on')) {
+            $smallform = 'checked';
+        } else {
+            $smallform = '';
+        }
     } elsif (defined ($form->{'path'})) {
         print $sock "Click 'Process' to process $form->{'path'}<br>\n";
     }
@@ -335,18 +349,31 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'stats',       'Statistics',        \@stats);
     &l00http_blockfilter_form($sock, $form, 'hide',        'Hide line',         \@hide);
 
-    print $sock "<tr><td>\n";
-    print $sock "Maximum lines per block display:\n";
-    print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"8\" name=\"maxblklines\" value=\"$maxblklines\"> \n";
-    print $sock "</td></tr>\n";
+    if ($smallform eq '') {
+        print $sock "<tr><td>\n";
+        print $sock "Maximum lines per block display:\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" size=\"8\" name=\"maxblklines\" value=\"$maxblklines\"> \n";
+        print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "Maximum lines to display:\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"text\" size=\"8\" name=\"maxlines\" value=\"$maxlines\"> \n";
+        print $sock "<input type=\"submit\" name=\"reset\" value=\"Reset\">\n";
+        print $sock "</td></tr>\n";
+    } else {
+        print $sock "<input type=\"hidden\" size=\"8\" name=\"maxblklines\" value=\"$maxblklines\"> \n";
+        print $sock "<input type=\"hidden\" size=\"8\" name=\"maxlines\" value=\"$maxlines\"> \n";
+    }
 
     print $sock "<tr><td>\n";
-    print $sock "Maximum lines to display:\n";
+    print $sock "<input type=\"checkbox\" name=\"smallform\" $smallform>Small form\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"text\" size=\"8\" name=\"maxlines\" value=\"$maxlines\"> \n";
-    print $sock "<input type=\"submit\" name=\"reset\" value=\"Reset\">\n";
+    print $sock "&nbsp;\n";
     print $sock "</td></tr>\n";
+
+
 
     print $sock "</table><br>\n";
     print $sock "</form>\n";
@@ -356,7 +383,9 @@ sub l00http_blockfilter_proc {
         defined ($form->{'path'}) &&
         (&l00httpd::l00freadOpen($ctrl, $form->{'path'}))) {
 
-        print $sock "Processing .";
+        if ($smallform eq '') {
+            print $sock "Processing .";
+        }
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_output.txt');
 
         $cnt = 0;
@@ -455,7 +484,7 @@ sub l00http_blockfilter_proc {
                 s/\r//;
                 s/\n//;
                 $cnt++;
-                if (($cnt % 1000) == 0) {
+                if ((($cnt % 1000) == 0) && ($smallform eq '')) {
                     print $sock " .";   # progress indicator
                 }
 
@@ -874,13 +903,15 @@ sub l00http_blockfilter_proc {
         s/^\d+: //gms;
         $ctrl->{'l00file'}->{"l00://blockfilter_output_notag.txt"} = $_;
 
-        print $sock "<br>Processed $cnt lines. ".
-            "Output $noblkfound blocks and $hitlines lines to:<br>".
-            "View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a>; ".
-            "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a> ... ".
-            "View <a href=\"/view.htm?path=l00://blockfilter_output_notag.txt\" target=\"_blank\">l00://blockfilter_output_notag.txt</a>".
-            "<p>\n";
-        print $sock "<a name=\"__toc__\"></a>$header<br>\n";
+        if ($smallform eq '') {
+            print $sock "<br>Processed $cnt lines. ".
+                "Output $noblkfound blocks and $hitlines lines to:<br>".
+                "View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a>; ".
+                "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a> ... ".
+                "View <a href=\"/view.htm?path=l00://blockfilter_output_notag.txt\" target=\"_blank\">l00://blockfilter_output_notag.txt</a>".
+                "<p>\n";
+            print $sock "<a name=\"__toc__\"></a>$header<br>\n";
+        }
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a><p>\n";
