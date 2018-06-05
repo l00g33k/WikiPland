@@ -77,7 +77,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
-    my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $jmp1, $cat1font1, $cat1font2, $cat1ln);
+    my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname);
 
@@ -365,8 +365,6 @@ sub l00http_dash_proc {
                     $cat1font1 = "<font style=\"color:black;background-color:white\">";
                     $cat1font2 = "<\/font>";
                 }
-                $jmp1 = $1;
-                $jmp1 =~ s/[^0-9A-Za-z]/_/g;
             } elsif ($this =~ /^==([^=]+)==/) {
                 #status age calculation
                 $updateLast = undef;
@@ -374,6 +372,8 @@ sub l00http_dash_proc {
                 $cat2 = $1;
                 l00httpd::dbp($config{'desc'}, "cat2 >$cat2<\n"), if ($ctrl->{'debug'} >= 5);;
                 $jmp = $1;
+                $jmp =~ s/\*\*/_/g;  # remove ** highlight
+                $jmp =~ s/\*.\*/_/g;
                 $jmp =~ s/[^0-9A-Za-z]/_/g;
                 if ($dbg) {
                     print $sock "  $cat1  $cat2\n";
