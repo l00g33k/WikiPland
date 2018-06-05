@@ -661,7 +661,7 @@ sub l00http_dash_proc {
                         $lnnostr = sprintf("%3d", $cnt);
                         #[[/ls.htm?path=$form->{'path'}#$jmp|iHot]]
                         #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a>
-                        $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "!!$tim";
+                        $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "!!\@$tim";
                         $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "$_";
                     }
                     close(IN);
@@ -828,8 +828,8 @@ sub l00http_dash_proc {
         }
         $anchor = '<a name="bangbang"></a>';
         foreach $_ (sort l00http_dash_outputsort @tops2) {
-            # drop seconds
-            s/^(\|\|!*)\d\d(\d\d) (\d\d\d\d)\d\d\|\|/${1}${2}_$3||/;
+            # drop seconds, print month as hex
+            s/^(\|\|!*)(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
