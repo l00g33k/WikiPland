@@ -77,7 +77,7 @@ sub l00http_blockfilter_form {
     } else {
         print $sock "<input type=\"hidden\" name=\"${name}paste\" value=\"$label\">\n";
         $tmp = join("\n", @$array);
-# this is wrong, todo
+# this seems wrong, todo?
         print $sock "<input type=\"hidden\" name=\"${name}\" value=\"$tmp\">\n";
     }
 }
@@ -961,13 +961,15 @@ sub l00http_blockfilter_proc {
         &l00httpd::l00fwriteOpen($ctrl, 'l00://blockfilter_cfg.txt');
         &l00httpd::l00fwriteBuf($ctrl, "$output");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"_blank\">l00://blockfilter_cfg.txt</a> , \n";
-        ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
-        print $sock "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=${pname}blockfilter_.txt\" target=\"_blank\">filemgt</a><p>\n";
 
-        print $sock "List of all parameters:<p>\n";
-        print $sock "<pre>$output</pre>\n";
+        if ($smallform eq '') {
+            print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"_blank\">l00://blockfilter_cfg.txt</a> , \n";
+            ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
+            print $sock "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=${pname}blockfilter_.txt\" target=\"_blank\">filemgt</a><p>\n";
 
+            print $sock "List of all parameters:<p>\n";
+            print $sock "<pre>$output</pre>\n";
+        }
     } else {
         if (defined ($form->{'process'})) {
             print $sock "Unable to process $form->{'path'}<br>\n";
