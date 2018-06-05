@@ -9,7 +9,7 @@ my %config = (proc => "l00http_blockfilter_proc",
               desc => "l00http_blockfilter_desc");
 my (@skipto, @scanuntil, @fileexclude, @blkstart, @blkstop, 
     @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats,
-    @preblkeval, @postblkeval);
+    @preblkeval, @postblkeval, @colors);
 my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, $maxblklines, @hide, $statsidx);
 
 $inverexclu = '';
@@ -18,6 +18,19 @@ $blockfiltercfg = '';
 $maxlines = 1000;
 $maxblklines = 200;
 $statsidx = 0;
+@colors = (
+    'lime', 
+    'aqua', 
+    'yellow', 
+    'green', 
+    'fuchsia',
+    'hotPink',
+    'gold',
+    'deepskyblue',
+    'sandbybrown',
+    'silver',
+    'olive'
+);
 
 sub l00http_blockfilter_paste {
     my ($ctrl, $form, $name, $array) = @_;
@@ -111,7 +124,7 @@ sub l00http_blockfilter_proc {
     my ($cnt, $output, $outram, $thisblockram, $thisblockdsp, $condition, $ending, $requiredfound, $requiredfound_currln, $blkexclufound);
     my ($blockendhits, $hitlines, $tmp, $evalName, $evalVals, $skip0scan1done2, $outputed, $link, $original);
     my ($inblk, $blkstartfound, $blkendfound, $found, $header, $noblkfound, $reqfound, $pname, $fname);
-    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2);
+    my ($viewskip, $fg, $bg, $regex, $eofoutput, $statsout, $statsoutcnt, $lnno, $tmp2, $ii);
     my ($cntsum, $valsum, $blockfilterstatfmt, $noblkstartOneTime, $stopreadingfile, $hitlinesoutputed);
 
 
@@ -543,7 +556,8 @@ sub l00http_blockfilter_proc {
 
                 ## colorize
 
-                foreach $condition (@color) {
+                for ($ii = 0; $ii <= $#color; $ii++) {
+                    $condition = $color[$ii];
                     if (($fg, $bg, $regex) = $condition =~ /^!!([a-z]+?)!!([a-z]+?)!!(.+)/) {
                         if ($link =~ s/($regex)/<font style="color:$fg;background-color:$bg">$1<\/font>/i) {
                             last; # stops at first hit
@@ -553,7 +567,12 @@ sub l00http_blockfilter_proc {
                             last; # stops at first hit
                         }
                     } else {
-                        if ($link =~ s/($condition)/<font style="color:black;background-color:lime">$1<\/font>/i) {
+                        if ($ii <= $#colors) {
+                            $tmp = $colors[$ii];
+                        } else {
+                            $tmp = $colors[$#colors];
+                        }
+                        if ($link =~ s/($condition)/<font style="color:black;background-color:$tmp">$1<\/font>/i) {
                             last; # stops at first hit
                         }
                     }
@@ -742,6 +761,35 @@ sub l00http_blockfilter_proc {
                     if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
 #                   if ($hitlines + $hitlinesoutputed < $maxlines) 
                         $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    }
+                }
+            } else {
+                # EOF, anything left to output?    
+                if (($outputed == 0) && ($blkexclufound == 0)) {
+                    # found end of block
+                    # do post blk eval
+                    foreach $condition (@postblkeval) {
+                        eval $condition;
+                    }
+
+                    $viewskip = $cnt - 10;
+                    if ($viewskip < 0) {
+                        $viewskip = 0;
+                    }
+                    $hitlines++;
+
+                    $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
+                    $noblkfound++;
+                    $output .= $thisblockdsp;
+                    $outram .= $thisblockram;
+
+                    # displayed line accounting
+                    if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
+                        # if block length is unlimited or greater than displayed
+                        $hitlinesoutputed += $hitlines;
+                    } else {
+                        # if only partial block was displayed
+                        $hitlinesoutputed += $maxblklines;
                     }
                 }
             }
