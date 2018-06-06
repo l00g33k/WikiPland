@@ -790,7 +790,7 @@ sub l00http_dash_proc {
                 print $sock "    $_\n";
             }
             # drop year
-            if (s/^(\|\| *!*)(20\d\d)(\d+ \d\d\d\d)(\d\d)(.+)``(.+)``$/$1$3$4$5``$6``/) {
+            if (s/^(\|\| *!*)(20\d\d)(\d+ \d\d\d\d)(\d\d)(.+)``(.+)``$/$1$2$3$4$5``$6``/) {
                 $tim = "$2$3$4";
                 $fir = "$6";
             } else {
@@ -829,7 +829,7 @@ sub l00http_dash_proc {
         $anchor = '<a name="bangbang"></a>';
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
-            s/^(\|\|!*)(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
+            s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
