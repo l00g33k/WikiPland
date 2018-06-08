@@ -79,7 +79,7 @@ sub l00http_dash_proc {
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
-    my ($jumpcnt, @jumpname);
+    my ($jumpcnt, @jumpname, $jmarkquick);
 
     $jumpcnt = 0;
     undef @jumpname;
@@ -864,31 +864,33 @@ sub l00http_dash_proc {
 
         # jump mark
         print $sock "<a name=\"quickcut\"></a>";
+        $jmarkquick = '';
         if ($jumpcnt > 0) {
             $tmp = 'Jump marks: ';
             for ($ii = 0; $ii <= $#jumpname; $ii++) {
                 if ($ii > 0) {
                     $tmp .= " - ";
                 }
-                $tmp .= "<a href=\"#jump$ii\">@jumpname[$ii]</a>";
+                $tmp .= "<a href=\"#jump$ii\">$jumpname[$ii]</a>";
             }
-            $tmp = &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);
-            print $sock "$tmp<p>\n";
+            $jmarkquick .= &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);
+            $jmarkquick .= "<p>\n";
         }
 
         # form elements
-        print $sock "Add ";
+        $jmarkquick .= "Add ";
         $tmp = 'style="height:1.4em; width:2.0em"';
         foreach $_ (@blocktime) {
-            print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
+            $jmarkquick .= "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
         }
-        print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
-        print $sock "to checked items<p>\n";
+        $jmarkquick .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
+        $jmarkquick .= "to checked items<p>\n";
         $tmp = 'style="height:1.4em; width:6.0em"';
-        print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check All\" $tmp> ";
-        print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check None\" $tmp> ";
-        print $sock "</form>\n";
+        $jmarkquick .= "<input type=\"submit\" name=\"chkall\" value=\"Check All\" $tmp> ";
+        $jmarkquick .= "<input type=\"submit\" name=\"chknone\" value=\"Check None\" $tmp> ";
+        $jmarkquick .= "</form>\n";
 
+        print $sock "$jmarkquick";
 
 
         $out = '';
@@ -1000,6 +1002,8 @@ sub l00http_dash_proc {
         }
     
         print $sock "</form>\n";
+
+        print $sock "$jmarkquick";
 
         print $sock "<a href=\"#top\">top</a>\n";
     }
