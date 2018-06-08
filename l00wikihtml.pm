@@ -568,7 +568,13 @@ sub wikihtml {
                     $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
                 }
                 # is it an extension line?
-                if ($tmp =~ /^[0-9A-Za-z'"_\-]/) {
+                # i608: line continues unless it's:
+                # * for bullet
+                # = for paragrap
+                # | for table
+                # " for hide paragraph
+#               if ($tmp =~ /^[0-9A-Za-z'"_\-]/) 
+                if ($tmp !~ /^[=\*\|"]/) {
                     $_ .= " $tmp";
                     # consume the line
                     $cacheidx++;
