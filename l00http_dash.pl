@@ -790,7 +790,7 @@ sub l00http_dash_proc {
                 print $sock "    $_\n";
             }
             # drop year
-            if (s/^(\|\| *!*)(20\d\d)(\d+ \d\d\d\d)(\d\d)(.+)``(.+)``$/$1$3$4$5``$6``/) {
+            if (s/^(\|\| *!*)(20\d\d)(\d+ \d\d\d\d)(\d\d)(.+)``(.+)``$/$1$2$3$4$5``$6``/) {
                 $tim = "$2$3$4";
                 $fir = "$6";
             } else {
@@ -829,7 +829,7 @@ sub l00http_dash_proc {
         $anchor = '<a name="bangbang"></a>';
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
-            s/^(\|\|!*)(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
+            s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
@@ -870,7 +870,7 @@ sub l00http_dash_proc {
                 if ($ii > 0) {
                     $tmp .= " - ";
                 }
-                $tmp .= "<a href=\"#jump$ii\">@jumpname[$ii]</a>";
+                $tmp .= "<a href=\"#jump$ii\">$jumpname[$ii]</a>";
             }
             $tmp = &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);
             print $sock "$tmp<p>\n";
@@ -888,7 +888,6 @@ sub l00http_dash_proc {
         print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check All\" $tmp> ";
         print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check None\" $tmp> ";
         print $sock "</form>\n";
-
 
 
         $out = '';
@@ -1000,6 +999,7 @@ sub l00http_dash_proc {
         }
     
         print $sock "</form>\n";
+
 
         print $sock "<a href=\"#top\">top</a>\n";
     }
