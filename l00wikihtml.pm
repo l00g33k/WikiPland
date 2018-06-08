@@ -58,37 +58,38 @@ sub l00wikihtml_fontsty {
     my ($buf) = @_;
 
     # **bold**    <strong>bold</strong>
-    $buf =~       s/ \*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
-    $buf =~       s/^\*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /;# at EOL
-    $buf =~       s/^\*\*([^ *][^*]+[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
-    $buf =~       s/ \*\*([^ *][^*]+[^ *])\*\* / <strong> $1 <\/strong> /g;
-    $buf =~ s/([ >|])\*\*([^ *][^*]+[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
+    # i608: changing [^*]+ to [^*]* so **ab** would work. Any side effect?
+    $buf =~       s/ \*\*([^ *][^*]*[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
+    $buf =~       s/^\*\*([^ *][^*]*[^ *])\*\* / <strong> $1 <\/strong> /;# at EOL
+    $buf =~       s/^\*\*([^ *][^*]*[^ *])\*\*$/ <strong> $1 <\/strong> /;# at EOL
+    $buf =~       s/ \*\*([^ *][^*]*[^ *])\*\* / <strong> $1 <\/strong> /g;
+    $buf =~ s/([ >|])\*\*([^ *][^*]*[^ *])\*\*([ <\]])/$1<strong> $2 <\/strong>$3/g;
     # *l*color bold**
     $buf =~       s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
     $buf =~       s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
     $buf =~       s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
     $buf =~ s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
     # //italics// <em>italics</em>
-    $buf =~       s/ \/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
-    $buf =~       s/^\/\/([^ \/][^\/]+[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
-    $buf =~       s/^\/\/([^ \/][^\/]+[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
-    $buf =~ s/([ >|])\/\/([^ \/][^\/]+[^ \/])\/\/([ <\]])/$1<em> $2 <\/em>$3/g;
+    $buf =~       s/ \/\/([^ \/][^\/]*[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
+    $buf =~       s/^\/\/([^ \/][^\/]*[^ \/])\/\/ / <em> $1 <\/em> /;    # at EOL
+    $buf =~       s/^\/\/([^ \/][^\/]*[^ \/])\/\/$/ <em> $1 <\/em> /;    # at EOL
+    $buf =~ s/([ >|])\/\/([^ \/][^\/]*[^ \/])\/\/([ <\]])/$1<em> $2 <\/em>$3/g;
     # __underline__   <u>underline</u>
-    $buf =~       s/ __([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
-    $buf =~       s/^__([^ _][^_]+[^ _])__ / <u> $1 <\/u> /;           # at EOL
-    $buf =~       s/^__([^ _][^_]+[^ _])__$/ <u> $1 <\/u> /;           # at EOL
-    $buf =~ s/([ >|])__([^ _][^_]+[^ _])__([ <\]])/$1<u>$2<\/u>$3/g;
+    $buf =~       s/ __([^ _][^_]*[^ _])__$/ <u> $1 <\/u> /;           # at EOL
+    $buf =~       s/^__([^ _][^_]*[^ _])__ / <u> $1 <\/u> /;           # at EOL
+    $buf =~       s/^__([^ _][^_]*[^ _])__$/ <u> $1 <\/u> /;           # at EOL
+    $buf =~ s/([ >|])__([^ _][^_]*[^ _])__([ <\]])/$1<u>$2<\/u>$3/g;
     # --strike-- <strike>strike</strike>
-    $buf =~       s/ --([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
-    $buf =~       s/^--([^ \-][^\-]+[^ \-])-- / <strike> $1 <\/strike> /;    # at EOL
-    $buf =~       s/^--([^ \-][^\-]+[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
-    $buf =~ s/([ >|])--([^ \-][^\-]+[^ \-])--([ <\]])/$1<strike> $2 <\/strike>$3/g;
+    $buf =~       s/ --([^ \-][^\-]*[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
+    $buf =~       s/^--([^ \-][^\-]*[^ \-])-- / <strike> $1 <\/strike> /;    # at EOL
+    $buf =~       s/^--([^ \-][^\-]*[^ \-])--$/ <strike> $1 <\/strike> /;    # at EOL
+    $buf =~ s/([ >|])--([^ \-][^\-]*[^ \-])--([ <\]])/$1<strike> $2 <\/strike>$3/g;
     # {{monospace}}   <tt>monospace</tt>
     # {{{{{{{{{{{{ match in search pattern so editor match works
-    $buf =~       s/ \{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
-    $buf =~       s/^\{\{([^ \}][^\}]+[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
-    $buf =~       s/^\{\{([^ \}][^\}]+[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
-    $buf =~ s/([ >|])\{\{([^ \}][^\}]+[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
+    $buf =~       s/ \{\{([^ \}][^\}]*[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
+    $buf =~       s/^\{\{([^ \}][^\}]*[^ \}])\}\} / <tt> $1 <\/tt> /;   # at EOL
+    $buf =~       s/^\{\{([^ \}][^\}]*[^ \}])\}\}$/ <tt> $1 <\/tt> /;   # at EOL
+    $buf =~ s/([ >|])\{\{([^ \}][^\}]*[^ \}])\}\}([ <\]])/$1<tt>$2<\/tt>$3/g;
 
     $buf;
 }
