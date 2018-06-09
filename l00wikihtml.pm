@@ -567,6 +567,7 @@ sub wikihtml {
                     # remove internal tag
                     $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
                 }
+                $tmp =~ s/[\n\r]//g;
                 # is it an extension line?
                 # i608: line continues unless it's:
                 # * for bullet
@@ -574,7 +575,7 @@ sub wikihtml {
                 # | for table
                 # " for hide paragraph
 #               if ($tmp =~ /^[0-9A-Za-z'"_\-]/) 
-                if ($tmp !~ /^[=\*\|"]/) {
+                if (($tmp !~ /^[=\*\|"]/) && ($tmp !~ /^ *$/)) {
                     $_ .= " $tmp";
                     # consume the line
                     $cacheidx++;
