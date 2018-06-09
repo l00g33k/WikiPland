@@ -424,13 +424,13 @@ sub l00http_dash_proc {
                 } else {
                     $dsc =~ s/^~(.+)$/~<strong><font style="color:black;background-color:yellow">$1<\/font><\/strong>/;
                 }
-                # . color silver/black for do now
+                # . color lightGray/black for do now
                 if ($dsc =~ /^\.([^\[\]]+)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
-                    $dsc = ".<strong><font style=\"color:black;background-color:silver\">$1<\/font><\/strong>$2";
+                    $dsc = ".<strong><font style=\"color:black;background-color:lightGray\">$1<\/font><\/strong>$2";
                 } else {
-                    $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:silver">$1<\/font><\/strong>/;
+                    $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
                 }
                 if (($cat1 =~ /$catflt/i) && 
                     ($eqlvl == 2)) {
@@ -716,13 +716,13 @@ sub l00http_dash_proc {
                     } else {
                         $dsc =~ s/^~(.+)$/~<strong><font style="color:black;background-color:yellow">$1<\/font><\/strong>/;
                     }
-                    # . color silver/black for do now
+                    # . color lightGray/black for do now
                     if ($dsc =~ /^\.([^\[\]]+)(\|+[^\[\]]+)$/) {
                         # special case : "desc | URL" and "desc ||clipboard"
                         # but not [[URL|desc]]
-                        $dsc = ".<strong><font style=\"color:black;background-color:silver\">$1<\/font><\/strong>$2";
+                        $dsc = ".<strong><font style=\"color:black;background-color:lightGray\">$1<\/font><\/strong>$2";
                     } else {
-                        $dsc =~ s/^\.(.+)$/~<strong><font style="color:black;background-color:silver">$1<\/font><\/strong>/;
+                        $dsc =~ s/^\.(.+)$/~<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
                     }
                     $tmpbuf .= " - $_";
                 }
