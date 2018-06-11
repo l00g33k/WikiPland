@@ -398,7 +398,7 @@ sub l00http_blockfilter_proc {
         $inblk = 0;
         $skip0scan1done2 = 0;    # skip to/scan to toggle
         $ending = 0;
-        $header = '';
+        $header = 'Block: ';
         $noblkfound = 0;
         $requiredfound = 0;
         $blkexclufound = 0;
@@ -917,8 +917,8 @@ sub l00http_blockfilter_proc {
                 "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a> ... ".
                 "View <a href=\"/view.htm?path=l00://blockfilter_output_notag.txt\" target=\"_blank\">l00://blockfilter_output_notag.txt</a>".
                 "<p>\n";
-            print $sock "<a name=\"__toc__\"></a>$header<br>\n";
         }
+        print $sock "<a name=\"__toc__\"></a>$header\n";
         print $sock "<pre>$output</pre>\n";
         print $sock "<a name=\"__end__\"></a>\n";
         print $sock "<a href=\"#__top__\">jump to top</a><p>\n";
