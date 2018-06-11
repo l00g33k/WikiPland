@@ -347,7 +347,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'preblkeval',  'Pre blk eval',      \@preblkeval);
     &l00http_blockfilter_form($sock, $form, 'postblkeval', 'Post blk eval',     \@postblkeval);
     &l00http_blockfilter_form($sock, $form, 'stats',       'Statistics',        \@stats);
-    &l00http_blockfilter_form($sock, $form, 'hide',        'Hide line',         \@hide);
+    &l00http_blockfilter_form($sock, $form, 'hide',        'Hide line (!!)',    \@hide);
 
     if ($smallform eq '') {
         print $sock "<tr><td>\n";
@@ -768,28 +768,35 @@ sub l00http_blockfilter_proc {
 
                     $found = 0;
                     foreach $condition (@hide) {
-                        if (/$condition/i) {
-                            # found, exclude
-                            $found = 1;
-                            last;
+                        if ($condition =~ /^!!/) {
+                            $tmp = $condition;
+                            substr($tmp, 0, 2) = '';
+                            if (!/$tmp/i) {
+                                # not found, exclude
+                                $found = 1;
+                                last;
+                            }
+                        } else {
+                            if (/$condition/i) {
+                                # found, exclude
+                                $found = 1;
+                                last;
+                            }
                         }
                     }
-                    if ($found) {
-                        # hide line
-                        next;
-                    }
+                    if (!$found) {
+                        # not hide line
+                        ## in block: collect output in this block
 
-                    ## in block: collect output in this block
-
-                    $viewskip = $cnt - 10;
-                    if ($viewskip < 0) {
-                        $viewskip = 0;
-                    }
-                    $hitlines++;
-                    $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                    if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
-#                   if ($hitlines + $hitlinesoutputed < $maxlines) 
-                        $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                        $viewskip = $cnt - 10;
+                        if ($viewskip < 0) {
+                            $viewskip = 0;
+                        }
+                        $hitlines++;
+                        $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                        if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
+                            $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                        }
                     }
                 }
             } else {
