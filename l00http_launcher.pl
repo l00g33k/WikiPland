@@ -77,7 +77,7 @@ sub l00http_launcher_proc {
 
     $col = 0;
     $fname = $path;
-    $fname =~ s/.+(\/.+)/$1/;
+    $fname =~ s/.+([\/\\].+)/$1/;
     $pathuri = $path;
     $pathuri =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
     foreach $name (@targets) {
@@ -91,6 +91,7 @@ sub l00http_launcher_proc {
            # add .htm as some browser won't open .txt as HTML
            $extra = '.htm';
         }
+
         print $sock "<a href=\"/$name.htm$fname$extra?path=$pathuri\">$name</a>\n";
         $col++;
         # change number of column here and below
