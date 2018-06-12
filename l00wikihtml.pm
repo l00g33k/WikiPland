@@ -574,8 +574,8 @@ sub wikihtml {
                 # = for paragrap
                 # | for table
                 # " for hide paragraph
-#               if ($tmp =~ /^[0-9A-Za-z'"_\-]/) 
-                if (($tmp !~ /^[=\*\|"]/) && ($tmp !~ /^ *$/)) {
+                # % for wiki commands
+                if (($tmp !~ /^[=\*\|"%]/) && ($tmp !~ /^ *$/)) {
                     $_ .= " $tmp";
                     # consume the line
                     $cacheidx++;
@@ -701,7 +701,8 @@ sub wikihtml {
             $ahead = $cacheidx + 1;
             # look forward
             $loop = 1;
-            while ($loop) {
+            while (($loop) && ($ahead <= $#inputcache)) {
+                # $#inputcache prevents run away mismatch
                 $tmp = $inputcache[$ahead];
                 if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
                     $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
