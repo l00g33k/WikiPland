@@ -575,7 +575,10 @@ sub wikihtml {
                 # | for table
                 # " for hide paragraph
                 # % for wiki commands
-                if (($tmp !~ /^[=\*\|"%]/) && ($tmp !~ /^ *$/)) {
+                                                # if not
+                if (($tmp !~ /^[=\*\|"%]/) &&   # starts with =*|"%
+                    ($tmp !~ /^ *$/) &&         # blank line
+                    ($tmp !~ /^  /)) {          # indent
                     $_ .= " $tmp";
                     # consume the line
                     $cacheidx++;
@@ -667,7 +670,8 @@ sub wikihtml {
             $ahead = $cacheidx + 1;
             # look forward
             $loop = 1;
-            while ($loop) {
+            while (($loop) && ($ahead <= $#inputcache)) {
+                # $#inputcache prevents run away mismatch
                 $tmp = $inputcache[$ahead];
                 if ($tmp =~ /%l00httpd:lnno:([0-9,]+)%/) {
                     $tmp =~ s/%l00httpd:lnno:([0-9,]+)%//;
