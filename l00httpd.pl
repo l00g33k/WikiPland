@@ -357,6 +357,7 @@ sub readl00httpdcfg {
                         # no match, skipping
                         $skip = 1;
                     }
+                    next;
                 }
                 if ($skip) {
                     next;
@@ -420,15 +421,17 @@ sub readl00httpdcfg {
     }
 
     foreach $key (keys %ctrl) {
-        if ($ctrl{$key} =~ /%PLPATH%/) {
-            print "$ctrl{$key} => ";
-            $ctrl{$key} =~ s/%PLPATH%/$plpath/g;
-            print "$ctrl{$key}\n";
-        }
-        if ($ctrl{$key} =~ /%WORKDIR%/) {
-            print "$ctrl{$key} => ";
-            $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
-            print "$ctrl{$key}\n";
+        if (defined($ctrl{$key})) {
+            if ($ctrl{$key} =~ /%PLPATH%/) {
+                print "$ctrl{$key} => ";
+                $ctrl{$key} =~ s/%PLPATH%/$plpath/g;
+                print "$ctrl{$key}\n";
+            }
+            if ($ctrl{$key} =~ /%WORKDIR%/) {
+                print "$ctrl{$key} => ";
+                $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
+                print "$ctrl{$key}\n";
+            }
         }
     }
 
