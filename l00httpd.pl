@@ -270,14 +270,16 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     $ctrl{'os'} = 'win';
     $ctrl{'machine'} = $ENV{'COMPUTERNAME'};
 } elsif ($^O eq 'linux') {
-    if ($plpath =~ /\/var\/lib\/openshift\//) {
+    # are we running on Openshift?
+    if (defined($ENV{'OPENSHIFT_BUILD_SOURCE'}) && 
+        ($ENV{'OPENSHIFT_BUILD_SOURCE'} =~ 
+        /l00g33k/)) {
         # on RHC
         $ctrl{'os'} = 'rhc';
-        $ctrl{'machine'} = $ENV{'OPENSHIFT_APP_UUID'};
     } else {
         $ctrl{'os'} = 'lin';
-        $ctrl{'machine'} = $ENV{'HOSTNAME'};
     }
+    $ctrl{'machine'} = $ENV{'HOSTNAME'};
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
@@ -1069,6 +1071,7 @@ while(1) {
                 $tmp = "$httpszhd"."Content-Length: $httpsz\x0D\x0A\x0D\x0A$httpszbd";
                 print $sock $tmp;
                 $sock->close;
+                print "$ctrl{'now_string'}: Requiring login\n", if ($debug >= 5);
                 next;
             }
             &dlog (2, "($modcalled): $urlparams\n");
