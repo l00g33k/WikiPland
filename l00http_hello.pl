@@ -32,13 +32,10 @@ sub l00http_hello_proc (\%) {
             &l00httpd::l00fwriteClose($ctrl);
         }
     } else {
-        # if not clearing, load from file
-        $delimiter = $/;
-        local $/ = undef;
+        # load from file
 		if (&l00httpd::l00freadOpen($ctrl, $history)) {
             $hellomsg = &l00httpd::l00freadAll($ctrl);
 		}
-        $/ = $delimiter;
     }
 
     if ((defined ($form->{'message'})) && 

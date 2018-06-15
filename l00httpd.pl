@@ -364,6 +364,30 @@ sub readl00httpdcfg {
 
                 ($key, $val) = split ('\^');
                 if ((defined ($key)) &&
+                    (length ($key) > 0)) {
+                    if ((defined ($val)) &&
+                        (length ($val) > 0)) {
+                        print ">$key< = >$val<\n";;
+                        if ($key eq 'workdir') {
+                            # special case workdir to accept only if exist
+                            $val =~ s/%PLPATH%/$plpath/;    # only fly plpath translation
+                            if (-d $val) {
+                                $ctrl{$key} = $val;
+                            }
+                        } else {
+                            $ctrl{$key} = $val;
+                        }
+                        if ($key =~ /^(\d+\.\d+\.\d+\.\d+)$/) {
+                            $ipallowed{$1}  = "yes";
+                        }
+                    } else {
+                        # undefine it
+                        print "Undefine >$key<\n";;
+                        undef $ctrl{$key};
+                    }
+                }
+
+                if ((defined ($key)) &&
                     (length ($key) > 0) && 
                     (defined ($val)) &&
                     (length ($val) > 0)) {
@@ -411,16 +435,7 @@ sub readl00httpdcfg {
     # RHC special: make clipath at Perl directory so everything below is viewable by default
     if ($ctrl{'os'} eq 'rhc') {
         # on RHC
-        $ctrl{'clipath'} =~ s/\/l00httpd\/pub\/$/\//;
-        $ctrl{'nopwpath'} = $ctrl{'clipath'};
         $nopwtimeout = 0x7fffffff;
-        # more RHC special
-        $ctrl{'alwayson_clip'} = 'rhc';
-        $ctrl{'alwayson_debug'} = 'rhc';
-        $ctrl{'alwayson_launcher'} = 'rhc';
-        $ctrl{'alwayson_readme'} = 'rhc';
-        $ctrl{'alwayson_solver'} = 'rhc';
-        $ctrl{'alwayson_tree'} = 'rhc';
     }
 
     # check 'quick' from 'l00httpd.cfg'
@@ -1064,6 +1079,7 @@ while(1) {
             if ($needpw &&
                 ($idpw ne $idpwmustbe) &&
                 (!$ishost)) {
+
                 $httpszhd = "HTTP/1.0 401 OK\x0D\x0A".
                     "WWW-Authenticate: Basic realm=\"personal\"\x0D\x0A";
                 $httpszbd = "<html><body>\x0D\x0ALogin required</body></html>\x0D\x0A";
