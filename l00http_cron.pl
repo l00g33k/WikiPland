@@ -515,11 +515,19 @@ sub l00http_cron_shutdown {
     $starttime = &l00http_cron_when_next ($ctrl);
 
     if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
-        print $sock "'cron' module \@shutdown tasks:<p>\n<pre>\n";
-        while ($_ = &l00httpd::l00freadLine($ctrl)) {
-            print $sock "$_";
+        if (defined($sock)) {
+            print $sock "'cron' module \@shutdown tasks:<p>\n<pre>\n";
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                print $sock "$_";
+            }
+            print $sock "</pre>\n";
+        } else {
+            print "'cron' module \@shutdown tasks:<p>\n<pre>\n";
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                print "$_";
+            }
+            print "</pre>\n";
         }
-        print $sock "</pre>\n";
     }
 
     # call perio to service atshutdown tasks

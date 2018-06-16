@@ -63,7 +63,7 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime);
+my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime);
 
 # set listening port
 $ctrl_port = 20337;
@@ -80,6 +80,7 @@ $waketil = 0;
 $ipage = 0;
 $battpct = '';
 $batttime = 0;
+$quitattime = 0x7fffffff;
 
 undef $timeout;
 
@@ -387,25 +388,6 @@ sub readl00httpdcfg {
                         undef $ctrl{$key};
                     }
                 }
-
-                if ((defined ($key)) &&
-                    (length ($key) > 0) && 
-                    (defined ($val)) &&
-                    (length ($val) > 0)) {
-                    print ">$key< = >$val<\n";;
-                    if ($key eq 'workdir') {
-                        # special case workdir to accept only if exist
-                        $val =~ s/%PLPATH%/$plpath/;    # only fly plpath translation
-                        if (-d $val) {
-                            $ctrl{$key} = $val;
-                        }
-                    } else {
-                        $ctrl{$key} = $val;
-                    }
-                    if ($key =~ /^(\d+\.\d+\.\d+\.\d+)$/) {
-                        $ipallowed{$1}  = "yes";
-                    }
-                }
             }
             close (IN);
         }
@@ -507,6 +489,9 @@ while ($_ = shift) {
     } elsif (/^cliport=(\d+)/) {
         $cli_port = $1;
         print "cliport set to $cli_port\n";
+    } elsif (/^quitinsec=(\d+)/) {
+        $quitattime = time;
+        $quitattime += $1;
     } elsif (/^hostip=(.+)/) {
         $host_ip = $1;
         print "hostip set to $host_ip\n";
@@ -727,6 +712,12 @@ sub periodictask {
             }
         }
     }
+
+    # don't sleep beyond time to quit
+    if ($tickdelta > ($quitattime > time)) {
+        $tickdelta = ($quitattime > time);
+    }
+
     &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
 
     if (($waketil != 0) &&
@@ -739,10 +730,13 @@ sub periodictask {
     }
 }
 
-$tickdelta = 3600;
 $uptime = time;
 $ttlconns = 0;
-
+$tickdelta = 3600;
+# don't sleep beyond time to quit
+if ($tickdelta > ($quitattime > time)) {
+    $tickdelta = ($quitattime > time);
+}
 
 &updateNow_string ();
 # start new log
@@ -1877,6 +1871,19 @@ while(1) {
     if ($ctrl_port_first == $ctrl_port) {
         # execute periodic tasks only on first instance
         &periodictask ();
+    }
+
+    if ($quitattime > time) {
+        # call shutdown functions
+        $ctrl{'sock'} = undef;
+        foreach $mod (sort keys %httpmods) {
+            if (defined ($modsinfo{"$mod:fn:shutdown"})) {
+                $subname = $modsinfo{"$mod:fn:shutdown"};
+                $retval = __PACKAGE__->$subname(\%ctrl);
+                print "Called '$mod' module shutdown function\n";
+            }
+        }
+        exit(2);
     }
 }
 
