@@ -994,7 +994,17 @@ while(1) {
                 } elsif (/POST (\/[^ ]*) HTTP/) {
                     # extract the URL after the domain
                     $urlparams = $1;
-                } elsif (/^X-Client-IP: ([0-9.:a-fA-F]+)/) {
+                } elsif (/^X-Forwarded-For: *([0-9.:a-fA-F]+)/) {
+                    # extract the client IP when hosting on Openshift v3
+                    # X-Forwarded-For: 12.34.56.78
+                    $client_ip = $1;
+                    # double IP recording but that's ok
+                    if (defined ($connected{$client_ip})) {
+                        $connected{$client_ip}++;
+                    } else {
+                        $connected{$client_ip} = 1;
+                    }
+                } elsif (/^X-Client-IP: *([0-9.:a-fA-F]+)/) {
                     # extract the client IP when hosting on rhcloud.com
                     $client_ip = $1;
                     # double IP recording but that's ok
