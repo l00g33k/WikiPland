@@ -369,7 +369,7 @@ sub readl00httpdcfg {
                     (length ($key) > 0)) {
                     if ((defined ($val)) &&
                         (length ($val) > 0)) {
-                        print ">$key< = >$val<\n";;
+#                        print ">$key< = >$val<\n";;
                         if ($key eq 'workdir') {
                             # special case workdir to accept only if exist
                             $val =~ s/%PLPATH%/$plpath/;    # only fly plpath translation
@@ -714,8 +714,8 @@ sub periodictask {
     }
 
     # don't sleep beyond time to quit
-    if ($tickdelta > ($quitattime > time)) {
-        $tickdelta = ($quitattime > time);
+    if ($tickdelta > ($quitattime - time)) {
+        $tickdelta = ($quitattime - time);
     }
 
     &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
@@ -734,8 +734,11 @@ $uptime = time;
 $ttlconns = 0;
 $tickdelta = 3600;
 # don't sleep beyond time to quit
-if ($tickdelta > ($quitattime > time)) {
-    $tickdelta = ($quitattime > time);
+if ($tickdelta > ($quitattime - time)) {
+    $tickdelta = ($quitattime - time);
+    if ($tickdelta <= 0) {
+        $tickdelta = 1;
+    }
 }
 
 &updateNow_string ();
@@ -1873,7 +1876,7 @@ while(1) {
         &periodictask ();
     }
 
-    if ($quitattime > time) {
+    if (time > $quitattime) {
         # call shutdown functions
         $ctrl{'sock'} = undef;
         foreach $mod (sort keys %httpmods) {
