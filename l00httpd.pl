@@ -369,7 +369,7 @@ sub readl00httpdcfg {
                     (length ($key) > 0)) {
                     if ((defined ($val)) &&
                         (length ($val) > 0)) {
-#                        print ">$key< = >$val<\n";;
+                        print ">$key< = >$val<\n";;
                         if ($key eq 'workdir') {
                             # special case workdir to accept only if exist
                             $val =~ s/%PLPATH%/$plpath/;    # only fly plpath translation
