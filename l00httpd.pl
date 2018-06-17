@@ -651,7 +651,7 @@ do {
     if (!$ctrl_lstn_sock) {
         if ($fixedport) {
             # wait for port to be available
-            print "Port $ctrl_port is not available. Sleep 3 secs and try again.\n";
+            print "Port $ctrl_port is not available. Sleep 3 secs and try again. ($tmp)\n";
             sleep (3);
         } else {
             $ctrl_port += 10;
@@ -679,7 +679,7 @@ do {
     if (!$cli_lstn_sock) {
         if ($fixedport) {
             # wait for port to be available
-            print "Port $cli_port is not available. Sleep 3 secs and try again.\n";
+            print "Port $cli_port is not available. Sleep 3 secs and try again. ($tmp)\n";
             sleep (3);
         } else {
             $cli_port += 10;
