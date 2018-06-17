@@ -63,11 +63,12 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime);
+my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $fixedport);
 
 # set listening port
 $ctrl_port = 20337;
 $cli_port = 20338;
+$fixedport = 0;
 $host_ip = '0.0.0.0';
 $idpwmustbe = "p:p";  # change as you wish
 $debug = 1;         # 0=none, 1=minimal, 5=max
@@ -489,6 +490,9 @@ while ($_ = shift) {
     } elsif (/^cliport=(\d+)/) {
         $cli_port = $1;
         print "cliport set to $cli_port\n";
+    } elsif (/^fixedport/) {
+        $fixedport = 1;
+        print "fixedport set to 1\n";
     } elsif (/^quitinsec=(\d+)/) {
         $quitattime = time;
         $quitattime += $1;
@@ -636,7 +640,7 @@ if ($ctrl{'os'} eq 'win') {
 }
 
 # create a listening socket 
-$tmp = 0;
+$tmp = 100;
 do {
     $ctrl_lstn_sock = IO::Socket::INET->new (
         LocalPort => $ctrl_port,
@@ -645,11 +649,14 @@ do {
         ReuseAddr => $reuseflag  # Reuse => 1
     );
     if (!$ctrl_lstn_sock) {
-        if (++$tmp > 100) {
-            $tmp = -1;
+        if ($fixedport) {
+            # wait for port to be available
+            print "Port $ctrl_port is not available. Sleep 3 secs and try again.\n";
+            sleep (3);
         } else {
             $ctrl_port += 10;
         }
+        $tmp--;
     }
 } while (!$ctrl_lstn_sock && ($tmp >= 0));
 die "Can't create socket for listening: $!" unless $ctrl_lstn_sock;
@@ -661,7 +668,7 @@ $ctrl{'ctrl_port'} = $ctrl_port;
 &loadmods($plpath);
 &loadmods($ctrl{'extraplpath'});
 
-$tmp = 0;
+$tmp = 100;
 do {
     $cli_lstn_sock = IO::Socket::INET->new (
         LocalPort => $cli_port,
@@ -670,11 +677,14 @@ do {
         ReuseAddr => 0  # Reuse => 1
     );
     if (!$cli_lstn_sock) {
-        if (++$tmp > 100) {
-            $tmp = -1;
+        if ($fixedport) {
+            # wait for port to be available
+            print "Port $cli_port is not available. Sleep 3 secs and try again.\n";
+            sleep (3);
         } else {
             $cli_port += 10;
         }
+        $tmp--;
     }
 } while (!$cli_lstn_sock && ($tmp >= 0));
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
