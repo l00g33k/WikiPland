@@ -727,6 +727,10 @@ sub periodictask {
     if ($tickdelta > ($quitattime - time)) {
         $tickdelta = ($quitattime - time);
     }
+    # sleep at least 1 second
+    if ($tickdelta <= 0) {
+        $tickdelta = 1;
+    }
 
     &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
 
@@ -746,9 +750,10 @@ $tickdelta = 3600;
 # don't sleep beyond time to quit
 if ($tickdelta > ($quitattime - time)) {
     $tickdelta = ($quitattime - time);
-    if ($tickdelta <= 0) {
-        $tickdelta = 1;
-    }
+}
+# sleep at least 1 second
+if ($tickdelta <= 0) {
+    $tickdelta = 1;
 }
 
 &updateNow_string ();
