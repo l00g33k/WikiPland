@@ -509,7 +509,7 @@ sub l00http_mobizoom_part1 {
     print $sock "<input type=\"text\" size=\"16\" name=\"url\" value=\"$url\" accesskey=\"e\"></td>\n";
     print $sock "<input type=\"submit\" name=\"fetch\" value=\"Fetch\">\n";
     print $sock "zoom:<input type=\"text\" size=\"3\" name=\"zoom\" value=\"$zoom\"></td>\n";
-    print $sock "<input type=\"submit\" name=\"paste\" value=\"CB paste\">\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"CB p&#818;aste\" accesskey=\"p\">\n";
     foreach $_ ((100, 110, 121, 133, 146, 160, 176, 194, 240, 300, 400, 500, 600)) {
         print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=mobizoom&zoomradio=$_&url=$url\">$_</a> ";
     }
