@@ -785,7 +785,7 @@ sub l00http_dash_proc {
             } else {
                #push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
                 if ($hdronly == 0) {
-                    push (@tops, "||$tasksTime{$_}$_||$bang XX $tasksDesc{$_} YY ||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$_``");
                 } else {
                     push (@tops, "||$tasksTime{$_}$_||$bang||``$_``");
                 }
