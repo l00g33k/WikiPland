@@ -63,7 +63,7 @@ my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $fixedport);
+my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $fixedport);
 
 # set listening port
 $ctrl_port = 20337;
@@ -81,6 +81,14 @@ $waketil = 0;
 $ipage = 0;
 $battpct = '';
 $batttime = 0;
+# These two implement a special Openshift demo auto quit and restart
+# $quitattimer is set from command line
+# When a module other than 'hello' is invoked, do:
+#   if ($quitattimer != 0) {
+#       $quitattime = time + $quitattimer
+#       $quitattimer = 0;
+#   }
+$quitattimer = 0;
 $quitattime = 0x7fffffff;
 
 undef $timeout;
@@ -494,8 +502,7 @@ while ($_ = shift) {
         $fixedport = 1;
         print "fixedport set to 1\n";
     } elsif (/^quitinsec=(\d+)/) {
-        $quitattime = time;
-        $quitattime += $1;
+        $quitattimer = $1;
     } elsif (/^hostip=(.+)/) {
         $host_ip = $1;
         print "hostip set to $host_ip\n";
@@ -956,6 +963,16 @@ while(1) {
             }
             print "httpsiz $httpsiz >>>$httpbuf<<<\n", if ($debug >= 5);
 
+            # Openshift demo: give a warning when we are quiting
+            if (time > $quitattime) {
+                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>Openshift WikiPland Demo</title>" . $ctrl{'htmlhead2'};
+                print $sock "$ctrl{'now_string'}: Your IP is $client_ip. \n";
+                print $sock sprintf ("up: %.3fh", (time - $uptime) / 3600.0);
+                print $sock "<p>Live demo timer has expires and the Docker container will restart<p>\n";
+                print $sock $ctrl{'htmlfoot'};
+                $sock->close;
+                next;
+            }
 
             $httpmethod = '(unknown)';
             if ($httpbuf =~ /^HEAD (\/[^ ]*) HTTP/) {
@@ -1351,6 +1368,13 @@ while(1) {
                     $retval = __PACKAGE__->$subname(\%ctrl);
                     print "Returned from $modcalled\n", if ($debug >= 5);
                     &dlog (4, $ctrl{'msglog'}."\n");
+                    # special Openshift demo handling
+                    if (($quitattimer != 0) && ($modcalled ne 'hello')) {
+                        print "Quit timer trigger and will quit in $quitattimer seconds\n";
+                        $quitattime = time + $quitattimer;
+                        $quitattimer = 0;
+                    }
+
                 }
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
@@ -1891,7 +1915,8 @@ while(1) {
         &periodictask ();
     }
 
-    if (time > $quitattime) {
+    if (time > $quitattime + 3) {
+        # give extra 3 seconds to allow last page to go out
         # call shutdown functions
         $ctrl{'sock'} = undef;
         foreach $mod (sort keys %httpmods) {
