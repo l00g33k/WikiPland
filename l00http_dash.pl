@@ -10,8 +10,9 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $listbang, $newbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort, $dashwidth);
+my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort, $dashwidth);
 $dash_all = 'past';
+$hdronly = 0;
 $listbang = '';
 $newwin = '';
 $newbang = '';
@@ -98,6 +99,14 @@ sub l00http_dash_proc {
         } else { $dash_all = 'past';
         }
     }
+    if (defined($form->{'hdronly'})) {
+        if ($form->{'hdronly'} eq 'hdr') {
+            $hdronly = 1;
+        } else {
+            $hdronly = 0;
+        }
+    }
+
 
     if ((defined ($form->{'listbang'})) && ($form->{'listbang'} eq 'on')) {
         $listbang = 'checked';
@@ -220,11 +229,12 @@ sub l00http_dash_proc {
         }
         print $sock "<input type=\"checkbox\" name=\"outputsort\" $outputsort>";
         if ($outputsort ne 'checked') {
-            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on\">cat1 sort</a>,\n";
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all\">all</a>).\n";
+            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=&hdronly=\">cat1 sort</a>,\n";
+            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=\">all</a>, \n";
+            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\">hdr</a>).\n";
         } else {
-            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">cat1 sort</a>,\n";
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">all</a>).\n";
+            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat1 sort</a>,\n";
+            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=\">all</a>).\n";
         }
         print $sock "<input type=\"checkbox\" name=\"smallhead\" $smallhead>";
         if ($smallhead ne 'checked') {
@@ -500,12 +510,9 @@ sub l00http_dash_proc {
 
                     #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
                     #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
-    #               if (!defined($tasksTime{$key}) ||
-    #                           ($tasksTime{$key} lt $tim)) 
                     if (!defined($tasksTime{$key})) {
                                  $tasksTime{$key} = $tim;
-#                                 $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
-                                 $tasksDesc{$key} = "AAA $dsc";
+                                 $tasksDesc{$key} = " $dsc";
                                  $countBang{$key} = 0;
                                 if ($dbg) {
                                     print $sock "    TIME  $tim    $key\n";
@@ -621,7 +628,7 @@ sub l00http_dash_proc {
                     } else {
                         # listing all !, i.e. listing ! and !!
                         if ($dsc =~ /^!{0,1}[^!]/) {
-                                     $tasksSticky{$key} .= "<br>$dsc";
+                            $tasksSticky{$key} .= "<br>$dsc";
                         }
                     }
                     if ($dsc =~ /^![^!]/) {
@@ -766,7 +773,7 @@ sub l00http_dash_proc {
                 $bang .= sprintf("<font style=\"color:black;background-color:silver\">%3.1fh</font>", 
                     int($logedTime{$_} / 3600 * 10 + 0.5) / 10);
             }
-            if (defined($tasksSticky{$_})) {
+            if ((defined($tasksSticky{$_})) && ($hdronly == 0)) {
                 $tmp = $tasksSticky{$_};
                 $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
                 #if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
@@ -776,7 +783,12 @@ sub l00http_dash_proc {
                 #    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang$tasksDesc{$_}$tmp ||``$_``");
                 #}
             } else {
-                push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
+               #push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
+                if ($hdronly == 0) {
+                    push (@tops, "||$tasksTime{$_}$_||$bang XX $tasksDesc{$_} YY ||``$_``");
+                } else {
+                    push (@tops, "||$tasksTime{$_}$_||$bang||``$_``");
+                }
             }
         }
 
