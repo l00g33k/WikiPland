@@ -21,7 +21,7 @@ sub l00http_hello_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($hellomsg, $delimiter, $history, $ii);
+    my ($hellomsg, $delimiter, $history, $ii, $lastlast, $secondlast);
 
     #$history = "$ctrl->{'workdir'}l00_hello.txt";
     $history = "l00://hello.txt";
@@ -88,12 +88,20 @@ sub l00http_hello_proc (\%) {
 
     # get submitted name and print greeting
     $ii = 400;
+    $lastlast = '';
+    $secondlast = '';
     foreach $_ (split("\n", $hellomsg)) {
-        print $sock "$_\n";
-        if ($ii-- < 0) {
-            last;
+        if ($ii-- >= 0) {
+            print $sock "$_\n";
+        } else {
+            # so we can display the last two lines;
+            $secondlast = $lastlast;
+            $lastlast = $_;
         }
     }
+    # display the last two lines if exist
+    print $sock "$secondlast\n", if ($secondlast ne '');
+    print $sock "$lastlast\n", if ($lastlast ne '');
 
     # dump all form data\
     print $sock "<p>All form parameters supplied in the URL:<p>".

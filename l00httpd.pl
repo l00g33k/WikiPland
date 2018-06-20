@@ -90,7 +90,7 @@ $batttime = 0;
 #   }
 $quitattimer = 0;
 $quitattime = 0x7fffffff;
-$quitmsg1 = "<font style=\"color:black;background-color:lime\">This demo will shutdown in ";
+$quitmsg1 = "<font style=\"color:black;background-color:lime\">This demo will be wiped and restarted in ";
 $quitmsg2 = " seconds.</font> ";
 $demomsg = "<font style=\"color:black;background-color:aqua\">See this <a href=\"https://l00g33k.wordpress.com/category/wikiplandintro/\">blog</a> for details about this site.</font> ";
 
