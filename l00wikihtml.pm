@@ -665,6 +665,9 @@ sub wikihtml {
         $tmp = $_;
         $tmp =~ s/&nbsp;/ /g;
         if ($tmp =~ /^  /) {
+            $tmp =~ s/[\r\n]//g;
+            # process font color short hand
+            $tmp = &l00wikihtml_fontsty($tmp);
             # currnet line is indented
             $tbuf = "$tmp\n";
             $ahead = $cacheidx + 1;
@@ -678,6 +681,9 @@ sub wikihtml {
                 }
                 $tmp =~ s/&nbsp;/ /g;
                 if ($tmp =~ /^  /) {
+                    $tmp =~ s/[\r\n]//g;
+                    # process font color short hand
+                    $tmp = &l00wikihtml_fontsty($tmp);
                     $tbuf .= "$tmp\n";
                     $ahead++;
                     $mdChanged2Tw = 1;
