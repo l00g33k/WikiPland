@@ -968,7 +968,8 @@ while(1) {
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>Openshift WikiPland Demo</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: Your IP is $client_ip. \n";
                 print $sock sprintf ("up: %.3fh", (time - $uptime) / 3600.0);
-                print $sock "<p>Live demo timer has expires and the Docker container will restart<p>\n";
+                print $sock "<p>Live demo timer has expired and the application will quit.\n";
+                print $sock "The Docker container will restart erasing all changes made.<p>\n";
                 print $sock $ctrl{'htmlfoot'};
                 $sock->close;
                 next;
@@ -1370,11 +1371,24 @@ while(1) {
                     &dlog (4, $ctrl{'msglog'}."\n");
                     # special Openshift demo handling
                     if (($quitattimer != 0) && ($modcalled ne 'hello')) {
-                        print "Quit timer trigger and will quit in $quitattimer seconds\n";
-                        $quitattime = time + $quitattimer;
-                        $quitattimer = 0;
-                    }
+                        $tmp = 1;
 
+                        # if secret exist, don't quit
+                        if(-f "${plpath}secret") {
+                            # compute md5sum
+                            $_ = `md5sum ${plpath}secret`;
+                            if ((/^(\S+)/) &&
+                                ($1 eq '5d568a56813cd2031e8ea893d95aade8')) {
+                                print "Found secret; don't quit.\n";
+                                $tmp = 0;
+                            }
+                        }
+                        if ($tmp) {
+                            print "Quit timer trigger and will quit in $quitattimer seconds\n";
+                            $quitattime = time + $quitattimer;
+                            $quitattimer = 0;
+                        }
+                    }
                 }
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
