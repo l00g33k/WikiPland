@@ -82,6 +82,7 @@ sub l00http_hello_proc (\%) {
     print $sock "<INPUT TYPE=\"hidden\" NAME=\"ip\" VALUE=\"$ctrl->{'client_ip'}\">\n";
     print $sock "</form>\n";
 
+    print $sock "System uptime: $ctrl->{'uptime'}<p>\n";
     if ($ctrl->{'ishost'}) {
         print $sock "View <a href=\"/view.htm?path=$history\">$history</a><p>\n";
     }
@@ -100,6 +101,7 @@ sub l00http_hello_proc (\%) {
         }
     }
     # display the last two lines if exist
+    print $sock "<p>Some messages are left out due to length<p>\n", if ($lastlast ne '');
     print $sock "$secondlast\n", if ($secondlast ne '');
     print $sock "$lastlast\n", if ($lastlast ne '');
 

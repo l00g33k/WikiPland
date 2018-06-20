@@ -1323,6 +1323,7 @@ while(1) {
                 # 3.1) if found, invoke module
 
                 # make data available to module
+                $ctrl{'uptime'} = sprintf ("%.3fh", (time - $uptime) / 3600.0);
                 $ctrl{'client_ip'} = $client_ip;
                 $ctrl{'FORM'} = \%FORM;
                 $ctrl{'FORMORG'} = $urlparams;
