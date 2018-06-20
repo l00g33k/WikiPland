@@ -60,7 +60,7 @@ sub l00http_hello_proc (\%) {
         print $sock "$ctrl->{'home'} \n";
     }
 
-    print $sock "<form action=\"/hello.htm\" method=\"get\">\n";
+    print $sock "<a name=\"top\"></a><form action=\"/hello.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
@@ -82,7 +82,7 @@ sub l00http_hello_proc (\%) {
     print $sock "<INPUT TYPE=\"hidden\" NAME=\"ip\" VALUE=\"$ctrl->{'client_ip'}\">\n";
     print $sock "</form>\n";
 
-    print $sock "System uptime: $ctrl->{'uptime'}.<p>\n";
+    print $sock "System uptime: $ctrl->{'uptime'}. Jump to <a href=\"#end\">bottom</a><p>\n";
     if (defined($ctrl->{'demomsg'})) {
         print $sock "$ctrl->{'demomsg'}.<p>\n";
     }
@@ -109,7 +109,7 @@ sub l00http_hello_proc (\%) {
     print $sock "$lastlast\n", if ($lastlast ne '');
 
     # dump all form data\
-    print $sock "<p>All form parameters supplied in the URL:<p>".
+    print $sock "<a name=\"end\"></a><p>Jump to <a href=\"#top\">top</a>. All HTTP form parameters supplied in the URL:<p>".
         "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     for $key (keys %$form) {
         $val = $form->{$key};
