@@ -62,8 +62,8 @@ my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown, $poormanrdnssub);
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
-my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $fixedport);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod, $demomsg);
+my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
 
 # set listening port
 $ctrl_port = 20337;
@@ -90,6 +90,9 @@ $batttime = 0;
 #   }
 $quitattimer = 0;
 $quitattime = 0x7fffffff;
+$quitmsg1 = "<font style=\"color:black;background-color:lime\">This demo will shutdown in ";
+$quitmsg2 = " seconds.</font> ";
+$demomsg = "<font style=\"color:black;background-color:aqua\">See this <a href=\"https://l00g33k.wordpress.com/category/wikiplandintro/\">blog</a> for details about this site.</font> ";
 
 undef $timeout;
 
@@ -1355,6 +1358,14 @@ while(1) {
                         }
                     }
                 }
+                if ($quitattime < 0x7fffffff) {
+                    $_ = $quitattime  - time;
+                    $ctrl{'home'} .= "$quitmsg1$_$quitmsg2";
+                }
+                if ($ctrl{'os'} eq 'rhc') {
+                    # Give Openshift demo notice
+                    $ctrl{'home'} .= $demomsg;
+                }
 
                 # invoke module
                 if (($debug >= 3) && $hiresclock) {
@@ -1596,6 +1607,14 @@ while(1) {
                     print $sock "<a href=\"/httpd.htm?bannermute=240\">4h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=43200\">1mo</a><p>";
+                }
+                if ($quitattime < 0x7fffffff) {
+                    $_ = $quitattime  - time;
+                    print $sock "$quitmsg1$_$quitmsg2";
+                }
+                if ($ctrl{'os'} eq 'rhc') {
+                    # Give Openshift demo notice
+                    print $sock "$demomsg";
                 }
 
                 print $sock "<a href=\"/httpd.htm\">#</a>\n";

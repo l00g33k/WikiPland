@@ -21,7 +21,7 @@ sub l00http_hello_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($hellomsg, $delimiter, $history);
+    my ($hellomsg, $delimiter, $history, $ii);
 
     #$history = "$ctrl->{'workdir'}l00_hello.txt";
     $history = "l00://hello.txt";
@@ -87,10 +87,17 @@ sub l00http_hello_proc (\%) {
     }
 
     # get submitted name and print greeting
-    print $sock "$hellomsg\n";
+    $ii = 400;
+    foreach $_ (split("\n", $hellomsg)) {
+        print $sock "$_\n";
+        if ($ii-- < 0) {
+            last;
+        }
+    }
 
     # dump all form data\
-    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<p>All form parameters supplied in the URL:<p>".
+        "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     for $key (keys %$form) {
         $val = $form->{$key};
         if (!defined ($val) || ($val =~ /^ *$/)) {
