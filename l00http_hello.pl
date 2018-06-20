@@ -48,7 +48,6 @@ sub l00http_hello_proc (\%) {
         # shows only last 6 IP digits
         $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
         $msgcnt++;
-#       $hellomsg = "<pre>$msgcnt: $ctrl->{'now_string'}, $_ said:</pre>$form->{'message'}\n<br>$hellomsg";
         $hellomsg = "<code>$msgcnt: $ctrl->{'now_string'}, $_ said:</code> $form->{'message'}\n<br>$hellomsg";
         if (&l00httpd::l00fwriteOpen($ctrl, $history)) {
             &l00httpd::l00fwriteBuf($ctrl, $hellomsg);
@@ -86,7 +85,7 @@ sub l00http_hello_proc (\%) {
 
     print $sock "System uptime: $ctrl->{'uptime'}. Jump to <a href=\"#end\">bottom</a><p>\n";
     if (defined($ctrl->{'demomsg'})) {
-        print $sock "$ctrl->{'demomsg'}.<p>\n";
+        print $sock "$ctrl->{'demomsg'}<p>\n";
     }
     if ($ctrl->{'ishost'}) {
         print $sock "View <a href=\"/view.htm?path=$history\">$history</a><p>\n";
