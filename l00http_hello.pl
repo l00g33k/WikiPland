@@ -5,10 +5,10 @@ use warnings;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($key, $val);
+my ($key, $val, $msgcnt);
 my %config = (proc => "l00http_hello_proc",
               desc => "l00http_hello_desc");
-
+$msgcnt = 0;
 
 sub l00http_hello_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -47,7 +47,9 @@ sub l00http_hello_proc (\%) {
         $form->{'message'} =~ s/\n/<br>\n/g;
         # shows only last 6 IP digits
         $_ = substr ($ctrl->{'client_ip'}, length ($ctrl->{'client_ip'}) - 6, 6);
-        $hellomsg = "<pre>$ctrl->{'now_string'}, $_ said:</pre>\n$form->{'message'}\n<p>$hellomsg";
+        $msgcnt++;
+#       $hellomsg = "<pre>$msgcnt: $ctrl->{'now_string'}, $_ said:</pre>$form->{'message'}\n<br>$hellomsg";
+        $hellomsg = "<code>$msgcnt: $ctrl->{'now_string'}, $_ said:</code> $form->{'message'}\n<br>$hellomsg";
         if (&l00httpd::l00fwriteOpen($ctrl, $history)) {
             &l00httpd::l00fwriteBuf($ctrl, $hellomsg);
             &l00httpd::l00fwriteClose($ctrl);

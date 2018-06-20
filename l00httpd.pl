@@ -914,6 +914,9 @@ while(1) {
                 next;
             } elsif (vec($rout,fileno($sock),1) == 1) {
                 $httpsiz = sysread ($sock, $httpbuf, $httpmax);
+                if (!defined($httpsiz) || ($httpsiz <= 0)) {
+                    next;
+                }
             } else {
                 print "sock timeout 0.01s\n", if ($debug >= 4);
                 $sock->close;
