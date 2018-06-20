@@ -62,8 +62,8 @@ my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown, $poormanrdnssub);
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
-my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
-my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $fixedport);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod, $demomsg);
+my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
 
 # set listening port
 $ctrl_port = 20337;
@@ -90,6 +90,9 @@ $batttime = 0;
 #   }
 $quitattimer = 0;
 $quitattime = 0x7fffffff;
+$quitmsg1 = "<font style=\"color:black;background-color:lime\">This demo will shutdown in ";
+$quitmsg2 = " seconds.</font> ";
+$demomsg = "<font style=\"color:black;background-color:aqua\">See this <a href=\"https://l00g33k.wordpress.com/category/wikiplandintro/\">blog</a> for details about this site.</font> ";
 
 undef $timeout;
 
@@ -968,7 +971,8 @@ while(1) {
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>Openshift WikiPland Demo</title>" . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: Your IP is $client_ip. \n";
                 print $sock sprintf ("up: %.3fh", (time - $uptime) / 3600.0);
-                print $sock "<p>Live demo timer has expires and the Docker container will restart<p>\n";
+                print $sock "<p>Live demo timer has expired and the application will quit.\n";
+                print $sock "The Docker container will restart erasing all changes made.<p>\n";
                 print $sock $ctrl{'htmlfoot'};
                 $sock->close;
                 next;
@@ -1052,7 +1056,7 @@ while(1) {
                 }
             }
 
-            print "FORM urlparams:$urlparams\n", if ($debug >= 2);
+            print "$ctrl{'now_string'} $client_ip FORM: $urlparams\n", if ($debug >= 1);
             $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
@@ -1354,6 +1358,14 @@ while(1) {
                         }
                     }
                 }
+                if ($quitattime < 0x7fffffff) {
+                    $_ = $quitattime  - time;
+                    $ctrl{'home'} .= "$quitmsg1$_$quitmsg2";
+                }
+                if ($ctrl{'os'} eq 'rhc') {
+                    # Give Openshift demo notice
+                    $ctrl{'home'} .= $demomsg;
+                }
 
                 # invoke module
                 if (($debug >= 3) && $hiresclock) {
@@ -1370,11 +1382,24 @@ while(1) {
                     &dlog (4, $ctrl{'msglog'}."\n");
                     # special Openshift demo handling
                     if (($quitattimer != 0) && ($modcalled ne 'hello')) {
-                        print "Quit timer trigger and will quit in $quitattimer seconds\n";
-                        $quitattime = time + $quitattimer;
-                        $quitattimer = 0;
-                    }
+                        $tmp = 1;
 
+                        # if secret exist, don't quit
+                        if(-f "${plpath}secret") {
+                            # compute md5sum
+                            $_ = `md5sum ${plpath}secret`;
+                            if ((/^(\S+)/) &&
+                                ($1 eq '5d568a56813cd2031e8ea893d95aade8')) {
+                                print "Found secret; don't quit.\n";
+                                $tmp = 0;
+                            }
+                        }
+                        if ($tmp) {
+                            print "Quit timer trigger and will quit in $quitattimer seconds\n";
+                            $quitattime = time + $quitattimer;
+                            $quitattimer = 0;
+                        }
+                    }
                 }
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
@@ -1582,6 +1607,14 @@ while(1) {
                     print $sock "<a href=\"/httpd.htm?bannermute=240\">4h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=300\">5h</a> - ";
                     print $sock "<a href=\"/httpd.htm?bannermute=43200\">1mo</a><p>";
+                }
+                if ($quitattime < 0x7fffffff) {
+                    $_ = $quitattime  - time;
+                    print $sock "$quitmsg1$_$quitmsg2";
+                }
+                if ($ctrl{'os'} eq 'rhc') {
+                    # Give Openshift demo notice
+                    print $sock "$demomsg";
                 }
 
                 print $sock "<a href=\"/httpd.htm\">#</a>\n";
