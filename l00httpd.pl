@@ -1053,7 +1053,7 @@ while(1) {
                 }
             }
 
-            print "$ctrl{'now_string'} $client_ip FORM: $urlparams\n", if ($debug >= 2);
+            print "$ctrl{'now_string'} $client_ip FORM: $urlparams\n", if ($debug >= 1);
             $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
