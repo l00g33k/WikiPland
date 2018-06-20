@@ -82,7 +82,10 @@ sub l00http_hello_proc (\%) {
     print $sock "<INPUT TYPE=\"hidden\" NAME=\"ip\" VALUE=\"$ctrl->{'client_ip'}\">\n";
     print $sock "</form>\n";
 
-    print $sock "System uptime: $ctrl->{'uptime'}<p>\n";
+    print $sock "System uptime: $ctrl->{'uptime'}.<p>\n";
+    if (defined($ctrl->{'demomsg'})) {
+        print $sock "$ctrl->{'demomsg'}.<p>\n";
+    }
     if ($ctrl->{'ishost'}) {
         print $sock "View <a href=\"/view.htm?path=$history\">$history</a><p>\n";
     }

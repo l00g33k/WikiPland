@@ -62,7 +62,7 @@ my ($httpsz, $httpszhd, $httpszbd, $open, $shutdown, $poormanrdnssub);
 my (@cmd_param_pairs, $timeout, $cnt, $cfgedit, $postboundary);
 my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %ifnet);
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
-my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod, $demomsg);
+my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
 my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
 
 # set listening port
@@ -92,7 +92,6 @@ $quitattimer = 0;
 $quitattime = 0x7fffffff;
 $quitmsg1 = "<font style=\"color:black;background-color:lime\">This demo will be wiped and restarted in ";
 $quitmsg2 = " seconds.</font> ";
-$demomsg = "<font style=\"color:black;background-color:aqua\">See this <a href=\"https://l00g33k.wordpress.com/category/wikiplandintro/\">blog</a> for details about this site.</font> ";
 
 undef $timeout;
 
@@ -316,6 +315,9 @@ print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 #}
 $ctrl{'plpath'} = $plpath;      # make it available to modules
 
+if ($ctrl{'os'} eq 'rhc') {
+    $ctrl{'demomsg'} = "<font style=\"color:black;background-color:aqua\">See this <a href=\"https://l00g33k.wordpress.com/category/wikiplandintro/\">blog</a> for details about this site.</font> ";
+}
 
 
 sub readl00httpdcfg {
@@ -1363,9 +1365,9 @@ while(1) {
                     $_ = $quitattime  - time;
                     $ctrl{'home'} .= "$quitmsg1$_$quitmsg2";
                 }
-                if ($ctrl{'os'} eq 'rhc') {
+                if (defined($ctrl{'demomsg'})) {
                     # Give Openshift demo notice
-                    $ctrl{'home'} .= $demomsg;
+                    $ctrl{'home'} .= $ctrl{'demomsg'};
                 }
 
                 # invoke module
@@ -1613,9 +1615,9 @@ while(1) {
                     $_ = $quitattime  - time;
                     print $sock "$quitmsg1$_$quitmsg2";
                 }
-                if ($ctrl{'os'} eq 'rhc') {
+                if (defined($ctrl{'demomsg'})) {
                     # Give Openshift demo notice
-                    print $sock "$demomsg";
+                    print $sock "$ctrl{'demomsg'}";
                 }
 
                 print $sock "<a href=\"/httpd.htm\">#</a>\n";
