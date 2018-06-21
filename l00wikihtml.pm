@@ -791,9 +791,9 @@ sub wikihtml {
             s/\?\?\?[$colorlukeys]*$//;
             if (/^=.+=$/) {
                 # '=' interferes with heading shorthand, global replace ____EqSg____ = later
-                s/^(=+)([^=]+)(=+)$/$1<font style____EqSg____"color:$colorfg;background-color:$color">$2<\/font>$3/g;
+                s/^(=+)([^=]+)(=+)$/$1 <font style____EqSg____"color:$colorfg;background-color:$color">$2<\/font> $3/g;
             } else {
-                $_ = "<font style=\"color:$colorfg;background-color:$color\">$_</font>";
+                $_ = " <font style=\"color:$colorfg;background-color:$color\">$_</font> ";
             }
             $_ .= " <a href=\"#___top___\">^</a>" .
                   " <a href=\"#__toc__\">toc</a>";

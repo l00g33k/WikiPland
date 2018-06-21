@@ -375,7 +375,7 @@ sub l00http_dash_proc {
                     $cat1font1 = "<font style=\"color:black;background-color:white\">";
                     $cat1font2 = "<\/font>";
                 }
-            } elsif ($this =~ /^==([^=]+)==/) {
+            } elsif ($this =~ /^==([^=]+)==(.*)/) {
                 #status age calculation
                 $updateLast = undef;
 
@@ -528,8 +528,8 @@ sub l00http_dash_proc {
                     }
                     if ($this =~ /!!!$/) {
                                  $lnnostr = sprintf("%3d", $lnno);
-                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
-                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = $dsc;
+                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">yyyyyy $cat1</a>||$lnnostr $cat2 "} = "!!$tim";
+                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">zzzzzz $cat1</a>||$lnnostr $cat2 "} = $dsc;
                                 if ($dbg) {
                                     print $sock "    !!! $this\n";
                                 }
