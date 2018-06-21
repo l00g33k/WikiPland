@@ -528,8 +528,8 @@ sub l00http_dash_proc {
                     }
                     if ($this =~ /!!!$/) {
                                  $lnnostr = sprintf("%3d", $lnno);
-                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">yyyyyy $cat1</a>||$lnnostr $cat2 "} = "!!$tim";
-                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">zzzzzz $cat1</a>||$lnnostr $cat2 "} = $dsc;
+                                 $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
+                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = $dsc;
                                 if ($dbg) {
                                     print $sock "    !!! $this\n";
                                 }
