@@ -395,7 +395,7 @@ sub l00http_dash_proc {
                 }
                 # make a link to lineeval at the target line
                 $lineevalln = $lnno;    # next entry line number but it's zero based
-                $cat2 = "<a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
+                $cat2 = "<a href=\"#top\">^</a> <a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
 
                 # jump mark
                 if ($this =~ /\?\?\?$/) {
