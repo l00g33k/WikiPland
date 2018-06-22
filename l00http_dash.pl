@@ -203,7 +203,8 @@ sub l00http_dash_proc {
         } else {
             $_ = '';
         }
-        print $sock "Display <input type=\"radio\" name=\"dash_all\" value=\"past\" $_>";
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">Display</a>\n";
+        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"past\" $_>";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">past</a>\n";
         if ($dash_all eq 'future') {
             $_ = 'checked';
