@@ -80,7 +80,7 @@ sub l00http_dash_proc {
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
-    my ($jumpcnt, @jumpname);
+    my ($jumpcnt, @jumpname, $jumpmarks);
 
     $jumpcnt = 0;
     undef @jumpname;
@@ -840,6 +840,7 @@ sub l00http_dash_proc {
             push(@tops2, $_);
         }
         $anchor = '<a name="bangbang"></a>';
+        $jumpmarks = 'Jump marks: ';
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
             s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
@@ -859,6 +860,11 @@ sub l00http_dash_proc {
                 #print $sock "$_\n";
             }
             $out .= "$_\n";
+            # [[#name]] is a shortcut for anchor in the list
+            # let's make a jump list for them; 1 per line max
+            if(/\[\[#(.+?)\]\]/) {
+                $jumpmarks .= "<a href=\"#$1\">$1</a> - ";
+            }
         }
         $out =~ s/\\n/<br>/gm;
         if ($smallhead ne 'checked') {
@@ -878,7 +884,7 @@ sub l00http_dash_proc {
         # jump mark
         print $sock "<a name=\"quickcut\"></a>";
         if ($jumpcnt > 0) {
-            $tmp = 'Jump marks: ';
+            $tmp = $jumpmarks;
             for ($ii = 0; $ii <= $#jumpname; $ii++) {
                 if ($ii > 0) {
                     $tmp .= " - ";
