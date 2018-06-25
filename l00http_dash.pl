@@ -169,8 +169,8 @@ sub l00http_dash_proc {
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
             print $sock " <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
-            print $sock "- <a href=\"#quickcut\">quickcut</a> \n";
-            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"#bangbang\">sticky items</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"#quickcut\">Jump here</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:gold\"><a href=\"#bangbang\">Jump out</a></font> \n";
         }
     }
     print $sock "<p>\n";
