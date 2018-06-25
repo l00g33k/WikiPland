@@ -576,7 +576,8 @@ sub wikihtml {
                 # " for hide paragraph
                 # % for wiki commands
                                                 # if not
-                if (($tmp !~ /^[=\*\|"%]/) &&   # starts with =*|"%
+                if (($tmp !~ /^[=\*\|%]/) &&    # starts with =*|"%
+                    ($tmp !~ /^""/) &&          # """" paragraph hiding
                     ($tmp !~ /^ *$/) &&         # blank line
                     ($tmp !~ /^  /)) {          # indent
                     $_ .= " $tmp";
