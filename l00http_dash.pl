@@ -10,7 +10,8 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $smallhead, $catflt, $outputsort, $dashwidth);
+my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, 
+$smallhead, $catflt, $outputsort, $dashwidth, $onlybang);
 $dash_all = 'past';
 $hdronly = 0;
 $listbang = '';
@@ -21,6 +22,7 @@ $smallhead = '';
 $catflt = '.';
 $outputsort = '';
 $dashwidth = 18;;
+$onlybang = '';
 
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
@@ -107,7 +109,11 @@ sub l00http_dash_proc {
         }
     }
 
-
+    if ((defined ($form->{'onlybang'})) && ($form->{'onlybang'} eq 'on')) {
+        $onlybang = 'checked';
+    } else {
+        $onlybang = '';
+    }
     if ((defined ($form->{'listbang'})) && ($form->{'listbang'} eq 'on')) {
         $listbang = 'checked';
     } else {
@@ -203,6 +209,13 @@ sub l00http_dash_proc {
         } else {
             $_ = '';
         }
+        print $sock "<input type=\"checkbox\" name=\"onlybang\" $onlybang>";
+        if ($onlybang ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+        }
+
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">Display</a>\n";
         print $sock "<input type=\"radio\" name=\"dash_all\" value=\"past\" $_>";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">past</a>\n";
@@ -779,7 +792,14 @@ sub l00http_dash_proc {
                 $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
                 #if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
                     # current is also sticky, skip current
-                    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
+                    if ($onlybang eq 'checked') {
+                        if (/\|\|.+?\|\|.+?!\*\*/) {
+                            # cat2 ends in !**
+                            push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
+                        }
+                    } else {
+                        push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
+                    }
                 #} else {
                 #    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang$tasksDesc{$_}$tmp ||``$_``");
                 #}
