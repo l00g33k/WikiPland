@@ -19,3 +19,15 @@ the last line has been processed, $_ and $next are undef and $last is the
 last line. To process only the current line, simply operate on $_; since 
 the result is under, it will not be output.
 * The variable '$lnno' is pre-defined to be the line number starting at 1.
+
+=Tricks=
+==Line Wrap==
+%BOOKMARK%
+* This simple regex substitution works as a line wrapper. See output in 
+send 's/(.{50,50}[^ ]* *)/$1\n/g;' to clipboard||s/(.{50,50}[^ ]* *)/$1\n/g;
+
+* See output in:
+l00://lineproc_out.txt | /view.htm?path=l00://lineproc_out.txt
+
+%END%
+

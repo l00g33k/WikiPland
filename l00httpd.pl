@@ -220,7 +220,7 @@ sub updateNow_string {
 # predefined to make it easy for the modules
 $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
 #::now::f705
-$htmlheadV1 = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A";
+$htmlheadV1 = "<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.0//EN\" \"http://www.wapforum.org/DTD/xhtml-mobile10.dtd\">\x0D\x0A";
 $htmlheadV2 = "<!DOCTYPE html>\x0D\x0A";
 $htmlheadB0 = "<html>\x0D\x0A".
               "<head>\x0D\x0A".
@@ -1052,7 +1052,7 @@ while(1) {
                         $connected{$client_ip} = 1;
                     }
                 } elsif (/^User-Agent:.*Android +5/i) {
-                    # Android 5.1: <!DOCTYPE html XHTML Mobile seems to make single colume display
+                    # Android 5.1: <!DOCTYPE html XHTML Mobile seems to make single column display
                     # This makes it more compact
                     $ctrl{'htmlhead'} = $htmlheadV2 . $htmlheadB0;
                 } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
