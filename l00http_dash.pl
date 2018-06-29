@@ -245,7 +245,7 @@ sub l00http_dash_proc {
         if ($outputsort ne 'checked') {
             print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=&hdronly=\">cat1 sort</a>,\n";
             print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=\">all</a>, \n";
-            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\">hdr</a>).\n";
+            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a>).\n";
         } else {
             print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat1 sort</a>,\n";
             print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=\">all</a>).\n";
@@ -824,7 +824,7 @@ sub l00http_dash_proc {
                         $jmp =~ s/\*\*/_/g;  # remove ** highlight
                         $jmp =~ s/\*.\*/_/g;
                         $jmp =~ s/[^0-9A-Za-z]/_/g;
-                        $jmp = " expand <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=#cat2$jmp\">$jmp</a>";
+                        $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=#cat2$jmp\">$jmp</a>";
                     } else {
                         $jmp = '';
                     }
