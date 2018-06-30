@@ -1683,7 +1683,7 @@ while(1) {
                 print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
                 if ($ishost) {
                     # with link control
-                    print $sock "<tr><td>Client enabled</td><td>Plugins</td><td>Descriptions</td>\n";
+                    print $sock "<tr><th>Client enabled</th><th>Plugins</th><th>Descriptions</th>\n";
 
                     print $sock "<tr>";
                     print $sock "<td><input type=\"checkbox\" name=\"allappson\">Apps on</td>\n";
@@ -1728,7 +1728,7 @@ while(1) {
                     print $sock "<td><a href=\"/view.htm/l00httpd.htm?path=$plpath"."l00httpd.pl\">".
                         "$tmp</a></td><td>Client access timeout (sec)</td>\n";
                 } else {
-                    print $sock "<tr><td>Plugins</td><td>Descriptions</td>\n";
+                    print $sock "<tr><th>Plugins</th><th>Descriptions</th>\n";
                 }
                 # list all modules
                 print "List all modules\n", if ($debug >= 5);
@@ -1844,6 +1844,7 @@ while(1) {
 
                     # dump all ctrl data
                     print $sock "<p>ctrl data:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                    print $sock "<tr><th>Keys</th><th>Values</th>\n";
                     for $key (sort keys %ctrl) {
                         $val = $ctrl{$key};
                         if (defined($val)) {
@@ -1862,7 +1863,7 @@ while(1) {
 
                     # list all periodic tasks
                     print $sock "<p>Perio task:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-                    print $sock "<tr><td>mod name</td><td>secs to fire</td></tr>\n";
+                    print $sock "<tr><th>Mod names</th><th>Secs to fire</th></tr>\n";
                     foreach $mod (sort keys %httpmods) {
                         if (defined ($modsinfo{"$mod:fn:perio"})) {
                             $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
@@ -1879,6 +1880,7 @@ while(1) {
                     # dump all form data
                     if ($modcalled eq 'httpd') {
                         print $sock "<p>FORM data:<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                        print $sock "<tr><th>Keys</th><th>Values</th>\n";
                         for $key (sort keys %FORM) {
                             $val = $FORM{$key};
                             $val =~ s/</&lt;/g;
@@ -1895,9 +1897,9 @@ while(1) {
                     # list ram files
                     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
                     print $sock "<tr>\n";
-                    print $sock "<td>names</td>\n";
-                    print $sock "<td>bytes</td>\n";
-                    print $sock "<td>time</td>\n";
+                    print $sock "<th>names</th>\n";
+                    print $sock "<th>bytes</th>\n";
+                    print $sock "<th>time</th>\n";
                     print $sock "</tr>\n";
                     # list ram files
                     $tmp = $ctrl{'l00file'};
