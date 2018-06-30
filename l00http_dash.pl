@@ -77,7 +77,7 @@ sub l00http_dash_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword, $lineevalln, %lineevallns);
-    my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime);
+    my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime, %tasksCat2);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
@@ -245,7 +245,7 @@ sub l00http_dash_proc {
         if ($outputsort ne 'checked') {
             print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=&hdronly=\">cat1 sort</a>,\n";
             print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=\">all</a>, \n";
-            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\">hdr</a>).\n";
+            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a>).\n";
         } else {
             print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat1 sort</a>,\n";
             print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=\">all</a>).\n";
@@ -272,6 +272,7 @@ sub l00http_dash_proc {
         undef %updateAgeVal;
         undef %firstTime;
         undef %logedTime;
+        undef %tasksCat2;
         undef @wikiword;
         undef %lineevallns;
         undef @blocktime;
@@ -401,7 +402,8 @@ sub l00http_dash_proc {
                 $jmp =~ s/[^0-9A-Za-z]/_/g;
                 if ($dbg) {
                     print $sock "  $cat1  $cat2\n";
-                } $time_start = 0;
+                }
+                $time_start = 0;
                 # Make a hot item include if $cat2 is a wikiword 
                 # alone and target exist (to be checked later)
                 if ($cat2 =~ /^[A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*$/) {
@@ -419,6 +421,8 @@ sub l00http_dash_proc {
                     $cat2 .= "<a name=\"jump$jumpcnt\"></a>";
                     $jumpcnt++;
                 }
+                # jump target when hdr only
+                $cat2 .= "<a name=\"cat2$jmp\"></a>";
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 # find wikiwords. make a copy to zap [] and <> and http
                 $tmp = $dsc;
@@ -528,6 +532,7 @@ sub l00http_dash_proc {
                                  $tasksTime{$key} = $tim;
                                  $tasksDesc{$key} = " $dsc";
                                  $countBang{$key} = 0;
+                                 $tasksCat2{$key} = $cat2;
                                 if ($dbg) {
                                     print $sock "    TIME  $tim    $key\n";
                                 }
@@ -684,6 +689,7 @@ sub l00http_dash_proc {
                         #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a>
                         $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "!!\@$tim";
                         $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "$_";
+                        $tasksCat2{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">iHot</a> ||$lnnostr <a href=\"/recedit.htm?record1=.&path=${pname}$hot\">INC</a> "} = "";
                     }
                     close(IN);
                 }
@@ -808,7 +814,21 @@ sub l00http_dash_proc {
                 if ($hdronly == 0) {
                     push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$_``");
                 } else {
-                    push (@tops, "||$tasksTime{$_}$_||$bang||``$_``");
+                    # create matching jump anchor when hdr only
+                    #$cat2 .= "<a name=\"cat2$jmp\">$jmp</a>";
+                    if (defined($tasksCat2{$_})) {
+                        $jmp = $tasksCat2{$_};
+                        $jmp =~ s/<a name=.+?>.+?<\/a>//g;
+                        $jmp =~ s/<.+?>//g;
+                        $jmp =~ s/\^ //;
+                        $jmp =~ s/\*\*/_/g;  # remove ** highlight
+                        $jmp =~ s/\*.\*/_/g;
+                        $jmp =~ s/[^0-9A-Za-z]/_/g;
+                        $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=#cat2$jmp\">$jmp</a>";
+                    } else {
+                        $jmp = '';
+                    }
+                    push (@tops, "||$tasksTime{$_}$_||$bang$jmp||``$_``");
                 }
             }
         }
