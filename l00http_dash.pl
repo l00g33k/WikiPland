@@ -824,7 +824,7 @@ sub l00http_dash_proc {
                         $jmp =~ s/\*\*/_/g;  # remove ** highlight
                         $jmp =~ s/\*.\*/_/g;
                         $jmp =~ s/[^0-9A-Za-z]/_/g;
-                        $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=#cat2$jmp\">$jmp</a>";
+                        $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#cat2$jmp\">$jmp</a>";
                     } else {
                         $jmp = '';
                     }
