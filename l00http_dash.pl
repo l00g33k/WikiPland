@@ -24,6 +24,77 @@ $outputsort = '';
 $dashwidth = 18;;
 $onlybang = '';
 
+
+sub l00http_dash_linewrap {
+    my ($buffer) = @_;
+    my ($ii, $idx, $len, $newbuf, $inangle, $insquare, $width);
+
+    $len = length($buffer);
+    if ($len > 2) {
+        # looking from the tail for '\n' or start (hence at least 3 bytes)
+        for($idx = $len - 2; $idx >= 0; $idx--) {
+            if (substr($buffer, $idx, 2) eq '\n') {
+                # found last '\n'
+                last;
+            }
+        }
+
+        if ($idx > 0) {
+            # found '\n' from the end, skip pass this '\n'
+            $idx += 2;
+        } else {
+            # else $idx is 0 at the start
+            $idx = 0;
+        }
+        if ($idx > 0) {
+            # copy content before '\n'
+            $newbuf .= substr($buffer, 0, $idx);
+        }
+
+        $inangle = 0;   # flag to exclude counting <tags>
+        $insquare = 0;  # flag to exclude counting [[url|desc]]
+        $width = 0;     # currently accumulated width
+        for ($ii = $idx; $ii < $len; $ii++) {
+            if (substr($buffer, $ii, 1) eq '<') {
+                # found '<', to skip to '>'
+                $inangle = 1;
+            }
+            if (substr($buffer, $ii, 2) eq '[[') {
+                # found '[[', to skip to ']]'
+                $insquare = 1;
+            }
+            if (($inangle == 0) && ($insquare == 0)) {
+                # not in <> nor [[]], accounting width
+                $width++;
+                if (($width > $dashwidth) && 
+                    (substr($buffer, $ii, 1) eq ' ')) {
+                    # too wide, add newline
+                    $newbuf .= ' \n';
+                    $width = 1;
+                }
+            }
+            if ($insquare) {
+                if (substr($buffer, $ii - 1, 2) eq ']]') {
+                    # in '[[' and found ']]', reset
+                    $insquare = 0;
+                }
+            }
+            if ($inangle) {
+                if (substr($buffer, $ii, 1) eq '>') {
+                    # in '<' and found '>', reset
+                    $inangle = 0;
+                }
+            }
+            # accumulate line
+            $newbuf .= substr($buffer, $ii, 1);
+        }
+        $buffer = $newbuf;
+    }
+
+    $buffer;
+}
+
+
 sub l00http_dash_outputsort {
     my ($retval, $acat1, $bcat1, $acat2, $bcat2, $aa, $bb);
 
@@ -548,7 +619,7 @@ sub l00http_dash_proc {
                     if ($this =~ /!!!$/) {
                                  $lnnostr = sprintf("%3d", $lnno);
                                  $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
-                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = $dsc;
+                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = &l00http_dash_linewrap($dsc);
                                 if ($dbg) {
                                     print $sock "    !!! $this\n";
                                 }
@@ -577,71 +648,7 @@ sub l00http_dash_proc {
                                 $tmp = 1;
                             }
                             if ($tmp) {
-                                $tasksSticky{$key} .= " - $dsc";
-                                my ($buffer, $idx, $len, $newbuf, $inangle, $insquare, $width);
-                                # save current line and length
-                                $buffer = $tasksSticky{$key};
-                                $len = length($buffer);
-                                if ($len > 2) {
-                                    # looking from the tail for '\n' or start (hence at least 3 bytes)
-                                    for($idx = $len - 2; $idx >= 0; $idx--) {
-                                        if (substr($buffer, $idx, 2) eq '\n') {
-                                            # found last '\n'
-                                            last;
-                                        }
-                                    }
-
-                                    if ($idx > 0) {
-                                        # found '\n' from the end, skip pass this '\n'
-                                        $idx += 2;
-                                    } else {
-                                        # else $idx is 0 at the start
-                                        $idx = 0;
-                                    }
-                                    if ($idx > 0) {
-                                        # copy content before '\n'
-                                        $newbuf .= substr($buffer, 0, $idx);
-                                    }
-
-                                    $inangle = 0;   # flag to exclude counting <tags>
-                                    $insquare = 0;  # flag to exclude counting [[url|desc]]
-                                    $width = 0;     # currently accumulated width
-                                    for ($ii = $idx; $ii < $len; $ii++) {
-                                        if (substr($buffer, $ii, 1) eq '<') {
-                                            # found '<', to skip to '>'
-                                            $inangle = 1;
-                                        }
-                                        if (substr($buffer, $ii, 2) eq '[[') {
-                                            # found '[[', to skip to ']]'
-                                            $insquare = 1;
-                                        }
-                                        if (($inangle == 0) && ($insquare == 0)) {
-                                            # not in <> nor [[]], accounting width
-                                            $width++;
-                                            if (($width > $dashwidth) && 
-                                                (substr($buffer, $ii, 1) eq ' ')) {
-                                                # too wide, add newline
-                                                $newbuf .= ' \n';
-                                                $width = 1;
-                                            }
-                                        }
-                                        if ($insquare) {
-                                            if (substr($buffer, $ii - 1, 2) eq ']]') {
-                                                # in '[[' and found ']]', reset
-                                                $insquare = 0;
-                                            }
-                                        }
-                                        if ($inangle) {
-                                            if (substr($buffer, $ii, 1) eq '>') {
-                                                # in '<' and found '>', reset
-                                                $inangle = 0;
-                                            }
-                                        }
-                                        # accumulate line
-                                        $newbuf .= substr($buffer, $ii, 1);
-                                    }
-                                    $tasksSticky{$key} = $newbuf;
-                                }
+                                $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " - $dsc");
                             }
                         }
                     } else {
@@ -796,21 +803,15 @@ sub l00http_dash_proc {
             if ((defined($tasksSticky{$_})) && ($hdronly == 0)) {
                 $tmp = $tasksSticky{$_};
                 $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
-                #if (index($tasksSticky{$_}, $tasksDesc{$_}) >= 0) {
-                    # current is also sticky, skip current
-                    if ($onlybang eq 'checked') {
-                        if (/\|\|.+?\|\|.+?!\*\*/) {
-                            # cat2 ends in !**
-                            push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
-                        }
-                    } else {
+                if ($onlybang eq 'checked') {
+                    if (/\|\|.+?\|\|.+?!\*\*/) {
+                        # cat2 ends in !**
                         push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
                     }
-                #} else {
-                #    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang$tasksDesc{$_}$tmp ||``$_``");
-                #}
+                } else {
+                    push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
+                }
             } else {
-               #push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ||``$_``");
                 if ($hdronly == 0) {
                     push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$_``");
                 } else {
