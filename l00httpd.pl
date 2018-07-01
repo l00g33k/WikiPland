@@ -1387,7 +1387,11 @@ while(1) {
                     print "Returned from $modcalled\n", if ($debug >= 5);
                     &dlog (4, $ctrl{'msglog'}."\n");
                     # special Openshift demo handling
-                    if (($quitattimer != 0) && ($modcalled ne 'hello')) {
+                    if (($quitattimer != 0) && 
+                        (!($modcalled eq 'hello') &&
+                         !(($modcalled eq 'ls') &&
+                           ($urlparams eq 'path=/favicon.ico&raw=on'))
+                        )) {
                         $tmp = 1;
 
                         # if secret exist, don't quit
