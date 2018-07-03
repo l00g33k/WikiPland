@@ -11,7 +11,7 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, 
-$smallhead, $catflt, $outputsort, $dashwidth, $onlybang);
+$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat);
 $dash_all = 'past';
 $hdronly = 0;
 $listbang = '';
@@ -23,6 +23,7 @@ $catflt = '.';
 $outputsort = '';
 $dashwidth = 18;;
 $onlybang = '';
+$onlyhat = '';
 
 
 sub l00http_dash_linewrap {
@@ -185,6 +186,11 @@ sub l00http_dash_proc {
     } else {
         $onlybang = '';
     }
+    if ((defined ($form->{'onlyhat'})) && ($form->{'onlyhat'} eq 'on')) {
+        $onlyhat = 'checked';
+    } else {
+        $onlyhat = '';
+    }
     if ((defined ($form->{'listbang'})) && ($form->{'listbang'} eq 'on')) {
         $listbang = 'checked';
     } else {
@@ -280,11 +286,17 @@ sub l00http_dash_proc {
         } else {
             $_ = '';
         }
-        print $sock "<input type=\"checkbox\" name=\"onlybang\" $onlybang>";
+        print $sock "(<input type=\"checkbox\" name=\"onlybang\" $onlybang>";
         if ($onlybang ne 'checked') {
-            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
         } else {
-            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+        }
+        print $sock "<input type=\"checkbox\" name=\"onlyhat\" $onlyhat>";
+        if ($onlyhat ne 'checked') {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlyhat=on&outputsort=&dash_all=past&hdronly=\">^itm</a> - ";
+        } else {
+            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">^itm</a> - ";
         }
         print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a> -\n";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">reset</a>)\n";
@@ -808,7 +820,14 @@ sub l00http_dash_proc {
                         # cat2 ends in !**
                         push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
                     }
-                } else {
+                }
+                if ($onlyhat eq 'checked') {
+                    if ($tmp =~ /\^/) {
+                        # cat2 ends in !**
+                        push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
+                    }
+                }
+                if (($onlybang ne 'checked') && ($onlyhat ne 'checked')) {
                     push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
                 }
             } else {
