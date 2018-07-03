@@ -282,12 +282,13 @@ sub l00http_dash_proc {
         }
         print $sock "<input type=\"checkbox\" name=\"onlybang\" $onlybang>";
         if ($onlybang ne 'checked') {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
         } else {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+            print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
         }
+        print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a> -\n";
+        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">reset</a>)\n";
 
-        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">Display</a>\n";
         print $sock "<input type=\"radio\" name=\"dash_all\" value=\"past\" $_>";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">past</a>\n";
         if ($dash_all eq 'future') {
@@ -316,7 +317,6 @@ sub l00http_dash_proc {
         if ($outputsort ne 'checked') {
             print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=&hdronly=\">cat1 sort</a>,\n";
             print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=\">all</a>, \n";
-            print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a>).\n";
         } else {
             print $sock "(<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat1 sort</a>,\n";
             print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=\">all</a>).\n";
