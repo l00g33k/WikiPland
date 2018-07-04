@@ -45,11 +45,30 @@ sub l00http_clip_proc {
         # clears
         $form->{'clip'} = '';
     }
+
+
     if (defined ($form->{'append'})) {
         $clip = $form->{'clip'};
         $clip .= &l00httpd::l00getCB($ctrl);
     } elsif (defined ($form->{'clip'})) {
         $clip = $form->{'clip'};
+
+        if (defined ($form->{'newln2slashn'})) {
+            $clip =~ s/\r\n/\\n/gms;
+            $clip =~ s/\n/\\n/gms;      # if <LF> only
+            # fake a 'Save' click
+            $form->{'update'} = 1;
+        }
+        if (defined ($form->{'slashn2newln'})) {
+            if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+                $clip =~ s/\\n/\r\n/gms;
+            } else {
+                $clip =~ s/\\n/\n/gms;
+            }
+            # fake a 'Save' click
+            $form->{'update'} = 1;
+        }
+
         if (defined ($form->{'update'})) {
             print $sock "<br>Also copied to <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>. \n";
             $tmp = &l00httpd::urlencode ($clip);
@@ -88,7 +107,14 @@ sub l00http_clip_proc {
     } else {
         print $sock "<br>\n";
     }
-    print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\" accesskey=\"e\">$clip</textarea>\n";
+    print $sock "<textarea name=\"clip\" cols=\"32\" rows=\"5\" accesskey=\"e\">$clip</textarea><br>\n";
+    print $sock "<input type=\"submit\" name=\"newln2slashn\" value=\"<CRLF> to \\n\"> \n";
+    if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+        print $sock "<input type=\"submit\" name=\"slashn2newln\" value=\"\\n to <CRLF>\"> \n";
+    } else {
+        print $sock "<input type=\"submit\" name=\"slashn2newln\" value=\"\\n to <LF>\"> \n";
+    }
+
     print $sock "<br>Jump URL: <input type=\"text\" size=\"10\" name=\"url\" value=\"$url\">\n";
 
     print $sock "View <a href=\"/view.htm?path=l00://clipboard.txt\">l00://clipboard.txt</a>, \n";
