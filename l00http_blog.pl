@@ -109,7 +109,7 @@ sub l00http_blog_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
-    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly);
+    my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly, $includefile, $pnameup);
 
     undef @blockquick;
     undef @blocktime;
@@ -120,6 +120,7 @@ sub l00http_blog_proc {
         $path = $form->{'path'};
         ($pname, $fname) = $path =~ /^(.+[\\\/])([^\\\/]+)$/;
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $includefile = '';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//g;
                 s/\n//g;
@@ -144,6 +145,49 @@ sub l00http_blog_proc {
                         $addtimeval{$tmp} = 24 * 3600 * $1;
                     }
                     push(@blocktime, $tmp);
+                }
+                # %INCLUDE<./xxx.txt>%
+                if (/%INCLUDE<(.+?)>%/) {
+                    $includefile = $1;
+                    # subst %INCLUDE<./xxx.txt> as 
+                    #       %INCLUDE</absolute/path/xxx.txt>
+                    $includefile =~ s/^\.[\\\/]/$pname/;
+                    # drop last directory from $pname for:
+                    # subst %INCLUDE<../xxx.txt> as 
+                    #       %INCLUDE</absolute/path/../xxx.txt>
+                    $pnameup = $pname;
+                    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                    $includefile =~ s/^\.\.\//$pnameup\//;
+                }
+            }
+            # handle include
+            if (($includefile ne '') && 
+                (&l00httpd::l00freadOpen($ctrl, $includefile))) {
+                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                    s/\r//;
+                    s/\n//;
+                    if (/^%BLOGURL:<(.+?)>%/) {
+                        $urlonly = $1;
+                        $urlonly =~ s/path=\$/path=$form->{'path'}/;
+                        $url = "Quick URL: <a href=\"$urlonly\">$urlonly</a><p>";
+                    }
+                    if (/^%BLOGQUICK:(.+?)%/) {
+                        push(@blockquick, $1);
+                    }
+                    if (/^%BLOGTIME:(.+?)%/) {
+                        $tmp = $1;
+                        $addtimeval{$tmp} = 0;
+                        if ($tmp =~ /(\d+)m/) {
+                            $addtimeval{$tmp} = 60 * $1;
+                        }
+                        if ($tmp =~ /(\d+)h/) {
+                            $addtimeval{$tmp} = 3600 * $1;
+                        }
+                        if ($tmp =~ /(\d+)d/) {
+                            $addtimeval{$tmp} = 24 * 3600 * $1;
+                        }
+                        push(@blocktime, $tmp);
+                    }
                 }
             }
         }

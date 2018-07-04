@@ -29,7 +29,7 @@ sub l00http_lineeval_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals);
-    my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard);
+    my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard, $includefile, $pnameup);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -168,6 +168,7 @@ sub l00http_lineeval_proc (\%) {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             undef @newfile;
             undef @evals;
+            $includefile = '';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
@@ -182,6 +183,37 @@ sub l00http_lineeval_proc (\%) {
                     } else {
                         # don't list the user copy2clipboard regex
                         push(@evals, $1);
+                    }
+                }
+                # %INCLUDE<./xxx.txt>%
+                if (/%INCLUDE<(.+?)>%/) {
+                    $includefile = $1;
+                    # subst %INCLUDE<./xxx.txt> as 
+                    #       %INCLUDE</absolute/path/xxx.txt>
+                    $includefile =~ s/^\.[\\\/]/$pname/;
+                    # drop last directory from $pname for:
+                    # subst %INCLUDE<../xxx.txt> as 
+                    #       %INCLUDE</absolute/path/../xxx.txt>
+                    $pnameup = $pname;
+                    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                    $includefile =~ s/^\.\.\//$pnameup\//;
+                }
+            }
+            # handle include
+            if (($includefile ne '') && 
+                (&l00httpd::l00freadOpen($ctrl, $includefile))) {
+                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                    s/\r//;
+                    s/\n//;
+                    # %LINEEVAL~#~s/^(.)/#$1/%
+                    if (/^\%LINEEVAL~(.+?)~(.+)\%$/) {
+                        if ($1 eq 'copy2clipboard') {
+                            # remember the user copy2clipboard regex
+                            $copy2clipboard = $2;
+                        } else {
+                            # don't list the user copy2clipboard regex
+                            push(@evals, $1);
+                        }
                     }
                 }
             }
