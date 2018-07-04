@@ -115,6 +115,7 @@ sub l00http_blog_proc {
     undef @blocktime;
     undef %addtimeval;
     $url = '';
+    $urlonly = '';
     $addtimeval{'NewTime'} = 0;
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -166,7 +167,8 @@ sub l00http_blog_proc {
                 while ($_ = &l00httpd::l00freadLine($ctrl)) {
                     s/\r//;
                     s/\n//;
-                    if (/^%BLOGURL:<(.+?)>%/) {
+                    if ($urlonly eq '') && (/^%BLOGURL:<(.+?)>%/)) {
+                        # do not overwrite root definition
                         $urlonly = $1;
                         $urlonly =~ s/path=\$/path=$form->{'path'}/;
                         $url = "Quick URL: <a href=\"$urlonly\">$urlonly</a><p>";
