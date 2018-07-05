@@ -96,6 +96,7 @@ sub l00http_lineeval_proc (\%) {
             undef @evals;
 
             $lnno = 1;
+            $includefile = '';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
@@ -110,7 +111,36 @@ sub l00http_lineeval_proc (\%) {
                     }
                 }
 
+                # %INCLUDE<./xxx.txt>%
+                if (/%INCLUDE<(.+?)>%/) {
+                    $includefile = $1;
+                    # subst %INCLUDE<./xxx.txt> as 
+                    #       %INCLUDE</absolute/path/xxx.txt>
+                    $includefile =~ s/^\.[\\\/]/$pname/;
+                    # drop last directory from $pname for:
+                    # subst %INCLUDE<../xxx.txt> as 
+                    #       %INCLUDE</absolute/path/../xxx.txt>
+                    $pnameup = $pname;
+                    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                    $includefile =~ s/^\.\.\//$pnameup\//;
+                }
+
                 $lnno++;
+            }
+            # handle include
+            if (($includefile ne '') && 
+                (&l00httpd::l00freadOpen($ctrl, $includefile))) {
+                while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                    s/\r//;
+                    s/\n//;
+                    # %LINEEVAL~#~s/^(.)/#$1/%
+                    if (/^\%LINEEVAL~(.+?)~(.+)\%$/) {
+                        if ($1 ne 'copy2clipboard') {
+                            # don't list the user copy2clipboard regex
+                            push(@evals, $2);
+                        }
+                    }
+                }
             }
 
             if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'rm') &&
