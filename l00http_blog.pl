@@ -167,7 +167,7 @@ sub l00http_blog_proc {
                 while ($_ = &l00httpd::l00freadLine($ctrl)) {
                     s/\r//;
                     s/\n//;
-                    if ($urlonly eq '') && (/^%BLOGURL:<(.+?)>%/)) {
+                    if (($urlonly eq '') && (/^%BLOGURL:<(.+?)>%/)) {
                         # do not overwrite root definition
                         $urlonly = $1;
                         $urlonly =~ s/path=\$/path=$form->{'path'}/;
