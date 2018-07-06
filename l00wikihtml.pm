@@ -793,6 +793,9 @@ sub wikihtml {
             if (/^=.+=$/) {
                 # '=' interferes with heading shorthand, global replace ____EqSg____ = later
                 s/^(=+)([^=]+)(=+)$/$1 <font style____EqSg____"color:$colorfg;background-color:$color">$2<\/font> $3/g;
+            } elsif (/^(\*+) (.+)$/) {
+                # Preserve '*'
+                $_ = "$1 <font style=\"color:$colorfg;background-color:$color\">$2</font> ";
             } else {
                 $_ = " <font style=\"color:$colorfg;background-color:$color\">$_</font> ";
             }
