@@ -9,8 +9,7 @@ use l00backup;
 my %config = (proc => "l00http_viewfile_proc",
               desc => "l00http_viewfile_desc");
 my ($hostpath, $lastpath, $refresh, $refreshfile);
-my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
-my ($findmaxln, $findskip);
+my ($findtext, $block, $wraptext, $nohdr, $pname, $fname, $maxln, $skip, $hilitetext);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -18,8 +17,6 @@ $wraptext = '';
 $nohdr = '';
 $skip = 0;
 $maxln = 1000;
-$findskip = 0;
-$findmaxln = 1000;
 $hilitetext = '';
 $lastpath = '';
 $refresh = '';
@@ -38,8 +35,8 @@ sub l00http_viewfile_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
-    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
-    my ($foundfullrst, @foundfullarray, $byteskipped);
+    my ($tmpno, $tmpln, $tmptop, $totallns, $skip0, $refreshtag);
+    my (@foundfullarray, $byteskipped);
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -115,12 +112,6 @@ sub l00http_viewfile_proc {
 
     print $sock "<p>\n";
     if (defined ($form->{'find'})) {
-        if (defined ($form->{'findmaxln'})) {
-            $findmaxln = $form->{'findmaxln'};
-        }
-        if (defined ($form->{'findskip'})) {
-            $findskip = $form->{'findskip'};
-        }
     }
     if (defined ($form->{'update'})) {
         if (defined ($form->{'maxln'})) {
@@ -212,10 +203,23 @@ sub l00http_viewfile_proc {
 
     $lineno = 0;
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
-        $found = '';
-
         if (open (IN, "<$form->{'path'}")) {
-
+            if ($skip < 0) {
+                print $sock "Negative skip, search for last line. May take some times. ".
+                    "Prints '.' per 65k lines on the console.<br>\n";
+                $skip = 0;
+                while (<IN>) {
+                    if (($skip & 0xffff) == 0) {
+                        print ".";
+                    }
+                    $skip++;
+                }
+                close (IN);
+                print $sock "There are $skip lines in $form->{'path'}<br>\n";
+                $skip -= $maxln;
+                print "\n";
+                open (IN, "<$form->{'path'}");
+            }
 
             print $sock "<pre>\n";
 
@@ -282,6 +286,7 @@ sub l00http_viewfile_proc {
                 }
             }
             print $sock "</pre>\n";
+            close (IN);
         }
     }
     print $sock "<hr><a name=\"end\"></a><p>\n";
