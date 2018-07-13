@@ -10,13 +10,17 @@ my %config = (proc => "l00http_viewfile_proc",
               desc => "l00http_viewfile_desc");
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $pname, $fname, $maxln, $skip, $hilitetext);
+my ($findmaxln, $findskip, $literal);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
 $wraptext = '';
+$literal = '';
 $nohdr = '';
 $skip = 0;
 $maxln = 1000;
+$findskip = 0;
+$findmaxln = 1000;
 $hilitetext = '';
 $lastpath = '';
 $refresh = '';
@@ -112,6 +116,12 @@ sub l00http_viewfile_proc {
 
     print $sock "<p>\n";
     if (defined ($form->{'find'})) {
+        if (defined ($form->{'findmaxln'})) {
+            $findmaxln = $form->{'findmaxln'};
+        }
+        if (defined ($form->{'findskip'})) {
+            $findskip = $form->{'findskip'};
+        }
     }
     if (defined ($form->{'update'})) {
         if (defined ($form->{'maxln'})) {
@@ -320,6 +330,48 @@ sub l00http_viewfile_proc {
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
+
+    # find
+    print $sock "<form action=\"/view.htm\" method=\"get\">\n";
+    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"find\" value=\"F&#818;ind\" accesskey=\"f\">\n";
+    print $sock "</td><td>\n";
+    print $sock "Find in this file\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "RegE&#818;x:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\" accesskey=\"e\"> <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Block mark:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"12\" name=\"block\" value=\"$block\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Formatted:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"wraptext\" $wraptext>wrap text\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Literal:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"literal\" $literal>show '&lt;' &amp; '&gt;'\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "File:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"12\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Skip <input type=\"text\" size=\"4\" name=\"findskip\" value=\"$findskip\">\n";
+    print $sock "</td><td>\n";
+    print $sock "max. <input type=\"text\" size=\"4\" name=\"findmaxln\" value=\"$findmaxln\"> lines\n";
+    print $sock "</td></tr>\n";
+    print $sock "</table>\n";
+    print $sock "</form>\n";
+    print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a> - \n";
