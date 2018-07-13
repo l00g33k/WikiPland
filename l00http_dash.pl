@@ -289,15 +289,15 @@ sub l00http_dash_proc {
         }
         print $sock "(<input type=\"checkbox\" name=\"onlybang\" $onlybang>";
         if ($onlybang ne 'checked') {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlybang=on&outputsort=&dash_all=past&hdronly=\">cat!</a></strong> - ";
         } else {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a> - ";
+            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">cat!</a></strong> - ";
         }
         print $sock "<input type=\"checkbox\" name=\"onlyhat\" $onlyhat>";
         if ($onlyhat ne 'checked') {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlyhat=on&outputsort=&dash_all=past&hdronly=\">^itm</a> - ";
+            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlyhat=on&outputsort=&dash_all=past&hdronly=\">^itm</a></strong> - ";
         } else {
-            print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">^itm</a> - ";
+            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">^itm</a></strong> - ";
         }
         print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a> -\n";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">reset</a>)\n";
@@ -557,10 +557,16 @@ sub l00http_dash_proc {
                     }
                 }
                 # ^ color fushcia/yellow for do now
-                if ($dsc =~ /^\^([^\[\]]+)(\|+[^\[\]]+)$/) {
+                if ($dsc =~ /^(\+\d+ *)\^([^\[\]]+)(\|+[^\[\]]+)$/) {
+                    # special case : "desc | URL" and "desc ||clipboard"
+                    # but not [[URL|desc]]
+                    $dsc = "$1^<strong><font style=\"color:yellow;background-color:fuchsia\">$2<\/font><\/strong>$3";
+                } elsif ($dsc =~ /^\^([^\[\]]+)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
                     $dsc = "^<strong><font style=\"color:yellow;background-color:fuchsia\">$1<\/font><\/strong>$2";
+                } elsif ($dsc =~ /^(\+\d+ *)\^(.+)$/) {
+                    $dsc = "$1^<strong><font style=\"color:yellow;background-color:fuchsia\">$2</font></strong>";
                 } else {
                     $dsc =~ s/^\^(.+)$/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                 }
@@ -784,10 +790,16 @@ sub l00http_dash_proc {
                     }
 
                     # ^ color fushcia/yellow for do now
-                    if ($dsc =~ /^\^([^\[\]]+)(\|+[^\[\]]+)$/) {
+                    if ($dsc =~ /^(\+\d+ *)\^([^\[\]]+)(\|+[^\[\]]+)$/) {
+                        # special case : "desc | URL" and "desc ||clipboard"
+                        # but not [[URL|desc]]
+                        $dsc = "$1^<strong><font style=\"color:yellow;background-color:fuchsia\">$2<\/font><\/strong>$3";
+                    } elsif ($dsc =~ /^\^([^\[\]]+)(\|+[^\[\]]+)$/) {
                         # special case : "desc | URL" and "desc ||clipboard"
                         # but not [[URL|desc]]
                         $dsc = "^<strong><font style=\"color:yellow;background-color:fuchsia\">$1<\/font><\/strong>$2";
+                    } elsif ($dsc =~ /^(\+\d+ *)\^(.+)$/) {
+                        $dsc = "$1^<strong><font style=\"color:yellow;background-color:fuchsia\">$2</font></strong>";
                     } else {
                         $dsc =~ s/^\^(.+)/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                     }
