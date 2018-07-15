@@ -1041,7 +1041,8 @@ sub l00http_ls_proc {
                     }
                     $found = '';
                     if (defined ($form->{'find'})) {
-                        $foundhdr = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
+                        $foundhdr = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>";
+                        $foundhdr .= " - View <a href=\"/view.htm?path=l00://ls_findinfile.txt\">l00://ls_findinfile.txt</a>";
                         if (defined ($form->{'findtext'})) {
                             $findtext = $form->{'findtext'};
                         }
@@ -1085,6 +1086,12 @@ sub l00http_ls_proc {
                         $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                         # render found results
                         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
+
+                        $ctrl->{'l00file'}->{'l00://ls_findinfile.txt'} = '';
+                        foreach $_ (split("\n", $found)) {
+                            s/^\d+: //;
+                            $ctrl->{'l00file'}->{'l00://ls_findinfile.txt'} .= "$_\n";
+                        }
                     }
                     
                     if ((defined ($form->{'find'})) &&
@@ -1117,7 +1124,8 @@ sub l00http_ls_proc {
 
                     $found = '';
                     if (defined ($form->{'find'})) {
-                        $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>\n";
+                        $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>";
+                        $found .= " - View <a href=\"/view.htm?path=l00://ls_findinfile.txt\">l00://ls_findinfile.txt</a>";
                         if (defined ($form->{'findtext'})) {
                             $findtext = $form->{'findtext'};
                         }
@@ -1134,6 +1142,12 @@ sub l00http_ls_proc {
                         $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font><hr>\n";
                         # rendering as raw text
                         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, $wikihtmlflags, $fname);
+
+                        $ctrl->{'l00file'}->{'l00://ls_findinfile.txt'} = '';
+                        foreach $_ (split("\n", $found)) {
+                            s/^\d+: //;
+                            $ctrl->{'l00file'}->{'l00://ls_findinfile.txt'} .= "$_\n";
+                        }
                     }
 
                     $ln = 1;
