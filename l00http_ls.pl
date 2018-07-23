@@ -1042,7 +1042,7 @@ sub l00http_ls_proc {
                     $found = '';
                     if (defined ($form->{'find'})) {
                         $foundhdr = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>";
-                        $foundhdr .= " - View <a href=\"/view.htm?path=l00://ls_findinfile.txt\">l00://ls_findinfile.txt</a>";
+                        $foundhdr .= " - View <a href=\"/view.htm?path=l00://ls_findinfile.txt\">l00://ls_findinfile.txt</a>\n";
                         if (defined ($form->{'findtext'})) {
                             $findtext = $form->{'findtext'};
                         }
@@ -1125,7 +1125,7 @@ sub l00http_ls_proc {
                     $found = '';
                     if (defined ($form->{'find'})) {
                         $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>";
-                        $found .= " - View <a href=\"/view.htm?path=l00://ls_findinfile.txt\">l00://ls_findinfile.txt</a>";
+                        $found .= " - View <a href=\"/view.htm?path=l00://ls_findinfile.txt\">l00://ls_findinfile.txt</a>\n";
                         if (defined ($form->{'findtext'})) {
                             $findtext = $form->{'findtext'};
                         }
