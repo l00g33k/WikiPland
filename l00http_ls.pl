@@ -385,7 +385,7 @@ sub l00http_ls_proc {
     # try to open as a directory
     print "ls: try open as directory >$path<\n", if ($ctrl->{'debug'} >= 5);
     if (!opendir (DIR, $path2)) {
-        print "ls: it is not a directory >$path<\n", if ($ctrl->{'debug'} >= 5);
+        print "ls: it is not a directory >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
         # 2) If the path is not a directory:
 
@@ -393,7 +393,7 @@ sub l00http_ls_proc {
         #print $sock "Try '$path' as a file<br>\n";
         # special case for /favicon.ico
         if ($path eq '/favicon.ico') {
-            $path = "$ctrl->{'plpath'}favicon.ico";
+            $path2 = "$ctrl->{'plpath'}favicon.ico";
         } else {
             if ($path !~ /[\\\/]/) {
                 # $path is filename only without path, append last pname
@@ -602,7 +602,7 @@ sub l00http_ls_proc {
             }
         } elsif (open (FILE, "<$path2")) {
             ($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/;
-            print "ls: opened as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
+            print "ls: opened as a file >$path2<\n", if ($ctrl->{'debug'} >= 5);
             if (defined ($form->{'bkvish'})) {
                 &l00backup::backupfile ($ctrl, $path2, 1, 5);
                 if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
@@ -614,7 +614,7 @@ sub l00http_ls_proc {
             # launch editor
             if (defined ($form->{'exteditor'})) {
                 if ($ctrl->{'os'} eq 'and') {
-                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path", "text/plain");
+                    $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path2", "text/plain");
                 } elsif (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                     my ($pid);
                     if ($pid = fork) {
@@ -659,7 +659,7 @@ sub l00http_ls_proc {
                 #    ($fname =~ /\.dat$/i)) { # raw for known binary
                 #    $urlraw = 1;
                 #}
-                ($httphdr, $urlraw) = &l00http_ls_conttype($path);
+                ($httphdr, $urlraw) = &l00http_ls_conttype($path2);
             }
             # auto raw for
             if (($read0raw1 == 1) || ($urlraw == 1)) {
@@ -669,7 +669,7 @@ sub l00http_ls_proc {
                  $size, $atime, $mtime, $ctime, $blksize, $blocks)
                  = stat($path2);
 
-                ($httphdr, $urlraw) = &l00http_ls_conttype($path);
+                ($httphdr, $urlraw) = &l00http_ls_conttype($path2);
                 $httphdr .= "Content-Length: $size\r\n";
                 $httphdr .= "Connection: close\r\nServer: l00httpd\r\n";
                 if ($path =~ /favicon\.ico/) {
@@ -722,7 +722,7 @@ sub l00http_ls_proc {
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path2<br>\n";
                     }
                     print $sock "$ctrl->{'home'} \n";
-                    if ($path =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
+                    if ($path2 =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
                         # we are displaying help text, also generate a link to source code
                         print $sock "<a href=\"/view.htm/$fname?path=$ctrl->{'plpath'}l00http_$1.pl\">code</a>\n";
                     }
