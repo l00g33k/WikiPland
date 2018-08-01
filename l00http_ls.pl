@@ -251,6 +251,23 @@ sub l00http_ls_proc {
 
     $skipto = '';
     $stopat = '';
+    if (defined ($form->{'setskipto'})) {
+        # so skipto navigation doesn't require 'submit' to be defined which 
+        # resets other flags
+        if (defined ($form->{'skipto'}) && ($form->{'skipto'} =~ /(\d+)/)) {
+            $skipto = $1;
+            $stopat = $skipto + 10;
+        }
+        if (defined ($form->{'stopat'}) && ($form->{'stopat'} =~ /(\d+)/)) {
+            $stopat = $1;
+            if ($skipto >= $stopat) {
+                $skipto  = $stopat - 10;
+                if ($skipto < 0) {
+                    $skipto = 0;
+                }
+            }
+        }
+    }
     if ((defined ($form->{'submit'})) && ($form->{'submit'} eq 'Submit')) {
         if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
             $sortkey1name2date = 2;
@@ -815,19 +832,19 @@ sub l00http_ls_proc {
                                 $start = 1;
                             }
                             $end = $start + $length;
-                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
                             $start = $skipto - int($length/2);
                             if ($start < 1) {
                                 $start = 1;
                             }
                             $end = $start + $length;
-                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
                             $start = $skipto + int($length/2);
                             $end = $start + $length;
-                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
                             $start = $skipto + $length;
                             $end = $start + $length;
-                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
                         }
                         if (($stopat ne '') && ($lnno > $stopat)) {
                             last;
@@ -1028,8 +1045,8 @@ sub l00http_ls_proc {
                             $start = 1;
                         }
                         $end = $lnno;
-                        $skiptohdr .= " top of file: <a href=\"/ls.htm?path=$path2&submit=Submit&skipto=1&stopat=$length\">1-$length</a> - \n";
-                        $skiptohdr .= " end of file: <a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a><br>\n";
+                        $skiptohdr .= " top of file: <a href=\"/ls.htm?path=$path2&setskipto=1&skipto=1&stopat=$length\">1-$length</a> - \n";
+                        $skiptohdr .= " end of file: <a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a><br>\n";
                     }
                     if (%showdir) {
                         if ($bare ne 'checked') {
