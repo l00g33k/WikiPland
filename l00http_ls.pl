@@ -800,13 +800,13 @@ sub l00http_ls_proc {
                         # SHOWLINENO specified in URL, turn on SHOWLINENO mode
                         $showlnno = 1;
                     }
+                    my ($length, $start, $end);
                     while (<FILE>) {
                         $lnno++;
                         if (($skipto ne '') && ($lnno < $skipto)) {
                             next;
                         }
                         if ($stopat ne '') {
-                            my ($length, $start, $end);
                             $skiptohdr  = "Content limited to between line $skipto-$lnno. Show: ";
                             $length = $lnno - $skipto;
 
@@ -828,7 +828,6 @@ sub l00http_ls_proc {
                             $start = $skipto + $length;
                             $end = $start + $length;
                             $skiptohdr .= "<a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a> - ";
-                            $skiptohdr .= "<br>\n";
                         }
                         if (($stopat ne '') && ($lnno > $stopat)) {
                             last;
@@ -1018,6 +1017,19 @@ sub l00http_ls_proc {
                         }
                         $_ = "%l00httpd:lnno:$lnno%$_";
                         $buf .= $_;
+                    }
+                    if ($stopat ne '') {
+                        # not displaying entire file, but let's count them any way
+                        while (<FILE>) {
+                            $lnno++;
+                        }
+                        $start = $lnno - $length;
+                        if ($start < 1) {
+                            $start = 1;
+                        }
+                        $end = $lnno;
+                        $skiptohdr .= " top of file: <a href=\"/ls.htm?path=$path2&submit=Submit&skipto=1&stopat=$length\">1-$length</a> - \n";
+                        $skiptohdr .= " end of file: <a href=\"/ls.htm?path=$path2&submit=Submit&skipto=$start&stopat=$end\">$start-$end</a><br>\n";
                     }
                     if (%showdir) {
                         if ($bare ne 'checked') {
