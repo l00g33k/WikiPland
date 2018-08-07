@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00backup;
+use l00httpd;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -100,6 +101,15 @@ sub l00http_recedit_output_row {
                     if ($1 lt $ctrl->{'now_string'}) {
                         $color1 = '<font style="color:black;background-color:silver">';
                         $color2 = '</font>';
+                    } else {
+                        # time to fire
+                        $tmp = l00httpd::now_string2time ($1) -
+                               l00httpd::now_string2time ($ctrl->{'now_string'});
+                        if (($tmp < 14400) && ($tmp > 1)) {
+                            # firing in the next 4 hours
+                            $color1 = '<font style="color:black;background-color:#d0f0d0">';
+                            $color2 = '</font>';
+                        }
                     }
                 }
             }
