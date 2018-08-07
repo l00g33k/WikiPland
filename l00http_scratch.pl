@@ -112,7 +112,7 @@ sub l00http_scratch_proc {
         print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
         print $sock "<input type=\"submit\" name=\"prepend\" value=\"Prepend\">\n";
         print $sock "<input type=\"submit\" name=\"cburl\" value=\"cp URL 2CB\">\n";
-        print $sock "<input type=\"submit\" name=\"2l00\" value=\"2 ram file\">\n";
+        print $sock "<input type=\"submit\" name=\"2l00\" value=\"2 r&#818;am file\" accesskey=\"r\">\n";
 
         print $sock "<br><input type=\"text\" size=\"10\" name=\"eval\" value=\"$eval\">\n";
         print $sock "The whole content of the scratch buffer is put in \$_ and then this string is \"eval'ed\", e.g. 'print \$sock \$_' prints the content to this HTML page\n";
