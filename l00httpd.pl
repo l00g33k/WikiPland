@@ -1334,7 +1334,12 @@ while(1) {
                 $ctrl{'FORMORG'} = $urlparams;
                 $ctrl{'sock'} = $sock;
                 $ctrl{'debug'} = $debug;
-                $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
+                if(defined($FORM{'path'}) && 
+                    ($FORM{'path'} =~ /[\\\/]([^\\\/]+)$/) ) {
+                    $ctrl{'htmlttl'} = "<title>$modcalled ($1)</title>\n";
+                } else {
+                    $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
+                }
                 $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> ";
                 $ctrl{'home'} .= "<a href=\"/ls.htm/HelpMod$modcalled.htm?path=${plpath}docs_demo/HelpMod$modcalled.txt\">?</a> ";
                 if (!-f "${plpath}docs_demo/HelpMod$modcalled.txt") {

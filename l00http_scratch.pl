@@ -83,6 +83,7 @@ sub l00http_scratch_proc {
         print $sock "<a href=\"#end\">Jump to end</a>. \n";
         $tmp = &l00httpd::urlencode ($scratch);
         print $sock "Go to <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">clip</a> - \n";
+        print $sock "<a href=\"/activity.htm?path=$tmp\">Activity</a> - \n";
         print $sock "<a href=\"/httpd.htm#ram\">RAM files</a> - \n";
         print $sock "$ctrl->{'HOME'}<br>\n";
     }
