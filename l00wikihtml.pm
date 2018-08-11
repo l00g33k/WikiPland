@@ -274,6 +274,30 @@ sub wikihtml {
                 # bullets, no linefeed
                 $inbuf .= "$_ ";
                 $bullet = 1;
+            } elsif (($desc, $clip) = /^ *(.*) *\|\|\|(.+)$/) {
+                # short hand send URL to Android's Activity or Windows' start: desc |||URL
+
+                # clip
+                $desc =~ s/ +$//g;
+                $bareclip = 0;
+                if ($desc eq '') {
+		            $desc = $clip;
+                    $bareclip = 1;
+		        }
+
+                #http://127.0.0.1:20337/clip.htm?update=Copy+to+clipboard&clip=
+                #%3A%2F
+                $clip = &l00httpd::urlencode ($clip);
+                $url = "/activity.htm?path=$clip";
+                $url = "[[$url|$desc&#8227;&#8227;]]";
+                if ($bareclip) {
+                    #$url = "&lt;$url&gt;";
+		        }
+                if ($last =~ /^\*/) {
+                    $inbuf .= "$url";
+                } else {
+                    $inbuf .= " - $url";
+                }
             } elsif (($desc, $clip) = /^ *(.*) *\|\|(.+)$/) {
                 # clip
                 $desc =~ s/ +$//g;

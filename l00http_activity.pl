@@ -47,8 +47,8 @@ sub l00http_activity_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>Android startActivity</title>" .$ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
-    print $sock "Path: <a href=\"/ls.htm?path=$path\">$path</a><p>\n";
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<p>\n";
+#   print $sock "Path: <a href=\"/ls.htm?path=$path\">$path</a><p>\n";
 
     $mime = '';
     if (-f $path) {
@@ -133,7 +133,9 @@ sub l00http_activity_proc {
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste CB\">\n";
     print $sock "</form>\n";
 
-    print $sock "$htmlout\n";
+    print $sock "$htmlout<p>\n";
+
+    print $sock &l00wikihtml::wikihtml ($ctrl, '', $path, 0);
 
     print $sock $ctrl->{'htmlfoot'};
 }
