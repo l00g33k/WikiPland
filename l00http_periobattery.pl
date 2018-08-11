@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use l00svg;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -419,45 +420,45 @@ sub l00http_periobattery_proc {
             $svgscr .= "$times[$lnno],$scrbrgts[$lnno] ";
         }
         if ($svgperc ne '') {
-            &l00svg::plotsvg ('battpercentage', $svgperc, $graphwd, $graphht);
+            &l00svg::plotsvg2 ('battpercentage', $svgperc, $graphwd, $graphht);
             print $sock "<p>$vol V $temp C $tmp mA $timestamp\n";
-            print $sock "<p>Level %:<br><a href=\"/svg.htm?graph=battpercentage&view=\"><img src=\"/svg.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
+            print $sock "<p>Level %:<br><a href=\"/svg2.htm?graph=battpercentage&view=\"><img src=\"/svg2.htm?graph=battpercentage\" alt=\"level % over time\"></a>\n";
         }
         if ($svgmah ne '') {
-            &l00svg::plotsvg ('svgmah', $svgmah, $graphwd, $graphht);
+            &l00svg::plotsvg2 ('svgmah', $svgmah, $graphwd, $graphht);
             $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
-            print $sock "<p>mAh:<br><a href=\"/svg.htm?graph=svgmah&view=\"><img src=\"/svg.htm?graph=svgmah\" alt=\"mAh readings\"></a>\n";
+            print $sock "<p>mAh:<br><a href=\"/svg2.htm?graph=svgmah&view=\"><img src=\"/svg2.htm?graph=svgmah\" alt=\"mAh readings\"></a>\n";
         }
         if ($svgsleep ne '') {
-            &l00svg::plotsvg ('battsleep', $svgsleep, $graphwd, $graphht);
+            &l00svg::plotsvg2 ('battsleep', $svgsleep, $graphwd, $graphht);
             $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
-            print $sock "<p>Interval:<br><a href=\"/svg.htm?graph=battsleep&view=\"><img src=\"/svg.htm?graph=battsleep\" alt=\"Interval between batt readings\"></a>\n";
+            print $sock "<p>Interval:<br><a href=\"/svg2.htm?graph=battsleep&view=\"><img src=\"/svg2.htm?graph=battsleep\" alt=\"Interval between batt readings\"></a>\n";
         }
         if ($svgblife ne '') {
-            &l00svg::plotsvg ('battlife', $svgblife, $graphwd, $graphht);
+            &l00svg::plotsvg2 ('battlife', $svgblife, $graphwd, $graphht);
             $tmp = $svgblifeIntv / 60;
-            print $sock "<p>%/hour (over $tmp hours span):<br><a href=\"/svg.htm?graph=battlife&view=\"><img src=\"/svg.htm?graph=battlife\" alt=\"level % over time\"></a>\n";
+            print $sock "<p>%/hour (over $tmp hours span):<br><a href=\"/svg2.htm?graph=battlife&view=\"><img src=\"/svg2.htm?graph=battlife\" alt=\"level % over time\"></a>\n";
         }
         if ($svgvolt ne '') {
-            &l00svg::plotsvg ('battvolt', $svgvolt, $graphwd, $graphht);
+            &l00svg::plotsvg2 ('battvolt', $svgvolt, $graphwd, $graphht);
             $timestamp =~ s/(\.\d)\d+ UTC/ UTC/g;
-            print $sock "<p>Volts:<br><a href=\"/svg.htm?graph=battvolt&view=\"><img src=\"/svg.htm?graph=battvolt\" alt=\"voltage over time\"></a>\n";
+            print $sock "<p>Volts:<br><a href=\"/svg2.htm?graph=battvolt&view=\"><img src=\"/svg2.htm?graph=battvolt\" alt=\"voltage over time\"></a>\n";
         }
         if ($svgmA ne '') {
-            &l00svg::plotsvg ('battmA', $svgmA, $graphwd, $graphht);
-            print $sock "<p>mA:<br><a href=\"/svg.htm?graph=battmA&view=\"><img src=\"/svg.htm?graph=battmA\" alt=\"charge/discharge current over time\"></a>\n";
+            &l00svg::plotsvg2 ('battmA', $svgmA, $graphwd, $graphht);
+            print $sock "<p>mA:<br><a href=\"/svg2.htm?graph=battmA&view=\"><img src=\"/svg2.htm?graph=battmA\" alt=\"charge/discharge current over time\"></a>\n";
         }
         if ($svgmAAvg ne '') {
-            &l00svg::plotsvg ('battmAavg', $svgmAAvg, $graphwd, $graphht);
-            print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg.htm?graph=battmAavg&view=\"><img src=\"/svg.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
+            &l00svg::plotsvg2 ('battmAavg', $svgmAAvg, $graphwd, $graphht);
+            print $sock "<p>mAavg (len: $mAAvgLen):<br><a href=\"/svg2.htm?graph=battmAavg&view=\"><img src=\"/svg2.htm?graph=battmAavg\" alt=\"charge/discharge current over time\"></a>\n";
         }
         if ($svgscr ne '') {
-            &l00svg::plotsvg ('battScr', $svgscr, $graphwd, $graphht);
-            print $sock "<p>screen :<br><a href=\"/svg.htm?graph=battScr&view=\"><img src=\"/svg.htm?graph=battScr\" alt=\"screen brightness over time\"></a>\n";
+            &l00svg::plotsvg2 ('battScr', $svgscr, $graphwd, $graphht);
+            print $sock "<p>screen :<br><a href=\"/svg2.htm?graph=battScr&view=\"><img src=\"/svg2.htm?graph=battScr\" alt=\"screen brightness over time\"></a>\n";
         }
         if ($svgtemp ne '') {
-            &l00svg::plotsvg ('batttemp', $svgtemp, $graphwd, $graphht);
-            print $sock "<p>Temp:<br><a href=\"/svg.htm?graph=batttemp&view=\"><img src=\"/svg.htm?graph=batttemp\" alt=\"temperature over time\"></a>\n";
+            &l00svg::plotsvg2 ('batttemp', $svgtemp, $graphwd, $graphht);
+            print $sock "<p>Temp:<br><a href=\"/svg2.htm?graph=batttemp&view=\"><img src=\"/svg2.htm?graph=batttemp\" alt=\"temperature over time\"></a>\n";
         }
     }
 

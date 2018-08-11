@@ -306,15 +306,15 @@ sub l00http_rptnetifcon_proc {
         print $sock "<a href=\"#remote\">remote ip</a>,\n";
         print $sock "<a href=\"#socket\">socket pairs</a>\n";
         if ($svgifdt ne '') {
-            &l00svg::plotsvg ('ifconfigdt', $svgifdt, 500, 300);
+            &l00svg::plotsvg2 ('ifconfigdt', $svgifdt, 500, 300);
             print $sock "<p>Log scale bytes/sec:<br><a href=\"/svg.htm?graph=ifconfigdt&view=\"><img src=\"/svg.htm?graph=ifconfigdt\" alt=\"logarithmic bytes/sec over time\"></a>\n";
         }
         if ($svgifdtlin ne '') {
-            &l00svg::plotsvg ('ifconfigdtlin', $svgifdtlin, 500, 300);
+            &l00svg::plotsvg2 ('ifconfigdtlin', $svgifdtlin, 500, 300);
             print $sock "<p>Linear scale bytes/sec:<br><a href=\"/svg.htm?graph=ifconfigdtlin&view=\"><img src=\"/svg.htm?graph=ifconfigdtlin\" alt=\"bytes/sec over time\"></a>\n";
         }
         if ($svgifdt ne '') {
-            &l00svg::plotsvg ('ifconfigacc', $svgifacc, 500, 300);
+            &l00svg::plotsvg2 ('ifconfigacc', $svgifacc, 500, 300);
             print $sock "<p>Cumulative bytes total:<br><a href=\"/svg.htm?graph=ifconfigacc&view=\"><img src=\"/svg.htm?graph=ifconfigacc\" alt=\"cumulative bytes over time\"></a>\n";
         }
 
