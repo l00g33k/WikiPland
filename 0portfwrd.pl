@@ -13,7 +13,7 @@ $server_ip = "localhost";
 $server_port = 20337;
 $listen_port = 60123;
 $ctrl_port = 60124;
-$only = '';
+$all = '';
 $timeout_mins = 30; # 30 min. timeout
 $statusonly = 0;
 $selectcnt = 0;
@@ -204,9 +204,6 @@ while($loop) {
 				} else {
 					$statusonly = 0;
 				}
-				if (defined ($params{'statusonly'})) {
-					$statusonly = 1;
-				}
 				if ($statusonly == 0) {
 					if ((defined $params{'server_ip'}) && ($server_ip ne $params{'server_ip'})) {
 						$server_ip = $params{'server_ip'};
@@ -218,8 +215,12 @@ while($loop) {
 						&close_server_sock;
 						&close_client_sock;
 					}
-					if ((defined $params{'only'}) && ($only ne $params{'only'})) {
-						$only = $params{'only'};
+					if ($params{'all'} eq 'on') {
+						$all = 'checked';
+						&close_server_sock;
+						&close_client_sock;
+					} else {
+						$all = '';
 						&close_server_sock;
 						&close_client_sock;
 					}
@@ -227,6 +228,16 @@ while($loop) {
 						$timeout_mins = $params{'timeout_mins'};
 						$tend = time + $timeout_mins * 60;
 					}
+                    foreach $ip (sort keys %client_ip_code) {
+print "IP $ip. $params{$ip}\n";
+                        if ($params{$ip} eq "on") {
+                            $client_ip_checked{$ip} = 'checked';
+                        } else {
+                            $client_ip_checked{$ip} = '';
+                        }
+						&close_server_sock;
+						&close_client_sock;
+                    }
 					if ($params{'forwardmode'} eq "okfwrd") {
 						$ok2fwrd = 2;
 					} else {
@@ -298,6 +309,29 @@ while($loop) {
             $htmlout .= "        </tr>\n";
 
             $htmlout .= "        <tr>\n";
+            $htmlout .= "            <td><input type=\"checkbox\" name=\"all\" $all>all</td>\n";
+            $htmlout .= "            <td>check to allow</td>\n";
+            $htmlout .= "        </tr>\n";
+
+            foreach $ip (sort keys %client_ip_code) {
+                $htmlout .= "        <tr>\n";
+                $htmlout .= "            <td><input type=\"checkbox\" name=\"$ip\" $client_ip_checked{$ip}>$ip</td>\n";
+                $htmlout .= "            <td>Code: $client_ip_code{$ip}.  Check to allow</td>\n";
+                $htmlout .= "        </tr>\n";
+            }
+
+            if ($statusonly) {
+                $buf = "checked";
+            } else {
+                $buf = "";
+            }
+            $htmlout .= "        <tr>\n";
+            $htmlout .= "            <td><input type=\"submit\" name=\"setconfig\" value=\"Set Config\">\n";
+            $htmlout .= "                <input type=\"submit\" name=\"quit\" value=\"Quit\"></td>\n";
+            $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update <input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
+            $htmlout .= "        </tr>\n";
+
+            $htmlout .= "        <tr>\n";
             $htmlout .= "            <td><input type=\"text\" size=\"20\" name=\"server_ip\" value=\"$server_ip\"></td>\n";
             $htmlout .= "            <td>server_ip</td>\n";
             $htmlout .= "        </tr>\n";
@@ -332,24 +366,6 @@ while($loop) {
             $htmlout .= "        <tr>\n";
             $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"noisy\">noisy</td>\n";
             $htmlout .= "            <td>noisy</td>\n";
-            $htmlout .= "        </tr>\n";
-
-            $htmlout .= "        <tr>\n";
-            $htmlout .= "            <td><input type=\"text\" size=\"20\" name=\"only\" value=\"$only\"></td>\n";
-            $htmlout .= "            <td>only ('any' for any)</td>\n";
-            $htmlout .= "        </tr>\n";
-
-
-
-            if ($statusonly) {
-                $buf = "checked";
-            } else {
-                $buf = "";
-            }
-            $htmlout .= "        <tr>\n";
-            $htmlout .= "            <td><input type=\"submit\" name=\"setconfig\" value=\"Set Config\">\n";
-            $htmlout .= "                <input type=\"submit\" name=\"quit\" value=\"Quit\"></td>\n";
-            $htmlout .= "            <td><input type=\"checkbox\" $buf name=\"statusonly\">Update<input type=\"submit\" name=\"statusonly\" value=\"Status Only\"></td>\n";
             $htmlout .= "        </tr>\n";
 
             $out_buf = "";
@@ -520,6 +536,11 @@ while($loop) {
                     if ($cliip) {
                         print "\nClient connected: $client_ip\n";
                     }
+                    if (!defined($client_ip_code {$client_ip})) {
+                        $client_ip_code{$client_ip} = int(rand() * 10000);
+                        $client_ip_checked{$client_ip} = '';
+                        print "\n$client_ip access code: $client_ip_code{$client_ip}\n";
+                    }
                     $client_conn_cnts {$client_ip}++;
                     $client_conn_time {$client_ip} = $now_string;
                     print "LISTEN client $client_ip connected\n", if ($noisy);
@@ -527,17 +548,12 @@ while($loop) {
 
                     # do we allow?
                     $connallowed = 0;
-                    $client_ip2 = $client_ip;
-                    if ($only eq '') {
-                        # so any IP goes
-                        $client_ip2 = '';
-                    } elsif ($only =~ /\.\*$/) {
-                        # if $only ends in .*, makes $client_ip2 look like .*
-                        $client_ip2 =~ s/\.\d+$/.*/;
-                    }
-print "LISTEN server_socket $server_socket - ok2fwrd $ok2fwrd - only >$only< client_ip2 >$client_ip2<\n", if (1);
+print "LISTEN server_socket $server_socket - ok2fwrd $ok2fwrd - client_ip >$client_ip<\n";
 
-                    if (($server_socket == 0) && ($ok2fwrd != 0) && ($only eq $client_ip2)) {
+                    if (($server_socket == 0) && ($ok2fwrd != 0) && 
+                        (($client_ip_checked{$client_ip} eq 'checked') || 
+                        ($all eq 'checked'))
+                        ) { 
                         $connallowed = 1;
                     }
                     if ($connallowed) {
@@ -571,7 +587,8 @@ print "LISTEN server_socket $server_socket - ok2fwrd $ok2fwrd - only >$only< cli
                                 }
                             }
                             print $client_socket "HTTP/1.0 200 OK\r\n\r\n<html><body>" . 
-                                "Welcome!  It is now $now_string.  Your external IP address is $client_ip" .
+                                "Welcome!  It is now $now_string.  Your external IP address is $client_ip. " .
+                                "Your code is: $client_ip_code{$client_ip}" .
                                 "</body></html>";
                         }
                         &close_client_sock;
