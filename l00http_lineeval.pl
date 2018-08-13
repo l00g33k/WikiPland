@@ -74,6 +74,7 @@ sub l00http_lineeval_proc (\%) {
         print $sock " - <a href=\"/lineeval.htm?path=$form->{'path'}\">refresh</a>";
     }
 
+    print $sock "<a name=\"#__top__\"></a>\n";
     print $sock "<form action=\"/lineeval.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
@@ -274,7 +275,8 @@ sub l00http_lineeval_proc (\%) {
                 if (($lnno & 1) == 0) {
                     print $sock "<font style=\"color:black;background-color:lightGray\">";
                 }
-                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a>: ", $lnno);
+                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a>", $lnno);
+                print $sock "<a href=\"#__top__\">^</a> ";
                 print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
                 print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";
                 if ($mvfrom ne '') {
