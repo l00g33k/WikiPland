@@ -530,8 +530,9 @@ sub pcSyncCmdline {
 
 #       $buf .= "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
 #       $buf .= "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
-        $buf .= "rsync -v  -e 'ssh -p 30339' 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
-        $buf .= "rsync -vv -e 'ssh -p 30339' $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
+        # $ctrl->{'adbrsyncopt'} defaults to "-e 'ssh -p 30339'" and may be overwritte in l00httpd.cfg
+        $buf .= "rsync -v  $ctrl->{'adbrsyncopt'} 127.0.0.1:$path$fname $rsyncpath$fname<br>\n";
+        $buf .= "rsync -vv $ctrl->{'adbrsyncopt'} $rsyncpath$fname 127.0.0.1:$path$fname<br>\n";
 
         $buf .= "<pre>\n";
         $buf .= "adb pull \"$path$fname\" \"$pcpath$fname\"\n";
@@ -548,8 +549,8 @@ sub pcSyncCmdline {
 
 #       $clip .= "rsync -v  -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' 127.0.0.1:$path$fname $rsyncpath$fname\n";
 #       $clip .= "rsync -vv -e 'ssh -p 30339' --rsync-path='/data/data/com.spartacusrex.spartacuside/files/system/bin/rsync' $rsyncpath$fname 127.0.0.1:$path$fname\n";
-        $clip .= "rsync -v  -e 'ssh -p 30339' 127.0.0.1:$path$fname $rsyncpath$fname\n";
-        $clip .= "rsync -vv -e 'ssh -p 30339' $rsyncpath$fname 127.0.0.1:$path$fname\n";
+        $clip .= "rsync -v  $ctrl->{'adbrsyncopt'} 127.0.0.1:$path$fname $rsyncpath$fname\n";
+        $clip .= "rsync -vv $ctrl->{'adbrsyncopt'} $rsyncpath$fname 127.0.0.1:$path$fname\n";
 
         $clip .= "adb pull \"$path$fname\" \"$pcpath$fname\"\n";
         $clip .= "adb push \"$pcpath$fname\" \"$path$fname\"\n";

@@ -244,6 +244,7 @@ $ctrl{'blogmaxln'}  = 50;
 $ctrl{'noclinav'}  = 1;
 $ctrl{'l00file'}->{'l00://_notes.txt'} = "A sample ram file.\nContent is lost when shutdown\nChange 'ram' for a separate ram file";
 $ctrl{'iamsleeping'} = 'no';
+$ctrl{'adbrsyncopt'} = "-e 'ssh -p 30339'";
 
 $nopwtimeout = 0;
 
@@ -324,9 +325,10 @@ sub readl00httpdcfg {
     my ($conf, $tmp, $cnt, $key, $val);
     $conf = "l00httpd.cfg";
 
-    # Looking fir l00httpd.cfg in 3 places
-    # 1: ${plpath}l00httpd.cfg
-    # 2: $ctrl{'workdir'}l00httpd.cfg
+    # Looking fir l00httpd.cfg in 4 places
+    # 0: ${plpath}l00httpd.cfg
+    # 1: $ctrl{'workdir'}l00httpd.cfg
+    # 2: ${plpath}l00httpd.cfg.local
     # 3: $ctrl{'altcfg'}l00httpd.cfg
     $cfgedit = '';
     for ($cnt = 0; $cnt <= 3; $cnt++) {
