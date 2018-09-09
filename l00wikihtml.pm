@@ -614,7 +614,9 @@ sub wikihtml {
         }
 
         # password/ID clipboard
-        if (/\* (ID|PW): (\S+) *$/) {
+        # send code to clipboard: * ALLCAP: xyz
+#if (/\* (ID|PW): (\S+) *$/)
+        if (/\* ([A-Z]{2,16}): (\S+) *$/) {
             $clip = &l00httpd::urlencode ($2);
             $tmp = sprintf ("<a href=\"/clip.htm?update=Copy+to+clipboard&clip=%s\" target=\"_blank\">%s&#8227;</a>", $clip, $2);
             $_ .= " ($tmp)";
