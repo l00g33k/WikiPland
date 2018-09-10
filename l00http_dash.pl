@@ -155,6 +155,7 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup);
+    my ($lineevalst, $lineevalen);
 
     $jumpcnt = 0;
     undef @jumpname;
@@ -531,7 +532,12 @@ sub l00http_dash_proc {
                 }
                 # make a link to lineeval at the target line
                 $lineevalln = $lnno;    # next entry line number but it's zero based
-                $cat2 = "<a href=\"#top\">^</a> <a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}#line$lnno\" target=\"_blank\">$cat2</a>";
+                $lineevalst = $lnno - 5;
+                if ($lineevalst < 0) {
+                    $lineevalst = 1;
+                }
+                $lineevalen = $lnno + 100;
+                $cat2 = "<a href=\"#top\">^</a> <a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}&rng=${lineevalst}_${lineevalen}#line$lnno\" target=\"_blank\">$cat2</a>";
 
                 # jump mark
                 if ($this =~ /\?\?\?$/) {

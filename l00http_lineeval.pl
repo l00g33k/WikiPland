@@ -30,6 +30,7 @@ sub l00http_lineeval_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard, $includefile, $pnameup);
+    my ($lineevalst, $lineevalen);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -44,6 +45,16 @@ sub l00http_lineeval_proc (\%) {
     if (defined ($form->{'anchor'})) {
         $anchor = $form->{'anchor'};
     }
+
+    # restricting display range
+    $lineevalst = 0;
+    $lineevalen = 0;
+    if (defined ($form->{'rng'}) && 
+        ($form->{'rng'} =~ /(\d+)_(\d+)/)) {
+        $lineevalst = $1;
+        $lineevalen = $2;
+    }
+
 
     if (defined ($form->{'run'})) {
         if (defined ($form->{'useform'}) && ($form->{'useform'} eq 'on')) {
@@ -249,7 +260,6 @@ sub l00http_lineeval_proc (\%) {
                 }
             }
 
-            $lnno = 1;
             print $sock "<pre>\n";
             if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                 defined($form->{'ln'})) {
@@ -268,9 +278,18 @@ sub l00http_lineeval_proc (\%) {
             $ctrl->{'ymddCODE'} = sprintf ("$year%1x%02d", $mon, $mday);
             #printf $sock ("$ctrl->{'ymddCODE'}\n");
 
+            $lnno = 0;
             foreach $_ (@newfile) {
                 s/\r//;
                 s/\n//;
+                $lnno++;
+
+                if (($lineevalst > 0) && ($lineevalst < $lineevalen)) {
+                    # restricting display range
+                    if (($lnno < $lineevalst) || ($lnno > $lineevalen)) {
+                        next;
+                    }
+                }
 
                 if (($lnno & 1) == 0) {
                     print $sock "<font style=\"color:black;background-color:lightGray\">";
@@ -316,8 +335,6 @@ sub l00http_lineeval_proc (\%) {
                         print $sock "$clipurl $_\n";
                     }
                 }
-
-                $lnno++;
             }
             print $sock "</pre>\n";
         }
