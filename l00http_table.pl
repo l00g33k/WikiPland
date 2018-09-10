@@ -162,7 +162,8 @@ sub l00http_table_proc {
     $tbl = '';
     $post = '';
     $buffer =~ s/\r//g;
-    $buffer =~ s/\|\| *\|\|/\|\|_\|\|/g;  # take care of empty cell (|||| -> ||_||)
+#i910    $buffer =~ s/\|\| *\|\|/\|\|_\|\|/g;  # take care of empty cell (|||| -> ||_||)
+    $buffer =~ s/\|\| *\|\|/\|\| \|\|/g;  # take care of empty cell (|||| -> || ||)
     $multitbl = 0;
     @alllines = split ("\n", $buffer);
     foreach $line (@alllines) {
@@ -221,7 +222,8 @@ sub l00http_table_proc {
             }
         }
         for ($ii = $#cols + 1; $ii < $nocols; $ii++) {
-            $cols [$ii] .= "_" . " " x ($width [$ii] - 1);
+#i910            $cols [$ii] .= "_" . " " x ($width [$ii] - 1);
+            $cols [$ii] .= " " . " " x ($width [$ii] - 1);
         }
         $tbl .= join ("||", @cols) . "||\n";;
     }
@@ -253,14 +255,16 @@ sub l00http_table_proc {
                         $buffer .= $cols [$ii] . "||";
                     } else {
                         if ($ii == $form->{'Avalue'}) {
-                            $buffer .= "_||";
+#i910                            $buffer .= "_||";
+                            $buffer .= " ||";
                         }
                         #    $buffer .= ".||";
                         $buffer .= $cols [$ii] . "||";
                     }
                 }
                 if ($form->{'Avalue'} == $nocols) {
-                    $buffer .= "_||";
+#i910                    $buffer .= "_||";
+                    $buffer .= " ||";
                 }
                 $tbl .= "$buffer\n";
             }
@@ -284,7 +288,8 @@ sub l00http_table_proc {
         } elsif ($form->{'method'} eq $modrow) {
             for (1..$form->{'Avalue'}) {
                 $tbl .= "||";
-                $tbl .= "_||" x $nocols;
+#i910                $tbl .= "_||" x $nocols;
+                $tbl .= " ||" x $nocols;
                 $tbl .= "\n";
             }
         } elsif ($form->{'method'} eq $moddel) {
