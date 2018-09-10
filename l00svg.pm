@@ -8,6 +8,8 @@ my (@colors, $tmp);
 my ($maxx, $maxy, $minx, $miny);
 my ($mgl, $mgr, $mgt, $mgb, $txw, $txh, $txz);
 
+my (%svg2data, %svg2wd, %svg2ht);
+
 $mgl = 70;
 $mgr = 10;
 $mgt = 10;
@@ -35,9 +37,20 @@ sub svg_graphlist {
     (sort keys %svggraphs);
 }
 
+sub svg2_getCurveXY {
+    my ($name, $idx, $off) = (@_);
+
+    if ($name =~ /^(.+?):.+?:.+?:$/) {
+        $name = $1;
+    }
+
+    svg_getCurveXY($name, $idx, $off);
+}
+
 sub svg_getCurveXY {
     my ($name, $idx, $off) = (@_);
     my ($cnt, $xx, $yy, @flds);
+
 
     undef $xx;
     undef $yy;
@@ -50,23 +63,34 @@ sub svg_getCurveXY {
                 if (@flds = split (',', $_)) {
                     $xx = $flds[0];
                     $yy = $flds[$idx + 1];
-#                    # convert from data x,y to screen x,y
-#                    ($xx, $yy) = &svg_curveXY2screenXY ($name, $idx, $xx, $yy);
                     last;
                 }
             }
             $cnt++;
         }
     } else {
-        $xx = 0;
-		$yy = 0;
+        #$xx = 0;
+		#$yy = 0;
+        print "l00svg.pm(".__LINE__.") graph\{$name\} not found\n";
+        exit(1);
     }
 
     ($xx, $yy);
 }
 
+sub svg2_curveXY2screenXY {
+    my ($name, $idx, $xx, $yy) = (@_);
+
+    if ($name =~ /^(.+?):.+?:.+?:$/) {
+        $name = $1;
+    }
+
+    svg_curveXY2screenXY($name, $idx, $xx, $yy);
+}
+
 sub svg_curveXY2screenXY {
     my ($name, $idx, $xx, $yy) = (@_);
+
 
     # rescale
     if (defined ($svgparams{"$name"})) {
@@ -90,8 +114,10 @@ sub svg_curveXY2screenXY {
                    ($svgparams{"$name:ht"} - $mgt - $mgb)) + $mgt;
         }
     } else {
-        $xx = 0;
-		$yy = 0;
+        #$xx = 0;
+		#$yy = 0;
+        print "l00svg.pm(".__LINE__.") graph\{$name\} not found\n";
+        exit(1);
     }
 
     ($xx, $yy);
@@ -103,6 +129,7 @@ sub svg_convert_xy {
     my ($name, $svgxy, $idx, $wd, $ht) = (@_);
     my ($svg_xy2, $xx, $yy, $cnt);
     my (@flds);
+
 
     $cnt = 0;
     # scan whole curve for min/max
@@ -192,6 +219,22 @@ sub svg_convert_xy_mapoverlay {
     $svg_xy2;
 }
 
+sub plotsvg2 {
+    my ($name, $data, $wd, $ht) = @_;
+
+    if ($name =~ /^(.+?):.+?:.+?:$/) {
+        $name = $1;
+    }
+
+    $svg2data{$name} = $data;
+    $svg2wd{$name} = $wd;
+    $svg2ht{$name} = $ht;
+
+
+    plotsvg($name, $data, $wd, $ht);
+}
+
+
 # $data looks like '0,1 1,4 2,2 3,19'
 # or '0,1,2,4 1,4,4,1 2,2,5,8 3,19,11,3'
 # $wd, $ht is size of svg
@@ -268,6 +311,52 @@ sub plotsvg {
     $svggraphs{$name} = $svg;
 }
 
+sub getsvg2 {
+    my ($name) = @_;
+    my ($data, $wd, $ht);
+    my ($ii, $data, $rnghi, $rnglo, $offset);
+
+
+
+    $rnghi = 0;
+    $rnglo = 0;
+    if ($name =~ /^(.+?):(.+?):(.+?):$/) {
+        ($name, $rnghi, $rnglo) = ($1, $2, $3);
+    }
+
+    if ($name eq 'demo') {
+        $data = '';
+        for ($ii = 0; $ii < 200; $ii++) {
+            $data .= "$ii," . sin (2 * 3.1416 * $ii / 100) . ' ';
+        }
+        plotsvg('demo', $data, 640, 480);
+    } else {
+        if (($rnghi != 0) && ($rnglo != 0)) {
+            $data = '';
+            $offset = 0;
+            foreach $_ (split (' ', $svg2data{$name})) {
+                if ($offset < $rnglo) {
+                    $offset++;
+                    next;
+                }
+                $offset++;
+                $data .= "$_ ";
+                if ($offset > $rnghi) {
+                    last;
+                }
+            }
+        } else {
+            $data = $svg2data{$name};
+        }
+        $wd = $svg2wd{$name};
+        $ht = $svg2ht{$name};
+
+        plotsvg($name, $data, $wd, $ht);
+    }
+
+    $svggraphs{$name};
+}
+
 sub getsvg {
     my ($name) = @_;
     my ($ii, $data);
@@ -277,7 +366,6 @@ sub getsvg {
         for ($ii = 0; $ii < 200; $ii++) {
             $data .= "$ii," . sin (2 * 3.1416 * $ii / 100) . ' ';
         }
-        plotsvg ('demo', $data, 640, 480);
     }
 
     $svggraphs{$name};
@@ -285,6 +373,7 @@ sub getsvg {
 
 sub setsvg {
     my ($name, $data) = @_;
+
 
     $svggraphs{$name} = $data;
 

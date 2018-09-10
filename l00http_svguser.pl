@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use l00wikihtml;
+use l00svg;
 
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
@@ -58,7 +59,7 @@ sub l00http_svguser_proc {
     print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\">$buf</textarea>\n";
     print $sock "</form>\n";
 
-    &l00svg::plotsvg ('svguser', $svgdata, $gwd, $ght);
+    &l00svg::plotsvg2 ('svguser', $svgdata, $gwd, $ght);
     print $sock "<p><a href=\"/svg.htm?graph=svguser&view=\"><img src=\"/svg.htm?graph=svguser\" alt=\"user svg data\"></a>\n";
 
     print $sock "<p>\n";
