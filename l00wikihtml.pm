@@ -812,7 +812,7 @@ sub wikihtml {
 
             # make a sortable TOC entry
             $tmp = "<!-- $tmp --><font style=\"color:$colorfg;background-color:$color\"><a href=\"#lnno$lnno\">$tmp</a></font><br>\n";
-            $postsit .= $tmp;
+            $postsit .= &l00wikihtml_fontsty($tmp);
             $oubuf .=  "<a name=\"lnno$lnno\">";
             # remove !!!
             s/\?\?\?[$colorlukeys]*$//;
