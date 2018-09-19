@@ -51,7 +51,7 @@ sub l00http_editsort_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $outbuf, @inbuf, $ii);
+    my ($lineno, $outbuf, @inbuf, $ii, $last);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -141,6 +141,24 @@ sub l00http_editsort_proc {
             &l00httpd::l00fwriteClose($ctrl);
         }
     }
+    if (defined ($form->{'dedup'})) {
+        undef @inbuf;
+        undef $last;
+        if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if (defined($last) && ($last eq $_)) {
+                    # same as last line, dedup by skipping
+                    next;
+                }
+                push (@inbuf, $_);
+                $last = $_;
+            }
+            $outbuf = join("", sort sortfn (@inbuf));
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
+            &l00httpd::l00fwriteBuf($ctrl, $outbuf);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    }
 
     if (&l00httpd::l00freadOpen($ctrl, 'l00://editblock.txt')) {
         print $sock "<p><pre>\n";
@@ -186,6 +204,12 @@ sub l00http_editsort_proc {
     print $sock "</td>\n";
     print $sock "<td>\n";
     print $sock "<input type=\"submit\" name=\"descend\" value=\"Descend\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"submit\" name=\"dedup\" value=\"De-dup\">\n";
+    print $sock "</td>\n";
+    print $sock "<td>\n";
+    print $sock "&nbsp;\n";
     print $sock "</td></tr>\n";
     print $sock "</form>\n";
 
