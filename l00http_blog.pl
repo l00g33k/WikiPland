@@ -422,7 +422,8 @@ sub l00http_blog_proc {
         }
         $output .= "</pre>\n";
         if ($lineno >= $ctrl->{'blogmaxln'}) {
-            $output .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">View formatted text</a><br>\n";
+            $output .= "Path: <a href=\"/view.htm?path=$form->{'path'}\">View formatted text</a> - ".
+                             "<a href=\"/view.htm?path=$form->{'path'}&hidelnno=on\">Without line number</a><br>\n";
         }
         if ($keys > 0) {
             print $sock "<br>\n";
