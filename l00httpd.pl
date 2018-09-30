@@ -1421,6 +1421,7 @@ while(1) {
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
                 $shutdown = 0;
+                $ipage = 0;     # reset IP cache age so next httpd.htm loading will show new IP
                 # process Home control data
                 if ($modcalled eq 'httpd') {
                     print "Start processing host control\n", if ($debug >= 5);
