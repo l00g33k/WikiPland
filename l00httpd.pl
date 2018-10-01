@@ -322,38 +322,38 @@ if ($ctrl{'os'} eq 'rhc') {
 
 
 sub readl00httpdcfg {
-    my ($conf, $tmp, $cnt, $key, $val);
-    $conf = "l00httpd.cfg";
+    my ($confpath, $cnt, $key, $val);
+
+# Looking fir l00httpd.cfg in 4 places
+# 0: ${plpath}l00httpd.cfg
+# 1: $ctrl{'workdir'}l00httpd.cfg
+# 2: ${plpath}l00httpd.cfg.local
+# 3: $ctrl{'altcfg'}l00httpd.cfg
 
     # Looking fir l00httpd.cfg in 4 places
     # 0: ${plpath}l00httpd.cfg
-    # 1: $ctrl{'workdir'}l00httpd.cfg
-    # 2: ${plpath}l00httpd.cfg.local
-    # 3: $ctrl{'altcfg'}l00httpd.cfg
+    # 1: ${plpath}l00httpd.cfg.local
+    # 2: $ctrl{'workdir'}l00httpd.cfg
+    # 3: $ctrl{'workdir'}l00httpd.cfg.local
     $cfgedit = '';
     for ($cnt = 0; $cnt <= 3; $cnt++) {
         if ($cnt == 0) {
-            $tmp = $plpath; # first time, find in l00httpd script directory
+            $confpath = "${plpath}l00httpd.cfg";
         } elsif ($cnt == 1) {
-            # may be the same a $plpath
-            $tmp = $ctrl{'workdir'}; # second time, find in workdir directory
+            # $plpath could change but not expected
+            $confpath = "${plpath}l00httpd.cfg.local";
         } elsif ($cnt == 2) {
-            $conf = "l00httpd.cfg.local";
-            $tmp = $plpath; # third time, find in l00httpd script directory
+            $confpath = "$ctrl{'workdir'}l00httpd.cfg";
 	    } else {
-            $conf = "l00httpd.cfg";
-            if (defined($ctrl{'altcfg'})) {
-                $tmp = $ctrl{'altcfg'};
-		    } else {
-                last;
-		    }
+            $confpath = "$ctrl{'workdir'}l00httpd.cfg.local";
 	    }
-        if (open (IN, "<$tmp$conf")) {
+        print "Trying  $confpath...\n";
+        if (open (IN, "<$confpath")) {
             if ($cfgedit eq '') {
                 $cfgedit = "Edit l00httpd.cfg at:<br>\n";
             }
-            $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$tmp$conf\">$tmp$conf</a><br>\n";
-            print "Reading $tmp$conf...\n";
+            $cfgedit .= "&nbsp;&nbsp;&nbsp;<a href=\"/edit.htm?path=$confpath\">$confpath</a><br>\n";
+            print "Reading $confpath...\n";
             # machine specific filter
             $skip = 0;
             $skipfilter = '.';
