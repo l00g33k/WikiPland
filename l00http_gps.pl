@@ -176,6 +176,11 @@ sub l00http_gps_proc {
 			close(OUT);
         }
     } elsif (defined ($form->{"getgps"})) {
+        if ($ctrl->{'os'} eq 'and') {
+            ($out, $lat, $lon, $lastcoor, $lastgps, $lastres)
+                = &l00httpd::android_get_gps ($ctrl, $known0loc1, $lastgps);
+            l00httpd::dbp($config{'desc'}, "got lat,lon $lat,$lon, $lastgps\n"), if ($ctrl->{'debug'} >= 5);
+        }
         &l00httpd::l00setCB($ctrl, "$lat,$lon $ctrl->{'now_string'}");
     }
     if ($datename) {
