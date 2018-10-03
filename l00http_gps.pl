@@ -65,6 +65,7 @@ sub l00http_gps_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, @countinglines, $out);
 
+    $out = '';
     if (!defined($ctrl->{'gpsdir'})) {
         # if not defined
         $ctrl->{'gpsdir'} = $ctrl->{'workdir'};
@@ -308,7 +309,7 @@ sub l00http_gps_proc {
 
     print $sock "<pre>", time - $lastgps, "s ago last GPS. ";
     print $sock time - $lastpoll, "s ago last poll\n";
-    print $sock "$lastres</pre>\n";
+    print $sock "$lastres$out</pre>\n";
     print $sock "Count: $percnt<br>\n";
 
 #    print $sock "<pre>$thislog</pre><p>\n";
