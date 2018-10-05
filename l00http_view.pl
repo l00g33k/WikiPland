@@ -321,7 +321,7 @@ sub l00http_view_proc {
                 } else {
                     $literal = '';
                 }
-                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer);
+                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'));
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
@@ -346,8 +346,8 @@ sub l00http_view_proc {
                             }
                             if ($literal eq 'checked') {
                                 # show < and > as literal and not HTML tags
-                                $tmpln =~ s/</&lt;/g;
-                                $tmpln =~ s/>/&gt;/g;
+#                                $tmpln =~ s/</&lt;/g;
+#                                $tmpln =~ s/>/&gt;/g;
                             }
 						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>".
                                 " <a href=\"/view.htm?path=$pname$fname&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
