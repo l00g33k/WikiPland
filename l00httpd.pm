@@ -160,13 +160,18 @@ sub dumphash {
     }
 }
 
-#$found .= &l00httpd::findInBuf ($findtext, $block, $buf);
+#$found .= &l00httpd::findInBuf ($findtext, $block, $buf, [$literal]);
 sub findInBuf  {
     # $findtext : string to find
     # $block    : text block marker
     # $buf      : find string in $buf
-    my ($findtext, $block, $buf) = @_;
+    # $literal  : if true, convert <> to &lt; &gt;
+    my ($findtext, $block, $buf, $literal) = @_;
     my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno, $invertfind);
+
+    if (!defined($literal)) {
+        $literal = 0;
+    }
 
     if ($findtext =~ /^!!/) {
         # invert find logic
@@ -234,7 +239,17 @@ sub findInBuf  {
         } else {
             # highlight hits
             foreach $pattern (split ('\|\|\|', $findtext)) {
-                $line =~ s/($pattern)/<font style=\"color:black;background-color:yellow\">$1<\/font>/gi;
+                if ($literal) {
+                    $line =~ s/($pattern)/:~~123____==:$1:~~123____=#:/gi;
+                } else {
+                   $line =~ s/($pattern)/<font style=\"color:black;background-color:yellow\">$1<\/font>/gi;
+                }
+            }
+            if ($literal) {
+                $line =~ s/</&lt;/g;
+                $line =~ s/>/&gt;/g;
+                $line =~ s/:~~123____==:/<font style=\"color:black;background-color:yellow\">/gi;
+                $line =~ s/:~~123____=#:/<\/font>/gi;
             }
             $blocktext .= "$lnno$line\n";
         }
