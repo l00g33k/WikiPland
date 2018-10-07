@@ -493,6 +493,7 @@ sub readl00httpdcfg {
 print "Reading $ctrl{'workdir'}.whoami\n";
 if (open(IN, "<$ctrl{'workdir'}.whoami")) {
     $ctrl{'whoami'} = <IN>;
+    $ctrl{'whoami'} =~ s/[\r\n]//g;
     close(IN);
 }
 if (!defined($ctrl{'whoami'})) {
