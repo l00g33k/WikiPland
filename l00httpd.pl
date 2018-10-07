@@ -324,6 +324,16 @@ if ($ctrl{'os'} eq 'rhc') {
 sub readl00httpdcfg {
     my ($confpath, $cnt, $key, $val);
 
+    # set default 'workdir' on first run
+    if (!defined ($ctrl{'workdir'})) {
+        # sets default if not defined in l00httpd.txt
+        $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
+    } elsif (!-d $ctrl{'workdir'}) {
+        # workdir is not a dir, use default
+        $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
+    }
+
+
 # Looking fir l00httpd.cfg in 4 places
 # 0: ${plpath}l00httpd.cfg
 # 1: $ctrl{'workdir'}l00httpd.cfg
@@ -392,6 +402,7 @@ sub readl00httpdcfg {
                             if (-d $val) {
                                 $ctrl{$key} = $val;
                             }
+                            print "workdir EXIST: $ctrl{$key}\n";
                         } else {
                             $ctrl{$key} = $val;
                         }
@@ -409,14 +420,6 @@ sub readl00httpdcfg {
         }
     }
 
-    # check 'workdir' from 'l00httpd.cfg'
-    if (!defined ($ctrl{'workdir'})) {
-        # sets default if not defined in l00httpd.txt
-        $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
-    } elsif (!-d $ctrl{'workdir'}) {
-        # workdir is not a dir, use default
-        $ctrl{'workdir'} = "$plpath"."l00httpd/";      # make it available to modules
-    }
 
     foreach $key (keys %ctrl) {
         if (defined($ctrl{$key})) {
@@ -487,6 +490,7 @@ sub readl00httpdcfg {
 &readl00httpdcfg;
 
 # read .whoami
+print "Reading $ctrl{'workdir'}.whoami\n";
 if (open(IN, "<$ctrl{'workdir'}.whoami")) {
     $ctrl{'whoami'} = <IN>;
     close(IN);
