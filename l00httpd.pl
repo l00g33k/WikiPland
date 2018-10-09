@@ -226,6 +226,7 @@ $htmlheadB0 = "<html>\x0D\x0A".
               "<head>\x0D\x0A".
               "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
               "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A".
+              "<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"/favicon.ico\" />\x0D\x0A".
               # so arrow keys scroll page in my browser
               "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=EmulateIE7\" />\x0D\x0A".
               "";
