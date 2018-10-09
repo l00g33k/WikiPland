@@ -974,8 +974,8 @@ sub l00http_blockfilter_proc {
             ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
             print $sock "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=${pname}blockfilter_.txt\" target=\"_blank\">filemgt</a><p>\n";
 
-            print $sock "List of all parameters:<p>\n";
-            print $sock "<pre>$output</pre>\n";
+            #print $sock "List of all parameters:<p>\n";
+            #print $sock "<pre>$output</pre>\n";
         }
     } else {
         if (defined ($form->{'process'})) {
@@ -1004,8 +1004,8 @@ sub l00http_blockfilter_proc {
         &l00httpd::l00fwriteClose($ctrl);
         print $sock "<a href=\"/view.htm?path=l00://blockfilter_cfg.txt\" target=\"_blank\">l00://blockfilter_cfg.txt</a><p>\n";
 
-        print $sock "List of all parameters:<p>\n";
-        print $sock "<pre>$output</pre>\n";
+        #print $sock "List of all parameters:<p>\n";
+        #print $sock "<pre>$output</pre>\n";
     }
 
     print $sock $ctrl->{'htmlfoot'};
