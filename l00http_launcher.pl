@@ -40,7 +40,8 @@ sub l00http_launcher_proc {
 
         if (($lpname, $lfname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/) {
             print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
-            print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a><p>\n";
+            print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a> -- \n";
+            print $sock "<a href=\"$form->{'path'}\">scripting</a><p>\n";
         }
     } else {
         $path = '';
