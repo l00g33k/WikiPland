@@ -30,7 +30,7 @@ sub l00http_do_proc {
     $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($rethash, $mypath, $refresh, $refreshtag, $fname);
-    my ($doplpathnow);
+    my ($doplpathnow, $overwrite);
 
     print "MOD: $config{'desc'}: Entered do\n", if ($debug >= 5);
 
@@ -64,6 +64,12 @@ sub l00http_do_proc {
     if ((defined ($form->{'bare'})) && ($form->{'bare'} eq 'on')) {
         $bare = 'checked';
     }
+    $overwrite = 0;
+    if ((defined ($form->{'overwrite'})) && ($form->{'overwrite'} eq 'on')) {
+        $overwrite = 1;
+        $form->{'path'} = $form->{'arg1'};
+    }
+
 
     # push args
     if (defined ($form->{'pushcb'})) {
@@ -85,7 +91,7 @@ sub l00http_do_proc {
     }
 
     # handling Quick URL
-    if ($doplpathset) {
+    if ($doplpathset && ($overwrite == 0)) {
         $form->{'arg1'} = $mypath;
         $doplpathnow = $doplpath;
     } else {
@@ -120,15 +126,16 @@ sub l00http_do_proc {
         if (($refresh eq '') && ($hide ne 'checked')) {
             print $sock "<form action=\"/do.htm\" method=\"get\">\n";
             print $sock "<input type=\"submit\" name=\"do\" value=\"Do\">\n";
-            if ($doplpathset) {
+            if ($doplpathset && ($overwrite == 0)) {
                 print $sock "Arg1:<input type=\"text\" name=\"arg1\" size=\"6\" value=\"$form->{'arg1'}\"> \n";
                 print $sock "<input type=\"hidden\" name=\"path\" value=\"$doplpath\">\n";
             } else {
                 print $sock "Path:<input type=\"text\" name=\"path\" size=\"6\" value=\"$mypath\"> \n";
             }
-            print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec<br>\n";
+            print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec. \n";
+            print $sock "<input type=\"checkbox\" name=\"overwrite\">Arg1 overwrites path<br>\n";
             print $sock "</form>\n";
-            if ($doplpathset) {
+            if ($doplpathset && ($overwrite == 0)) {
                 print $sock "<font style=\"color:black;background-color:lime\">Using Quick URL</font>: $doplpath<p>\n";
             }
         }
@@ -170,7 +177,7 @@ sub l00http_do_proc {
         }
 
         if ($hide ne 'checked') {
-            if ($doplpathset) {
+            if ($doplpathset && ($overwrite == 0)) {
                 print $sock "Quick URL is active. Full URL is:<br>\n";
                 $tmp = "/do.htm?do=Do+more&path=$doplpath&arg1=$form->{'arg1'}";
                 print $sock "<a href=\"$tmp\">$tmp</a><br>\n";
@@ -192,7 +199,7 @@ sub l00http_do_proc {
                 print $sock "<a href=\"/view.htm?path=$doplpathnow\">Vw</a>\n";
                 print $sock "<a href=\"/do.htm?path=$doplpathnow\">form</a>\n";
             }
-            if ($doplpathset) {
+            if ($doplpathset && ($overwrite == 0)) {
                 print $sock "Quick URL is active. Full URL is:<br>\n";
                 $tmp = "/do.htm?do=Do+more&path=$doplpath&arg1=$form->{'arg1'}";
                 print $sock "<a href=\"$tmp\">$tmp</a><br>\n";
