@@ -43,7 +43,7 @@ sub l00http_view_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
-    my ($foundfullrst, @foundfullarray);
+    my ($foundfullrst, @foundfullarray, $actualSt, $actualEn);
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -417,6 +417,8 @@ sub l00http_view_proc {
             } else {
                 $skip0  = $skip;
             }
+            $actualSt = -1;
+            $actualEn = -1;
             foreach $_ (split ("\n", $buffer)) {
                 $lineno++;
                 if ($lineno < $skip0) {
@@ -433,6 +435,11 @@ sub l00http_view_proc {
                 s/&/&amp;/g;
                 s/</&lt;/g;
                 s/>/&gt;/g;
+                # record lines actually displayed
+                if ($actualSt < 0) {
+                    $actualSt = $lineno;
+                }
+                $actualEn = $lineno;
                 if (defined($form->{'hidelnno'}) && 
                     ($form->{'hidelnno'} eq 'on')) {
                     if ($hilite == $lineno) {
@@ -517,7 +524,8 @@ sub l00http_view_proc {
     print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$form->{'path'}#top\">5000</a>,\n";
     print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$form->{'path'}#top\">10000</a> lines.<p>\n";
 
-    print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file<p>\n";
+    print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
+    print $sock "ls between <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a><p>\n";
 
     # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
