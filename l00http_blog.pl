@@ -341,7 +341,9 @@ sub l00http_blog_proc {
                     foreach $line (@alllines) {
                         $line =~ s/\r//g;
                         $line =~ s/\n//g;
-                        if ($stylecurr eq 'blog') {
+                        if (($stylecurr eq 'blog') ||
+                            # overwrite to keep newline
+                            (defined ($form->{'keepnl'}) && ($form->{'keepnl'} eq 'on'))) {
                             # blog
                             &l00httpd::l00fwriteBuf($ctrl, "$line\n");
                         } else {
@@ -442,7 +444,7 @@ sub l00http_blog_proc {
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
     if (defined($form->{'afterline'})) {
-        print $sock "on line<input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
+        print $sock "on line <input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
@@ -467,6 +469,7 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log style add\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
+    print $sock "<input type=\"checkbox\" name=\"keepnl\">Keep newline\n";
 
     print $sock "<p>$url";
     $tmp = 'style="height:1.4em; width:2.0em"';
