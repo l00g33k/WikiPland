@@ -132,6 +132,14 @@ sub l00http_clip_proc {
     print $sock "<p>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $clip." <p><p>", 0);
 
+    if (($_) = $clip =~ /(https*:\/\/[^ \n\r\t]+)/) {
+        # we have an URL
+        print $sock "<form action=\"$_\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"null\" value=\"J&#818;ump to URL\" accesskey=\"j\"> \n";
+        print $sock "</form><p>\n";
+    }
+
+
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
 }
