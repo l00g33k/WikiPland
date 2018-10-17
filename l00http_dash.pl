@@ -155,10 +155,11 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup);
-    my ($lineevalst, $lineevalen);
+    my ($lineevalst, $lineevalen, %cat2tolnno);
 
     $jumpcnt = 0;
     undef @jumpname;
+    undef %cat2tolnno;
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -432,17 +433,36 @@ sub l00http_dash_proc {
 
         $out = '';
         $modified = 0;
-        for ($ii = 0; $ii <= $#alllines; $ii++) {
-            if ((defined($form->{"ln$ii"})) &&          # selected line
-                ($ii > 0) &&                            # there is a line before this
-                ($alllines[$ii - 1] =~ /^==[^=]/)) {     # and is level 2 ==
-                my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
-                    localtime (time + $addtime);
-                $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
-                    $year + 1900, $mon+1, $mday, $hour, $min, $sec);
-                $modified++;
+        # insert heading
+        if ((defined($form->{"inscat2at"})) && 
+            (($tmp) = $form->{"inscat2at"} =~ /(\d+)/)) {
+            $tmp--;
+            for ($ii = 0; $ii < $tmp; $ii++) {
+                $out .= "$alllines[$ii]\n";
             }
-            $out .= "$alllines[$ii]\n";
+            $out .= "==**newcat**==\n";
+            my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
+                localtime (time);
+            $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
+                $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+            for (; $ii <= $#alllines; $ii++) {
+                $out .= "$alllines[$ii]\n";
+            }
+            $modified = 1;
+        } else {
+            # update date through checkbox
+            for ($ii = 0; $ii <= $#alllines; $ii++) {
+                if ((defined($form->{"ln$ii"})) &&          # selected line
+                    ($ii > 0) &&                            # there is a line before this
+                    ($alllines[$ii - 1] =~ /^==[^=]/)) {     # and is level 2 ==
+                    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
+                        localtime (time + $addtime);
+                    $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
+                        $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+                    $modified++;
+                }
+                $out .= "$alllines[$ii]\n";
+            }
         }
         if ($modified) {
             # modify, backup and write update
@@ -549,6 +569,7 @@ sub l00http_dash_proc {
                 }
                 # jump target when hdr only
                 $cat2 .= "<a name=\"cat2$jmp\"></a>";
+                $cat2tolnno{"cat2$jmp"} = $lnno;
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 # find wikiwords. make a copy to zap [] and <> and http
                 $tmp = $dsc;
@@ -911,7 +932,10 @@ sub l00http_dash_proc {
                         $jmp =~ s/\*\*/_/g;  # remove ** highlight
                         $jmp =~ s/\*.\*/_/g;
                         $jmp =~ s/[^0-9A-Za-z]/_/g;
+                        $tmp = $cat2tolnno{"cat2$jmp"};
                         $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#cat2$jmp\">$jmp</a>";
+                        $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}&inscat2at=$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
+
                     } else {
                         $jmp = '';
                     }
