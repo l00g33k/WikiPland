@@ -72,7 +72,7 @@ sub l00http_uploadfile_proc {
             &l00httpd::l00fwriteOpen($ctrl, $path);
             &l00httpd::l00fwriteBuf($ctrl, $form->{'payload'});
             &l00httpd::l00fwriteClose($ctrl);
-            print $sock "<p>Saved '$fname' to '$path'<br>\n";
+            print $sock "<p>Saved '$fname' to '<a href=\"/launcher.htm?path=$path\">$path/</a>'<br>\n";
             print $sock sprintf("Size = %d bytes<br>CRC32 = 0x%08x<br>\n", length($form->{'payload'}), $_);
             print $sock "<a href =\"/ls.htm?path=$path\">$fname</a>\n";
             print $sock "<a href =\"/view.htm?path=$path\">view</a>\n";
