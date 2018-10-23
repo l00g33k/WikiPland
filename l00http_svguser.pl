@@ -41,26 +41,38 @@ sub l00http_svguser_proc {
         $ght = $1;
     }
 
-    $svgdata = $buf;
-    # conversions
-    $svgdata =~ s/\t/,/g; # tab to ,
-    $svgdata =~ s/\r/ /g; # \r to space
-    $svgdata =~ s/\n/ /g; # \n to space
-    $svgdata =~ s/,+/,/g; # multiple ,, to single ,
-    $svgdata =~ s/ +/ /g; # multiple spaces to single space
+    $svgdata = '';
+    foreach $_ (split("\n", $buf)) {
+        # split into one line at a time
+        @_ = split(",", $_);
+        if ($svgdata ne '') {
+            $svgdata .= ' ';
+        }
+        foreach $_ (@_) {
+            # make comma separated numbers only
+            if (/^[0-9.eE+\-]+$/) {
+                if (($svgdata !~ / $/) && ($svgdata ne '')) {
+                    $svgdata .= ',';
+                }
+                $svgdata .= $_;
+            } else {
+                last;
+            }
+        }
+    }
 
-    print $sock "<form action=\"/svguser.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"plot\" value=\"Plot\"> \n";
+    print $sock "<form action=\"/svguser.htm\" method=\"post\">\n";
+    print $sock "Width: <input type=\"text\" size=\"6\" name=\"gwd\" value=\"$gwd\">\n";
+    print $sock "Height: <input type=\"text\" size=\"6\" name=\"ght\" value=\"$ght\">\n";
     if ($ctrl->{'os'} eq 'and') {
         print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\"> \n";
     }
-    print $sock "Width: <input type=\"text\" size=\"6\" name=\"gwd\" value=\"$gwd\">\n";
-    print $sock "Height: <input type=\"text\" size=\"6\" name=\"ght\" value=\"$ght\">\n";
-    print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\">$buf</textarea>\n";
+    print $sock "<input type=\"submit\" name=\"plot\" value=\"Plot\"> \n";
+    print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\" accesskey=\"e\">$buf</textarea>\n";
     print $sock "</form>\n";
 
     &l00svg::plotsvg2 ('svguser', $svgdata, $gwd, $ght);
-    print $sock "<p><a href=\"/svg.htm?graph=svguser&view=\"><img src=\"/svg.htm?graph=svguser\" alt=\"user svg data\"></a>\n";
+    print $sock "<p><a href=\"/svg2.htm?graph=svguser&view=\"><img src=\"/svg2.htm?graph=svguser\" alt=\"user svg data\"></a>\n";
 
     print $sock "<p>\n";
 
