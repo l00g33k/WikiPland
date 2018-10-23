@@ -64,10 +64,8 @@ sub l00http_svguser_proc {
     print $sock "<form action=\"/svguser.htm\" method=\"post\">\n";
     print $sock "Width: <input type=\"text\" size=\"6\" name=\"gwd\" value=\"$gwd\">\n";
     print $sock "Height: <input type=\"text\" size=\"6\" name=\"ght\" value=\"$ght\">\n";
-    if ($ctrl->{'os'} eq 'and') {
-        print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\"> \n";
-    }
-    print $sock "<input type=\"submit\" name=\"plot\" value=\"Plot\"> \n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"Pa&#818;ste\" accesskey=\"a\"> \n";
+    print $sock "<input type=\"submit\" name=\"plot\" value=\"P&#818;lot\" accesskey=\"p\"> \n";
     print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\" accesskey=\"e\">$buf</textarea>\n";
     print $sock "</form>\n";
 
