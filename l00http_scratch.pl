@@ -185,14 +185,19 @@ sub l00http_scratch_proc {
 
     $scratchhtml =~ s/<a href/<a $newwin href/g;
     print $sock "$scratchhtml\n";
-    if (($tmp) = $scratch =~ /(https*:\/\/[^ \n\r\t]+)/) {
-        # we have an URL
-        print $sock "<form action=\"$tmp\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"null\" value=\"J&#818;ump to URL\" accesskey=\"j\"> \n";
-        print $sock "</form><p>\n";
-    }
 
     if ($notbare) {
+        if (($tmp) = $scratch =~ /(https*:\/\/[^ \n\r\t]+)/) {
+            # we have an URL
+            print $sock "<form action=\"$tmp\" method=\"get\">\n";
+            print $sock "<input type=\"submit\" name=\"null\" value=\"J&#818;ump to URL\" accesskey=\"j\"> \n";
+            print $sock "</form><p>\n";
+        }
+        print $sock "<form action=\"/ls.htm/index.txt.htm\" method=\"get\">\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$ctrl->{'workdir'}index.txt\">\n";
+        print $sock "<input type=\"submit\" name=\"null\" value=\"H&#818;OME\" accesskey=\"h\"> \n";
+        print $sock "</form><p>\n";
+
         print $sock "<p><p><hr>\n";
         print $sock "<p><p><hr>\n";
         print $sock "<p><p><hr>\n";
