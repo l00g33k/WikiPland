@@ -31,6 +31,10 @@ sub l00http_svguser_proc {
     $buf = '';
     if (defined ($form->{'paste'})) {
         $buf = &l00httpd::l00getCB($ctrl);
+    } elsif (defined ($form->{'ram'})) {
+        if (&l00httpd::l00freadOpen($ctrl, "l00://svguser.txt")) {
+            $buf = &l00httpd::l00freadAll($ctrl);
+        }
     } elsif (defined ($form->{'plot'})) {
         $buf = $form->{'svgdata'};
     }
@@ -64,6 +68,7 @@ sub l00http_svguser_proc {
     print $sock "<form action=\"/svguser.htm\" method=\"post\">\n";
     print $sock "Width: <input type=\"text\" size=\"6\" name=\"gwd\" value=\"$gwd\">\n";
     print $sock "Height: <input type=\"text\" size=\"6\" name=\"ght\" value=\"$ght\">\n";
+    print $sock "<input type=\"submit\" name=\"ram\" value=\"R&#818;AM\" accesskey=\"r\"> \n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Pa&#818;ste\" accesskey=\"a\"> \n";
     print $sock "<input type=\"submit\" name=\"plot\" value=\"P&#818;lot\" accesskey=\"p\"> \n";
     print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\" accesskey=\"e\">$buf</textarea>\n";
