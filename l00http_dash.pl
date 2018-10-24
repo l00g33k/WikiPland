@@ -736,7 +736,7 @@ sub l00http_dash_proc {
                                 $tmp = 1;
                             }
                             if ($tmp) {
-                                $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " - $dsc");
+                                $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
                             }
                         }
                     } else {
@@ -858,7 +858,7 @@ sub l00http_dash_proc {
                     } else {
                         $dsc =~ s/^\.(.+)$/~<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
                     }
-                    $tmpbuf .= " - $_";
+                    $tmpbuf .= " &#9670; $_";
                 }
             }
         }
@@ -1066,7 +1066,7 @@ sub l00http_dash_proc {
             $out .= "* Wikiwords found on this page: ";
             foreach $_ (sort @wikiword) {
                 if ($tmp ne $_) {
-                    $out .= " - $_";
+                    $out .= " &#9670; $_";
                 }
                 $tmp = $_;
             }
