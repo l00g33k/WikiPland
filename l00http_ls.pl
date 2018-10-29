@@ -180,7 +180,11 @@ sub l00http_ls_conttype {
         $conttype = "Content-Type: image/png\r\n";
     } elsif ($fname =~ /\.wmf$/i) {
         $urlraw = 1;
-        $conttype = "Content-Type: image/wmf\r\n";
+        # $conttype = "Content-Type: image/wmf\r\n";
+        # .wmf is only encountered for AP generate graph
+        # but in fact it is .png with .wmf extension.  So give 
+        # real mime type
+        $conttype = "Content-Type: image/png\r\n";
     } elsif (($fname =~ /\.bin$/i) ||
              ($fname =~ /\.exe$/i) ||
              ($fname =~ /\.dat$/i)) {
