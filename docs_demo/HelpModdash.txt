@@ -6,10 +6,10 @@
 *** ==*r*red**== ???r
 
 ** 'KIV' queues: keep in view
-*** ==*D*deepPink**== ???D
+*** ==*f*fuchsia**==  ???f
 
 ** 'do at' queues: do at specific times
-*** ==*f*fuchsia**==  ???f
+*** ==*h*hotPink**==  ???h
 
 * Neutral colors for keep watching
 ** '5min' queues: do something quick
@@ -21,26 +21,43 @@
 
 * Bright color for projects
 ** 'Pay attention':
-*** ==*d*gold**== ???d
+*** ==*D*deepPink**== ???D
 ** 'project' queues: projects
 *** ==*l*lime**==  ???l
+*** ==*S*deepSkyBlue**== ???S
 *** ==*a*aqua**== ???a
 *** ==*y*yellow**== ???y
-*** ==*S*deepSkyBlue**== ???S
+*** ==*d*gold**== ???d
+*** ==*B*sandyBrown**== ???B
 
 * Grayish colors for less important but not to be ignored
 ** 'structural' queues: making things work
 *** ==*L*lightGray**== ???L
 *** ==*s*silver**== ???s
 *** ==*g*gray**== ???g
-*** ==*o*olive**== ???o
 
 * Dark color to skip visually
 ** 'hide' queues: hide in plain sight
 *** ==*b*brown**== ???b
+*** ==*o*olive**== ???o
 
 =Special Keywords=
 * %DASHHIDE:ON% and %DASHHIDE:OFF% will cause the dash module to ignore content 
 between these two keywords.
 
+=Custom category color=
+* %DASHCOLOR:black:Gold% for black on gold; use web color
 
+=Other notations=
+* ===chapter=== (3rd level) to hide low priority tasks
+* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)
+* !! at start to hide in the latest
+* ! at start to hide but add to !# count
+* +# hides for # days from timestamp
+* Make comment date in the future to hide it
+* \\n are converted to newlines
+* Just timestamp is ok to mark new date, e.g. * 20171005 001200
+* * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent
+* ^text, to mark a do now item, in yellow on fuchsia
+* ~text, to mark a do next item, in black on yellow
+* .text, to mark a watch item, in black on silver
