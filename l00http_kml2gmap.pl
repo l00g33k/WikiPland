@@ -213,7 +213,7 @@ sub l00http_kml2gmap_desc {
 
 
 my ($htmlhead);
-$htmlhead =#"<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.0//EN\" \"http://www.wapforum.org/DTD/xhtml-mobile10.dtd\">\x0D\x0A".
+$htmlhead = "<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.0//EN\" \"http://www.wapforum.org/DTD/xhtml-mobile10.dtd\">\x0D\x0A".
             "<html>\x0D\x0A".
             "<head>\x0D\x0A".
             "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
