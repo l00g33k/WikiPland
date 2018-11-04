@@ -150,7 +150,7 @@ sub l00http_dash_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword, $lineevalln, %lineevallns);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime, %tasksCat2);
-    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $tmpbuf);
+    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $nowbuf, $nowbuf2);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
@@ -281,7 +281,7 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-        print $sock "CatFlt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\">\n";
+        print $sock "CatF&#818;rlt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\">\n";
         print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -480,6 +480,8 @@ sub l00http_dash_proc {
 
         $cat1 = 'cat1';
         $cat2 = 'cat2';
+        $nowbuf = '';
+        $nowbuf2 = '';
         $timetoday = 0;
         $time_start = 0;
         $jmp = '';
@@ -737,12 +739,20 @@ sub l00http_dash_proc {
                             }
                             if ($tmp) {
                                 $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
+                                if ($key=~ /\*KIV\*.*\*now\*/) {
+                                    # keep for 'now' listing
+                                    $nowbuf = $tasksSticky{$key};
+                                }
                             }
                         }
                     } else {
                         # listing all !, i.e. listing ! and !!
                         if ($dsc =~ /^!{0,1}[^!]/) {
                             $tasksSticky{$key} .= "<br>$dsc";
+                            # keep for 'now' listing
+                            if ($key=~ /\*KIV\*.*\*now\*/) {
+                                $nowbuf = $tasksSticky{$key};
+                            }
                         }
                     }
                     if ($dsc =~ /^![^!]/) {
@@ -806,29 +816,34 @@ sub l00http_dash_proc {
         }
 
         # insert from RAM file
-        $tmpbuf = '';
+        $nowbuf2 = '';
         if (&l00httpd::l00freadOpen($ctrl, "l00://dash.txt")) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/[\r\n]//g;
-                if ($tmpbuf eq '') {
-                    $tmpbuf = $_;
+                if ($nowbuf2 eq '') {
+                    $nowbuf2 = $_;
                 } else {
-                    if ($tmpbuf =~ /\\n([^\\]+?)$/m) {
+                    if ($nowbuf2 =~ /\\n([^\\]+?)$/m) {
                         $tmp = $1;
                     } else {
-                        $tmp = $tmpbuf;
+                        $tmp = $nowbuf2;
                     }
                     if (length($tmp) > $dashwidth) {
-                        $tmpbuf .= '\\n';
+                        $nowbuf2 .= '\\n';
                     }
-                    $tmpbuf .= " &#9670; $_";
+                    $nowbuf2 .= " &#9670; $_";
                 }
             }
         }
+        if (($nowbuf ne '') && ($nowbuf2 ne '')) {
+            $nowbuf = "$nowbuf *y*RAM:** $nowbuf2";
+		} else {
+            $nowbuf = "$nowbuf$nowbuf2";
+		}
 
         push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
             "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
-            "||$tmpbuf ||``tasksTime``");
+            "||$nowbuf ||``tasksTime``");
 
         $cnt = 0;
         foreach $_ (sort keys %tasksTime) {
