@@ -213,7 +213,7 @@ sub l00http_kml2gmap_desc {
 
 
 my ($htmlhead);
-$htmlhead = "<!DOCTYPE html PUBLIC '-//WAPFORUM//DTD XHTML Mobile 1.0//EN' 'http://www.wapforum.org/DTD/xhtml-mobile10.dtd'>\x0D\x0A".
+$htmlhead =#"<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.0//EN\" \"http://www.wapforum.org/DTD/xhtml-mobile10.dtd\">\x0D\x0A".
             "<html>\x0D\x0A".
             "<head>\x0D\x0A".
             "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
@@ -727,11 +727,21 @@ sub l00http_kml2gmap_proc {
     foreach $_ (sort keys %labelsort) {
         $labeltable .= $labelsort{$_};
     }
+    $labeltable .= "</pre>\n";
 
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
     print $sock "<span id=\"coor\">&nbsp;</span><br>";
-    print $sock "<span id=\"distance\">&nbsp;</span><p>";
-    print $sock "$labeltable</pre>\n";
+    print $sock "<span id=\"distance\">&nbsp;</span><p>\n";
+
+    print $sock "Last markers: \n";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=1\">A</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=2\">B</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=3\">C</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=4\">D</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=5\">E</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=6\">F</a><br>\n";
+
+    print $sock "$labeltable\n";
 
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
