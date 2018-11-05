@@ -525,7 +525,8 @@ sub l00http_view_proc {
     print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$form->{'path'}#top\">10000</a> lines.<p>\n";
 
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
-    print $sock "ls between <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a><p>\n";
+    print $sock "ls between <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
+    print $sock "with <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
 
     # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
