@@ -669,7 +669,7 @@ sub l00http_kml2gmap_proc {
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
             # selecting one
-            $zoom = 12;
+            $zoom = 13;
             # the selected marker
             $ctrlon = ($lonmax + $lonmin) / 2;
             $ctrlat = ($latmax + $latmin) / 2;
@@ -735,12 +735,12 @@ sub l00http_kml2gmap_proc {
     print $sock "<span id=\"distance\">&nbsp;</span><p>\n";
 
     print $sock "Last markers: \n";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=1\">A</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=2\">B</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=3\">C</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=4\">D</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=5\">E</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=6\">F</a><br>\n";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=0\">A</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=1\">B</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=2\">C</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=3\">D</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=4\">E</a> - ";
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=5\">F</a><br>\n";
 
     print $sock "$labeltable\n";
 
