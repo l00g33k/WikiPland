@@ -727,6 +727,7 @@ sub l00http_kml2gmap_proc {
     foreach $_ (sort keys %labelsort) {
         $labeltable .= $labelsort{$_};
     }
+    $labeltable .= "displaying $nowypts waypoints\n";
     $labeltable .= "</pre>\n";
 
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
