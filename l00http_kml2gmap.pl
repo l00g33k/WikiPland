@@ -669,7 +669,7 @@ sub l00http_kml2gmap_proc {
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
             # selecting one
-            $zoom = 18;
+            $zoom = 12;
             # the selected marker
             $ctrlon = ($lonmax + $lonmin) / 2;
             $ctrlat = ($latmax + $latmin) / 2;
