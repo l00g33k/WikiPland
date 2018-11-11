@@ -716,7 +716,7 @@ sub l00http_kml2gmap_proc {
             $ctrl->{'htmlhead2'};
 
         print $sock "<a name=\"___top___\"></a>\n";
-        print $sock "<input id=\"pac-input\" class=\"controls\" type=\"text\" placeholder=\"Search Box\">\n";
+        print $sock "<input id=\"pac-input\" class=\"controls\" type=\"text\" placeholder=\"Search Box\" accesskey=\"s\">\n";
         print $sock "<div id=\"googleMap\" style=\"width:${width}px;height:${height}px;\"></div>\n";
     } else {
         print $sock $ctrl->{'httphead'} . $htmlhead . "<title>kml2gmap</title>\n" . $ctrl->{'htmlhead2'};
