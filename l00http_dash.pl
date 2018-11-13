@@ -819,6 +819,9 @@ sub l00http_dash_proc {
         $nowbuf2 = '';
         if (&l00httpd::l00freadOpen($ctrl, "l00://dash.txt")) {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if (/^#/) {
+                    next;
+                }
                 s/[\r\n]//g;
                 if ($nowbuf2 eq '') {
                     $nowbuf2 = $_;
