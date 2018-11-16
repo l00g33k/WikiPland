@@ -28,7 +28,7 @@ my ($gsmday, $gsmin, $gsmon, $gssec, $gswday, $gsyday);
 my ($gsyear, $hdr, $idx, $ii, $jj, $jj1, $jj2, $julian, $k, $ldate);
 my ($len, $ln, $outsz, $thisweek, $todo, $wk, $wkce);
 my ($wkln, $wkno, $wkos, $xx, $yy, %db);
-my ($results);
+my ($results, $daywkno);
 my (%list, %tbl, @outs, $filter);
 
 
@@ -40,7 +40,7 @@ my $prewk =  0;
 my $border = 0;        # text border on both sides of cell
 
 $filter = '.';
-
+$daywkno = '';
 
 
 sub l00http_cal_desc {
@@ -54,12 +54,15 @@ sub l00http_cal_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
+    my ($day1, $dayno, $wkno, $dayno2, $wkno2);
 
     # get current date/time
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     $mon++;
     # convert to week number
     ($thisweek, $now) = &l00mktime::weekno ($year, $mon, $mday);
+
+    $day1 = &l00mktime::mktime ($year, 0, 1, 0, 0, 0) / (24 * 3600) - 1;
 
     #: open input file and scan calendar inputs
     if (defined ($form->{'path'}) && length ($form->{'path'}) > 6) {
@@ -127,6 +130,10 @@ sub l00http_cal_proc {
         }
     }
 
+    $daywkno = '';
+    if (defined ($form->{'daywkno'}) && ($form->{'daywkno'} eq 'on')) {
+        $daywkno = 'checked';
+    }
 
     # 1) Read a description file
 
@@ -304,6 +311,18 @@ sub l00http_cal_proc {
             } else {
                 $tbl{"$idx"} = "<small>$jj</small>";
             }
+            if ($daywkno eq 'checked') {
+                $dayno = ($wk * 7 + $day - 3) - $day1;
+                $wkno = int($wk - $day1 / 7) + 1;
+                if ($dayno > 365) {
+                    # cheating, simpler
+                    $dayno -= 365;
+                    $wkno -= 52;
+                }
+                $dayno2 = 366 - $dayno;
+                $wkno2 = 53 - $wkno;
+                $tbl{"$idx"} .= " <small>$dayno-$dayno2/$wkno-$wkno2</small>";
+            }
         }
     }
     foreach $wk (sort keys %list) {
@@ -390,6 +409,8 @@ sub l00http_cal_proc {
         print $sock "</pre>\n";
     }
 
+
+
     # 3) Display form controls
     print $sock "<p><a href=\"#top\">Jump to top</a><be>\n";
 
@@ -423,6 +444,11 @@ sub l00http_cal_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"printascii\">Print ASCII</td>\n";
+    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"daywkno\" $daywkno>Print day/week number</td>\n";
     print $sock "        <td>&nbsp;</td>\n";
     print $sock "    </tr>\n";
 
