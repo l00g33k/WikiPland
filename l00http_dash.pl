@@ -166,6 +166,14 @@ sub l00http_dash_proc {
         $dashwidth = $ctrl->{'dashwidth'};
     }
 
+    # reset button
+    if (defined($ctrl->{'reset'})) {
+        $form->{'process'} = 'Process';
+        $form->{'outputsort'} = undef;
+        $form->{'dash_all'} = 'past';
+        $form->{'hdronly='} = undef;
+    }
+
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
@@ -302,7 +310,8 @@ sub l00http_dash_proc {
             print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">^itm</a></strong> - ";
         }
         print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a> -\n";
-        print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">reset</a>)\n";
+       #print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">reset</a>)\n";
+        print $sock "<input type=\"submit\" name=\"reset\" value=\"R&#818;eset\" accesskey=\"r\">)\n";
 
         print $sock "<input type=\"radio\" name=\"dash_all\" value=\"past\" $_>";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=past\">past</a>\n";
