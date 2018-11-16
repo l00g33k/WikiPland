@@ -1524,12 +1524,12 @@ sub l00http_ls_proc {
                 print $sock "<tr><td>\n";
                 print $sock "<input type=\"submit\" name=\"find\" value=\"Find\">\n";
                 print $sock "</td><td>\n";
-                print $sock "Find in this file\n";
+                print $sock "F&#818;ind in this file\n";
                 print $sock "</td></tr>\n";
                 print $sock "<tr><td>\n";
                 print $sock "RegEx:\n";
                 print $sock "</td><td>\n";
-                print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\">\n";
+                print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\" accesskey=\"f\">\n";
                 print $sock "</td></tr>\n";
                 print $sock "<tr><td>\n";
                 print $sock "Block mark:\n";
@@ -1562,7 +1562,7 @@ sub l00http_ls_proc {
 
                 print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/edit.htm\" method=\"get\">\n";
-                print $sock "<td><input type=\"submit\" name=\"edit\" value=\"Edit\"></td>\n";
+                print $sock "<td><input type=\"submit\" name=\"edit\" value=\"E&#818;dit\" accesskey=\"e\"></td>\n";
                 print $sock "<td><input type=\"text\" size=\"7\" name=\"path\" value=\"$path2\"></td>\n";
                 #print $sock "<td><input type=\"text\" size=\"4\" name=\"busybox\" value=\"busybox vi $path\"></td>\n";
                 print $sock "</form>\n";
