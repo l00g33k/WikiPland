@@ -167,11 +167,11 @@ sub l00http_dash_proc {
     }
 
     # reset button
-    if (defined($ctrl->{'reset'})) {
+    if (defined($form->{'reset'})) {
         $form->{'process'} = 'Process';
-        $form->{'outputsort'} = undef;
+        $form->{'outputsort'} = '';
         $form->{'dash_all'} = 'past';
-        $form->{'hdronly='} = undef;
+        $form->{'hdronly'} = '';
     }
 
 
@@ -930,6 +930,7 @@ sub l00http_dash_proc {
                         $jmp = '';
                     }
 		    # ckechkbox for mass update
+		    #print "$lineevallns{$_}\" $checked>#$lineevallns{$_}\n";
                     $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
                     push (@tops, "||$tasksTime{$_}$_||$tmp2$bang$jmp||``$_``");
                 }
