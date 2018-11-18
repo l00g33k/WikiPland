@@ -11,12 +11,13 @@ use l00crc32;
 my %config = (proc => "l00http_tree_proc",
               desc => "l00http_tree_desc");
 
-my (@list, $lvl, $md5support, $depthmax, $maxlines, $fileinclu);
+my (@list, $lvl, $md5support, $depthmax, $maxlines, $fileinclu, $stamp);
 
 $md5support = -1;
 $depthmax = 20;
 $maxlines = 1000;
 $fileinclu = '';
+$stamp = '';
 
 sub l00Http_tree_proxy {
     my ($sock, $target) = @_;
@@ -116,7 +117,8 @@ sub l00http_tree_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $time0, $nodir, $nofile, $showbak,
         $nolinks, $nodirs, $size, $atime, $mtimea, $ctime, $blksize, $blocks, $nobytes, $isdir);
     my (%countext, $ext, %sizeMd5sum, $md5sum, $fname, $dir, $allsums, $base, $partpath);
-    my ($fil0no1exclu2inclu, $scriptout, $outdir);
+    my ($fil0no1exclu2inclu, $scriptout, $outdir, $fstamp);
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
 
 
     $time0 = time;
@@ -176,6 +178,11 @@ sub l00http_tree_proc {
         $nodirs = 'checked';
     } else  {
         $nodirs = '';
+    }
+    if (defined($form->{'stamp'})) {
+        $stamp = 'checked';
+    } else  {
+        $stamp = '';
     }
 
 
@@ -310,6 +317,9 @@ sub l00http_tree_proc {
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
                 $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                     = stat($path.$file);
+                ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+                 = localtime($mtimea);
+                $fstamp = sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                 $nobytes += $size;
                 $partpath = $path.$file;
                 $partpath =~ s/^$base/.\//;
@@ -332,6 +342,9 @@ sub l00http_tree_proc {
                     }
                     if ($cnt <= $maxlines) {
                         if ((!$isdir) || ($nodirs ne 'checked')) {
+                            if ($stamp ne '') {
+                                print $sock "$fstamp ";
+                            }
                             if ($nolinks ne 'checked') {
                                 print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %08x ", $size, $crc32);
                             } else {
@@ -369,6 +382,9 @@ sub l00http_tree_proc {
                     }
                     if ($cnt <= $maxlines) {
                         if ((!$isdir) || ($nodirs ne 'checked')) {
+                            if ($stamp ne '') {
+                                print $sock "$fstamp ";
+                            }
                             if ($nolinks ne 'checked') {
                                 print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> %s ", $size, $crc32);
                             } else {
@@ -398,6 +414,9 @@ sub l00http_tree_proc {
                     }
                     if ($cnt <= $maxlines) {
                         if ((!$isdir) || ($nodirs ne 'checked')) {
+                            if ($stamp ne '') {
+                                print $sock "$fstamp ";
+                            }
                             if ($nolinks ne 'checked') {
                                 print $sock sprintf ("<a href=\"/launcher.htm?path=$path$file\">%8d</a> ", $size);
                             } else {
@@ -489,6 +508,7 @@ sub l00http_tree_proc {
         }
     }
     print $sock "<br><input type=\"checkbox\" name=\"showbak\" $showbak>Show *.bak too\n";
+    print $sock "<br><input type=\"checkbox\" name=\"stamp\" $stamp>Show date/timestamp\n";
     print $sock "<br><input type=\"checkbox\" name=\"nolinks\" $nolinks>Do not make links\n";
     print $sock "<br><input type=\"checkbox\" name=\"nodirs\" $nodirs>Do not show directories\n";
     print $sock "</form><br>\n";
