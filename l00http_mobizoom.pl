@@ -228,6 +228,7 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<iframe.+?<\/iframe>//gsi;
         $wget =~ s/<style.+?<\/style>//gsi;
         $wget =~ s/<figcaption.+?<\/figcaption>//gsi;
+        $wget =~ s/<\/*ol.*?>//gsi;
 
         # slashdot special: eliminate list
         $wget =~ s/<li.*?>/<br>&sect;&nbsp;&nbsp;&nbsp;/gsi;
