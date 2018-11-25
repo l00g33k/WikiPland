@@ -1054,17 +1054,17 @@ sub l00http_dash_proc {
 
 
         $out = '';
-        if (($#wikiword >= 0) && ($smallhead ne 'checked')) {
-            $tmp = '';
-            $out .= "* Wikiwords found on this page: ";
-            foreach $_ (sort @wikiword) {
-                if ($tmp ne $_) {
-                    $out .= " &#9670; $_";
-                }
-                $tmp = $_;
-            }
-            $out .= "<br>\n";
-        }
+       #if (($#wikiword >= 0) && ($smallhead ne 'checked')) {
+       #    $tmp = '';
+       #    $out .= "* Wikiwords found on this page: ";
+       #    foreach $_ (sort @wikiword) {
+       #        if ($tmp ne $_) {
+       #            $out .= " &#9670; $_";
+       #        }
+       #        $tmp = $_;
+       #    }
+       #    $out .= "<br>\n";
+       #}
 
         $help  = '';
         if ($smallhead ne 'checked') {
@@ -1082,6 +1082,7 @@ sub l00http_dash_proc {
 
         print $sock "<hr><a name=\"end\"></a>";
 
+    if ($smallhead eq 'checked') {
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
         print $sock "<a href=\"#end\">Jump to end</a>\n";
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
@@ -1134,6 +1135,7 @@ sub l00http_dash_proc {
         }
     
         print $sock "</form>\n";
+    }
 
 
         print $sock "<a href=\"#top\">top</a>\n";

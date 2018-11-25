@@ -220,6 +220,8 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/*article.*?>//gsi;
         $wget =~ s/<\/*section.*?>//gsi;
         $wget =~ s/<\/*main.*?>//gsi;
+        $wget =~ s/<\/*menu.*?>//gsi;
+        $wget =~ s/<\/*label.*?>//gsi;
         $wget =~ s/<\/*nav.*?>//gsi;
         $wget =~ s/<hr.*?>//gsi;
 
