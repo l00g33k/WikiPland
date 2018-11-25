@@ -468,7 +468,7 @@ sub l00http_view_proc {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
                                 $tmp = $hilitetextidx + 1;
-                                print $sock sprintf ("\" target=\"_blank\">%04d</a><a href=\"#hilitetext_$tmp\">&gt;</a>", $lineno) . "$_\n";
+                                print $sock sprintf ("\" target=\"_blank\">%04d</a><a href=\"#hilitetext_$tmp\">&gt;</a>", $lineno) . " $_\n";
                                 $hilitetextidx++;
                             } else {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
