@@ -166,6 +166,9 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.bmp$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/bmp\r\n";
+    } elsif ($fname =~ /\.ico$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/x-icon\r\n";
     } elsif ($fname =~ /\.gif$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/gif\r\n";
