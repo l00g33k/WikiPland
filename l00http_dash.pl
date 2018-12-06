@@ -155,7 +155,7 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup);
-    my ($lineevalst, $lineevalen, %cat2tolnno);
+    my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays);
 
     $jumpcnt = 0;
     undef @jumpname;
@@ -735,19 +735,17 @@ sub l00http_dash_proc {
                             l00httpd::dbp($config{'desc'}, "dsc >$dsc<\n"), if ($ctrl->{'debug'} >= 5);
                             if ($dsc =~ /^\+(\d+) /) {
                                 # hide for +# days
-                                $tmp = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
-                                       &l00httpd::now_string2time($tim)) / (24 * 3600));
-                                if (($tmp >= $1) || ($dash_all eq 'all')) {
-                                    # but don't hide if displaying all
-                                    $tmp = 1;
-                                } else {
-                                    $tmp = 0;
+                                $hidedays = int((&l00httpd::now_string2time($ctrl->{'now_string'}) - 
+                                       &l00httpd::now_string2time($tim)) / (24 * 3600)) - $1;
+                                if ($dash_all eq 'all') {
+                                    $hidedays = 0;
                                 }
                             } else {
-                                $tmp = 1;
+                                $hidedays = -1;
                             }
-                            if ($tmp) {
-                                $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
+                            if ($hidedays >= 0) {
+                                # show days past hide, e.g. 3 days past: (3+)+5 do stuff
+                                $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; ($hidedays+)$dsc");
                                 if ($key=~ /\*KIV\*.*\*now\*/) {
                                     # keep for 'now' listing
                                     $nowbuf = $tasksSticky{$key};
