@@ -29,7 +29,7 @@ sub l00http_periodic_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
 
     # get submitted name and print greeting
-    if (defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) {
+    if ((defined ($form->{"interval"}) && ($form->{"interval"} >= 0)) && (defined ($form->{"submit"}))) {
         $interval = $form->{"interval"};
     }
 
@@ -75,8 +75,9 @@ sub l00http_periodic_proc {
     print $sock "Count: $percnt<br><a href=\"#end\">Jump to end</a>\n";
     print $sock "<pre>$perbuf</pre>\n";
     
-    print $sock "Windows example: `msg /TIME:1 * The message`<br>\n";
-    print $sock "WikiPland/Android example: TBD<br>\n";
+    print $sock "Windows example: <a href=\"/clip.htm?update=C%CC%B2opy+to+CB&clip=%60msg+%2FTIME%3A1+*+The+message%60&url=\">`msg /TIME:1 * The message`</a><br>\n";
+    print $sock "WikiPland/Android example: <a href=\"/clip.htm?update=C%CC%B2opy+to+CB&clip=%24ctrl-%3E%7B%27droid%27%7D-%3EmakeToast%28%27Making+a+toast%27%29&url=\">\$ctrl->{'droid'}->makeToast('Making a toast')</a><br>\n";
+
     print $sock "<a name=\"end\"></a>\n";
 
     # send HTML footer and ends
