@@ -11,7 +11,7 @@ my %config = (proc => "l00http_blog_proc",
               desc => "l00http_blog_desc");
 my ($buffer, $lastbuf, $quicktimesave);
 $lastbuf = '';
-$quicktimesave = '';
+$quicktimesave = 'checked';
 
 
 sub blog_make_hdr {
