@@ -168,6 +168,7 @@ sub l00http_dash_proc {
 
     # reset button
     if (defined($form->{'reset'})) {
+        $form->{'listbang'} = '';
         $form->{'process'} = 'Process';
         $form->{'outputsort'} = '';
         $form->{'dash_all'} = 'past';
@@ -574,7 +575,7 @@ sub l00http_dash_proc {
                 if ($this =~ /\?\?\?$/) {
                     $tmp = $cat2;
                     $tmp =~ s/<.+?>//g;
-                    push (@jumpname, $tmp);
+                    push (@jumpname, "$tmp???jump$jumpcnt");
                     $cat2 .= "<a name=\"jump$jumpcnt\"></a>";
                     $jumpcnt++;
                 }
@@ -743,7 +744,7 @@ sub l00http_dash_proc {
                             } else {
                                 $hidedays = undef;
                             }
-                            if ($hidedays >= 0) {
+                            if (!defined($hidedays) || ($hidedays >= 0)) {
                                 # show days past hide, e.g. 3 days past: (3+)+5 do stuff
                                 if (defined($hidedays)) {
                                     $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; ($hidedays+)$dsc");
@@ -1031,11 +1032,22 @@ sub l00http_dash_proc {
         print $sock "<a name=\"quickcut\"></a>";
         if ($jumpcnt > 0) {
             $tmp = $jumpmarks;
+            @jumpname = sort {
+                    my($aa,$bb); 
+                    $aa=$a; 
+                    $bb=$b; 
+                    $aa=~ s/\*\*//; 
+                    $aa=~ s/\*.\*//; 
+                    $bb=~ s/\*\*//; 
+                    $bb=~ s/\*.\*//; 
+                    lc($aa) cmp lc($bb);
+                } (@jumpname);
             for ($ii = 0; $ii <= $#jumpname; $ii++) {
                 if ($ii > 0) {
                     $tmp .= " - ";
                 }
-                $tmp .= "<a href=\"#jump$ii\">$jumpname[$ii]</a>";
+                ($desc, $anchor) = split ('\?\?\?', $jumpname[$ii]);
+                $tmp .= "<a href=\"#$anchor\">$desc</a>";
             }
             $tmp = &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);
             print $sock "$tmp<p>\n";

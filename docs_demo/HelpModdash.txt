@@ -44,6 +44,15 @@
 =Special Keywords=
 * %DASHHIDE:ON% and %DASHHIDE:OFF% will cause the dash module to ignore content 
 between these two keywords.
+* [ [ # name ] ] : makes an anchor to be listed in 
+'Jump marks' list at the bottom of the page.  The 'Jump 
+to end' link at the top allows quick navigation to this 
+list which in turn allows you to quickly jump to your 
+targets.  (Spaces added in [ [ # name ] ] to defeat making an anchor; remove 
+spaces in document.)
+* Similar to anchor described above, adding ??? at the end 
+of a second level heading makes a link in the 'Jump marks' 
+list, e.g. ==my task==???(newline) makes a link to this heading.
 
 =Custom category color=
 * %DASHCOLOR:black:Gold% for black on gold; use web color
