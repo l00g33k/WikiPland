@@ -544,7 +544,7 @@ sub l00http_dash_proc {
                 $tmp =~ s/\*\*$//;
                 $tmp =~ s/^\*.\*//;
                 if (!defined($cat1s{$tmp})) {
-                    $cat1s{$tmp} = $lnno;
+                    $cat1s{$tmp} = $cat1;
                 }
                 if ($cat1ln + 1 != $lnno) {
                     #what is $1 and $2: $cat1font1 = "<font style=\"color:$1;background-color:$2\">";
@@ -1102,7 +1102,7 @@ sub l00http_dash_proc {
 
             $help .= "\n\nCat1's:\n";
             foreach $cat1 (sort (keys %cat1s)) {
-                $help .= "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all&catflt=$cat1\">$cat1</a> - ";
+                $help .= "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all&catflt=$cat1\"> $cat1s{$cat1} </a> - ";
             }
         }
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
