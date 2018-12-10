@@ -1,0 +1,22 @@
+%TOC%
+=Syncview Overview=
+* Creates a synchronized view of two files using 
+regex to search for synchronization markers.  The 
+first occurances of the matching marker in each file is 
+used to synchronize the display.  If additional 
+matching pattern is necessary, the marker pattern should 
+be enclosed in paranthesis '()' such that it is returned 
+as $1.
+
+=Form Fields=
+==Highlight==
+* Highlights any matching regex
+==Marker Regex==
+* Regex to search for pattern.  The match enclosed by the 
+first pair of parenthesis is used as the marker.
+==Width==
+* Width of the display
+==Path==
+* Full path to the left and the right files.
+
+

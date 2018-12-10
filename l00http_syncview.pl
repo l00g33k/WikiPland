@@ -151,9 +151,23 @@ sub l00http_syncview_proc {
     }
     if (defined ($form->{'leftregex'})) {
         $leftregex = $form->{'leftregex'};
+        $_ = $leftregex;
+        # remove escaped parenthesis
+        s/\\\(//g;
+        s/\\\)//g;
+        if (/\(.+\)/) {
+            $leftregex = "($leftregex)";
+        }
     }
     if (defined ($form->{'rightregex'})) {
         $rightregex = $form->{'rightregex'};
+        $_ = $rightregex;
+        # remove escaped parenthesis
+        s/\\\(//g;
+        s/\\\)//g;
+        if (/\(.+\)/) {
+            $rightregex = "($rightregex)";
+        }
     }
     if (defined ($form->{'highlight'})) {
         $highlight = $form->{'highlight'};
@@ -238,6 +252,9 @@ sub l00http_syncview_proc {
             if ($leftblkcnt > 0) {
                 $leftblksz[$leftblkcnt - 1] = $lastblksz;
             }
+foreach $_ (0..$leftblkcnt) {
+$htmlout .= "DBGDBGl: $_ leftblkat[$_] $leftblkat[$_] leftblksz[$_] $leftblksz[$_]\n";
+}
             $htmlout .= "    read $leftttllns lines and found $leftblkcnt markers, $dupmarkercnt duplicates\n";
         } else {
             $htmlout .= "$leftfile open failed\n";
@@ -306,6 +323,7 @@ sub l00http_syncview_proc {
                 # associative array index
                 if (!defined($rightblksz{$leftmarkers[$blkidx]}) ||
                     ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]})) {
+$htmlout .= "DBGDBG1: \n";
                     # left block larger
                     # print both
                     $ii = 0;
@@ -345,6 +363,7 @@ sub l00http_syncview_proc {
                         }
                     }
                 } else {
+$htmlout .= "DBGDBG2: \n";
                     # right block larger
                     # print both
                     $ii = 0;
@@ -413,14 +432,14 @@ sub l00http_syncview_proc {
     print $sock "<input type=\"submit\" name=\"pasteleft\" value=\"CB>Left:\">";
     print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"leftregex\" value=\"$leftregex\">\n";
     print $sock " Width: <input type=\"text\" size=\"4\" name=\"lwidth\" value=\"$lwidth\">\n";
-    print $sock "<br><textarea name=\"pathleft\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$leftfile</textarea>\n";
+    print $sock "<br>Path: <input type=\"text\" size=\"20\" name=\"pathleft\" value=\"$leftfile\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"pasteright\" value=\"CB>Right:\">";
     print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"rightregex\" value=\"$rightregex\">\n";
     print $sock " Width: <input type=\"text\" size=\"4\" name=\"rwidth\" value=\"$rwidth\">\n";
-    print $sock "<br><textarea name=\"pathright\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$rightfile</textarea>\n";
+    print $sock "<br>Path: <input type=\"text\" size=\"20\" name=\"pathright\" value=\"$rightfile\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
