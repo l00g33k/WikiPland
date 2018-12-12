@@ -846,14 +846,14 @@ sub l00http_dash_proc {
                 if ($nowbuf2 eq '') {
                     $nowbuf2 = $_;
                 } else {
-                    if ($nowbuf2 =~ /\\n([^\\]+?)$/m) {
-                        $tmp = $1;
-                    } else {
-                        $tmp = $nowbuf2;
-                    }
-                    if (length($tmp) > $dashwidth) {
-                        $nowbuf2 .= '\\n';
-                    }
+#                   if ($nowbuf2 =~ /\\n([^\\]+?)$/m) {
+#                       $tmp = $1;
+#                   } else {
+#                       $tmp = $nowbuf2;
+#                   }
+#                   if (length($tmp) > $dashwidth) {
+#                       $nowbuf2 .= '\\n';
+#                   }
                     $nowbuf2 .= " &#9670; $_";
                 }
             }
@@ -863,9 +863,10 @@ sub l00http_dash_proc {
 		} else {
             $nowbuf = "$nowbuf$nowbuf2";
 		}
+        $nowbuf = &l00http_dash_linewrap($nowbuf);
 
-        push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
-            "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
+push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
+    "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
             "||$nowbuf ||``tasksTime``");
 
         $cnt = 0;
