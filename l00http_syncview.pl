@@ -101,7 +101,7 @@ sub l00http_syncview_proc {
     my (@leftblkat, @leftmarkers, @leftblksz, $leftblkcnt, $rightblkcnt, $lastblksz);
     my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
     my ($oout, $nout, $ospc, $dupmarkercnt, %dummymarker);
-    my ($leftttllns, $rightttllns);
+    my ($leftttllns, $rightttllns, $allmatches, @allmatches);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -155,7 +155,7 @@ sub l00http_syncview_proc {
         # remove escaped parenthesis
         s/\\\(//g;
         s/\\\)//g;
-        if (/\(.+\)/) {
+        if (!/\(.+\)/) {
             $leftregex = "($leftregex)";
         }
     }
@@ -165,7 +165,7 @@ sub l00http_syncview_proc {
         # remove escaped parenthesis
         s/\\\(//g;
         s/\\\)//g;
-        if (/\(.+\)/) {
+        if (!/\(.+\)/) {
             $rightregex = "($rightregex)";
         }
     }
@@ -231,14 +231,15 @@ sub l00http_syncview_proc {
                 s/\r//;
                 s/\n//;
                 $lastblksz++;
-                if (/$leftregex/) {
-                    if (defined($dummymarker{$1})) {
+                if (@allmatches = /$leftregex/) {
+                    $allmatches = join(",", @allmatches);
+                    if (defined($dummymarker{$allmatches})) {
                         # ignore duplicated marker
                         $dupmarkercnt++;
                     } else {
-                        $dummymarker{$1} = 1;
+                        $dummymarker{$allmatches} = 1;
                         $leftblkat[$leftblkcnt] = $leftttllns;
-                        $leftmarkers[$leftblkcnt] = $1;
+                        $leftmarkers[$leftblkcnt] = $allmatches;
                         if ($leftblkcnt > 0) {
                             $leftblksz[$leftblkcnt - 1] = $lastblksz;
                         }
@@ -277,17 +278,18 @@ $htmlout .= "DBGDBGl: $_ leftblkat[$_] $leftblkat[$_] leftblksz[$_] $leftblksz[$
                 s/\r//;
                 s/\n//;
                 $lastblksz++;
-                if (/$rightregex/) {
-                    if (defined($rightmarkerat{$1})) {
+                if (@allmatches = /$rightregex/) {
+                    $allmatches = join(",", @allmatches);
+                    if (defined($rightmarkerat{$allmatches})) {
                         # ignore duplicated marker
                         $dupmarkercnt++;
                     } else {
-                        $rightmarkerat{$1} = $rightttllns;
+                        $rightmarkerat{$allmatches} = $rightttllns;
                         if ($lastrightmkr ne '') {
                             $rightblksz{$lastrightmkr} = $lastblksz;
                         }
                         $lastblksz = 0;
-                        $lastrightmkr = $1;
+                        $lastrightmkr = $allmatches;
                         $rightblkcnt++;
                     }
                 }

@@ -1,12 +1,21 @@
 %TOC%
 =Syncview Overview=
-* Creates a synchronized view of two files using 
-regex to search for synchronization markers.  The 
-first occurances of the matching marker in each file is 
-used to synchronize the display.  If additional 
-matching pattern is necessary, the marker pattern should 
-be enclosed in paranthesis '()' such that it is returned 
-as $1.
+* Syncview displays two documents side by side and 
+aligns lines using markers found using regex.  This 
+is particularly useful when viewing say the timestamped 
+console logs of concurrent processes.  The markers 
+are found using regex.  The markers could use only 
+part of the match by enclosing the marking patterns 
+in parenthesis and thereby excluding parts of the regex 
+not inside parenthesis.  The matched markers need not 
+be unique.  In a sequence of regex matches, there could 
+be intervening lines without match, and only the first 
+hit in a consecutive series of the same matched pattern 
+is recognized.  This allows for says using date as the 
+matched pattern and therefore making each new day a 
+new marker.  The matched patterns may repeat, as long 
+as there are intervening and different patterns, such 
+as using days of week as marker.
 
 =Form Fields=
 ==Highlight==

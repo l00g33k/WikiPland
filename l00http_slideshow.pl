@@ -165,6 +165,10 @@ sub l00http_slideshow_proc {
                         push (@allpics, $file);
                     } elsif ($file =~ /\.wmf$/i) {
                         push (@allpics, $file);
+                    } elsif ($file =~ /\.gif$/i) {
+                        push (@allpics, $file);
+                    } elsif ($file =~ /\.bmp$/i) {
+                        push (@allpics, $file);
                     }
                 }
                 closedir (DIR);
@@ -174,14 +178,27 @@ sub l00http_slideshow_proc {
                 @allpics = sort llsfn2 @allpics;
 
                 $phase = 0; # search for 1 pic match
+                if ($ctrl->{'debug'} >= 3) {
+                    l00httpd::dbp($config{'desc'}, "USER SELECTS: >$form->{'path'}<\n");
+                }
                 for ($ii = 0; $ii <= $#allpics; $ii++) {
                     $file = $allpics[$ii];
+                    if ($ctrl->{'debug'} >= 4) {
+                        l00httpd::dbp($config{'desc'}, "$ii: $file\n");
+                    }
+
                     if ("$path$file" eq $form->{'path'}) {
                         $phase = 1;
                         $idx0 = $ii + 1;
+                        if ($ctrl->{'debug'} >= 3) {
+                            l00httpd::dbp($config{'desc'}, "SELECTED: >$path$file<\n");
+                        }
                     }
                     if ($phase == ($picsperpage + 1)) {
                         # we have found the number of pictures to display
+                        if ($ctrl->{'debug'} >= 3) {
+                            l00httpd::dbp($config{'desc'}, "found the number of pictures to display\n");
+                        }
                         last;   # done searching
                     }
                     if ($phase) {
@@ -214,7 +231,9 @@ sub l00http_slideshow_proc {
                             }
                         }
                         $outbuf .= "$newline\n";
-                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        $_ = "$path$file";
+                        s/\+/%2B/g;
+                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$_\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
                         $outbuf .= "$newline\n";
                         $phase++;
                     }
@@ -223,12 +242,16 @@ sub l00http_slideshow_proc {
             }
         }
 
-        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[0]\">Newest</a> \n";
+        $_ = $allpics[0];
+        s/\+/%2B/g;
+        print $sock "<a href=\"/slideshow.htm?path=$path$_\">Newest</a> \n";
         $tmp = $#allpics - $picsperpage + 1;
         if ($tmp < 0) {
             $tmp = 0;
         }
-        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[$tmp]\">Oldest</a> \n";
+        $_ = $allpics[$tmp];
+        s/\+/%2B/g;
+        print $sock "<a href=\"/slideshow.htm?path=$path$_\">Oldest</a> \n";
 
         if ($nonewline ne 'checked') {
             print $sock "<p>\n";
@@ -240,12 +263,14 @@ sub l00http_slideshow_proc {
             $tmp = 0;
         }
         $newer = "$path$allpics[$tmp]";
+        $newer =~ s/\+/%2B/g;
 
         $tmp = $idx1;
         if ($tmp > $#allpics - $picsperpage + 1) {
             $tmp = $#allpics - $picsperpage + 1;
         }
         $older = "$path$allpics[$tmp]";
+        $older =~ s/\+/%2B/g;
 
         print $sock "<a href=\"/slideshow.htm?path=$newer\">Newer</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$older\">Older</a> \n";
@@ -290,9 +315,17 @@ aassdd
     }
 
     print $sock "<p>\n";
-    for ($ii = 1; $ii < $#allpics; $ii++) {
-        $file = $allpics[$#allpics - $ii + 1];
-        print $sock "<a href=\"/slideshow.htm?path=$path$file\">$ii</a>\n";
+#    for ($ii = 1; $ii <= $#allpics + 1; $ii++) {
+#        $file = $allpics[$#allpics - $ii + 1];
+#        $_ = "$path$file";
+#        s/\+/%2B/g;
+#        print $sock "<a href=\"/slideshow.htm?path=$_\">$ii</a>\n";
+#    }
+    for ($ii = 1; $ii <= $#allpics + 1; $ii++) {
+        $file = $allpics[$ii - 1];
+        $_ = "$path$file";
+        s/\+/%2B/g;
+        print $sock "<a href=\"/slideshow.htm?path=$_\">$ii</a>\n";
     }
     print $sock "<p>\n";
 
