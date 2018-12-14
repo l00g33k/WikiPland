@@ -245,9 +245,7 @@ sub l00http_slideshow_proc {
         print $sock "<a href=\"/slideshow.htm?path=$newer\">Newer</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$older\">Older</a> \n";
         print $sock "$idx0..$idx1 of ", $#allpics + 1, ".\n";
-        if ($nonewline ne 'checked') {
-            print $sock "<p>\n";
-        }
+        print $sock "<p>\n";
 
         print $sock $outbuf;
 
