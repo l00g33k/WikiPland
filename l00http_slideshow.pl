@@ -87,7 +87,12 @@ sub l00http_slideshow_proc {
     my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
+    if (defined ($form->{'path'})) {
+        $_ = $form->{'path'};
+    } else {
+        $_ = '(none)';
+    }
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>slideshow - $_</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a> -- \n";
 
     if (defined ($form->{'set'})) {
@@ -295,7 +300,7 @@ aassdd
     print $sock "<a/><form action=\"/slideshow.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"><br>Image size, e.g.: 1024 or 100%\n";
+    print $sock "<input type=\"submit\" name=\"set\" value=\"S&#818;et\" accesskey=\"s\"><br>Image size, e.g.: 1024 or 100%\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
