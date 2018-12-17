@@ -6,9 +6,8 @@ package l00diff;
 
 our (@diffout, @OLD, @NEW, $OC, $NC, $OLNO, $NLNO, @OA, @NA, %SYMBOL);
 
-
 sub l00http_diff_make_outline {
-    my ($oii, $nii, $width, $oldfile, $newfile) = @_;
+    my ($oii, $nii, $width, $oldfile, $newfile, $debug) = @_;
     my ($oout, $nout, $ospc, $tmp, $clip, $view, $lineno0, $lineno);
 
 
@@ -28,11 +27,17 @@ sub l00http_diff_make_outline {
         }
         $view = "/view.htm?path=$oldfile&hiliteln=$lineno&lineno=on#line$lineno0";
         $oout = sprintf ("%3d<a href=\"%s\">:</a> %s", $oii + 1, $view, $tmp);
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "oii=$oii $OLD[$oii]\n");
+        }
     } else {
         # make a string of space of same length
         $ospc = sprintf ("%3d: %-${width}s", 0, ' ');
         $ospc =~ s/./ /g;
         $oout = $ospc;
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "oii=$oii\n");
+        }
     }
     if (($nii >= 0) && ($nii <= $#NEW)) {
         $tmp = sprintf ("%-${width}s", substr($NEW[$nii],0,$width));
@@ -48,8 +53,14 @@ sub l00http_diff_make_outline {
         }
         $view = "/view.htm?path=$newfile&hiliteln=$lineno&lineno=on#line$lineno0";
         $nout = sprintf ("%3d<a href=\"%s\">:</a> %s", $nii + 1, $view, $tmp);
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "nii=$nii $NEW[$nii]\n");
+        }
     } else {
         $nout = '';
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "nii=$nii\n");
+        }
     }
 
     ($oout, $nout, $ospc);
@@ -86,7 +97,7 @@ sub l00http_diff_output {
     my ($lastold, $oldFromNew, $oout, $nout, $ospc, $out, $debugbuf);
     my ($blocksize, $blockstart, $mxblocksize, $mxblockstart, $firstnew);
     my ($outlinks, $deleted, $added, $moved, $same, $lastact, $firstact, $anchor);
-    my ($mxblockstartNew);
+    my ($mxblockstartNew, $oiilast, $niilast, $samecnt);
 
     # find first non added lines in NEW
     $firstnew = -1;
@@ -201,10 +212,27 @@ sub l00http_diff_output {
     # print forward of largest matched block
     $hiding = 0;
     $hiding2 = 0;
+    $oiilast = $oii;
+    $niilast = $nii;
+    $samecnt = 0;
     while (($oii <= $#OLD) || ($nii <= $#NEW)) {
         $hiding++;
+        # Infinite loop safety break check
+        if (($oiilast == $oii) && ($niilast == $nii)) {
+            $samecnt++;
+        } else {
+            $samecnt = 0;
+        }
+        $oiilast = $oii;
+        $niilast = $nii;
+        if ($samecnt > 10) {
+            $_ = " Infinite loop safety break: hiding $hiding oii $oii  nii $nii\n";
+            push (@diffout, $_);
+            l00httpd::dbp('l00diff.pm', $_);
+            last;
+        }
         # prepare outputs
-        ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii, $width, $oldfile, $newfile);
+        ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii, $width, $oldfile, $newfile, $debug);
         # print deleted
         if (($oii <= $#OLD) && ($OA[$oii] < 0)) {
             if ($lastact ne '<') {
@@ -351,12 +379,34 @@ sub l00http_diff_output {
     $lastact = $firstact;
     #$outlinks = "backward debug " . $outlinks;
 
+
+    $oiilast = $oii;
+    $niilast = $nii;
+    $samecnt = 0;
     while (($oii >= 0) || ($nii >= 0)) {
         $hiding++;
+        # Infinite loop safety break check
+        if (($oiilast == $oii) && ($niilast == $nii)) {
+            $samecnt++;
+        } else {
+            $samecnt = 0;
+        }
+        $oiilast = $oii;
+        $niilast = $nii;
+        if ($samecnt > 10) {
+            $_ = " Infinite loop safety break: hiding $hiding oii $oii  nii $nii\n";
+            push (@diffout, $_);
+            l00httpd::dbp('l00diff.pm', $_);
+            last;
+        }
         # prepare outputs
-        ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii, $width, $oldfile, $newfile);
+        ($oout, $nout, $ospc) = &l00http_diff_make_outline($oii, $nii, $width, $oldfile, $newfile, $debug);
         # print deleted
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "(".__LINE__.") $lastact print deleted (($oii >= 0) && ($OA[$oii] < 0))\n");
+        }
         if (($oii >= 0) && ($OA[$oii] < 0)) {
+            # not yet reached top of old file, and this line has been deleted
             if ($lastact ne '<') {
                 # make link to changes
                 if ($lastact eq '>') {
@@ -394,6 +444,9 @@ sub l00http_diff_output {
             next;
         }
         # print added
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "(".__LINE__.") $lastact print added (($nii >= 0) && ($NA[$nii] < 0))\n");
+        }
         if (($nii >= 0) && ($NA[$nii] < 0)) {
             if ($lastact ne '>') {
                 # make link to changes
@@ -432,6 +485,9 @@ sub l00http_diff_output {
             next;
         }
         # print identical
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "(".__LINE__.") $lastact print identical (($oii >= 0) && ($nii >= 0) && ($OA[$oii] == $nii))\n");
+        }
         if (($oii >= 0) && ($nii >= 0) && ($OA[$oii] == $nii)) {
             if ($hide ne 'checked') {
                 # print if not hiding
@@ -485,7 +541,50 @@ sub l00http_diff_output {
             $same++;
             next;
         }
+        # print moved block in OLD
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "(".__LINE__.") $lastact print moved block in OLD (($oii >= 0) && ($OA[$oii] > $nii))\n");
+        }
+        if (($oii >= 0) && ($OA[$oii] < $nii)) {
+            if ($lastact ne ']') {
+                # make link to changes
+                if ($lastact eq '>') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">add[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '<') {
+                    if ($oii >= 0) {
+                        $_ = $oii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">delete($_)</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '=') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">4same[$_]</a> " . $outlinks;
+                    }
+                } elsif ($lastact eq '[') {
+                    if ($nii >= 0) {
+                        $_ = $nii + 2;
+                        $outlinks = "<a href=\"#change$anchor\">move[$_]</a> " . $outlinks;
+                    }
+                }
+                unshift (@diffout, "<a name=\"change$anchor\"></a>");
+                $anchor++;
+                $lastact = ']';
+            }
+
+            unshift (@diffout, sprintf (" %s ] (%d) moved to new\n", $oout, $OA[$oii] + 1));
+            if ($debug >= 5) {
+                l00httpd::dbp('l00diff.pm', "(".__LINE__.") move left: oii $oii nii $nii\n");
+            }
+            $oii--;
+            next;
+        }
         # print moved block in NEW
+        if ($debug >= 5) {
+            l00httpd::dbp('l00diff.pm', "(".__LINE__.") $lastact print moved block in NEW (($nii >= 0) && ($NA[$nii] > $oii))\n");
+        }
         if (($nii >= 0) && ($NA[$nii] > $oii)) {
             if ($lastact ne '[') {
                 # make link to changes
@@ -515,7 +614,7 @@ sub l00http_diff_output {
                 $lastact = '[';
             }
 
-            $_ = sprintf ("moved (%d)", $NA[$nii] + 1);
+            $_ = sprintf ("moved from old (%d)", $NA[$nii] + 1);
             substr ($ospc, length ($ospc) - length ($_), length ($_)) = $_;
             unshift (@diffout, " $ospc [$nout\n");
             if ($debug >= 5) {
@@ -525,43 +624,6 @@ sub l00http_diff_output {
             $moved++;
             next;
         }
-        # print moved block in OLD
-        if (($oii >= 0) && ($OA[$oii] > $nii)) {
-            if ($lastact ne ']') {
-                # make link to changes
-                if ($lastact eq '>') {
-                    if ($nii >= 0) {
-                        $_ = $nii + 2;
-                        $outlinks = "<a href=\"#change$anchor\">add[$_]</a> " . $outlinks;
-                    }
-                } elsif ($lastact eq '<') {
-                    if ($oii >= 0) {
-                        $_ = $oii + 2;
-                        $outlinks = "<a href=\"#change$anchor\">delete($_)</a> " . $outlinks;
-                    }
-                } elsif ($lastact eq '=') {
-                    if ($nii >= 0) {
-                        $_ = $nii + 2;
-                        $outlinks = "<a href=\"#change$anchor\">4same[$_]</a> " . $outlinks;
-                    }
-                } elsif ($lastact eq '[') {
-                    if ($nii >= 0) {
-                        $_ = $nii + 2;
-                        $outlinks = "<a href=\"#change$anchor\">move[$_]</a> " . $outlinks;
-                    }
-                }
-                unshift (@diffout, "<a name=\"change$anchor\"></a>");
-                $anchor++;
-                $lastact = ']';
-            }
-
-            unshift (@diffout, sprintf (" %s ] (%d) moved\n", $oout, $OA[$oii] + 1));
-            if ($debug >= 5) {
-                l00httpd::dbp('l00diff.pm', "(".__LINE__.") move left: oii $oii nii $nii\n");
-            }
-            $oii--;
-            next;
-        }
     }
 
     $outlinks = sprintf ("Deleted %4d lines\n" .
@@ -569,7 +631,8 @@ sub l00http_diff_output {
                          "Moved   %4d lines\n" . 
                          "Same    %4d lines\n", 
                          $deleted, $added, $moved, $same) . 
-                "</pre>Links to modified blocks, (old line#), [new line#]: " . $outlinks . "<pre>\n";
+                "</pre>Links to modified blocks, (old line#), [new line#]: " . $outlinks . 
+                "<br>=: same line, &lt;: deleted in new, &gt;: added in new, ]: moved from old, [:moved to in new<pre>\n";
 
     $out = '';
     for ($ln = 0; $ln <= $#diffout; $ln++) {
@@ -604,6 +667,9 @@ sub l00http_diff_compare {
             s/\n//;
             push (@OLD, $_);
         }
+open(DBGOU, ">c:/x/ram/del/old_disk2.txt");
+print DBGOU "$oldfile\n".join("\n", @OLD);
+close(DBGOU);
         $htmlout .= "    read $cnt lines\n";
     } else {
         $htmlout .= "$oldfile open failed\n";
@@ -619,6 +685,9 @@ sub l00http_diff_compare {
             s/\n//;
             push (@NEW, $_);
         }
+open(DBGOU, ">c:/x/ram/del/new_ram.txt");
+print DBGOU "$newfile\n".join("\n", @NEW);
+close(DBGOU);
         $htmlout .= "    read $cnt lines\n\n";
     } else {
         $htmlout .= "$newfile open failed\n";
@@ -654,7 +723,7 @@ sub l00http_diff_compare {
 
     undef %SYMBOL;
     # Pass 1
-    if ($debug >= 1) {
+    if ($debug >= 2) {
         l00httpd::dbp('l00diff.pm', "Pass 1: Fill SYMBOL table with OLD file content\n");
     }
     for ($ln = 0; $ln <= $#OLD; $ln++) {
@@ -686,7 +755,7 @@ sub l00http_diff_compare {
 
 
     # Pass 2
-    if ($debug >= 1) {
+    if ($debug >= 2) {
         l00httpd::dbp('l00diff.pm', "Pass 2: Fill SYMBOL table with NEW file content\n");
     }
     for ($ln = 0; $ln <= $#NEW; $ln++) {
@@ -723,7 +792,7 @@ sub l00http_diff_compare {
 
 
     # Pass 3
-    if ($debug >= 1) {
+    if ($debug >= 2) {
         l00httpd::dbp('l00diff.pm', "Pass 3: Establish match for unique lines\n");
     }
     foreach $text (keys %SYMBOL) {
@@ -740,7 +809,7 @@ sub l00http_diff_compare {
     }
 
     # Pass 4
-    if ($debug >= 1) {
+    if ($debug >= 2) {
         l00httpd::dbp('l00diff.pm', "Pass 4: Match non unique lines by context going forward\n");
     }
     for ($ln = 0; $ln < $#NEW; $ln++) { # skip last line which has no next
@@ -768,7 +837,7 @@ sub l00http_diff_compare {
 
 
     # Pass 5
-    if ($debug >= 1) {
+    if ($debug >= 2) {
         l00httpd::dbp('l00diff.pm', "Pass 5: Match non unique lines by context going backword\n");
     }
     for ($ln = $#NEW - 1; $ln > 0; $ln--) {
@@ -793,8 +862,12 @@ sub l00http_diff_compare {
     }
 
     # Pass 6: debug output
-    if ($debug >= 1) {
+    if ($debug >= 2) {
         l00httpd::dbp('l00diff.pm', "Pass 6: Output results\n");
+        l00httpd::dbp('l00diff.pm', "\$oii: old line number\n");
+        l00httpd::dbp('l00diff.pm', "\$nii: new line number\n");
+        l00httpd::dbp('l00diff.pm', "\$OA[\$oii]: old line \$oii is new line \$OA[\$oii]; -1 if deleted\n");
+        l00httpd::dbp('l00diff.pm', "\$NA[\$nii]: new line \$nii is old line \$NA[\$nii]; -1 if deleted\n");
         $oii = 0;
         $nii = 0;
         $out = '';
@@ -824,10 +897,17 @@ sub l00http_diff_compare {
         l00httpd::dbp('l00diff.pm', "--------------------------\n");
     }
 
+    if ($debug >= 2) {
+        l00httpd::dbp('l00diff.pm', "Pass 7: &l00http_diff_output\n");
+    }
     $htmlout .= &l00http_diff_output ($width, $oldfile, $newfile, 
         $hide, $maxline, $debug);
 
     $htmlout .= "</pre>\n";
+
+    if ($debug >= 2) {
+        l00httpd::dbp('l00diff.pm', "Pass 8: Completed\n");
+    }
 
     ($htmlout, \@OA, \@NA);
 }

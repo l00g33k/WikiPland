@@ -57,12 +57,10 @@ sub l00http_diff_proc {
     print $sock "<p>\n";
 
 
-    if (defined ($form->{'debug'})) {
-        if ($form->{'debug'} =~ /(\d+)/) {
-            $debug = $1;
-        } else {
-            $debug = 5;
-        }
+    if ($ctrl->{'debug'} >= 2) {
+        $debug = $ctrl->{'debug'};
+    } else {
+        $debug = 0;
     }
 
     if (defined ($form->{'hide'}) && ($form->{'hide'} eq 'on')) {
