@@ -2,10 +2,11 @@ use warnings;
 use IO::Socket;     # for networking
 use IO::Select;     # for networking
 
-my(@pids, $t, $preend, $upper24, $ipst, $ipen, $ip, $pid, @ports, $port);
+my(@pids, $t, $preend, $upper24, $ipst, $ipen, $ip, $pid, @ports, $port, $debug);
 $t = time;
 undef @pids;
 undef @ports;
+$debug = 0;
 
 $upper24 = '192.168.1.';
 $ipst = 100;
@@ -28,6 +29,9 @@ if(!defined($sock)) {
     if (defined($ctrl->{'FORM'}->{'arg3'})) {
         @ports = split(',', $ctrl->{'FORM'}->{'arg3'});
     }
+    if (defined($ctrl->{'FORM'}->{'debug'})) {
+        $debug = $ctrl->{'FORM'}->{'debug'};
+    }
 }
 print $sock "Scanning port ".join(',', @ports)," in IP range $upper24$ipst-$ipen\n";
 foreach $ip ($ipst..$ipen) {
@@ -41,9 +45,10 @@ foreach $ip ($ipst..$ipen) {
             # child process
             my ($readable, $host, $server_socket, $readbytes);
 
-            $readable = IO::Select->new;     # Create a new IO::Select object
             $host = "$upper24$ip";
-            #print "CHILD: \$\$=$$ \$pid=$pid ip=$ip \$host=$host\n";
+            print $sock "Scan ($host:$port)\n", if($debug);
+if(1){
+            $readable = IO::Select->new;     # Create a new IO::Select object
             $server_socket = IO::Socket::INET->new(
                 PeerAddr => $host,
                 PeerPort => $port,
@@ -57,10 +62,13 @@ foreach $ip ($ipst..$ipen) {
                     # don't expect more than 1 to be ready
                     sysread ($curr_socket, $_, 120);
                     s/[\n\r]/ /g;
+                    s/</&lt;/g;
+                    s/>/&gt;/g;
                     print $sock "$host:$port $_\n";
                 }
                 $server_socket->close();
             }
+}
             exit (0);
         }
     }
