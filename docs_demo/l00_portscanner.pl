@@ -1,24 +1,24 @@
+use warnings;
 use IO::Socket;     # for networking
 use IO::Select;     # for networking
 
-my(@pids, $t, $preend, $upper24, $ipst, $ipen, $port);
+my(@pids, $t, $preend, $upper24, $ipst, $ipen, $ip, $pid, @ports, $port);
 $t = time;
 undef @pids;
+undef @ports;
+
+$upper24 = '192.168.1.';
+$ipst = 100;
+$ipen = 120;
+$ports[0] = 22;
 
 if(!defined($sock)) {
     $sock = STDOUT;
     $preend = '';
-    $upper24 = '192.168.1.';
-    $ipst = 2;
-    $ipen = 254;
-    $port = 22;
 } else {
     print $sock "<pre>\n";
     print $sock "Arg1=upper24, Arg2=IP start-end, Arv3=port[,port]\n";
     $preend = "</pre>\n";
-    $upper24 = '192.168.1.';
-    $ipst = 2;
-    $ipen = 254;
     if (defined($ctrl->{'FORM'}->{'arg1'})) {
         $upper24 = $ctrl->{'FORM'}->{'arg1'};
     }
@@ -26,28 +26,27 @@ if(!defined($sock)) {
         ($ipst, $ipen) = $ctrl->{'FORM'}->{'arg2'} =~ /(\d+)-(\d+)/;;
     }
     if (defined($ctrl->{'FORM'}->{'arg3'})) {
-        $port = $ctrl->{'FORM'}->{'arg3'};
+        @ports = split(',', $ctrl->{'FORM'}->{'arg3'});
     }
 }
-print $sock "Scanning port $port in IP range $upper24$ipst-$ipen\n";
+print $sock "Scanning port ".join(',', @ports)," in IP range $upper24$ipst-$ipen\n";
 foreach $ip ($ipst..$ipen) {
-    my ($pid);
-    if ($pid = fork) {
-        #print "MAIN: \$\$=$$ \$pid=$pid ip=$ip\n";
-        push(@pids, $pid);
-    } else {
-        # http://www.oreilly.com/openbook/cgi/ch10_10.html
-        # child process
-        my ($readable, $host, $server_socket, $readbytes, @ports, $thisport);
+    foreach $port (@ports) {
+        my ($pid);
+        if ($pid = fork) {
+            #print "MAIN: \$\$=$$ \$pid=$pid ip=$ip\n";
+            push(@pids, $pid);
+        } else {
+            # http://www.oreilly.com/openbook/cgi/ch10_10.html
+            # child process
+            my ($readable, $host, $server_socket, $readbytes);
 
-        $readable = IO::Select->new;     # Create a new IO::Select object
-        $host = "$upper24$ip";
-        @ports = split(',', $port);
-        foreach $thisport (@ports) {
+            $readable = IO::Select->new;     # Create a new IO::Select object
+            $host = "$upper24$ip";
             #print "CHILD: \$\$=$$ \$pid=$pid ip=$ip \$host=$host\n";
             $server_socket = IO::Socket::INET->new(
                 PeerAddr => $host,
-                PeerPort => $thisport,
+                PeerPort => $port,
                 Timeout  => 3,
                 Proto    => 'tcp');
             if (defined($server_socket)) {
@@ -58,12 +57,12 @@ foreach $ip ($ipst..$ipen) {
                     # don't expect more than 1 to be ready
                     sysread ($curr_socket, $_, 120);
                     s/[\n\r]/ /g;
-                    print $sock "$host:$thisport $_\n";
+                    print $sock "$host:$port $_\n";
                 }
                 $server_socket->close();
             }
+            exit (0);
         }
-        exit (0);
     }
 }
 foreach $pid (@pids) {
