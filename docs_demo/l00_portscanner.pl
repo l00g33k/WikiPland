@@ -47,12 +47,12 @@ foreach $ip ($ipst..$ipen) {
             $server_socket = IO::Socket::INET->new(
                 PeerAddr => $host,
                 PeerPort => $port,
-                Timeout  => 3,
+                Timeout  => 1,
                 Proto    => 'tcp');
             if (defined($server_socket)) {
                 print $server_socket "\n";
                 $readable->add($server_socket);  # Add the lstnsock to it
-                my ($ready) = IO::Select->select($readable, undef, undef, 3);
+                my ($ready) = IO::Select->select($readable, undef, undef, 1);
                 foreach my $curr_socket (@$ready) {
                     # don't expect more than 1 to be ready
                     sysread ($curr_socket, $_, 120);
