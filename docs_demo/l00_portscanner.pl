@@ -11,6 +11,7 @@ if(!defined($sock)) {
     $upper24 = '192.168.1.';
     $ipst = 2;
     $ipen = 254;
+    $port = 22;
 } else {
     print $sock "<pre>\n";
     print $sock "Arg1=upper24, Arg2=IP start-end, Arv3=port\n";
@@ -28,6 +29,7 @@ if(!defined($sock)) {
         $port = $ctrl->{'FORM'}->{'arg3'};
     }
 }
+print $sock "Scanning port $port in IP range $upper24$ipst-$ipen\n";
 foreach $ip ($ipst..$ipen) {
     my ($pid);
     if ($pid = fork) {
