@@ -225,6 +225,11 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/*nav.*?>//gsi;
         $wget =~ s/<hr.*?>//gsi;
 
+        $wget =~ s/<\/*table.*?>//gsi;
+        $wget =~ s/<\/*tr.*?>//gsi;
+        $wget =~ s/<\/*td.*?>//gsi;
+        $wget =~ s/<\/*th.*?>//gsi;
+
         $wget =~ s/<!.+?>//gs;
         $wget =~ s/<script.+?<\/script *\n*\r*>//gsi;
         $wget =~ s/<iframe.+?<\/iframe>//gsi;
