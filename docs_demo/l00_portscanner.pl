@@ -55,7 +55,7 @@ if(1){
                 Timeout  => 1,
                 Proto    => 'tcp');
             if (defined($server_socket)) {
-                print $server_socket "\n";
+                 print $server_socket "GET /\r\n\r\n";
                 $readable->add($server_socket);  # Add the lstnsock to it
                 my ($ready) = IO::Select->select($readable, undef, undef, 1);
                 foreach my $curr_socket (@$ready) {
@@ -64,7 +64,7 @@ if(1){
                     s/[\n\r]/ /g;
                     s/</&lt;/g;
                     s/>/&gt;/g;
-                    print $sock "$host:$port $_\n";
+                    print $sock "<a href=\"http://$host:$port\">$host:$port</a> $_\n";
                 }
                 $server_socket->close();
             }
