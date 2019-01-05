@@ -87,12 +87,7 @@ sub l00http_slideshow_proc {
     my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
 
     # Send HTTP and HTML headers
-    if (defined ($form->{'path'})) {
-        $_ = $form->{'path'};
-    } else {
-        $_ = '(none)';
-    }
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>slideshow - $_</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a> -- \n";
 
     if (defined ($form->{'set'})) {
@@ -165,10 +160,6 @@ sub l00http_slideshow_proc {
                         push (@allpics, $file);
                     } elsif ($file =~ /\.wmf$/i) {
                         push (@allpics, $file);
-                    } elsif ($file =~ /\.gif$/i) {
-                        push (@allpics, $file);
-                    } elsif ($file =~ /\.bmp$/i) {
-                        push (@allpics, $file);
                     }
                 }
                 closedir (DIR);
@@ -178,27 +169,14 @@ sub l00http_slideshow_proc {
                 @allpics = sort llsfn2 @allpics;
 
                 $phase = 0; # search for 1 pic match
-                if ($ctrl->{'debug'} >= 3) {
-                    l00httpd::dbp($config{'desc'}, "USER SELECTS: >$form->{'path'}<\n");
-                }
                 for ($ii = 0; $ii <= $#allpics; $ii++) {
                     $file = $allpics[$ii];
-                    if ($ctrl->{'debug'} >= 4) {
-                        l00httpd::dbp($config{'desc'}, "$ii: $file\n");
-                    }
-
                     if ("$path$file" eq $form->{'path'}) {
                         $phase = 1;
                         $idx0 = $ii + 1;
-                        if ($ctrl->{'debug'} >= 3) {
-                            l00httpd::dbp($config{'desc'}, "SELECTED: >$path$file<\n");
-                        }
                     }
                     if ($phase == ($picsperpage + 1)) {
                         # we have found the number of pictures to display
-                        if ($ctrl->{'debug'} >= 3) {
-                            l00httpd::dbp($config{'desc'}, "found the number of pictures to display\n");
-                        }
                         last;   # done searching
                     }
                     if ($phase) {
@@ -231,9 +209,7 @@ sub l00http_slideshow_proc {
                             }
                         }
                         $outbuf .= "$newline\n";
-                        $_ = "$path$file";
-                        s/\+/%2B/g;
-                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$_\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
                         $outbuf .= "$newline\n";
                         $phase++;
                     }
@@ -242,16 +218,12 @@ sub l00http_slideshow_proc {
             }
         }
 
-        $_ = $allpics[0];
-        s/\+/%2B/g;
-        print $sock "<a href=\"/slideshow.htm?path=$path$_\">Newest</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[0]\">Newest</a> \n";
         $tmp = $#allpics - $picsperpage + 1;
         if ($tmp < 0) {
             $tmp = 0;
         }
-        $_ = $allpics[$tmp];
-        s/\+/%2B/g;
-        print $sock "<a href=\"/slideshow.htm?path=$path$_\">Oldest</a> \n";
+        print $sock "<a href=\"/slideshow.htm?path=$path$allpics[$tmp]\">Oldest</a> \n";
 
         if ($nonewline ne 'checked') {
             print $sock "<p>\n";
@@ -263,14 +235,12 @@ sub l00http_slideshow_proc {
             $tmp = 0;
         }
         $newer = "$path$allpics[$tmp]";
-        $newer =~ s/\+/%2B/g;
 
         $tmp = $idx1;
         if ($tmp > $#allpics - $picsperpage + 1) {
             $tmp = $#allpics - $picsperpage + 1;
         }
         $older = "$path$allpics[$tmp]";
-        $older =~ s/\+/%2B/g;
 
         print $sock "<a href=\"/slideshow.htm?path=$newer\">Newer</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$older\">Older</a> \n";
@@ -315,17 +285,9 @@ aassdd
     }
 
     print $sock "<p>\n";
-#    for ($ii = 1; $ii <= $#allpics + 1; $ii++) {
-#        $file = $allpics[$#allpics - $ii + 1];
-#        $_ = "$path$file";
-#        s/\+/%2B/g;
-#        print $sock "<a href=\"/slideshow.htm?path=$_\">$ii</a>\n";
-#    }
-    for ($ii = 1; $ii <= $#allpics + 1; $ii++) {
-        $file = $allpics[$ii - 1];
-        $_ = "$path$file";
-        s/\+/%2B/g;
-        print $sock "<a href=\"/slideshow.htm?path=$_\">$ii</a>\n";
+    for ($ii = 1; $ii < $#allpics; $ii++) {
+        $file = $allpics[$#allpics - $ii + 1];
+        print $sock "<a href=\"/slideshow.htm?path=$path$file\">$ii</a>\n";
     }
     print $sock "<p>\n";
 
@@ -333,7 +295,7 @@ aassdd
     print $sock "<a/><form action=\"/slideshow.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"set\" value=\"S&#818;et\" accesskey=\"s\"><br>Image size, e.g.: 1024 or 100%\n";
+    print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"><br>Image size, e.g.: 1024 or 100%\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
