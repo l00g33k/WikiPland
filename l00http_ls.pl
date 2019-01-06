@@ -178,6 +178,12 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.js$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/javascript\r\n";
+    } elsif ($fname =~ /\.pgm$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/x-portable-graymap\r\n";
+    } elsif ($fname =~ /\.avi$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: image/x-msvideo\r\n";
     } elsif ($fname =~ /\.png$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: image/png\r\n";
