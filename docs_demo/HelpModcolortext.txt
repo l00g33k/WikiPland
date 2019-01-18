@@ -1,0 +1,10 @@
+%TOC%
+=Introduction=
+* This module uses the rules defined in l00://colortext_rules.txt
+to color lines of text in the file.
+=Quick Start=
+* Check the 'Create' checkbox and click 'Color Text'
+* Follow the 'l00://colortext_rules.txt' link
+* At the bottom follow the 'Take a rest drive' link 
+for an example
+
