@@ -54,7 +54,7 @@ sub l00http_colortext_proc {
             $_ =    "|| Foreground || Background || Start Regex                  || End Count || End Regex || Remark ||\n".
                     "|| yellow     || magenta    || [l]00http_colortext_desc     || 1         || }         || start of function to end of function       ||\n".
                     "|| black      || cyan       || [l]00http_colortext_proc     || 1         || .         || one line only       ||\n".
-                    "|| black      || gray       || print[ ]\\\$sock             || 1         || .         || note triple \\ to escape \$       ||\n".
+                    "|| black      || gray       || print[ ]\\\$sock             || 1         || .         || note \\ to escape \$       ||\n".
                     "|| black      || silver     || \\\$foundRuleN = \\\$ruleidx || 3         || .         || three line block       ||\n".
                     "* Sample rules. Leading and trailing whitespaces are trimmed from regex.\n".
                     "* [[/colortext.htm?path=$ctrl->{'plpath'}l00http_colortext.pl=l00%3A%2F%2Fcolortext_rules.txt&color=on|Take a test drive]]\n";
