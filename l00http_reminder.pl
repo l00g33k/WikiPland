@@ -493,8 +493,11 @@ sub l00http_reminder_perio {
                     int (((time - $utcoffsec) - $_) / 60),
                     ((time - $utcoffsec) - $_) % 60);
                 &l00httpd::l00PopMsg($ctrl, "$life $msgtoast");
-                if ((-f $msgtoast) && ($msgtoast =~ /\.pl$/)) {
-                   do $msgtoast;
+                # if any message is a file ending in .pl, Perl do it
+                foreach $_ (split(' -- ', $msgtoast)) {
+                    if ((-f $_) && (/\.pl$/)) {
+                       do $_;
+                    }
                 }
             }
 
