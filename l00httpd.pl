@@ -761,6 +761,7 @@ sub periodictask {
         $waketil = 0;
         # release wake lock
         $ctrl{'droid'}->wakeLockRelease();
+        $ctrl{'BANNER:wakelock'} = undef;
     }
 }
 
@@ -1501,13 +1502,16 @@ while(1) {
                         if ((defined ($FORM{'wake'})) && ($ctrl{'os'} eq 'and')) {
                             if ($FORM{'wake'} eq 'on') {
                                 $ctrl{'droid'}->wakeLockAcquirePartial();
+                                $ctrl{'BANNER:wakelock'} = '<center><font style="color:yellow;background-color:red">WAKELOCK ON</font></center><p>';
                             }
                             if ($FORM{'wake'} eq 'off') {
                                 $ctrl{'droid'}->wakeLockRelease();
+                                $ctrl{'BANNER:wakelock'} = undef;
                             }
                         }
                         if (defined ($FORM{'wakeon'}) && ($FORM{'wakeon'} eq 'on') && ($ctrl{'os'} eq 'and')) {
                             $ctrl{'droid'}->wakeLockAcquirePartial();
+                            $ctrl{'BANNER:wakelock'} = '<center><font style="color:yellow;background-color:red">WAKELOCK ON</font></center><p>';
                             if (defined ($FORM{'waketil'}) && 
                                 ($FORM{'waketil'} =~ /(\d+)/)) {
                                 # sleep time
@@ -1516,6 +1520,7 @@ while(1) {
                         }
                         if (defined ($FORM{'wakeof'}) && ($FORM{'wakeof'} eq 'on') && ($ctrl{'os'} eq 'and')) {
                             $ctrl{'droid'}->wakeLockRelease();
+                            $ctrl{'BANNER:wakelock'} = undef;
                             $waketil = 0;
                         }
                         if (defined ($FORM{'wifi'})) {
