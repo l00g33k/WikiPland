@@ -156,6 +156,7 @@ sub l00http_reminder_proc {
     my ($pathbase, $incpath, $bufinc, $bufall);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
+    my ($life);
 
     $formmsg = '';
 
@@ -286,6 +287,16 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p> \n";
 
     if ($bigbutton eq 'checked') {
+    if (!($msgtoast =~ /^ *$/)) {
+        $_ = $starttime;
+            if ($_ < $lifestart) {
+                $_ = $lifestart;
+            }
+            $life = sprintf ("%d:%02d", 
+                int (((time - $utcoffsec) - $_) / 60),
+                ((time - $utcoffsec) - $_) % 60);
+            print $sock "timer $life";
+        }
         print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
         print $sock "<input type=\"submit\" name=\"pause\" value=\"Pause\" style=\"height:14em; width:20em\">\n";
         print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
@@ -478,6 +489,7 @@ sub l00http_reminder_perio {
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=1&bigbutton=on\">_1'_</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=60\">60'</a> - ".
