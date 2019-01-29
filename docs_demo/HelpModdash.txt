@@ -70,3 +70,9 @@ list, e.g. ==my task==???(newline) makes a link to this heading.
 * ^text, to mark a do now item, in yellow on fuchsia
 * ~text, to mark a do next item, in black on yellow
 * .text, to mark a watch item, in black on silver
+
+==See Here==
+* The following shortcut will create a link to visit the rendered 
+page (using ls.htm) at this location:
+
+    * 20181124 115337 Link text [[#anchor]]

@@ -682,6 +682,12 @@ sub l00http_dash_proc {
                         }
                     }
 
+
+                    # handle: link text [[#anchor]]
+                    if ($dsc =~ / *(.+) +\[\[#(.+)\]\] */) {
+                       $dsc = "$1 [[#$2]] | /ls.htm?path=$form->{'path'}#$2";
+                    }
+
                     # convert desc||clip to clipboard link
                     if (!($dsc =~ /\[\[.+\|.+\]\]/)) {
                         # do so only when we don't have [[URL|desc]] shortcuts
