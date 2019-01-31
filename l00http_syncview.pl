@@ -426,19 +426,19 @@ $htmlout .= "DBGDBG2: \n";
     print $sock "<form action=\"/syncview.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"view\" value=\"View\">\n";
+    print $sock "<input type=\"submit\" name=\"view\" value=\"V&#818;iew\" accesskey=\"v\">\n";
     print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"pasteleft\" value=\"CB>Left:\">";
+    print $sock "<input type=\"submit\" name=\"pasteleft\" value=\"CB>L&#818;eft:\" accesskey=\"l\">";
     print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"leftregex\" value=\"$leftregex\">\n";
     print $sock " Width: <input type=\"text\" size=\"4\" name=\"lwidth\" value=\"$lwidth\">\n";
     print $sock "<br>Path: <input type=\"text\" size=\"20\" name=\"pathleft\" value=\"$leftfile\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"pasteright\" value=\"CB>Right:\">";
+    print $sock "<input type=\"submit\" name=\"pasteright\" value=\"CB>R&#818;ight:\" accesskey=\"r\">";
     print $sock " Marker regex: <input type=\"text\" size=\"8\" name=\"rightregex\" value=\"$rightregex\">\n";
     print $sock " Width: <input type=\"text\" size=\"4\" name=\"rwidth\" value=\"$rwidth\">\n";
     print $sock "<br>Path: <input type=\"text\" size=\"20\" name=\"pathright\" value=\"$rightfile\">\n";
@@ -446,7 +446,7 @@ $htmlout .= "DBGDBG2: \n";
 
     print $sock "<tr><td>\n";
     print $sock "&nbsp;";
-    print $sock "<input type=\"submit\" name=\"swap\" value=\"Swap\">; ";
+    print $sock "<input type=\"submit\" name=\"swap\" value=\"S&#818;wap\" accesskey=\"s\">; ";
     print $sock "Skip <input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\"> lines, view\n";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxline\" value=\"$maxline\"> lines max.\n";
     print $sock "<input type=\"text\" size=\"4\" name=\"maxsecline\" value=\"$maxsecline\"> lines max per section.\n";
