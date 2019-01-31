@@ -253,9 +253,9 @@ sub l00http_syncview_proc {
             if ($leftblkcnt > 0) {
                 $leftblksz[$leftblkcnt - 1] = $lastblksz;
             }
-foreach $_ (0..$leftblkcnt) {
-$htmlout .= "DBGDBGl: $_ leftblkat[$_] $leftblkat[$_] leftblksz[$_] $leftblksz[$_]\n";
-}
+#foreach $_ (0..$leftblkcnt) {
+#$htmlout .= "DBGDBGl: $_ leftblkat[$_] $leftblkat[$_] leftblksz[$_] $leftblksz[$_]\n";
+#}
             $htmlout .= "    read $leftttllns lines and found $leftblkcnt markers, $dupmarkercnt duplicates\n";
         } else {
             $htmlout .= "$leftfile open failed\n";
@@ -325,7 +325,7 @@ $htmlout .= "DBGDBGl: $_ leftblkat[$_] $leftblkat[$_] leftblksz[$_] $leftblksz[$
                 # associative array index
                 if (!defined($rightblksz{$leftmarkers[$blkidx]}) ||
                     ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]})) {
-$htmlout .= "DBGDBG1: \n";
+#$htmlout .= "DBGDBG1: \n";
                     # left block larger
                     # print both
                     $ii = 0;
@@ -365,7 +365,7 @@ $htmlout .= "DBGDBG1: \n";
                         }
                     }
                 } else {
-$htmlout .= "DBGDBG2: \n";
+#$htmlout .= "DBGDBG2: \n";
                     # right block larger
                     # print both
                     $ii = 0;
