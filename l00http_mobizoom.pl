@@ -213,6 +213,7 @@ sub l00http_mobizoom_mobilize {
             $wget =~ s/<\/(\w+)(.*?)>/<\/$1$2> &lt;\/$1&gt;/gs;
         }
 
+        $wget =~ s/<!--.*?-->//gsi;
         $wget =~ s/<\/*span.*?>//gsi;
         $wget =~ s/<\/*div.*?>//gsi;
         $wget =~ s/<\/*aside.*?>//gsi;
