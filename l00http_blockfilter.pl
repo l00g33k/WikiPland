@@ -11,7 +11,7 @@ my (@skipto, @scanuntil, @fileexclude, @blkstart, @blkstop,
     @blkrequired, @blkexclude, @color, @eval, @blockend, @preeval, @stats,
     @preblkeval, @postblkeval, @colors);
 my ($inverexclu, $blockfiltercfg, $reloadcfg, $maxlines, $maxblklines, @hide, 
-    $statsidx, $smallform);
+    $statsidx, $smallform, $wikitize);
 
 $inverexclu = '';
 $reloadcfg = '';
@@ -20,6 +20,7 @@ $maxlines = 1000;
 $maxblklines = 200;
 $statsidx = 0;
 $smallform = '';
+$wikitize = '';
 @colors = (
     'lime', 
     'aqua', 
@@ -306,6 +307,12 @@ sub l00http_blockfilter_proc {
         } else {
             $smallform = '';
         }
+
+        if (defined ($form->{'wikitize'}) && ($form->{'wikitize'} eq 'on')) {
+            $wikitize = 'checked';
+        } else {
+            $wikitize = '';
+        }
     } elsif (defined ($form->{'path'})) {
         print $sock "Click 'Process' to process $form->{'path'}<br>\n";
     }
@@ -370,7 +377,7 @@ sub l00http_blockfilter_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"smallform\" $smallform>Small form\n";
     print $sock "</td><td>\n";
-    print $sock "&nbsp;\n";
+    print $sock "<input type=\"checkbox\" name=\"wikitize\" $wikitize>Wikitize\n";
     print $sock "</td></tr>\n";
 
 
@@ -688,8 +695,13 @@ sub l00http_blockfilter_proc {
 
                             $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
                             $noblkfound++;
-                            $output .= $thisblockdsp;
-                            $outram .= $thisblockram;
+                            if ($wikitize eq '') {
+                                $output .= $thisblockdsp;
+                                $outram .= $thisblockram;
+                            } else {
+                                $output .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockdsp, 0);
+                                $outram .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockram, 0);;
+                            }
 
                             # displayed line accounting
                             if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
@@ -793,9 +805,16 @@ sub l00http_blockfilter_proc {
                             $viewskip = 0;
                         }
                         $hitlines++;
-                        $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                        if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
-                            $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                        if ($wikitize eq '') {
+                            $thisblockram .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                            if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
+                                $thisblockdsp .= sprintf ("<a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                            }
+                        } else {
+                            $thisblockram .= "$link\n";
+                            if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
+                                $thisblockdsp .= "$link\n";
+                            }
                         }
                     }
                 }
@@ -816,8 +835,13 @@ sub l00http_blockfilter_proc {
 
                     $header .= "<a href=\"#blk$noblkfound\">$noblkfound</a> ";
                     $noblkfound++;
-                    $output .= $thisblockdsp;
-                    $outram .= $thisblockram;
+                    if ($wikitize eq '') {
+                        $output .= $thisblockdsp;
+                        $outram .= $thisblockram;
+                    } else {
+                        $output .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockdsp, 0);
+                        $outram .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockram, 0);;
+                    }
 
                     # displayed line accounting
                     if (($maxblklines == 0) || ($hitlines < $maxblklines)) {
@@ -849,39 +873,74 @@ sub l00http_blockfilter_proc {
 
                 $hitlines = 1;
 
-                $thisblockram  = "<a name=\"blk$noblkfound\"></a>\n";
-                $thisblockram .= "Block $noblkfound. Jump to: ";
-                $thisblockram .= "<a href=\"#__top__\">top</a> - ";
-                $thisblockram .= "<a href=\"#__toc__\">toc</a> - ";
-                $thisblockram .= "<a href=\"#__end__\">end</a> -- ";
-                $tmp = $noblkfound - 1;
-                $thisblockram .= "<a href=\"#blk$tmp\">last</a> - ";
-                $tmp = $noblkfound + 1;
-                $thisblockram .= "<a href=\"#blk$tmp\">next</a> \n";
-                $thisblockram .= "\n";
-
-                if ($hitlines + $hitlinesoutputed < $maxlines) {
-                    $thisblockdsp  = "<a name=\"blk$noblkfound\"></a>\n";
-                    $thisblockdsp .= "Block $noblkfound. Jump to: ";
-                    $thisblockdsp .= "<a href=\"#__top__\">top</a> - ";
-                    $thisblockdsp .= "<a href=\"#__toc__\">toc</a> - ";
-                    $thisblockdsp .= "<a href=\"#__end__\">end</a> -- ";
+                if ($wikitize eq '') {
+                    $thisblockram  = "<a name=\"blk$noblkfound\"></a>\n";
+                    $thisblockram .= "Block $noblkfound. Jump to: ";
+                    $thisblockram .= "<a href=\"#__top__\">top</a> - ";
+                    $thisblockram .= "<a href=\"#__toc__\">toc</a> - ";
+                    $thisblockram .= "<a href=\"#__end__\">end</a> -- ";
                     $tmp = $noblkfound - 1;
-                    $thisblockdsp .= "<a href=\"#blk$tmp\">last</a> - ";
+                    $thisblockram .= "<a href=\"#blk$tmp\">last</a> - ";
                     $tmp = $noblkfound + 1;
-                    $thisblockdsp .= "<a href=\"#blk$tmp\">next</a> \n";
-                    $thisblockdsp .= "\n";
+                    $thisblockram .= "<a href=\"#blk$tmp\">next</a> \n";
+                    $thisblockram .= "\n";
+
+                    if ($hitlines + $hitlinesoutputed < $maxlines) {
+                        $thisblockdsp  = "<a name=\"blk$noblkfound\"></a>\n";
+                        $thisblockdsp .= "Block $noblkfound. Jump to: ";
+                        $thisblockdsp .= "<a href=\"#__top__\">top</a> - ";
+                        $thisblockdsp .= "<a href=\"#__toc__\">toc</a> - ";
+                        $thisblockdsp .= "<a href=\"#__end__\">end</a> -- ";
+                        $tmp = $noblkfound - 1;
+                        $thisblockdsp .= "<a href=\"#blk$tmp\">last</a> - ";
+                        $tmp = $noblkfound + 1;
+                        $thisblockdsp .= "<a href=\"#blk$tmp\">next</a> \n";
+                        $thisblockdsp .= "\n";
+                    } else {
+                        $thisblockdsp  = '';
+                    }
                 } else {
-                    $thisblockdsp  = '';
+                    $thisblockram  = "<a name=\"blk$noblkfound\"></a>\n";
+                    $thisblockram .= "Block $noblkfound. Jump to: ";
+                    $thisblockram .= "<a href=\"#__top__\">top</a> - ";
+                    $thisblockram .= "<a href=\"#__toc__\">toc</a> - ";
+                    $thisblockram .= "<a href=\"#__end__\">end</a> -- ";
+                    $tmp = $noblkfound - 1;
+                    $thisblockram .= "<a href=\"#blk$tmp\">last</a> - ";
+                    $tmp = $noblkfound + 1;
+                    $thisblockram .= "<a href=\"#blk$tmp\">next</a> \n";
+                    $thisblockram .= "\n";
+
+                    if ($hitlines + $hitlinesoutputed < $maxlines) {
+                        $thisblockdsp  = "<a name=\"blk$noblkfound\"></a>\n";
+                        $thisblockdsp .= "Block $noblkfound. Jump to: ";
+                        $thisblockdsp .= "<a href=\"#__top__\">top</a> - ";
+                        $thisblockdsp .= "<a href=\"#__toc__\">toc</a> - ";
+                        $thisblockdsp .= "<a href=\"#__end__\">end</a> -- ";
+                        $tmp = $noblkfound - 1;
+                        $thisblockdsp .= "<a href=\"#blk$tmp\">last</a> - ";
+                        $tmp = $noblkfound + 1;
+                        $thisblockdsp .= "<a href=\"#blk$tmp\">next</a> \n";
+                        $thisblockdsp .= "\n";
+                    } else {
+                        $thisblockdsp  = '';
+                    }
                 }
 
                 $viewskip = $cnt - 10;
                 if ($viewskip < 0) {
                     $viewskip = 0;
                 }
-                $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
-                if ($hitlines + $hitlinesoutputed < $maxlines) {
-                    $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                if ($wikitize eq '') {
+                    $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    if ($hitlines + $hitlinesoutputed < $maxlines) {
+                        $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link); 
+                    }
+                } else {
+                    $thisblockram .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link);
+                    if ($hitlines + $hitlinesoutputed < $maxlines) {
+                        $thisblockdsp .= sprintf ("<font style=\"color:black;background-color:silver\"><a href=\"/view.htm?update=Skip&skip=%d&maxln=100&path=%s&hiliteln=%d&refresh=\" target=\"_blank\">%05d</a>: %s</font>\n", $viewskip, $form->{'path'}, $cnt, $cnt, $link);
+                    }
                 }
             }
 
