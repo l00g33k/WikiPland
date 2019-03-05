@@ -403,14 +403,21 @@ sub l00http_reminder_proc {
     print $sock "</form></p>\n";
 
 
+    print $sock "<a name=\"pause\"></a>\n";
     print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$form->{'path'}&reminder=on\">Recedit</a> - \n";
     print $sock "<a href=\"/reminder.htm?reload=on\">Reload</a> - \n";
     print $sock "<a href=\"#top\">top</a></li>\n";
-    print $sock "<li>Pause: <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=20\">20'</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
+#   print $sock "<li>Pause: <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - \n";
+    print $sock "<li>Pause: ";
+    foreach $_ (1..30) {
+        print $sock "<a href=\"/reminder.htm?pause=Pause&min=$_\">$_'</a> - \n";
+    }
+#   print $sock "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - \n";
+#   print $sock "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - \n";
+#   print $sock "<a href=\"/reminder.htm?pause=Pause&min=20\">20'</a> - \n";
+#   print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=35\">35'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=40\">40'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=45\">45'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=60\">1h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=90\">1h5</a> - \n";
@@ -488,11 +495,11 @@ sub l00http_reminder_perio {
             $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=1&bigbutton=on\">_1'_</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=60\">60'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=10#pause\">10'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=30#pause\">30'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=60#pause\">60'</a> - ".
                 "<a href=\"/reminder.htm#manage\">:::</a> </center>";
 
             if ((!($msgtoast =~ /^ *$/)) &&
