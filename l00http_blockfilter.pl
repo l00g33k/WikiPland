@@ -699,8 +699,12 @@ sub l00http_blockfilter_proc {
                                 $output .= $thisblockdsp;
                                 $outram .= $thisblockram;
                             } else {
+                                $output .= "</pre>";
                                 $output .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockdsp, 0);
+                                $output .= "<pre>";
+                                $outram .= "</pre>";
                                 $outram .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockram, 0);;
+                                $outram .= "<pre>";
                             }
 
                             # displayed line accounting
@@ -839,8 +843,12 @@ sub l00http_blockfilter_proc {
                         $output .= $thisblockdsp;
                         $outram .= $thisblockram;
                     } else {
+                        $output .= "</pre>";
                         $output .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockdsp, 0);
+                        $output .= "<pre>";
+                        $outram .= "</pre>";
                         $outram .= &l00wikihtml::wikihtml ($ctrl, '', $thisblockram, 0);;
+                        $outram .= "<pre>";
                     }
 
                     # displayed line accounting
