@@ -29,8 +29,7 @@ if ($0 =~ /^(.+[\\\/])[^\\\/]+$/) {
 # shrink // to /
 $plpath =~ s/\/\/+/\//g;
 
-
-#use l00base64;      # used for decoding authentication
+use lib ".";        # include current directory
 use l00base64;      # used for decoding authentication
 use l00httpd;
 use IO::Socket;     # for networking
