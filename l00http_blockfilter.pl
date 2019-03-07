@@ -64,16 +64,25 @@ sub l00http_blockfilter_paste {
 }
 
 sub l00http_blockfilter_form {
-    my ($sock, $form, $name, $label, $array) = @_;
-    my ($tmp);
+    my ($sock, $form, $name, $label, $array, $accesskey) = @_;
+    my ($tmp, $accessattr, $accessmsg);
+
+    if (defined($accesskey)) {
+        $accessmsg = " $accesskey&#818;";
+        $accessattr = "accesskey=\"$accesskey\"";
+    } else {
+        $accessmsg = '';
+        $accessattr = '';
+    }
+
 
     if ($smallform eq '') {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"submit\" name=\"${name}paste\" value=\"$label\">\n";
-        print $sock "pattern (1 per line)\n";
+        print $sock "pattern (1 per line)$accessmsg\n";
         print $sock "</td><td>\n";
         $tmp = join("\n", @$array);
-        print $sock "<textarea name=\"${name}\" cols=24 rows=2>$tmp</textarea>\n";
+        print $sock "<textarea name=\"${name}\" cols=24 rows=2 $accessattr>$tmp</textarea>\n";
         print $sock "</td></tr>\n";
     } else {
         print $sock "<input type=\"hidden\" name=\"${name}paste\" value=\"$label\">\n";
@@ -344,9 +353,9 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'skipto',      'Skip to',           \@skipto);
     &l00http_blockfilter_form($sock, $form, 'scanuntil',   'Scan until',        \@scanuntil);
     &l00http_blockfilter_form($sock, $form, 'fileexclude', 'Exclude Line (!!)', \@fileexclude);
-    &l00http_blockfilter_form($sock, $form, 'blkstart',    'Block Start',       \@blkstart);
-    &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop);
-    &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired);
+    &l00http_blockfilter_form($sock, $form, 'blkstart',    'Block Start',       \@blkstart,     's');
+    &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop,      'e');
+    &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired,  'r');
     &l00http_blockfilter_form($sock, $form, 'blkexclude',  'Block Exclude (!!)',\@blkexclude);
     &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
