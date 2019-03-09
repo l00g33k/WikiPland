@@ -11,11 +11,12 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, 
-$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat);
+$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
 $dash_all = 'past';
 $hdronly = 0;
 $listbang = '';
 $newwin = '';
+$target = '';
 $newbang = '';
 $freefmt = '';
 $smallhead = '';
@@ -152,7 +153,7 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime, %tasksCat2);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $nowbuf, $nowbuf2);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
-    my ($lnnostr, $lnno, $hot, $hide, $key, $target, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
+    my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s);
@@ -209,13 +210,6 @@ sub l00http_dash_proc {
     } else {
         $listbang = '';
     }
-    if ((defined ($form->{'newwin'})) && ($form->{'newwin'} eq 'on')) {
-        $newwin = 'checked';
-        $target = 'target="_blank"';
-    } else {
-        $newwin = '';
-        $target = '';
-    }
     if ((defined ($form->{'newbang'})) && ($form->{'newbang'} eq 'on')) {
         $newbang = 'checked';
     } else {
@@ -241,6 +235,13 @@ sub l00http_dash_proc {
             $catflt = $form->{'catflt'};
         } else {
             $catflt = '.';
+        }
+        if ((defined ($form->{'newwin'})) && ($form->{'newwin'} eq 'on')) {
+            $newwin = 'checked';
+            $target = 'target="_blank"';
+        } else {
+            $newwin = '';
+            $target = '';
         }
     }
     if (defined ($form->{'dbg'})) {
@@ -1018,7 +1019,8 @@ push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
             if (defined($tasksLine{$1})) {
                 $cat1cat2 = $1;
                 #print $sock "$tasksLine{$cat1cat2} $1          ";
-                s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star" $target>$1<\/a>||/;
+               #s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star" $target>$1<\/a>||/;
+                s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$1<\/a>||/;
                 #print $sock "$_\n";
             }
             $out .= "$_\n";
