@@ -26,7 +26,7 @@ my %config = (proc => "l00http_syncview_proc",
 
 
 my ($lwidth, $rwidth, $rightfile, $leftfile, $skip, $highlight);
-my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex, $maxsecline);
+my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex, $maxsecline, @colors);
 $lwidth = 20;
 $rwidth = 20;
 $rightfile = '';
@@ -37,6 +37,21 @@ $rightregex = '';
 $skip = 0;
 $highlight = '';
 $maxsecline = 1000;
+@colors = (
+    'yellow',
+    'aqua',
+    'lime',
+    'deepPink',
+    'deepSkyBlue',
+    'fuchsia',
+    'silver',
+    'brown',
+    'red',
+    'gray',
+    'olive',
+    'lightGray',
+    'teal'
+);
 
 sub l00http_syncview_make_outline {
     my ($oii, $nii, $lwidth, $rwidth, $leftfile, $rightfile) = @_;
@@ -102,6 +117,7 @@ sub l00http_syncview_proc {
     my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
     my ($oout, $nout, $ospc, $dupmarkercnt, %dummymarker);
     my ($leftttllns, $rightttllns, $allmatches, @allmatches);
+    my (@highlights, $color);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -415,7 +431,17 @@ sub l00http_syncview_proc {
 
         # global highlight
         if (($highlight ne '') && (length($highlight) > 1)) {
-            $htmlout =~ s/($highlight)/<font style="color:black;background-color:yellow">$1<\/font>/gsm;
+            @highlights = split ('\|\|', $highlight);
+print "$#highlights ", join(' - ', @highlights), "\n";
+            for ($ii = 0; $ii <= $#highlights; $ii++) {
+                if ($ii <= $#colors) {
+                    $color = $colors[$ii];
+                } else {
+                    $color = $colors[$#colors];
+                }
+print "COLOR: $ii: $color >$highlights[$ii]<\n";
+                $htmlout =~ s/($highlights[$ii])/<font style="color:black;background-color:$color">$1<\/font>/gsm;
+            }
         }
 
         print $sock $htmlout;
@@ -427,7 +453,7 @@ sub l00http_syncview_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"view\" value=\"V&#818;iew\" accesskey=\"v\">\n";
-    print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\">\n";
+    print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\"> || for color, e.g. (color1)||(color2)\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
