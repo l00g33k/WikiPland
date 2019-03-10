@@ -1,0 +1,8 @@
+%TOC%
+
+=Introduction=
+This example periodically 'eval' the expression at the 
+specified interval.
+
+If the expression starts with '/' and looks like a 
+!WikiPland URL, it is executed as such.
