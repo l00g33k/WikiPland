@@ -36,6 +36,12 @@ sub l00http_periodic_proc {
     if (defined ($form->{"stop"})) {
         $interval = 0;
     }
+    if ($interval == 0) {
+        $ctrl->{'BANNER:periodic'} = undef;
+    } else {
+        # warning banner
+        $ctrl->{'BANNER:periodic'} = "<center><font style=\"color:yellow;background-color:red\">periodic ${interval}s</font></center><p>";
+    }
 
     if (defined ($form->{"eval"})) {
         $eval = $form->{"eval"};
