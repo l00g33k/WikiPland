@@ -26,7 +26,7 @@ my %config = (proc => "l00http_syncview_proc",
 
 
 my ($lwidth, $rwidth, $rightfile, $leftfile, $skip, $highlight, $preeval);
-my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex, $maxsecline);
+my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex, $maxsecline, @colors);
 $lwidth = 20;
 $rwidth = 20;
 $rightfile = '';
@@ -38,6 +38,21 @@ $skip = 0;
 $highlight = '';
 $maxsecline = 1000;
 $preeval = '';
+@colors = (
+    'yellow',
+    'aqua',
+    'lime',
+    'deepPink',
+    'deepSkyBlue',
+    'fuchsia',
+    'silver',
+    'brown',
+    'red',
+    'gray',
+    'olive',
+    'lightGray',
+    'teal'
+);
 
 sub l00http_syncview_make_outline {
     my ($oii, $nii, $lwidth, $rwidth, $leftfile, $rightfile) = @_;
@@ -103,6 +118,7 @@ sub l00http_syncview_proc {
     my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
     my ($oout, $nout, $ospc, $dupmarkercnt, %dummymarker);
     my ($leftttllns, $rightttllns, $allmatches, @allmatches);
+    my (@highlights, $color);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -425,7 +441,15 @@ sub l00http_syncview_proc {
 
         # global highlight
         if (($highlight ne '') && (length($highlight) > 1)) {
-            $htmlout =~ s/($highlight)/<font style="color:black;background-color:yellow">$1<\/font>/gsm;
+            @highlights = split ('\|\|', $highlight);
+            for ($ii = 0; $ii <= $#highlights; $ii++) {
+                if ($ii <= $#colors) {
+                    $color = $colors[$ii];
+                } else {
+                    $color = $colors[$#colors];
+                }
+                $htmlout =~ s/($highlights[$ii])/<font style="color:black;background-color:$color">$1<\/font>/gsm;
+            }
         }
 
         print $sock $htmlout;
@@ -437,8 +461,11 @@ sub l00http_syncview_proc {
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"view\" value=\"V&#818;iew\" accesskey=\"v\">\n";
-    print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\">\n";
-    print $sock "Pre-eval: <input type=\"text\" size=\"8\" name=\"preeval\" value=\"$preeval\">\n";
+    print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\"> separate color by ||, e.g. (exp1)||(exp2)\n";
+    print $sock "</td></tr>\n";
+
+    print $sock "<tr><td>\n";
+    print $sock "Pre-eval: <input type=\"text\" size=\"8\" name=\"preeval\" value=\"$preeval\"> e.g. to remove text s/^leader//\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";

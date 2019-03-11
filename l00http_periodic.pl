@@ -36,6 +36,12 @@ sub l00http_periodic_proc {
     if (defined ($form->{"stop"})) {
         $interval = 0;
     }
+    if ($interval == 0) {
+        $ctrl->{'BANNER:periodic'} = undef;
+    } else {
+        # warning banner
+        $ctrl->{'BANNER:periodic'} = "<center><font style=\"color:yellow;background-color:red\">periodic ${interval}s</font></center><p>";
+    }
 
     if (defined ($form->{"eval"})) {
         $eval = $form->{"eval"};
@@ -86,7 +92,8 @@ sub l00http_periodic_proc {
 
 sub l00http_periodic_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my $buf;
+    my ($buf, $modcalled, $urlparams, @cmd_param_pairs, $cmd_param_pair, $name, $param, %FORM, $socknul);
+    my ($subname, $savehome, $savehttphead, $savehtmlhead, $savehtmlttl, $savehtmlhead2, $saveclient_ip);
 
     if (($interval > 0) && 
         (($lastcalled == 0) || (time >= ($lastcalled + $interval)))) {
@@ -103,7 +110,70 @@ sub l00http_periodic_perio {
             $perbuf = sprintf ("$ctrl->{'now_string'},$perltime\n");
             print $perbuf;
         }
-        print eval $eval;
+        if ($eval =~ /^\/(\w+)\.(pl|htm)[^?]*\?*(.*)$/) {
+            # of form: http://localhost:20337/ls.htm?path=/sdcard
+            $modcalled = $1;
+            $urlparams = $3;
+            #print "CRON self: >$modcalled< >$urlparams<\n";
+
+            @cmd_param_pairs = split ('&', $urlparams);
+            foreach $cmd_param_pair (@cmd_param_pairs) {
+                ($name, $param) = split ('=', $cmd_param_pair);
+                if (defined ($name) && defined ($param)) {
+                    $param =~ tr/+/ /;
+                    $param =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
+                    $FORM{$name} = $param;
+                    # convert \ to /
+                    if ($name eq 'path') {
+                        $FORM{$name} =~ tr/\\/\//;
+                    }
+                    #print "CRON self: >$name< >$param<\n";
+                }
+            }
+            # invoke module
+            if (defined ($ctrl->{'modsinfo'}->{"$modcalled:fn:proc"})) {
+
+                $subname = $ctrl->{'modsinfo'}->{"$modcalled:fn:proc"};
+                print "CRON: callmod $subname\n", if ($ctrl->{'debug'} >= 4);
+                $ctrl->{'FORM'} = \%FORM;
+
+                $savehome = $ctrl->{'home'};
+                $savehttphead = $ctrl->{'httphead'};
+                $savehtmlhead = $ctrl->{'htmlhead'};
+                $savehtmlttl = $ctrl->{'htmlttl'};
+                $savehtmlhead2 = $ctrl->{'htmlhead2'};
+                $saveclient_ip = $ctrl->{'client_ip'};
+
+                $ctrl->{'home'} = '';
+                $ctrl->{'httphead'} = '';
+                $ctrl->{'htmlhead'} = '';
+                $ctrl->{'htmlttl'} = '';
+                $ctrl->{'htmlhead2'} = '';
+                $ctrl->{'client_ip'} = 0;
+                if ($ctrl->{'os'} eq 'win') {
+                    open ($socknul, ">\\\\.\\nul");
+                } else {
+                    open ($socknul, ">/dev/null");
+                }
+                $ctrl->{'sock'} = $socknul;
+
+                $ctrl->{'msglog'} = "";
+
+                __PACKAGE__->$subname($ctrl);
+
+                close ($socknul);
+                &dlog (3, $ctrl->{'msglog'}."\n");
+
+                $ctrl->{'home'} = $savehome;
+                $ctrl->{'httphead'} = $savehttphead;
+                $ctrl->{'htmlhead'} = $savehtmlhead;
+                $ctrl->{'htmlttl'} = $savehtmlttl;
+                $ctrl->{'htmlhead2'} = $savehtmlhead2;
+                $ctrl->{'client_ip'} = $saveclient_ip;
+            }
+        } else {
+            print eval $eval;
+        }
         $perltime = time;
         $percnt++;
     }
