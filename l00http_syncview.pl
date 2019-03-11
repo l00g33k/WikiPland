@@ -25,7 +25,7 @@ my %config = (proc => "l00http_syncview_proc",
 
 
 
-my ($lwidth, $rwidth, $rightfile, $leftfile, $skip, $highlight);
+my ($lwidth, $rwidth, $rightfile, $leftfile, $skip, $highlight, $preeval);
 my ($maxline, @RIGHT, @LEFT, $leftregex, $rightregex, $maxsecline);
 $lwidth = 20;
 $rwidth = 20;
@@ -37,6 +37,7 @@ $rightregex = '';
 $skip = 0;
 $highlight = '';
 $maxsecline = 1000;
+$preeval = '';
 
 sub l00http_syncview_make_outline {
     my ($oii, $nii, $lwidth, $rwidth, $leftfile, $rightfile) = @_;
@@ -172,6 +173,9 @@ sub l00http_syncview_proc {
     if (defined ($form->{'highlight'})) {
         $highlight = $form->{'highlight'};
     }
+    if (defined ($form->{'preeval'})) {
+        $preeval = $form->{'preeval'};
+    }
 
     # copy paste target
     if (defined ($form->{'swap'})) {
@@ -228,6 +232,9 @@ sub l00http_syncview_proc {
             $dupmarkercnt = 0;
             undef %dummymarker;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if ($preeval ne '') {
+                    eval $preeval;
+                }
                 s/\r//;
                 s/\n//;
                 $lastblksz++;
@@ -275,6 +282,9 @@ sub l00http_syncview_proc {
             $lastblksz = 0;
             $dupmarkercnt = 0;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if ($preeval ne '') {
+                    eval $preeval;
+                }
                 s/\r//;
                 s/\n//;
                 $lastblksz++;
@@ -428,6 +438,7 @@ sub l00http_syncview_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"view\" value=\"V&#818;iew\" accesskey=\"v\">\n";
     print $sock "Highlight: <input type=\"text\" size=\"8\" name=\"highlight\" value=\"$highlight\">\n";
+    print $sock "Pre-eval: <input type=\"text\" size=\"8\" name=\"preeval\" value=\"$preeval\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
