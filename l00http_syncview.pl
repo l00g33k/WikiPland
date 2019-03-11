@@ -115,6 +115,7 @@ sub l00http_syncview_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($htmlout, $cnt, $ln, $ii);
     my (@leftblkat, @leftmarkers, @leftblksz, $leftblkcnt, $rightblkcnt, $lastblksz);
+    my (@rightblkat, @rightblksz, $rightblkidx, %rightblkidxfor, $rightblkidxnxt, @rightblkmarker);
     my (%rightmarkerat, %rightblksz, $lastrightmkr, $lnsoutput, $blkidx);
     my ($oout, $nout, $ospc, $dupmarkercnt, %dummymarker);
     my ($leftttllns, $rightttllns, $allmatches, @allmatches);
@@ -262,6 +263,7 @@ sub l00http_syncview_proc {
                     } else {
                         $dummymarker{$allmatches} = 1;
                         $leftblkat[$leftblkcnt] = $leftttllns;
+#$htmlout .= "DBGDBGl: \$leftblkat\[$leftblkcnt\] $leftblkat[$leftblkcnt] \$allmatches $allmatches\n";
                         $leftmarkers[$leftblkcnt] = $allmatches;
                         if ($leftblkcnt > 0) {
                             $leftblksz[$leftblkcnt - 1] = $lastblksz;
@@ -276,9 +278,6 @@ sub l00http_syncview_proc {
             if ($leftblkcnt > 0) {
                 $leftblksz[$leftblkcnt - 1] = $lastblksz;
             }
-#foreach $_ (0..$leftblkcnt) {
-#$htmlout .= "DBGDBGl: $_ leftblkat[$_] $leftblkat[$_] leftblksz[$_] $leftblksz[$_]\n";
-#}
             $htmlout .= "    read $leftttllns lines and found $leftblkcnt markers, $dupmarkercnt duplicates\n";
         } else {
             $htmlout .= "$leftfile open failed\n";
@@ -293,6 +292,7 @@ sub l00http_syncview_proc {
             $rightttllns = 0;
             undef %rightmarkerat;
             undef %rightblksz;
+            undef %rightblkidxfor;
             $lastrightmkr = '';
             $rightblkcnt = 0;
             $lastblksz = 0;
@@ -310,10 +310,19 @@ sub l00http_syncview_proc {
                         # ignore duplicated marker
                         $dupmarkercnt++;
                     } else {
+                        # also keep right block at and size
+                        $rightblkat[$rightblkcnt] = $rightttllns;
+                        $rightblkidxfor{$allmatches} = $rightblkcnt;
+                        $rightblkmarker[$rightblkcnt] = $allmatches;
+                        if ($rightblkcnt > 0) {
+                            $rightblksz[$rightblkcnt - 1] = $lastblksz;
+                        }
+
                         $rightmarkerat{$allmatches} = $rightttllns;
                         if ($lastrightmkr ne '') {
                             $rightblksz{$lastrightmkr} = $lastblksz;
                         }
+#$htmlout .= "DBGDBGr: \$rightblkat\[$rightblkcnt\] $rightblkat[$rightblkcnt] \$allmatches $allmatches \$rightmarkerat\{$allmatches\} $rightmarkerat{$allmatches}\n";
                         $lastblksz = 0;
                         $lastrightmkr = $allmatches;
                         $rightblkcnt++;
@@ -321,6 +330,9 @@ sub l00http_syncview_proc {
                 }
                 push (@RIGHT, $_);
                 $rightttllns++;
+            }
+            if ($rightblkcnt > 0) {
+                $rightblksz[$rightblkcnt - 1] = $lastblksz;
             }
             $rightblksz{$lastrightmkr} = $lastblksz;
             $htmlout .= "    read $rightttllns lines and found $rightblkcnt markers, $dupmarkercnt duplicates\n\n";
@@ -331,6 +343,7 @@ sub l00http_syncview_proc {
 
         $lnsoutput = 0;
         $blkidx = 0;
+        $rightblkidx = 0;
         while ($lnsoutput++ < $maxline) {
             for ($blkidx = 0; $blkidx < $leftblkcnt; $blkidx++) {
                 if ($skip >= 0) {
@@ -344,11 +357,52 @@ sub l00http_syncview_proc {
                         next;
                     }
                 }
+                # the right file could have a marker missing from the left file
+                if (defined($rightblkidxfor{$leftmarkers[$blkidx]})) {
+                    $rightblkidxnxt = $rightblkidxfor{$leftmarkers[$blkidx]};
+#$htmlout .= "DBGDBGrpt: right \$rightblkidxfor\{$leftmarkers[$blkidx]\} $rightblkidxfor{$leftmarkers[$blkidx]} \$rightblkat\[\$rightblkidxfor\{\$leftmarkers\[\$blkidx\]\}\] $rightblkat[$rightblkidxfor{$leftmarkers[$blkidx]}] \$rightblkidxnxt $rightblkidxnxt \$leftmarkers\[\$blkidx\] $leftmarkers[$blkidx]\n";
+                    $rightblkidx++; # point to next line
+                    while ($rightblkidx < $rightblkidxnxt) {
+#$htmlout .= "DBGDBGrpt: RIGHT \$rightblkidx $rightblkidx \$rightblkidxnxt $rightblkidxnxt \$rightblkat\[\$rightblkidx\] $rightblkat[$rightblkidx] \$rightblksz\[\$rightblkidx\] $rightblksz[$rightblkidx]\n";
+                        for ($ii = 0; $ii < $rightblksz[$rightblkidx] &&
+                            $ii < $maxsecline; $ii++) {
+                            ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
+                                -1, 
+                                $rightblkat[$rightblkidx] + $ii, 
+                                $lwidth, $rwidth, $leftfile, $rightfile);
+                            if ($ii == 0) {
+                                $oout =~ s/($rightblkmarker[$rightblkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                                $nout =~ s/($rightblkmarker[$rightblkidx])/<font style="color:black;background-color:silver">$1<\/font>/;
+                            }
+                            $htmlout .= " $oout |$nout\n";
+                            if ($lnsoutput++ >= $maxline) {
+                                last;
+                            }
+                        }
+                        if ($lnsoutput >= $maxline) {
+                            last;
+                        }
+
+                        $rightblkidx++;
+                    }
+#                } else {
+##$htmlout .= "DBGDBGrpt: MISSING LEFT?\n";
+                    # but the missing right will be printed eventually out of order from the left
+#                    $rightblkidxnxt = 0;
+                }
+
+                if (defined($rightblkidxfor{$leftmarkers[$blkidx]})) {
+                    $rightblkidx = $rightblkidxfor{$leftmarkers[$blkidx]};
+                }
+#$htmlout .= "DBGDBGrpt: print pair \$rightblkidx $rightblkidx\n";
+
+
                 # 3) Find first marker in left beyond specified number of lines 
                 # to skip, display the block on the left
                 # 4) Using associative array to look for the matching marker in 
                 # the right file and display matching block. Handle missing 
                 # associative array index
+#$htmlout .= "DBGDBGrpt: \$blkidx $blkidx (\$leftmarkers\[\$blkidx\] $leftmarkers[$blkidx]) (\$rightblksz\{\$leftmarkers\[\$blkidx\]\} $rightblksz{$leftmarkers[$blkidx]}) $rightblkidx \$rightblkidx \$rightblkidxnxt $rightblkidxnxt\n";
                 if (!defined($rightblksz{$leftmarkers[$blkidx]}) ||
                     ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]})) {
 #$htmlout .= "DBGDBG1: \n";
@@ -356,6 +410,7 @@ sub l00http_syncview_proc {
                     # print both
                     $ii = 0;
                     if (defined($rightblksz{$leftmarkers[$blkidx]})) {
+                        {$leftmarkers[$blkidx]}
                         for (; $ii < $rightblksz{$leftmarkers[$blkidx]} &&
                             $ii < $maxsecline; $ii++) {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
@@ -390,6 +445,7 @@ sub l00http_syncview_proc {
                             last;
                         }
                     }
+                    # and remaining right
                 } else {
 #$htmlout .= "DBGDBG2: \n";
                     # right block larger
