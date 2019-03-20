@@ -263,7 +263,7 @@ sub l00http_syncview_proc {
                     } else {
                         $dummymarker{$allmatches} = 1;
                         $leftblkat[$leftblkcnt] = $leftttllns;
-#$htmlout .= "DBGDBGl: \$leftblkat\[$leftblkcnt\] $leftblkat[$leftblkcnt] \$allmatches $allmatches\n";
+                        $htmlout .= "DBGDBGl: \$leftblkat\[$leftblkcnt\] $leftblkat[$leftblkcnt] \$allmatches $allmatches\n", if ($ctrl->{'debug'} >= 3);
                         $leftmarkers[$leftblkcnt] = $allmatches;
                         if ($leftblkcnt > 0) {
                             $leftblksz[$leftblkcnt - 1] = $lastblksz;
@@ -322,7 +322,7 @@ sub l00http_syncview_proc {
                         if ($lastrightmkr ne '') {
                             $rightblksz{$lastrightmkr} = $lastblksz;
                         }
-#$htmlout .= "DBGDBGr: \$rightblkat\[$rightblkcnt\] $rightblkat[$rightblkcnt] \$allmatches $allmatches \$rightmarkerat\{$allmatches\} $rightmarkerat{$allmatches}\n";
+$htmlout .= "DBGDBGr: \$rightblkat\[$rightblkcnt\] $rightblkat[$rightblkcnt] \$allmatches $allmatches \$rightmarkerat\{$allmatches\} $rightmarkerat{$allmatches}\n", if ($ctrl->{'debug'} >= 3);
                         $lastblksz = 0;
                         $lastrightmkr = $allmatches;
                         $rightblkcnt++;
@@ -360,10 +360,10 @@ sub l00http_syncview_proc {
                 # the right file could have a marker missing from the left file
                 if (defined($rightblkidxfor{$leftmarkers[$blkidx]})) {
                     $rightblkidxnxt = $rightblkidxfor{$leftmarkers[$blkidx]};
-#$htmlout .= "DBGDBGrpt: right \$rightblkidxfor\{$leftmarkers[$blkidx]\} $rightblkidxfor{$leftmarkers[$blkidx]} \$rightblkat\[\$rightblkidxfor\{\$leftmarkers\[\$blkidx\]\}\] $rightblkat[$rightblkidxfor{$leftmarkers[$blkidx]}] \$rightblkidxnxt $rightblkidxnxt \$leftmarkers\[\$blkidx\] $leftmarkers[$blkidx]\n";
+$htmlout .= "DBGDBGrpt: right \$rightblkidxfor\{$leftmarkers[$blkidx]\} $rightblkidxfor{$leftmarkers[$blkidx]} \$rightblkat\[\$rightblkidxfor\{\$leftmarkers\[\$blkidx\]\}\] $rightblkat[$rightblkidxfor{$leftmarkers[$blkidx]}] \$rightblkidxnxt $rightblkidxnxt \$leftmarkers\[\$blkidx\] $leftmarkers[$blkidx]\n", if ($ctrl->{'debug'} >= 3);
                     $rightblkidx++; # point to next line
                     while ($rightblkidx < $rightblkidxnxt) {
-#$htmlout .= "DBGDBGrpt: RIGHT \$rightblkidx $rightblkidx \$rightblkidxnxt $rightblkidxnxt \$rightblkat\[\$rightblkidx\] $rightblkat[$rightblkidx] \$rightblksz\[\$rightblkidx\] $rightblksz[$rightblkidx]\n";
+$htmlout .= "DBGDBGrpt: RIGHT \$rightblkidx $rightblkidx \$rightblkidxnxt $rightblkidxnxt \$rightblkat\[\$rightblkidx\] $rightblkat[$rightblkidx] \$rightblksz\[\$rightblkidx\] $rightblksz[$rightblkidx]\n", if ($ctrl->{'debug'} >= 3);
                         for ($ii = 0; $ii < $rightblksz[$rightblkidx] &&
                             $ii < $maxsecline; $ii++) {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(
@@ -394,7 +394,7 @@ sub l00http_syncview_proc {
                 if (defined($rightblkidxfor{$leftmarkers[$blkidx]})) {
                     $rightblkidx = $rightblkidxfor{$leftmarkers[$blkidx]};
                 }
-#$htmlout .= "DBGDBGrpt: print pair \$rightblkidx $rightblkidx\n";
+$htmlout .= "DBGDBGrpt: print pair \$rightblkidx $rightblkidx\n", if ($ctrl->{'debug'} >= 3);
 
 
                 # 3) Find first marker in left beyond specified number of lines 
@@ -402,10 +402,10 @@ sub l00http_syncview_proc {
                 # 4) Using associative array to look for the matching marker in 
                 # the right file and display matching block. Handle missing 
                 # associative array index
-#$htmlout .= "DBGDBGrpt: \$blkidx $blkidx (\$leftmarkers\[\$blkidx\] $leftmarkers[$blkidx]) (\$rightblksz\{\$leftmarkers\[\$blkidx\]\} $rightblksz{$leftmarkers[$blkidx]}) $rightblkidx \$rightblkidx \$rightblkidxnxt $rightblkidxnxt\n";
+$htmlout .= "DBGDBGrpt: \$blkidx $blkidx (\$leftmarkers\[\$blkidx\] $leftmarkers[$blkidx]) (\$rightblksz\{\$leftmarkers\[\$blkidx\]\} $rightblksz{$leftmarkers[$blkidx]}) $rightblkidx \$rightblkidx \$rightblkidxnxt $rightblkidxnxt\n", if ($ctrl->{'debug'} >= 3);
                 if (!defined($rightblksz{$leftmarkers[$blkidx]}) ||
                     ($leftblksz[$blkidx] >= $rightblksz{$leftmarkers[$blkidx]})) {
-#$htmlout .= "DBGDBG1: \n";
+$htmlout .= "DBGDBG1: \n", if ($ctrl->{'debug'} >= 3);
                     # left block larger
                     # print both
                     $ii = 0;
@@ -447,7 +447,7 @@ sub l00http_syncview_proc {
                     }
                     # and remaining right
                 } else {
-#$htmlout .= "DBGDBG2: \n";
+$htmlout .= "DBGDBG2: \n", if ($ctrl->{'debug'} >= 3);
                     # right block larger
                     # print both
                     $ii = 0;
