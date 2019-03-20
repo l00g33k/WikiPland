@@ -10,11 +10,26 @@ package l00httpd;
 #use l00httpd;      # used for findInBuf
 
 my ($readName, $readBuf, @readAllLines, $readIdx, $writeName, $writeBuf);
-my ($debuglog, $debuglogstate, %poorwhois, $usewinclipboard);
+my ($debuglog, $debuglogstate, %poorwhois, $usewinclipboard, @colors);
 
 $debuglog = '';
 $debuglogstate = 0;
 $usewinclipboard = 0;
+@colors = (
+    'yellow',
+    'aqua',
+    'lime',
+    'deepPink',
+    'deepSkyBlue',
+    'fuchsia',
+    'silver',
+    'brown',
+    'red',
+    'gray',
+    'olive',
+    'lightGray',
+    'teal'
+);
 
 #debugprint("calling $cnt\n");
 
@@ -167,7 +182,7 @@ sub findInBuf  {
     # $buf      : find string in $buf
     # $literal  : if true, convert <> to &lt; &gt;
     my ($findtext, $block, $buf, $literal) = @_;
-    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno, $invertfind);
+    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno, $invertfind, $ii, $color);
 
     if (!defined($literal)) {
         $literal = 0;
@@ -214,8 +229,8 @@ sub findInBuf  {
             $hit = 0;
             $blocktext = '';
         }
-        # $findtext could be multiple pattern separated by |||
-        foreach $pattern (split ('\|\|\|', $findtext)) {
+        # $findtext could be multiple pattern separated by ||
+        foreach $pattern (split ('\|\|', $findtext)) {
             if ($line =~ /$pattern/i) {
                 $hit = 1;
             }
@@ -232,23 +247,30 @@ sub findInBuf  {
             $blocktext .= "</font>\n";
 #        } elsif ($block ne '.') {
 #            # not line mode, highlight hits
-#            foreach $pattern (split ('\|\|\|', $findtext)) {
+#            foreach $pattern (split ('\|\|', $findtext)) {
 #                $line =~ s/($pattern)/<font style=\"color:black;background-color:yellow\">$1<\/font>/gi;
 #            }
 #            $blocktext .= "$line\n";
         } else {
             # highlight hits
-            foreach $pattern (split ('\|\|\|', $findtext)) {
+            $ii = 0;
+            foreach $pattern (split ('\|\|', $findtext)) {
+                if ($ii <= $#colors) {
+                    $color = $colors[$ii];
+                } else {
+                    $color = $colors[$#colors];
+                }
                 if ($literal) {
                     $line =~ s/($pattern)/:~~123____==:$1:~~123____=#:/gi;
                 } else {
-                   $line =~ s/($pattern)/<font style=\"color:black;background-color:yellow\">$1<\/font>/gi;
+                   $line =~ s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
                 }
+                $ii++;
             }
             if ($literal) {
                 $line =~ s/</&lt;/g;
                 $line =~ s/>/&gt;/g;
-                $line =~ s/:~~123____==:/<font style=\"color:black;background-color:yellow\">/gi;
+                $line =~ s/:~~123____==:/<font style=\"color:black;background-color:$colors[0]\">/gi;
                 $line =~ s/:~~123____=#:/<\/font>/gi;
             }
             $blocktext .= "$lnno$line\n";
