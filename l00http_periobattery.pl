@@ -327,7 +327,10 @@ sub l00http_periobattery_proc {
         print $sock "Live: ${livelevel}% ${livevol}V ${batttemp}C ${livecurr}mA.<br>\n";
     }
     print $sock "Last: ${battperc}% ${battvolts}V ${batttemp}C ${battmA}mA. ($battcnt)<br>\n";
-
+    &l00httpd::l00fwriteOpen($ctrl, "l00://battlog.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $battlog);
+    &l00httpd::l00fwriteClose($ctrl);
+    print $sock "View: <a href=\"/view.htm?path=l00://battlog.txt\">l00://battlog.txt</a><br>\n";
 
     if (defined ($form->{"graphs"})) {
         $lnno = 0;
