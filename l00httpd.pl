@@ -709,8 +709,8 @@ do {
 die "Can't create socket for listening: $!" unless $cli_lstn_sock;
 print "ctrl_port is $ctrl_port\n";
 print "cli_port  is $cli_port\n";
-print STDERR "ctrl_port is $ctrl_port\n";
-print STDERR "cli_port  is $cli_port\n";
+print STDERR "ctrl_port http://localhost:$ctrl_port\n";
+print STDERR "cli_port  http://localhost:$cli_port\n";
 
 my $readable = IO::Select->new;     # Create a new IO::Select object
 $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
