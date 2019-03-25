@@ -409,13 +409,14 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"#top\">top</a></li>\n";
 #   print $sock "<li>Pause: <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - \n";
     print $sock "<li>Pause: ";
-    foreach $_ (1..30) {
+    foreach $_ (1..29) {
         print $sock "<a href=\"/reminder.htm?pause=Pause&min=$_\">$_'</a> - \n";
     }
 #   print $sock "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - \n";
 #   print $sock "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - \n";
 #   print $sock "<a href=\"/reminder.htm?pause=Pause&min=20\">20'</a> - \n";
-#   print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
+    print $sock " - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=35\">35'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=40\">40'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=45\">45'</a> - \n";
@@ -499,6 +500,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/reminder.htm?pause=Pause&min=10#pause\">10'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=30#pause\">30'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=45#pause\">45'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=60#pause\">60'</a> - ".
                 "<a href=\"/reminder.htm#manage\">:::</a> </center>";
 
