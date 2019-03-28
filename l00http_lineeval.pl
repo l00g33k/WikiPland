@@ -6,12 +6,15 @@ use l00backup;
 
 # do %TXTDOPL% in .txt
 my ($arg, $eval, $sort, $sortdec, $wholefile, $useform);
+my ($lineevalst, $lineevalen);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
 $wholefile = '';
 $useform = '';
+$lineevalst = 0;
+$lineevalen = 0;
 
 my %config = (proc => "l00http_lineeval_proc",
               desc => "l00http_lineeval_desc");
@@ -30,7 +33,6 @@ sub l00http_lineeval_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard, $includefile, $pnameup);
-    my ($lineevalst, $lineevalen);
 
     # Send HTTP and HTML headers
     # Send HTTP and HTML headers
@@ -46,14 +48,6 @@ sub l00http_lineeval_proc (\%) {
         $anchor = $form->{'anchor'};
     }
 
-    # restricting display range
-    $lineevalst = 0;
-    $lineevalen = 0;
-    if (defined ($form->{'rng'}) && 
-        ($form->{'rng'} =~ /(\d+)_(\d+)/)) {
-        $lineevalst = $1;
-        $lineevalen = $2;
-    }
 
 
     if (defined ($form->{'run'})) {
@@ -61,6 +55,24 @@ sub l00http_lineeval_proc (\%) {
             $useform = 'checked';
         } else {
             $useform = '';
+        }
+
+        # restricting display range
+        if (defined ($form->{'rngst'}) && 
+            ($form->{'rngst'} =~ /(\d+)/)) {
+            $lineevalst = $1;
+        } else {
+            $lineevalst = 0;
+        }
+        if (defined ($form->{'rngen'}) && 
+            ($form->{'rngen'} =~ /(\d+)/)) {
+            $lineevalen = $1;
+        } else {
+            $lineevalen = 0;
+        }
+        if (($lineevalst == 0) || ($lineevalen == 0)) {
+            $lineevalst = 0;
+            $lineevalen = 0;
         }
     }
 
@@ -93,6 +105,23 @@ sub l00http_lineeval_proc (\%) {
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
     print $sock "            <input type=\"submit\" name=\"run\" value=\"Set\">\n";
     print $sock "            <input type=\"checkbox\" name=\"useform\" $useform>Use form</td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td>\n";
+    if ($lineevalst == 0) {
+        $_ = '';
+    } else {
+        $_ = $lineevalst;
+    }
+    print $sock "            Range start: <input type=\"text\" size=\"6\" name=\"rngst\" value=\"$_\">\n";
+    if ($lineevalen == 0) {
+        $_ = '';
+    } else {
+        $_ = $lineevalen;
+    }
+    print $sock "            end: <input type=\"text\" size=\"6\" name=\"rngen\" value=\"$_\">\n";
+    print $sock "        </td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -294,12 +323,12 @@ sub l00http_lineeval_proc (\%) {
                 if (($lnno & 1) == 0) {
                     print $sock "<font style=\"color:black;background-color:lightGray\">";
                 }
-                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a>", $lnno);
+                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a>", $lnno);
                 print $sock "<a href=\"#__top__\">^</a> ";
-                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
-                print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";
+                print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
+                print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";
                 if ($mvfrom ne '') {
-                    print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=mv&mvto=$lnno$mvfrom&anchor=$anchor#$anchor\">mv</a> ";
+                    print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=mv&mvto=$lnno$mvfrom&anchor=$anchor#$anchor\">mv</a> ";
                 } else {
                     print $sock "mv ";
                 }
@@ -310,7 +339,7 @@ sub l00http_lineeval_proc (\%) {
                         print $sock "<input type=\"checkbox\" name=\"chk_evalid_${tmp}__ln_${lnno}\" tabindex=\"$tabindex\">$evals[$tmp] ";
                     } else {
                         # no checkbox
-                        print $sock "<a href=\"/lineeval.htm?path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
+                        print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
                     }
                 }
                 if (($lnno & 1) == 0) {
