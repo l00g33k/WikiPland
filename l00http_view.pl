@@ -11,7 +11,7 @@ my %config = (proc => "l00http_view_proc",
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
-my ($findmaxln, $findskip, $eval, $evalbox, $literal);
+my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -28,6 +28,21 @@ $refresh = '';
 $refreshfile = '';
 $eval = '';
 $evalbox = '';
+@colors = (
+    'yellow',
+    'aqua',
+    'lime',
+    'deepPink',
+    'deepSkyBlue',
+    'fuchsia',
+    'silver',
+    'brown',
+    'red',
+    'gray',
+    'olive',
+    'lightGray',
+    'teal'
+);
 
 
 sub l00http_view_desc {
@@ -42,8 +57,8 @@ sub l00http_view_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
-    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag);
-    my ($foundfullrst, @foundfullarray, $actualSt, $actualEn);
+    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
+    my ($foundfullrst, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -137,7 +152,9 @@ sub l00http_view_proc {
     }
 
 
-    if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
+    if (defined ($form->{'clrhilite'})) {
+        $hilitetext = '';
+    } elsif (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 0)) {
         $hilitetext = $form->{'hilitetext'};
     }
 
@@ -445,8 +462,17 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
-                        if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
-                            s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/gi;
+                        if (length($hilitetext) > 0) {
+                            $ii = 0;
+                            foreach $pattern (split ('\|\|', $hilitetext)) {
+                                if ($ii <= $#colors) {
+                                    $color = $colors[$ii];
+                                } else {
+                                    $color = $colors[$#colors];
+                                }
+                                s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
+                                $ii++;
+                            }
                         }
                         print $sock "$_\n";
                     }
@@ -456,13 +482,25 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
-#                       print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$lineno&lineno=on&skip=%d&maxln=%d#line%d\">:</a> ", $lineno, $lineno - 20, 1000, $lineno) 
-                        print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$form->{'path'}&blklineno=%d\">:</a> ", $lineno, $lineno) 
-                            . "$_</font>\n";
+                        print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$form->{'path'}&blklineno=%d\">:</a> ", $lineno, $lineno) . "$_</font>\n";
                     } else {
-                        if (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 1)) {
-                            if (/$form->{'hilitetext'}/) {
-                                s/($form->{'hilitetext'})/<font style=\"color:black;background-color:lime\">$1<\/font>/gi;
+                        if (length($hilitetext) > 0) {
+                            $hit = 0;
+                            $ii = 0;
+                            foreach $pattern (split ('\|\|', $hilitetext)) {
+                                if ($ii <= $#colors) {
+                                    $color = $colors[$ii];
+                                } else {
+                                    $color = $colors[$#colors];
+                                }
+                                if (/$pattern/) {
+                                    s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
+                                    $hit = 1;
+                                }
+
+                                $ii++;
+                            }
+                            if ($hit) {
                                 print $sock "<a name=\"hilitetext_$hilitetextidx\"></a>";
                                 $tmp = $hilitetextidx - 1;
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
@@ -533,12 +571,15 @@ sub l00http_view_proc {
     print $sock "<form action=\"/view.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"dohilite\" value=\"HiLite\">\n";
+    print $sock "<input type=\"submit\" name=\"dohilite\" value=\"H&#818;iLite\" accesskey=\"h\">\n";
     print $sock "</td><td>\n";
     print $sock "regex <input type=\"text\" size=\"12\" name=\"hilitetext\" value=\"$hilitetext\">\n";
-    print $sock "</td></tr>\n";
+    print $sock "<input type=\"submit\" name=\"clrhilite\" value=\"clr\"></td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+    if (defined($form->{'hidelnno'}) && ($form->{'hidelnno'} eq 'on')) {
+        print $sock "<input type=\"hidden\" name=\"hidelnno\" value=\"on\">\n";
+    }
     print $sock "</form>\n";
 
     # find
