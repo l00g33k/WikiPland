@@ -68,8 +68,8 @@ sub l00http_shell_proc {
     }
 
     print $sock "<form action=\"/shell.htm\" method=\"get\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
-    print $sock "<p><input type=\"submit\" name=\"exec\" value=\"Exec\">\n";
+    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
+    print $sock "<p><input type=\"submit\" name=\"exec\" value=\"Ex&#818;ec\" accesskey=\"x\">\n";
     print $sock " <input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
     print $sock "</form>\n";
 
