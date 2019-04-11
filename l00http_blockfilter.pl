@@ -384,7 +384,7 @@ sub l00http_blockfilter_proc {
     }
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"checkbox\" name=\"smallform\" $smallform>Small form\n";
+    print $sock "<input type=\"checkbox\" name=\"smallform\" $smallform accesskey=\"m\">Sm&#818;all form\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"wikitize\" $wikitize accesskey=\"w\">W&#818;ikitize\n";
     print $sock "</td></tr>\n";
