@@ -513,6 +513,10 @@ while ($_ = shift) {
     } elsif (/^fixedport/) {
         $fixedport = 1;
         print "fixedport set to 1\n";
+    } elsif (/^cfg=(\w+?)\^(.+)/) {
+        # looks like config name^value
+        $ctrl{$1} = $2;
+        print "cfg=$1^$2\n";
     } elsif (/^quitinsec=(\d+)/) {
         $quitattimer = $1;
     } elsif (/^hostip=(.+)/) {
