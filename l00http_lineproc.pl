@@ -5,12 +5,13 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile, $nolnno);
+my ($arg, $eval, $sort, $sortdec, $wholefile, $rmnewline, $nolnno);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
 $wholefile = '';
+$rmnewline = '';
 $nolnno = '';
 
 my %config = (proc => "l00http_lineproc_proc",
@@ -87,6 +88,11 @@ sub l00http_lineproc_proc (\%) {
         } else {
             $wholefile = '';
         }
+        if (defined ($form->{'rmnewline'}) && ($form->{'rmnewline'} eq 'on')) {
+            $rmnewline = 'checked';
+        } else {
+            $rmnewline = '';
+        }
     }
 
     print $sock "<a href=\"/lineproc.htm?path=$form->{'path'}\">Refresh</a> - ";
@@ -103,7 +109,8 @@ sub l00http_lineproc_proc (\%) {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
     print $sock "            <input type=\"checkbox\" name=\"wholefile\" $wholefile>whole file.\n";
-    print $sock "            <input type=\"submit\" name=\"run\" value=\"P&#818;rocess\" accesskey=\"p\"></td>\n";
+    print $sock "            <input type=\"submit\" name=\"run\" value=\"P&#818;rocess\" accesskey=\"p\">\n";
+    print $sock "            <input type=\"checkbox\" name=\"rmnewline\" $rmnewline>remove newline.</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
@@ -168,7 +175,11 @@ sub l00http_lineproc_proc (\%) {
                         eval $eval1;
                     }
                     if (defined($_)) {
-                        push(@newfile, "$_\n");
+                        if ($rmnewline eq 'checked') {
+                            push(@newfile, "$_");
+                        } else {
+                            push(@newfile, "$_\n");
+                        }
                     }
                     $lnno++;
                 }
