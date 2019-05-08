@@ -11,13 +11,14 @@ use l00crc32;
 my %config = (proc => "l00http_tree_proc",
               desc => "l00http_tree_desc");
 
-my (@list, $lvl, $md5support, $depthmax, $maxlines, $fileinclu, $stamp);
+my (@list, $lvl, $md5support, $depthmax, $maxlines, $fileinclu, $stamp, $filter);
 
 $md5support = -1;
 $depthmax = 20;
 $maxlines = 1000;
 $fileinclu = '';
 $stamp = '';
+$filter = '';
 
 sub l00Http_tree_proxy {
     my ($sock, $target) = @_;
@@ -160,10 +161,6 @@ sub l00http_tree_proc {
         $form->{'path'} = '';
     }
 
-    if (!defined ($form->{'filter'})) {
-        $form->{'filter'} = '';
-    }
-
     if (defined($form->{'showbak'})) {
         $showbak = 'checked';
     } else  {
@@ -184,6 +181,23 @@ sub l00http_tree_proc {
     } else  {
         $stamp = '';
     }
+
+    $fil0no1exclu2inclu = 0;
+    if (defined($form->{'submit'})) {
+        if ((defined ($form->{'filter'})) && ($form->{'filter'} !~ /^ *$/)) {
+            $filter = $form->{'filter'};
+            if (defined($form->{'fileinclu'}) && ($form->{'fileinclu'} eq 'on')) {
+                $fil0no1exclu2inclu = 2;
+                $fileinclu = 'checked';
+            } else {
+                $fil0no1exclu2inclu = 1;
+                $fileinclu = '';
+            }
+        } else {
+            $filter = '';
+        }
+    }
+
 
 
     # Send HTTP and HTML headers
@@ -218,14 +232,56 @@ sub l00http_tree_proc {
                 s/ \*\.\// .\//;
                 #print $sock "$_\n";
                 if (/^(\d+) \.\/(.+)/) {
-                    $cnt++;
                     $size = $1;
                     $fname = $2;
+
+                    # observe filter
+                    if ($fil0no1exclu2inclu == 1) {
+                        if ($fname =~ /$filter/) {
+                            # exclude match
+                            next;
+                        }
+                    }
+                    if ($fil0no1exclu2inclu == 2) {
+                        if ($fname !~ /$filter/) {
+                            # include match
+                            next;
+                        }
+                    }
+                    $cnt++;
+
+                    # count extension
+                    if ($fname =~ /\.([^.]+)$/) {
+                        $ext = $1;
+                    } else {
+                        $ext = '(no ext)';
+                    }
+                    if (defined ($countext{$ext})) {
+                        $countext{$ext}++;
+                    } else {
+                        $countext{$ext} = 1;
+                    }
+
                     $sizeMd5sum{$fname} = sprintf("|| %8d ||", $size);
                 } elsif (/^([0-9a-fA-F]+) +\.\/(.+)/) {
-                    $cntbak++;
                     $md5sum = $1;
                     $fname = $2;
+
+                    # observe filter
+                    if ($fil0no1exclu2inclu == 1) {
+                        if ($fname =~ /$filter/) {
+                            # exclude match
+                            next;
+                        }
+                    }
+                    if ($fil0no1exclu2inclu == 2) {
+                        if ($fname !~ /$filter/) {
+                            # include match
+                            next;
+                        }
+                    }
+                    $cntbak++;
+
                     $sizeMd5sum{$fname} .= " $md5sum ||";
                 } elsif (!/^ *$/ && !/^\*/) {
                     print $sock "Unidentified line '$_'<br>'\n";
@@ -253,6 +309,24 @@ sub l00http_tree_proc {
             print $sock "<a href=\"/treesize.htm?path=l00://tree.htm\">treesize l00://tree.htm</a>. \n";
             print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm&path2=$form->{'path'}.txt\">filemgt tree.htm</a><p>\n";
             print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
+
+            # report extension count
+            print $sock "<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+            print $sock "<tr>\n";
+            print $sock "<td>#</td>\n";
+            print $sock "<td>Extension</td>\n";
+            print $sock "<td>Count</td>\n";
+            print $sock "</tr>\n";
+            $cnt = 1;
+            foreach $ext (sort keys %countext) {
+                print $sock "<tr>\n";
+                print $sock "<td>$cnt</td>\n";
+                print $sock "<td>$ext</td>\n";
+                print $sock "<td>$countext{$ext}</td>\n";
+                print $sock "</tr>\n";
+                $cnt++;
+            }
+            print $sock "</table>\n";
         }
     } elsif (defined($form->{'submit'})) {
         # path is a directory
@@ -270,16 +344,6 @@ sub l00http_tree_proc {
 	    $time0 = time;
         $nobytes = 0;
         undef %countext;
-        $fil0no1exclu2inclu = 0;
-        if ($form->{'filter'} !~ /^ *$/) {
-            if (defined($form->{'fileinclu'}) && ($form->{'fileinclu'} eq 'on')) {
-                $fil0no1exclu2inclu = 2;
-                $fileinclu = 'checked';
-            } else {
-                $fil0no1exclu2inclu = 1;
-                $fileinclu = '';
-            }
-        }
         foreach $file (sort @list) {
             if (defined($form->{'showbak'}) ||
                (!($file =~ /\.bak$/))) {
@@ -293,13 +357,13 @@ sub l00http_tree_proc {
     		        $cnt++;
                 }
                 if ($fil0no1exclu2inclu == 1) {
-                    if ($file =~ /$form->{'filter'}/) {
+                    if ($file =~ /$filter/) {
                         # exclude match
                         next;
                     }
                 }
                 if ($fil0no1exclu2inclu == 2) {
-                    if ($file !~ /$form->{'filter'}/) {
+                    if ($file !~ /$filter/) {
                         # include match
                         next;
                     }
@@ -492,7 +556,7 @@ sub l00http_tree_proc {
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Scan\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
-    print $sock "<br>Filter (fullpath): <input type=\"text\" size=\"16\" name=\"filter\" value=\"$form->{'filter'}\">\n";
+    print $sock "<br>Filter (fullpath): <input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\">\n";
     print $sock "<input type=\"checkbox\" name=\"fileinclu\" $fileinclu>include matched (case sensitive)\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
     if ($ctrl->{'os'} eq 'and') {
