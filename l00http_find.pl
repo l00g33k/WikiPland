@@ -25,7 +25,7 @@ my ($atime, $blksize, $blocks, $buf, $bulvl, $ctime, $dev);
 my ($el, $file, $fullpath, $gid, $hits, $hour, $ii);
 my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
-my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx);
+my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx, $findctrl);
 my ($fmatch, $fmatches, $content, $pathregex, $fullname, $lineno, $lineno0, $maxlines, $sock);
 my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $filenameonly, $srcdoc, $sortoffset);
 
@@ -44,6 +44,11 @@ $sortoffset = 0;
 $pathregex = '';
 
 sub findsort {
+    $a =~ s/<.+?>//g;
+    $b =~ s/<.+?>//g;
+    if ($findctrl->{'debug'} >= 3) {
+        print substr($b, $sortoffset, 9999) . "\n";
+    }
     substr($b, $sortoffset, 9999) cmp substr($a, $sortoffset, 9999);
 }
 
@@ -310,6 +315,8 @@ sub l00http_find_proc {
     my $form = $ctrl->{'FORM'};
     my ($thispath, $pathcnt, $dirlist);
 
+
+    $findctrl = $ctrl;
 
     # special srcdoc.pl integration
     $srcdoc = '';
