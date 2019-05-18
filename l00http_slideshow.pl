@@ -9,10 +9,12 @@ use l00wikihtml;
 my %config = (proc => "l00http_slideshow_proc",
               desc => "l00http_slideshow_desc");
 my ($width, $height, $llspath, $picsperpage, $nonewline, $gpstrk, $gpstrk0, %locs);
+my ($showname);
 $width = '100%';
 $height = '';
 $picsperpage = 6;
 $nonewline = '';
+$showname = '';;
 $gpstrk0 = '.';
 $gpstrk = '';
 
@@ -69,6 +71,32 @@ sub llsfn2 {
     $rst;
 }
 
+sub llsfn3 {
+    my ($rst);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+        $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
+    
+    if ((-d $llspath.$a) && (-d $llspath.$b)) {
+        # both dir
+        $rst = $b cmp $a;
+    } elsif (!(-d $llspath.$a) && !(-d $llspath.$b)) {
+        # both file
+#       # it's not a directory, print a link to a file
+#       ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+#       $size, $atime, $mtimea, $ctime, $blksize, $blocks)
+#       = stat($llspath.$a);
+#       ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+#       $size, $atime, $mtimeb, $ctime, $blksize, $blocks)
+#       = stat($llspath.$b);
+        $rst = $b cmp $a;
+    } elsif (-d $llspath.$a) {
+        $rst = 1;
+    } else {
+        $rst = -1;
+    }
+    $rst;
+}
+
 sub l00http_slideshow_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -104,6 +132,11 @@ sub l00http_slideshow_proc {
             $nonewline = 'checked';
         } else {
             $nonewline = '';
+        }
+        if ((defined ($form->{'showname'})) && ($form->{'showname'} eq 'on')) {
+            $showname = 'checked';
+        } else {
+            $showname = '';
         }
         if (defined ($form->{'gpstrk'}) &&
             (length($form->{'gpstrk'}) > 0)) {
@@ -166,7 +199,11 @@ sub l00http_slideshow_proc {
 
                 # sort by reverse time, so 'next' come first
                 $llspath = $path;
-                @allpics = sort llsfn2 @allpics;
+                if ($showname ne 'checked') {
+                    @allpics = sort llsfn2 @allpics;
+                } else {
+                    @allpics = sort llsfn3 @allpics;
+                }
 
                 $phase = 0; # search for 1 pic match
                 for ($ii = 0; $ii <= $#allpics; $ii++) {
@@ -186,9 +223,19 @@ sub l00http_slideshow_proc {
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
                         if ($nonewline ne 'checked') {
-                            $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
-                                "$path$allpics[$ii]",
-                                $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+#                           $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
+#                               "$path$allpics[$ii]",
+#                               $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                            if ($showname ne 'checked') {
+                               $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
+                                    "$path$allpics[$ii]",
+                                    $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                            } else {
+                                $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %s:", 
+                                    "$path$allpics[$ii]",
+                                    $ii + 1, 
+                                    $allpics[$ii]);
+                            }
                             if ($gpstrk ne '') {
                                 #::now::#1
                                 if ($file =~ /(\d{8,8}_\d{6,6})/) {
@@ -308,6 +355,9 @@ aassdd
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"nonewline\" $nonewline>No newline\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "<input type=\"checkbox\" name=\"showname\" $showname>Show filename\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "GPS trk: <input type=\"text\" size=\"6\" name=\"gpstrk\" value=\"$gpstrk\">\n";
