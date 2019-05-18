@@ -332,9 +332,16 @@ aassdd
     }
 
     print $sock "<p>\n";
-    for ($ii = 1; $ii < $#allpics; $ii++) {
-        $file = $allpics[$#allpics - $ii + 1];
-        print $sock "<a href=\"/slideshow.htm?path=$path$file\">$ii</a>\n";
+    if ($showname ne 'checked') {
+        for ($ii = 1; $ii < $#allpics; $ii++) {
+            $file = $allpics[$#allpics - $ii + 1];
+            print $sock "<a href=\"/slideshow.htm?path=$path$file\">$ii</a>\n";
+        }
+    } else {
+        for ($ii = 1; $ii < $#allpics; $ii++) {
+            $file = $allpics[$ii - 1];
+            print $sock "<a href=\"/slideshow.htm?path=$path$file\">$ii</a>\n";
+        }
     }
     print $sock "<p>\n";
 
