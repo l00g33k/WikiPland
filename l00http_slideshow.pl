@@ -256,7 +256,7 @@ sub l00http_slideshow_proc {
                             }
                         }
                         $outbuf .= "$newline\n";
-                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\"><img src=\"/ls.htm/$file?path=$path$file\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\" target=\"_blank\"><img src=\"/ls.htm/$file?path=$path$file\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
                         $outbuf .= "$newline\n";
                         $phase++;
                     }
