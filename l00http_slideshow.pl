@@ -227,13 +227,16 @@ sub l00http_slideshow_proc {
 #                               "$path$allpics[$ii]",
 #                               $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             if ($showname ne 'checked') {
-                               $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
-                                    "$path$allpics[$ii]",
-                                    $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
-                            } else {
-                                $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %s:", 
+                               $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%4d/%02d/%02d %02d:%02d:%02d</a>:", 
                                     "$path$allpics[$ii]",
                                     $ii + 1, 
+                                    "$path$allpics[$ii]",
+                                    1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                            } else {
+                                $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%s</a>:", 
+                                    "$path$allpics[$ii]",
+                                    $ii + 1, 
+                                    "$path$allpics[$ii]",
                                     $allpics[$ii]);
                             }
                             if ($gpstrk ne '') {
