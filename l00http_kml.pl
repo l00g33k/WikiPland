@@ -9,8 +9,31 @@ use l00backup;
 my %config = (proc => "l00http_kml_proc",
               desc => "l00http_kml_desc");
 
-my ($kmlheader1, $kmlheader2, $kmlfooter, $trackheight, $trackmark);
-my ($latoffset, $lonoffset, $applyoffset, $color);
+my ($kmlheader1, $kmlheader2, $kmlheader2a, $kmlheader2b, $kmlheader2c, 
+    $kmlfooter, $trackheight, $trackmark);
+my ($latoffset, $lonoffset, $applyoffset, $color, $thiscolor, $thisname);
+
+my (%colorcode);
+#$colorlukeys = 'rylsafgodGDbSpLTBhu';
+$colorcode{'r'} = 'ff0000ff';   #red
+$colorcode{'y'} = 'ff0000ff';   #yellow
+$colorcode{'l'} = 'ff0000ff';   #lime
+$colorcode{'s'} = 'ff0000ff';   #silver
+$colorcode{'a'} = 'ff0000ff';   #aqua
+$colorcode{'f'} = 'ff0000ff';   #fuchsia
+$colorcode{'g'} = 'ff0000ff';   #gray
+$colorcode{'o'} = 'ff0000ff';   #olive
+$colorcode{'d'} = 'ff0000ff';   #gold
+$colorcode{'G'} = 'ff00ff00';   #green
+$colorcode{'D'} = 'ff0000ff';   #DeepPink
+$colorcode{'b'} = 'ff0000ff';   #Brown
+$colorcode{'S'} = 'ff0000ff';   #DeepSkyBlue
+$colorcode{'p'} = 'ff0000ff';   #Purple
+$colorcode{'L'} = 'ff0000ff';   #LightGray
+$colorcode{'T'} = 'ff0000ff';   #Teal
+$colorcode{'B'} = 'ff0000ff';   #SandyBrown
+$colorcode{'h'} = 'ff0000ff';   #HotPink
+$colorcode{'u'} = 'ffff0000';   #blue
 
 $trackheight = 0;
 $trackmark = 0;
@@ -26,11 +49,14 @@ $kmlheader1 =
     "<Document>\n".
     "	<name>";
 
-$kmlheader2 = "</name>\n".
-    "	<open>1</open>\n".
-    "   <Style id=\"sh_donut\">\n".
+
+$kmlheader2a = "</name>\n".
+    "	<open>1</open>\n";
+
+$kmlheader2b = 
+    "   <Style id=\"sh_donut%s\">\n".
     "       <IconStyle>\n".
-    "           <color>$color</color>\n".
+    "           <color>%s</color>\n".
     "           <scale>1.4</scale>\n".
     "           <Icon>\n".
     "               <href>http://maps.google.com/mapfiles/kml/shapes/donut.png</href>\n".
@@ -39,9 +65,9 @@ $kmlheader2 = "</name>\n".
     "       <ListStyle>\n".
     "       </ListStyle>\n".
     "   </Style>\n".
-    "   <Style id=\"sn_donut\">\n".
+    "   <Style id=\"sn_donut%s\">\n".
     "       <IconStyle>\n".
-    "           <color>$color</color>\n".
+    "           <color>%s</color>\n".
     "           <scale>1.2</scale>\n".
     "           <Icon>\n".
     "               <href>http://maps.google.com/mapfiles/kml/shapes/donut.png</href>\n".
@@ -50,19 +76,31 @@ $kmlheader2 = "</name>\n".
     "       <ListStyle>\n".
     "       </ListStyle>\n".
     "   </Style>\n".
-    "   <StyleMap id=\"msn_donut\">\n".
+    "   <StyleMap id=\"msn_donut%s\">\n".
     "       <Pair>\n".
     "           <key>normal</key>\n".
-    "           <styleUrl>#sn_donut</styleUrl>\n".
+    "           <styleUrl>#sn_donut%s</styleUrl>\n".
     "       </Pair>\n".
     "       <Pair>\n".
     "           <key>highlight</key>\n".
-    "           <styleUrl>#sh_donut</styleUrl>\n".
+    "           <styleUrl>#sh_donut%s</styleUrl>\n".
     "       </Pair>\n".
-    "   </StyleMap>\n".
+    "   </StyleMap>\n";
+
+$kmlheader2c = 
     "	<Folder>\n".
     "		<name>Temporary Places</name>\n".
     "		<open>1</open>\n";
+
+$kmlheader2 = $kmlheader2a;
+$kmlheader2 .= sprintf ($kmlheader2b, '', 'ff0000ff', '', 'ff0000ff', '', '', '');
+foreach $thisname (keys %colorcode) {
+    $kmlheader2 .= sprintf ($kmlheader2b, 
+        "_$thisname", $colorcode{$thisname}, 
+        "_$thisname", $colorcode{$thisname}, 
+        "_$thisname", "_$thisname", "_$thisname");
+}
+$kmlheader2 .= $kmlheader2c;
 
 $kmlfooter = "\t</Folder>\n</Document>\n</kml>\n";
 
@@ -79,7 +117,7 @@ sub l00http_kml_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
-    my ($gpxtime, $fname, $curlatoffset, $curlonoffset);
+    my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $wayptcolor);
     my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow, $newbuf, $pathbase);
 
     $rawkml = 0;
@@ -547,12 +585,19 @@ sub l00http_kml_proc {
                             if ($starname ne '') {
                                 # * name from line above over writes name from URL
                                 $name = $starname;
+                            } else {
+                                $wayptcolor = '';
                             }
                         } elsif (/^\* +([^ ]+)/) {
                             # of the form:
                             # * name
                             # https://www.google.com/maps/@31.1956864,121.3522793,15z
                             $starname = $1;
+                            if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
+                                $wayptcolor = "_$1";
+                            } else {
+                                $wayptcolor = '';
+                            }
                             next;
                         } else {
                             $starname = '';
@@ -563,7 +608,7 @@ sub l00http_kml_proc {
                         $kmlbuf .= 
                             "\t\t<Placemark>\n".
                             "\t\t\t<name>$name</name>\n".
-                            "\t\t\t<styleUrl>#msn_donut</styleUrl>\n".
+                            "\t\t\t<styleUrl>#msn_donut$wayptcolor</styleUrl>\n".
                             "\t\t\t<Point>\n".
                             "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
                             "\t\t\t</Point>\n".
