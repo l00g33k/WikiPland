@@ -88,7 +88,7 @@ sub l00http_uploadfile_proc {
     print $sock "<input type=\"text\" size=\"20\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<input id=\"myfile\" name=\"myfile\" type=\"file\">\n";
+    print $sock "<input id=\"myfile\" name=\"myfile\" accept=\"*/*\" type=\"file\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "</table><br>\n";
