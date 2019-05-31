@@ -221,11 +221,11 @@ sub l00http_readgraph_proc {
             print $sock "<font color=\"red\">+</font></div>\n";
 
             print $sock "Clicked: ($form->{'x'} , $form->{'y'}) -&gt; \n";
-            printf $sock ("%f , ", 
+            printf $sock ("<font style=\"color:black;background-color:gold\">%f , ", 
                 ($form->{'readbrx'} - $form->{'readtlx'}) * ($form->{'x'} - $form->{'screentlx'}) / ($form->{'screenbrx'} - $form->{'screentlx'}) 
                 + $form->{'readtlx'}
             );
-            printf $sock ("%f", 
+            printf $sock ("%f</font>", 
                 ($form->{'readbry'} - $form->{'readtly'}) * ($form->{'y'} - $form->{'screently'}) / ($form->{'screenbry'} - $form->{'screently'}) 
                 + $form->{'readtly'}
             );
@@ -233,12 +233,12 @@ sub l00http_readgraph_proc {
                 $deltax = $form->{'x'} - $formlastx;
                 $deltay = $form->{'y'} - $formlasty;
                 print $sock " --- Delta: ($deltax , $deltay) -&gt; ";
-                printf $sock ("%f , ", 
+                printf $sock ("<font style=\"color:black;background-color:gold\">%f , ", 
                     ($form->{'readbrx'} - $form->{'readtlx'}) * 
                     $deltax / 
                     ($form->{'screenbrx'} - $form->{'screentlx'})
                 );
-                printf $sock ("%f", 
+                printf $sock ("%f</font>", 
                     ($form->{'readbry'} - $form->{'readtly'}) * 
                     $deltay / 
                     ($form->{'screenbry'} - $form->{'screently'})
