@@ -151,7 +151,7 @@ sub l00http_dash_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($buf, $pname, $fname, @alllines, $buffer, $line, $ii, $eqlvl, @wikiword, $lineevalln, %lineevallns);
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime, %tasksCat2);
-    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, $nowbuf, $nowbuf2);
+    my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, %nowbuf, $nowbuf, $nowbuf2);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
@@ -293,7 +293,7 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-        print $sock "CatF&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\">\n";
+        print $sock "Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\">\n";
         print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -493,7 +493,7 @@ sub l00http_dash_proc {
 
         $cat1 = 'cat1';
         $cat2 = 'cat2';
-        $nowbuf = '';
+        %nowbuf = undef;
         $nowbuf2 = '';
         $timetoday = 0;
         $time_start = 0;
@@ -766,9 +766,9 @@ sub l00http_dash_proc {
                                 } else {
                                     $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
                                 }
-                                if ($key=~ /\*KIV\*.*\*now\*/) {
+                                if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
                                     # keep for 'now' listing
-                                    $nowbuf = $tasksSticky{$key};
+                                    $nowbuf{$key} = $tasksSticky{$key};
                                 }
                             }
                         }
@@ -777,8 +777,8 @@ sub l00http_dash_proc {
                         if ($dsc =~ /^!{0,1}[^!]/) {
                             $tasksSticky{$key} .= "<br>$dsc";
                             # keep for 'now' listing
-                            if ($key=~ /\*KIV\*.*\*now\*/) {
-                                $nowbuf = $tasksSticky{$key};
+                            if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
+                                $nowbuf{$key} = $tasksSticky{$key};
                             }
                         }
                     }
@@ -864,6 +864,10 @@ sub l00http_dash_proc {
                     $nowbuf2 .= " &#9670; $_";
                 }
             }
+        }
+        $nowbuf = '';
+        foreach $_ (keys %nowbuf) {
+            $nowbuf .= $nowbuf{$_};
         }
         if (($nowbuf ne '') && ($nowbuf2 ne '')) {
             $nowbuf = "$nowbuf *y*RAM:** $nowbuf2";
