@@ -143,10 +143,10 @@ sub l00http_scratch_proc {
         print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
         print $sock "<input type=\"submit\" name=\"wikitize\" value=\"W&#818;ikitize\" accesskey=\"w\">\n";
         print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
-        print $sock "<input type=\"submit\" name=\"formatted\" value=\"Formatted\">\n";
-        print $sock "<input type=\"checkbox\" name=\"bare\">Bare";
+        print $sock "<input type=\"submit\" name=\"formatted\" value=\"F&#818;ormatted\" accesskey=\"f\">\n";
+        print $sock "<input type=\"checkbox\" name=\"bare\">Bare.";
         if (defined ($form->{'formatted'})) {
-            print $sock " .Wrap formatted to width (blank for no wrap): <input type=\"text\" size=\"6\" name=\"wrapwidth\" value=\"$wrapwidth\">\n";
+            print $sock " Wrap formatted to wi&#818;dth (blank for no wrap): <input type=\"text\" size=\"6\" name=\"wrapwidth\" value=\"$wrapwidth\" accesskey=\"i\">\n";
         }
         print $sock "</form><p>\n";
 
