@@ -640,9 +640,10 @@ sub l00http_dash_proc {
                 } else {
                     $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
                 }
-                if (($cat1 =~ /$catflt/i) && 
+                if ((($cat1 =~ /$catflt/i) || ($tim =~ /$catflt/))&& 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
+                    # or time
                     # and ^==cat2==
 
                     # compute time.stop - time.start
