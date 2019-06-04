@@ -7,9 +7,10 @@ use warnings;
 
 my %config = (proc => "l00http_scratch_proc",
               desc => "l00http_scratch_desc");
-my ($scratch, $scratchhtml, $tmp, $eval, $newwin);
+my ($scratch, $scratchhtml, $tmp, $eval, $newwin, $wrapwidth);
 $eval = '';
 $newwin = '';
+$wrapwidth = '';
 
 sub l00http_scratch_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -23,7 +24,7 @@ sub l00http_scratch_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $notbare);
+    my (@alllines, $line, $notbare, $st, $en, $thisen, $wrapat, $ii);
 
     # Do bare display?
     $notbare = 1;
@@ -75,6 +76,17 @@ sub l00http_scratch_proc {
             }
         }
     }
+
+
+    if (defined ($form->{'wrapwidth'})) {
+        $wrapwidth = '';
+        if ($form->{'wrapwidth'} =~ /(\d+)/) {
+            if ($1) {
+                $wrapwidth = $1;
+            }
+        }
+    }
+
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>scratch</title>" . $ctrl->{'htmlhead2'};
@@ -131,8 +143,11 @@ sub l00http_scratch_proc {
         print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
         print $sock "<input type=\"submit\" name=\"wikitize\" value=\"W&#818;ikitize\" accesskey=\"w\">\n";
         print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
-        print $sock "<input type=\"submit\" name=\"formatted\" value=\"Formatted\">\n";
-        print $sock "<input type=\"checkbox\" name=\"bare\">Bare";
+        print $sock "<input type=\"submit\" name=\"formatted\" value=\"F&#818;ormatted\" accesskey=\"f\">\n";
+        print $sock "<input type=\"checkbox\" name=\"bare\">Bare.";
+        if (defined ($form->{'formatted'})) {
+            print $sock " Wrap formatted to wi&#818;dth (blank for no wrap): <input type=\"text\" size=\"6\" name=\"wrapwidth\" value=\"$wrapwidth\" accesskey=\"i\">\n";
+        }
         print $sock "</form><p>\n";
 
 
@@ -151,7 +166,34 @@ sub l00http_scratch_proc {
         $scratchhtml =~ s/\n/<br>/g;
         $scratchhtml =~ s/<br>/<br>\n/g;
     } elsif (defined ($form->{'formatted'})) {
-        $scratchhtml = $scratch;
+        if ($wrapwidth eq '') {
+            $scratchhtml = $scratch;
+        } else {
+            $scratchhtml = '';
+            foreach $_ (split("\n", $scratch)) {
+                $st = 0;
+                $en = length ($_);
+                # for each line, start from 0 and print up to last space or
+                # width if no space is found
+                while ($st < $en) {
+                    $thisen = $st + $wrapwidth;
+                    $wrapat = $thisen;      # force wrap at width but
+                    # if space found before it, break there
+                    for ($ii = $st; ($ii < $thisen) && ($ii < $en); $ii++) {
+                        if (" " eq substr ($_, $ii, 1)) {
+                            # a space, potential break
+                            $wrapat = $ii + 1;
+                        }
+                    }
+                    # last potential break is real break unless no space is found
+                    $scratchhtml .= substr ($_, $st, $wrapat - $st) . "\n";
+                    $st = $wrapat;
+                }
+
+                $scratchhtml .= "\n";
+            }
+        }
+
         $scratchhtml =~ s/</&lt;/g;
         $scratchhtml =~ s/>/&gt;/g;
         $scratchhtml =~ s/\r\n/\n/g;
