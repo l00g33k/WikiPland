@@ -31,7 +31,7 @@ sub l00http_lineeval_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals);
+    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals, $ii);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard, $includefile, $pnameup);
 
     # Send HTTP and HTML headers
@@ -121,6 +121,11 @@ sub l00http_lineeval_proc (\%) {
         $_ = $lineevalen;
     }
     print $sock "            end: <input type=\"text\" size=\"6\" name=\"rngen\" value=\"$_\">\n";
+    if ($useform ne 'checked') {
+        print $sock "            <a href=\"/lineeval.htm?rngst=&rngen=&run=run&path=$form->{'path'}&run=run&cmd=\">clr</a>";
+    } else {
+        print $sock "            <a href=\"/lineeval.htm?rngst=&rngen=&run=run&path=$form->{'path'}&run=run&cmd=&useform=on\">clr</a>";
+    }
     print $sock "        </td>\n";
     print $sock "    </tr>\n";
 
@@ -289,6 +294,14 @@ sub l00http_lineeval_proc (\%) {
                 }
             }
 
+            if ((($lineevalst == 0) || ($lineevalen == 0)) 
+                && ($#newfile > 50)) {
+                print $sock "jump to line: ";
+                for ($ii = 50; $ii < $#newfile; $ii += 50) {
+                    print $sock "<a href=\"#line$ii\">$ii</a> - ";
+                }
+            }
+
             print $sock "<pre>\n";
             if (defined($form->{'cmd'}) && ($form->{'cmd'} eq 'mk') &&
                 defined($form->{'ln'})) {
@@ -308,6 +321,7 @@ sub l00http_lineeval_proc (\%) {
             #printf $sock ("$ctrl->{'ymddCODE'}\n");
 
             $lnno = 0;
+
             foreach $_ (@newfile) {
                 s/\r//;
                 s/\n//;
@@ -323,7 +337,7 @@ sub l00http_lineeval_proc (\%) {
                 if (($lnno & 1) == 0) {
                     print $sock "<font style=\"color:black;background-color:lightGray\">";
                 }
-                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a>", $lnno);
+                printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a> ", $lnno);
                 print $sock "<a href=\"#__top__\">^</a> ";
                 print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
                 print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";
