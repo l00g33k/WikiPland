@@ -49,6 +49,10 @@ sub l00http_colortext_proc {
     }
     print $sock "<br>\n";
 
+    if (defined ($form->{'color'}) && defined ($form->{'rules'})) {
+        $rules = $form->{'rules'};
+    }
+
     if (defined ($form->{'sample'})) {
         if (&l00httpd::l00fwriteOpen($ctrl, 'l00://colortext_rules.txt')) {
             $_ =    "|| Foreground || Background || Start Regex                  || End Count || End Regex || Remark ||\n".
@@ -56,6 +60,7 @@ sub l00http_colortext_proc {
                     "|| black      || cyan       || [l]00http_colortext_proc     || 1         || .         || one line only       ||\n".
                     "|| black      || gray       || print[ ]\\\$sock             || 1         || .         || note \\ to escape \$       ||\n".
                     "|| black      || silver     || \\\$foundRuleN = \\\$ruleidx || 3         || .         || three line block       ||\n".
+                    "|| black      || lime       || #(15)                        || 1         || #(19)     || by line numbers       ||\n".
                     "* Sample rules. Leading and trailing whitespaces are trimmed from regex.\n".
                     "* [[/colortext.htm?path=$ctrl->{'plpath'}l00http_colortext.pl=l00%3A%2F%2Fcolortext_rules.txt&color=on|Take a test drive]]\n";
             &l00httpd::l00fwriteBuf($ctrl, $_);
@@ -72,24 +77,24 @@ sub l00http_colortext_proc {
     print $sock "</form>\n";
 
 
-    if (defined ($form->{'rules'})) {
-        if (&l00httpd::l00freadOpen($ctrl, $form->{'rules'})) {
-            $norules = 0;
-            while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                if ((/^ *\|\|.*\|\| *$/) && !(/Foreground \|\| Background/)) {
-                    # Looks like rule entry
-                    @rules = split('\|\|', $_);
-                    if ($#rules == ($remark + 1)) {
-                        # as expected
-                        # remote leading and trialing spaces from Regex
-                        for ($ii = 1; $ii <= 6; $ii++) {
-                            $rules[$ii] =~ s/^ +//;
-                            $rules[$ii] =~ s/ +$//;
-                        }
-                        # http://perldoc.perl.org/perldsc.html#ARRAYS-OF-ARRAYS
-                        $allrules[$norules] = [ @rules ];
-                        $norules++;
+    if (&l00httpd::l00freadOpen($ctrl, $rules)) {
+        $norules = 0;
+        while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            s/[\r\n]//g;
+
+            if ((/^ *\|\|.*\|\| *$/) && !(/Foreground \|\| Background/)) {
+                # Looks like rule entry
+                @rules = split('\|\|', $_);
+                if ($#rules == ($remark)) {
+                    # as expected
+                    # remote leading and trialing spaces from Regex
+                    for ($ii = 1; $ii <= $remark; $ii++) {
+                        $rules[$ii] =~ s/^ +//;
+                        $rules[$ii] =~ s/ +$//;
                     }
+                    # http://perldoc.perl.org/perldsc.html#ARRAYS-OF-ARRAYS
+                    $allrules[$norules] = [ @rules ];
+                    $norules++;
                 }
             }
         }
@@ -115,14 +120,27 @@ sub l00http_colortext_proc {
             # apply coloring rules
             if ($foundRuleN >= 0) {
                 # a rule was found, search for end condition
-                if ($line =~ /$allrules[$ruleidx][$enRegex]/) {
-                    # match
-                    $foundCnt++;
-                    if ($foundCnt >= $allrules[$ruleidx][$enCnt]) {
-                        # met hit count, clear coloring
-                        $foundRuleN = -1;
-                        $forecolor = 'black';
-                        $backcolor = 'white';
+                if ($allrules[$ruleidx][$enRegex] =~ /^#\((\d+)\)$/) {
+                    if ($lineno == $1) {
+                        # match
+                        $foundCnt++;
+                        if ($foundCnt >= $allrules[$ruleidx][$enCnt]) {
+                            # met hit count, clear coloring
+                            $foundRuleN = -1;
+                            $forecolor = 'black';
+                            $backcolor = 'white';
+                        }
+                    }
+                } else {
+                    if ($line =~ /$allrules[$ruleidx][$enRegex]/) {
+                        # match
+                        $foundCnt++;
+                        if ($foundCnt >= $allrules[$ruleidx][$enCnt]) {
+                            # met hit count, clear coloring
+                            $foundRuleN = -1;
+                            $forecolor = 'black';
+                            $backcolor = 'white';
+                        }
                     }
                 }
             } else {
@@ -131,13 +149,24 @@ sub l00http_colortext_proc {
                 $backcolor = 'white';
                 # search for a rule for start condition
                 for ($ruleidx = 0; $ruleidx < $norules; $ruleidx++) {
-                    if ($line =~ /$allrules[$ruleidx][$stRegex]/) {
-                        # match
-                        $foundRuleN = $ruleidx;
-                        $foundCnt = 0;
-                        $forecolor = $allrules[$foundRuleN][$fore];
-                        $backcolor = $allrules[$foundRuleN][$back];
-                        last;
+                    if ($allrules[$ruleidx][$stRegex] =~ /^#\((\d+)\)$/) {
+                        if ($lineno == $1) {
+                            # match
+                            $foundRuleN = $ruleidx;
+                            $foundCnt = 0;
+                            $forecolor = $allrules[$foundRuleN][$fore];
+                            $backcolor = $allrules[$foundRuleN][$back];
+                            last;
+                        }
+                    } else {
+                        if ($line =~ /$allrules[$ruleidx][$stRegex]/) {
+                            # match
+                            $foundRuleN = $ruleidx;
+                            $foundCnt = 0;
+                            $forecolor = $allrules[$foundRuleN][$fore];
+                            $backcolor = $allrules[$foundRuleN][$back];
+                            last;
+                        }
                     }
                 }
             }
