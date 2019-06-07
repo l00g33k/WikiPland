@@ -121,7 +121,7 @@ sub l00http_colortext_proc {
             if ($foundRuleN >= 0) {
                 # a rule was found, search for end condition
                 if ($allrules[$ruleidx][$enRegex] =~ /^#\((\d+)\)$/) {
-                    if ($lineno == $1) {
+                    if ($lineno == ($1 + 1)) {
                         # match
                         $foundCnt++;
                         if ($foundCnt >= $allrules[$ruleidx][$enCnt]) {
