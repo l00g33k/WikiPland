@@ -185,6 +185,7 @@ sub wget {
             }
         } else {
             $hdr = 'wget utility is not available in the shell to fetch HTTPS';
+            $hdr .= ". Try <a href=\"http://127.0.0.1:20347/mobizoom.htm?url=$url&fetch=Fetch\">http://127.0.0.1:20347/mobizoom.htm</a>";
             $bdy = $hdr;
         }
     }
