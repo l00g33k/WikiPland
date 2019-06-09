@@ -763,7 +763,7 @@ sub l00http_dash_proc {
                             if (!defined($hidedays) || ($hidedays >= 0)) {
                                 # show days past hide, e.g. 3 days past: (3+)+5 do stuff
                                 if (defined($hidedays)) {
-                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; ($hidedays+)$dsc");
+                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; (<font style=\"color:red;background-color:silver\"><strong>$hidedays+</strong></font>)$dsc");
                                 } else {
                                     $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
                                 }
