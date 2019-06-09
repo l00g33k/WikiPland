@@ -1,0 +1,10 @@
+%TOC%
+
+=Polyline support=
+Polyline support is specified by the 'poly: ' prefix 
+and a space delimited latitude,longitude pairs
+
+    * poly_name
+    poly: 40.730206194012574,-74.03105175812993 40.744062308099,-73.937410477002
+
+

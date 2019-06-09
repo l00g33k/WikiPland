@@ -230,10 +230,13 @@ sub l00http_kml2gmap_proc {
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
+    my (@polyline, $polyidx, $polybuf, $polypt);
 
     $gpslon = '';
     $gpslat = '';
     $desc = "new$new";
+
+    $polyidx = 0;
 
     if (defined($ctrl->{'googleapikey'})) {
         $apikey = $ctrl->{'googleapikey'};
@@ -505,6 +508,33 @@ sub l00http_kml2gmap_proc {
                     $name = $starname;
                     $starname = '';
                 }
+            } elsif (/^poly:/) {
+                if ($starname ne '') {
+                    # * name from line above over writes name from URL
+                    $name = $starname;
+                    $starname = '';
+                }
+
+                s/^poly: *//;
+                $polyidx++;
+                @polyline = split(" ", $_);
+                $polybuf = "var polycoor$polyidx = [\n";
+                foreach $polypt (@polyline) {
+                    ($lat, $lon) = split(',', $polypt);
+                    $polybuf .= "    {lat: $lat, lng: $lon},\n";
+                }
+                $polybuf .= 
+                "  ];\n".
+                "  var polypath$polyidx = new google.maps.Polyline({\n".
+                "    path: polycoor$polyidx,\n".
+                "    geodesic: true,\n".
+                "    strokeColor: '#FF0000',\n".
+                "    strokeOpacity: 1.0,\n".
+                "    strokeWeight: 1\n".
+                "  });\n";
+
+                $myMarkers .= $polybuf;
+                $mySetMap .= "polypath$polyidx.setMap(map);\n";
             } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+(.+)/) {
                 # match, falls thru
                 if ($starname ne '') {
@@ -626,24 +656,6 @@ sub l00http_kml2gmap_proc {
             $mySetMap .= "marker$nowypts.setMap(map);\n";
             $nowypts++;
         }
-$myMarkers .= 
-"  var polycoor1 = [".
-"    {lat: 40.749, lng: -73.97},".
-"    {lat: 40.749, lng: -73.99},".
-"    {lat: 40.769, lng: -73.99},".
-"    {lat: 40.769, lng: -73.97},".
-"    {lat: 40.749, lng: -73.97}".
-"  ];".
-"  var polypath1 = new google.maps.Polyline({".
-"    path: polycoor1,".
-"    geodesic: true,".
-"    strokeColor: '#FF0000',".
-"    strokeOpacity: 1.0,".
-"    strokeWeight: 1".
-"  });";
-
-
-$mySetMap .= "polypath1.setMap(map);\n";
     }
 
 
