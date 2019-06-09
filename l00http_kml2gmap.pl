@@ -8,7 +8,7 @@ use l00httpd;
 
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
-my ($width, $height, $apikey, $satellite);
+my ($width, $height, $apikey, $satellite, $initzoom);
 my ($new, $selregex, $drawgrid, $matched, $exclude);
 
 $new = 1;
@@ -17,6 +17,7 @@ $myMarkers = '';
 $mySetMap = '';
 $selregex = '';
 $drawgrid = '';
+$initzoom = '';
 
 $width = 500;
 $height = 380;
@@ -278,6 +279,11 @@ sub l00http_kml2gmap_proc {
             $drawgrid = 'checked';
         } else {
             $drawgrid = '';
+        }
+        if (defined($form->{'initzoom'}) && ($form->{'initzoom'} =~ /(\d+)/)) {
+            $initzoom = $1;
+        } else {
+            $initzoom = '';
         }
     }
 
@@ -674,15 +680,19 @@ sub l00http_kml2gmap_proc {
             $ctrlon = ($lonmax + $lonmin) / 2;
             $ctrlat = ($latmax + $latmin) / 2;
         } else {
-            $zoom = 1;
-            if ($span > 1e-9) {
-                while (1) {
-                    if ($span * 2 ** $zoom > 200) {
-                        last;
-                    }
-                    $zoom++;
-                    if ($zoom >= 17) {
-                        last;
+            if ($initzoom ne '') {
+                $zoom = $initzoom;
+            } else {
+                $zoom = 1;
+                if ($span > 1e-9) {
+                    while (1) {
+                        if ($span * 2 ** $zoom > 200) {
+                            last;
+                        }
+                        $zoom++;
+                        if ($zoom >= 17) {
+                            last;
+                        }
                     }
                 }
             }
@@ -788,6 +798,7 @@ sub l00http_kml2gmap_proc {
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"Update\">\n";
+        print $sock "zoom <input type=\"text\" name=\"initzoom\" size=\"5\" value=\"$initzoom\"> (was $zoom)\n";
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";
