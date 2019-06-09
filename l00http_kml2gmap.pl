@@ -191,7 +191,9 @@ ENDOFSCRIPT2b
 #marker2.setMap(map);
 #$mySetMap
 
+
 $gmapscript3 = <<ENDOFSCRIPT3;
+
 
 var myCenterCursor =new google.maps.LatLng(0,0);
 cursor=new google.maps.Marker({ position:myCenterCursor});
@@ -624,6 +626,24 @@ sub l00http_kml2gmap_proc {
             $mySetMap .= "marker$nowypts.setMap(map);\n";
             $nowypts++;
         }
+$myMarkers .= 
+"  var polycoor1 = [".
+"    {lat: 40.749, lng: -73.97},".
+"    {lat: 40.749, lng: -73.99},".
+"    {lat: 40.769, lng: -73.99},".
+"    {lat: 40.769, lng: -73.97},".
+"    {lat: 40.749, lng: -73.97}".
+"  ];".
+"  var polypath1 = new google.maps.Polyline({".
+"    path: polycoor1,".
+"    geodesic: true,".
+"    strokeColor: '#FF0000',".
+"    strokeOpacity: 1.0,".
+"    strokeWeight: 1".
+"  });";
+
+
+$mySetMap .= "polypath1.setMap(map);\n";
     }
 
 
