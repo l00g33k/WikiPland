@@ -9,7 +9,7 @@ use l00httpd;
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
 my ($width, $height, $apikey, $satellite, $initzoom);
-my ($new, $selregex, $drawgrid, $matched, $exclude);
+my ($new, $selregex, $drawgrid, $matched, $exclude, @polylinepts);
 
 $new = 1;
 $myCenters = '';
@@ -18,6 +18,7 @@ $mySetMap = '';
 $selregex = '';
 $drawgrid = '';
 $initzoom = '';
+@polylinepts = ();
 
 $width = 500;
 $height = 380;
@@ -381,6 +382,7 @@ sub l00http_kml2gmap_proc {
                 }
             }
             $buffer = "* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
+            push (@polylinepts, "$form->{'lat'},$form->{'long'}");
 
             # back up
             &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
@@ -390,6 +392,29 @@ sub l00http_kml2gmap_proc {
             &l00httpd::l00fwriteClose($ctrl);
         }
     } 
+
+    # add new polyline
+    if (defined ($form->{'resetpoly'})) {
+        @polylinepts = ();
+    }
+    if (defined ($form->{'path'}) && 
+        defined ($form->{'savepoly'})) {
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+            $buffer = "* $form->{'desc'}\n".
+                "poly: ".  join (" ", @polylinepts).  "\n\n".
+                "$buffer";
+            @polylinepts = ();
+
+            # back up
+            &l00backup::backupfile ($ctrl, $form->{'path'}, 1, 5);
+            # update file
+            &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+            &l00httpd::l00fwriteBuf($ctrl, $buffer);
+            &l00httpd::l00fwriteClose($ctrl);
+        }
+    } 
+
 
     # paste GPS
     if (defined ($form->{'path'}) && 
@@ -530,7 +555,7 @@ sub l00http_kml2gmap_proc {
                 "    geodesic: true,\n".
                 "    strokeColor: '#FF0000',\n".
                 "    strokeOpacity: 1.0,\n".
-                "    strokeWeight: 1\n".
+                "    strokeWeight: 2\n".
                 "  });\n";
 
                 $myMarkers .= $polybuf;
@@ -831,6 +856,12 @@ sub l00http_kml2gmap_proc {
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"Update\">\n";
         print $sock "zoom <input type=\"text\" name=\"initzoom\" size=\"5\" value=\"$initzoom\"> (was $zoom)\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"resetpoly\" value=\"Reset Poly\">\n";
+        print $sock "</td><td>\n";
+        print $sock "<input type=\"submit\" name=\"savepoly\" value=\"Save Polyline\">\n";
+        print $sock "(" .  ($#polylinepts + 1) . " pts)\n";
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";
