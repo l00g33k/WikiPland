@@ -90,6 +90,14 @@ function placeMarkerAndPanTo(latLng, map) {
             "Distance: " + 
             getDistanceFromLatLonInKm(latLng, latLngLast) + " km";
     }
+
+    document.getElementById("polylinejs").value = 
+        document.getElementById("polylinejs").value + 
+        " " + 
+        latLng.lat() +
+        "," +
+        latLng.lng();
+
     document.getElementById("long").value = latLng.lng();
     document.getElementById("lat").value = latLng.lat();
     lng0 = latLng.lng();
@@ -401,6 +409,14 @@ sub l00http_kml2gmap_proc {
         defined ($form->{'savepoly'})) {
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             $buffer = &l00httpd::l00freadAll($ctrl);
+            if (defined ($form->{'polylinejs'}) && 
+                ($form->{'polylinejs'} =~ /[0-9.+-]+,[0-9.+-]+/)) {
+                @polylinepts = ();
+                foreach $_ (split(" ", $form->{'polylinejs'})) {
+                    ($lat, $lon) = split(",", $_);
+                    push (@polylinepts, "$lat,$lon");
+                }
+            }
             $buffer = "* $form->{'desc'}\n".
                 "poly: ".  join (" ", @polylinepts).  "\n\n".
                 "$buffer";
@@ -699,7 +715,7 @@ sub l00http_kml2gmap_proc {
         if (defined($lonmax) && defined($lonmin) &&
             defined($latmax) && defined($latmin)) {
         $ctrlat = ($latmax + $latmin) / 2;
-            $ctrlon = ($lonmax + $lonmin) / 2;
+        $ctrlon = ($lonmax + $lonmin) / 2;
         $span = sqrt (($lonmax - $lonmin) ** 2 + 
                       (($latmax - $latmin) * 
                       cos (($latmax + $latmin) / 2 / 180 
@@ -732,13 +748,23 @@ sub l00http_kml2gmap_proc {
             $zoom = 11;
         } elsif (defined ($form->{'mkridx'})) {
             # selecting one
-            $zoom = 13;
+            if ($initzoom ne '') {
+                $zoom = $initzoom;
+            } else {
+                $zoom = 13;
+            }
             # the selected marker
             $ctrlon = ($lonmax + $lonmin) / 2;
             $ctrlat = ($latmax + $latmin) / 2;
         } else {
             if ($initzoom ne '') {
                 $zoom = $initzoom;
+                if (defined ($form->{'addway'}) &&
+                    defined ($form->{'long'}) &&
+                    defined ($form->{'lat'})) {
+                    $ctrlon = $form->{'long'};
+                    $ctrlat = $form->{'lat'};
+                }
             } else {
                 $zoom = 1;
                 if ($span > 1e-9) {
@@ -862,6 +888,7 @@ sub l00http_kml2gmap_proc {
         print $sock "</td><td>\n";
         print $sock "<input type=\"submit\" name=\"savepoly\" value=\"Save Polyline\">\n";
         print $sock "(" .  ($#polylinepts + 1) . " pts)\n";
+        print $sock "<input type=\"text\" name=\"polylinejs\" id=\"polylinejs\" size=\"12\" value=\"\"></span><p>\n";
         print $sock "</td></tr>\n";
         print $sock "</table><br>\n";
         print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";

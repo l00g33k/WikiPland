@@ -119,6 +119,8 @@ sub l00http_kml_proc {
     my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
     my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $wayptcolor);
     my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow, $newbuf, $pathbase);
+    my (@polyline);
+
 
     $rawkml = 0;
     $kmlheadernow = '';
@@ -587,6 +589,23 @@ sub l00http_kml_proc {
                                 $name = $starname;
                             } else {
                                 $wayptcolor = '';
+                            }
+                            if (/^poly:/) {
+                                $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .
+                                           "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
+                                           "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                           "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
+                                           "\t\t\t<coordinates>\n";
+
+                                s/^poly: *//;
+                                @polyline = split(" ", $_);
+                                foreach $_ (@polyline) {
+                                    ($lat, $lon) = split(',', $_);
+                                    $kmlbuf .= "\t\t\t$lon,$lat,$trackheight\n";
+                                }
+
+                                $kmlbuf .= "\t\t</coordinates></LineString></Placemark>\n";
+                                next;
                             }
                         } elsif (/^\* +([^ ]+)/) {
                             # of the form:
