@@ -135,7 +135,12 @@ sub l00http_activity_proc {
 
     print $sock "$htmlout<p>\n";
 
-    print $sock &l00wikihtml::wikihtml ($ctrl, '', $path, 0);
+    if (-f $path) {
+        # local file
+        print $sock &l00wikihtml::wikihtml ($ctrl, '', "Launcher: [[/launcher.htm?path=$path|$path]]", 0);
+    } else {
+        print $sock &l00wikihtml::wikihtml ($ctrl, '', $path, 0);
+    }
 
     print $sock $ctrl->{'htmlfoot'};
 }
