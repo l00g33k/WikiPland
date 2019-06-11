@@ -612,7 +612,10 @@ sub l00http_kml_proc {
                                 $name = $starname;
                                 $starname = '';
                             } else {
-                                $wayptcolor = '__';
+                                $wayptcolor = '_r';
+                            }
+                            if ($wayptcolor eq '__') {
+                                $wayptcolor = '_r';
                             }
                             if (/^poly:/) {
                                 $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .

@@ -579,6 +579,12 @@ sub l00http_kml2gmap_proc {
                     # * name from line above over writes name from URL
                     $name = $starname;
                     $starname = '';
+                } else {
+                    $wayptcolor = '_r';
+                }
+                if ($wayptcolor eq '__') {
+                    # change black line to red
+                    $wayptcolor = '_r';
                 }
 
                 s/^poly: *//;
@@ -641,7 +647,6 @@ sub l00http_kml2gmap_proc {
                 next;
             }
 
-print "name $name wayptcolor $wayptcolor: $colorlookup{$wayptcolor}\n";
             # select marker by regex
             if (defined($selregex) && (length($selregex) > 0)) {
                 if ($matched eq 'checked') {
@@ -724,6 +729,10 @@ print "name $name wayptcolor $wayptcolor: $colorlookup{$wayptcolor}\n";
             $labelsort{"$name -- $jlabel"} .= "\" target=\"_blank\">:</a> ";
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"_blank\">$lat,$lon</a>\n";
 
+            if ($wayptcolor eq '_r') {
+                # avoid red on red
+                $wayptcolor = '__';
+            }
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
                 "  color: '#".
