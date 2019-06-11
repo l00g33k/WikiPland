@@ -28,6 +28,51 @@ $apikey = '';
 $matched = '';
 $exclude = '';
 
+my (%colorcode);
+#$colorlukeys = 'rylsafgodGDbSpLTBhu';
+$colorcode{'r'} = 'ff0000ff';   #red
+$colorcode{'y'} = 'ff0000ff';   #yellow
+$colorcode{'l'} = 'ff0000ff';   #lime
+$colorcode{'s'} = 'ff0000ff';   #silver
+$colorcode{'a'} = 'ff0000ff';   #aqua
+$colorcode{'f'} = 'ff0000ff';   #fuchsia
+$colorcode{'g'} = 'ff0000ff';   #gray
+$colorcode{'o'} = 'ff0000ff';   #olive
+$colorcode{'d'} = 'ff0000ff';   #gold
+$colorcode{'G'} = 'ff00ff00';   #green
+$colorcode{'D'} = 'ff0000ff';   #DeepPink
+$colorcode{'b'} = 'ff0000ff';   #Brown
+$colorcode{'S'} = 'ff0000ff';   #DeepSkyBlue
+$colorcode{'p'} = 'ff0000ff';   #Purple
+$colorcode{'L'} = 'ff0000ff';   #LightGray
+$colorcode{'T'} = 'ff0000ff';   #Teal
+$colorcode{'B'} = 'ff0000ff';   #SandyBrown
+$colorcode{'h'} = 'ff0000ff';   #HotPink
+$colorcode{'u'} = 'ffff0000';   #blue
+
+my (%colorlookup);
+#$colorlukeys = 'rylsafgodGDbSpLTBhu';
+$colorlookup{'__'} = '0000ff';   #red
+$colorlookup{'_r'} = '0000ff';   #red
+$colorlookup{'_y'} = '0000ff';   #yellow
+$colorlookup{'_l'} = '0000ff';   #lime
+$colorlookup{'_s'} = '0000ff';   #silver
+$colorlookup{'_a'} = '0000ff';   #aqua
+$colorlookup{'_f'} = '0000ff';   #fuchsia
+$colorlookup{'_g'} = '0000ff';   #gray
+$colorlookup{'_o'} = '0000ff';   #olive
+$colorlookup{'_d'} = '0000ff';   #gold
+$colorlookup{'_G'} = '00ff00';   #green
+$colorlookup{'_D'} = '0000ff';   #DeepPink
+$colorlookup{'_b'} = '0000ff';   #Brown
+$colorlookup{'_S'} = '0000ff';   #DeepSkyBlue
+$colorlookup{'_p'} = '0000ff';   #Purple
+$colorlookup{'_L'} = '0000ff';   #LightGray
+$colorlookup{'_T'} = '0000ff';   #Teal
+$colorlookup{'_B'} = '0000ff';   #SandyBrown
+$colorlookup{'_h'} = '0000ff';   #HotPink
+$colorlookup{'_u'} = 'ff0000';   #blue
+
 $gmapscript0 = "<script\n";
 #src="http://maps.googleapis.com/maps/api/js?key=$apikey">
 $gmapscript1 = <<ENDOFSCRIPT1;
@@ -239,7 +284,7 @@ sub l00http_kml2gmap_proc {
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
-    my (@polyline, $polyidx, $polybuf, $polypt);
+    my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor);
 
     $gpslon = '';
     $gpslat = '';
@@ -564,12 +609,17 @@ sub l00http_kml2gmap_proc {
                     ($lat, $lon) = split(',', $polypt);
                     $polybuf .= "    {lat: $lat, lng: $lon},\n";
                 }
+#my (%colorlookup);
+%colorlookup{$wayptcolor}
                 $polybuf .= 
                 "  ];\n".
                 "  var polypath$polyidx = new google.maps.Polyline({\n".
                 "    path: polycoor$polyidx,\n".
                 "    geodesic: true,\n".
-                "    strokeColor: '#FF0000',\n".
+               #"    strokeColor: '#FF0000',\n".
+                "    strokeColor: '#".
+                    %colorlookup{$wayptcolor}.
+                    "',\n".
                 "    strokeOpacity: 1.0,\n".
                 "    strokeWeight: 2\n".
                 "  });\n";
@@ -588,6 +638,12 @@ sub l00http_kml2gmap_proc {
                 # * name
                 # https://www.google.com/maps/@31.1956864,121.3522793,15z
                 $starname = $1;
+                if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
+                    $wayptcolor = "_$1";
+                    $starname =~ s/!!!([rylsafgodGDbSpLTBhu])$//;
+                } else {
+                    $wayptcolor = '__';
+                }
                 next;
             } elsif (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
                 # of the form:
