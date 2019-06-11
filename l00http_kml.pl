@@ -13,27 +13,50 @@ my ($kmlheader1, $kmlheader2, $kmlheader2a, $kmlheader2b, $kmlheader2c,
     $kmlfooter, $trackheight, $trackmark);
 my ($latoffset, $lonoffset, $applyoffset, $color, $thiscolor, $thisname);
 
-my (%colorcode);
+my (%colorlookup);
 #$colorlukeys = 'rylsafgodGDbSpLTBhu';
-$colorcode{'r'} = 'ff0000ff';   #red
-$colorcode{'y'} = 'ff0000ff';   #yellow
-$colorcode{'l'} = 'ff0000ff';   #lime
-$colorcode{'s'} = 'ff0000ff';   #silver
-$colorcode{'a'} = 'ff0000ff';   #aqua
-$colorcode{'f'} = 'ff0000ff';   #fuchsia
-$colorcode{'g'} = 'ff0000ff';   #gray
-$colorcode{'o'} = 'ff0000ff';   #olive
-$colorcode{'d'} = 'ff0000ff';   #gold
-$colorcode{'G'} = 'ff00ff00';   #green
-$colorcode{'D'} = 'ff0000ff';   #DeepPink
-$colorcode{'b'} = 'ff0000ff';   #Brown
-$colorcode{'S'} = 'ff0000ff';   #DeepSkyBlue
-$colorcode{'p'} = 'ff0000ff';   #Purple
-$colorcode{'L'} = 'ff0000ff';   #LightGray
-$colorcode{'T'} = 'ff0000ff';   #Teal
-$colorcode{'B'} = 'ff0000ff';   #SandyBrown
-$colorcode{'h'} = 'ff0000ff';   #HotPink
-$colorcode{'u'} = 'ffff0000';   #blue
+$colorlookup{'__'} = 'ff0000ff';   #red
+$colorlookup{'_r'} = 'ff0000ff';   #red
+$colorlookup{'_y'} = 'ff00ffff';   #yellow
+$colorlookup{'_l'} = 'ff00ff00';   #lime
+$colorlookup{'_s'} = 'ffc0c0c0';   #silver
+$colorlookup{'_a'} = 'ffffff00';   #aqua
+$colorlookup{'_f'} = 'ffff00ff';   #fuchsia
+$colorlookup{'_g'} = 'ff808080';   #gray
+$colorlookup{'_o'} = 'ff008080';   #olive
+$colorlookup{'_d'} = 'ff00d7ff';   #gold
+$colorlookup{'_G'} = 'ff008000';   #green
+$colorlookup{'_D'} = 'ff9314ff';   #DeepPink
+$colorlookup{'_b'} = 'ff2a2aa5';   #Brown
+$colorlookup{'_S'} = 'ffffbf00';   #DeepSkyBlue
+$colorlookup{'_p'} = 'ff800080';   #Purple
+$colorlookup{'_L'} = 'ffd3d3d3';   #LightGray
+$colorlookup{'_T'} = 'ff808000';   #Teal
+$colorlookup{'_B'} = 'ff60a4f4';   #SandyBrown
+$colorlookup{'_h'} = 'ffb469ff';   #HotPink
+$colorlookup{'_u'} = 'ffff0000';   #blue
+#my (%colorcode);
+##$colorlukeys = 'rylsafgodGDbSpLTBhu';
+#$colorcode{'_'} = 'ff0000ff';   #red
+#$colorcode{'r'} = 'ff0000ff';   #red
+#$colorcode{'y'} = 'ff0000ff';   #yellow
+#$colorcode{'l'} = 'ff0000ff';   #lime
+#$colorcode{'s'} = 'ff0000ff';   #silver
+#$colorcode{'a'} = 'ff0000ff';   #aqua
+#$colorcode{'f'} = 'ff0000ff';   #fuchsia
+#$colorcode{'g'} = 'ff0000ff';   #gray
+#$colorcode{'o'} = 'ff0000ff';   #olive
+#$colorcode{'d'} = 'ff0000ff';   #gold
+#$colorcode{'G'} = 'ff00ff00';   #green
+#$colorcode{'D'} = 'ff0000ff';   #DeepPink
+#$colorcode{'b'} = 'ff0000ff';   #Brown
+#$colorcode{'S'} = 'ff0000ff';   #DeepSkyBlue
+#$colorcode{'p'} = 'ff0000ff';   #Purple
+#$colorcode{'L'} = 'ff0000ff';   #LightGray
+#$colorcode{'T'} = 'ff0000ff';   #Teal
+#$colorcode{'B'} = 'ff0000ff';   #SandyBrown
+#$colorcode{'h'} = 'ff0000ff';   #HotPink
+#$colorcode{'u'} = 'ffff0000';   #blue
 
 $trackheight = 0;
 $trackmark = 0;
@@ -94,11 +117,11 @@ $kmlheader2c =
 
 $kmlheader2 = $kmlheader2a;
 $kmlheader2 .= sprintf ($kmlheader2b, '', 'ff0000ff', '', 'ff0000ff', '', '', '');
-foreach $thisname (keys %colorcode) {
+foreach $thisname (keys %colorlookup) {
     $kmlheader2 .= sprintf ($kmlheader2b, 
-        "_$thisname", $colorcode{$thisname}, 
-        "_$thisname", $colorcode{$thisname}, 
-        "_$thisname", "_$thisname", "_$thisname");
+        "$thisname", $colorlookup{$thisname}, 
+        "$thisname", $colorlookup{$thisname}, 
+        "$thisname", "$thisname", "$thisname");
 }
 $kmlheader2 .= $kmlheader2c;
 
@@ -587,12 +610,13 @@ sub l00http_kml_proc {
                             if ($starname ne '') {
                                 # * name from line above over writes name from URL
                                 $name = $starname;
+                                $starname = '';
                             } else {
-                                $wayptcolor = '';
+                                $wayptcolor = '__';
                             }
                             if (/^poly:/) {
                                 $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .
-                                           "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
+                                           "\t\t\t<Style id=\"lc\"><LineStyle><color>$colorlookup{$wayptcolor}</color><width>4</width></LineStyle></Style>\n" .
                                            "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
                                            "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                            "\t\t\t<coordinates>\n";
@@ -615,7 +639,7 @@ sub l00http_kml_proc {
                             if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
                                 $wayptcolor = "_$1";
                             } else {
-                                $wayptcolor = '';
+                                $wayptcolor = '__';
                             }
                             next;
                         } else {
