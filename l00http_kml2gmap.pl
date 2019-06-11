@@ -28,50 +28,30 @@ $apikey = '';
 $matched = '';
 $exclude = '';
 
-my (%colorcode);
-#$colorlukeys = 'rylsafgodGDbSpLTBhu';
-$colorcode{'r'} = 'ff0000ff';   #red
-$colorcode{'y'} = 'ff0000ff';   #yellow
-$colorcode{'l'} = 'ff0000ff';   #lime
-$colorcode{'s'} = 'ff0000ff';   #silver
-$colorcode{'a'} = 'ff0000ff';   #aqua
-$colorcode{'f'} = 'ff0000ff';   #fuchsia
-$colorcode{'g'} = 'ff0000ff';   #gray
-$colorcode{'o'} = 'ff0000ff';   #olive
-$colorcode{'d'} = 'ff0000ff';   #gold
-$colorcode{'G'} = 'ff00ff00';   #green
-$colorcode{'D'} = 'ff0000ff';   #DeepPink
-$colorcode{'b'} = 'ff0000ff';   #Brown
-$colorcode{'S'} = 'ff0000ff';   #DeepSkyBlue
-$colorcode{'p'} = 'ff0000ff';   #Purple
-$colorcode{'L'} = 'ff0000ff';   #LightGray
-$colorcode{'T'} = 'ff0000ff';   #Teal
-$colorcode{'B'} = 'ff0000ff';   #SandyBrown
-$colorcode{'h'} = 'ff0000ff';   #HotPink
-$colorcode{'u'} = 'ffff0000';   #blue
 
-my (%colorlookup);
-#$colorlukeys = 'rylsafgodGDbSpLTBhu';
-$colorlookup{'__'} = '0000ff';   #red
-$colorlookup{'_r'} = '0000ff';   #red
-$colorlookup{'_y'} = '0000ff';   #yellow
-$colorlookup{'_l'} = '0000ff';   #lime
-$colorlookup{'_s'} = '0000ff';   #silver
-$colorlookup{'_a'} = '0000ff';   #aqua
-$colorlookup{'_f'} = '0000ff';   #fuchsia
-$colorlookup{'_g'} = '0000ff';   #gray
-$colorlookup{'_o'} = '0000ff';   #olive
-$colorlookup{'_d'} = '0000ff';   #gold
-$colorlookup{'_G'} = '00ff00';   #green
-$colorlookup{'_D'} = '0000ff';   #DeepPink
-$colorlookup{'_b'} = '0000ff';   #Brown
-$colorlookup{'_S'} = '0000ff';   #DeepSkyBlue
-$colorlookup{'_p'} = '0000ff';   #Purple
-$colorlookup{'_L'} = '0000ff';   #LightGray
-$colorlookup{'_T'} = '0000ff';   #Teal
-$colorlookup{'_B'} = '0000ff';   #SandyBrown
-$colorlookup{'_h'} = '0000ff';   #HotPink
-$colorlookup{'_u'} = 'ff0000';   #blue
+my (%colorlookup);
+#$colorlukeys = 'rylsafgodGDbSpLTBhu';
+$colorlookup{'__'} = '000000';   #black
+$colorlookup{'_r'} = 'ff0000';   #red
+$colorlookup{'_y'} = 'ffff00';   #yellow
+$colorlookup{'_l'} = '00ff00';   #lime
+$colorlookup{'_s'} = 'c0c0c0';   #silver
+$colorlookup{'_a'} = '00ffff';   #aqua
+$colorlookup{'_f'} = 'ff00ff';   #fuchsia
+$colorlookup{'_g'} = '808080';   #gray
+$colorlookup{'_o'} = '808000';   #olive
+$colorlookup{'_d'} = 'ffd700';   #gold
+$colorlookup{'_G'} = '008000';   #green
+$colorlookup{'_D'} = 'ff1493';   #DeepPink
+$colorlookup{'_b'} = 'a52a2a';   #Brown
+$colorlookup{'_S'} = '00bfff';   #DeepSkyBlue
+$colorlookup{'_p'} = '800080';   #Purple
+$colorlookup{'_L'} = 'd3d3d3';   #LightGray
+$colorlookup{'_T'} = '008080';   #Teal
+$colorlookup{'_B'} = 'f4a460';   #SandyBrown
+$colorlookup{'_h'} = 'ff69b4';   #HotPink
+$colorlookup{'_u'} = '0000ff';   #blue
+
 
 $gmapscript0 = "<script\n";
 #src="http://maps.googleapis.com/maps/api/js?key=$apikey">
@@ -609,8 +589,6 @@ sub l00http_kml2gmap_proc {
                     ($lat, $lon) = split(',', $polypt);
                     $polybuf .= "    {lat: $lat, lng: $lon},\n";
                 }
-#my (%colorlookup);
-%colorlookup{$wayptcolor}
                 $polybuf .= 
                 "  ];\n".
                 "  var polypath$polyidx = new google.maps.Polyline({\n".
@@ -618,7 +596,7 @@ sub l00http_kml2gmap_proc {
                 "    geodesic: true,\n".
                #"    strokeColor: '#FF0000',\n".
                 "    strokeColor: '#".
-                    %colorlookup{$wayptcolor}.
+                    $colorlookup{$wayptcolor}.
                     "',\n".
                 "    strokeOpacity: 1.0,\n".
                 "    strokeWeight: 2\n".
@@ -638,12 +616,13 @@ sub l00http_kml2gmap_proc {
                 # * name
                 # https://www.google.com/maps/@31.1956864,121.3522793,15z
                 $starname = $1;
-                if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
-                    $wayptcolor = "_$1";
+                if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
+                    $wayptcolor = "_$1";
                     $starname =~ s/!!!([rylsafgodGDbSpLTBhu])$//;
-                } else {
-                    $wayptcolor = '__';
-                }
+                } else {
+                    $wayptcolor = '__';
+                }
+
                 next;
             } elsif (/^T +([NS])(\d\d)([0-9.\-]+) +([EW])(\d\d\d)([0-9.\-]+)/) {
                 # of the form:
@@ -662,6 +641,7 @@ sub l00http_kml2gmap_proc {
                 next;
             }
 
+print "name $name wayptcolor $wayptcolor: $colorlookup{$wayptcolor}\n";
             # select marker by regex
             if (defined($selregex) && (length($selregex) > 0)) {
                 if ($matched eq 'checked') {
@@ -746,7 +726,14 @@ sub l00http_kml2gmap_proc {
 
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
-                "  label: '$jlabel' , \n".
+                "  color: '#".
+                    $colorlookup{$wayptcolor}.
+                    "' , \n".
+                "  label: {".
+                    "text: '$jlabel',\n".
+                    "color: '#".
+                    $colorlookup{$wayptcolor}.
+                    "'}, \n".
                 "  title: '$jname'});\n";
 
             # marker.setMap(map);
@@ -936,7 +923,7 @@ sub l00http_kml2gmap_proc {
         print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"Update\">\n";
+        print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"U&#818;pdate\" accesskey=\"u\">\n";
         print $sock "zoom <input type=\"text\" name=\"initzoom\" size=\"5\" value=\"$initzoom\"> (was $zoom)\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
