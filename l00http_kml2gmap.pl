@@ -264,7 +264,7 @@ sub l00http_kml2gmap_proc {
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
-    my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor);
+    my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor, $icon);
 
     $gpslon = '';
     $gpslat = '';
@@ -600,10 +600,7 @@ sub l00http_kml2gmap_proc {
                 "  var polypath$polyidx = new google.maps.Polyline({\n".
                 "    path: polycoor$polyidx,\n".
                 "    geodesic: true,\n".
-               #"    strokeColor: '#FF0000',\n".
-                "    strokeColor: '#".
-                    $colorlookup{$wayptcolor}.
-                    "',\n".
+                "    strokeColor: '#$colorlookup{$wayptcolor}',\n".
                 "    strokeOpacity: 1.0,\n".
                 "    strokeWeight: 2\n".
                 "  });\n";
@@ -729,20 +726,34 @@ sub l00http_kml2gmap_proc {
             $labelsort{"$name -- $jlabel"} .= "\" target=\"_blank\">:</a> ";
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/clip.htm?update=&clip=$lat,$lon\" target=\"_blank\">$lat,$lon</a>\n";
 
-            if ($wayptcolor eq '_r') {
-                # avoid red on red
-                $wayptcolor = '__';
+                 if ($wayptcolor eq '__') {
+                $icon = 'red';
+            } elsif ($wayptcolor eq '_y') {
+                $icon = 'yellow';
+            } elsif ($wayptcolor eq '_u') {
+                $icon = 'blue';
+            } elsif ($wayptcolor eq '_l') {
+                $icon = 'green';
+            } elsif ($wayptcolor eq '_d') {
+                $icon = 'orange';
+            } elsif ($wayptcolor eq '_f') {
+                $icon = 'pink';
+            } elsif ($wayptcolor eq '_p') {
+                $icon = 'purple';
+            } elsif ($wayptcolor eq '_r') {
+                $icon = 'red';
+            } else {
+                $icon = 'red';
             }
+            $icon = "icon: { url: \"http://maps.google.com/mapfiles/ms/icons/$icon-dot.png\" },";
+
             $myMarkers .= "var marker$nowypts =new google.maps.Marker({ ".
                 "  position:myCenter$nowypts , \n".
-                "  color: '#".
-                    $colorlookup{$wayptcolor}.
-                    "' , \n".
+                $icon.
                 "  label: {".
                     "text: '$jlabel',\n".
-                    "color: '#".
-                    $colorlookup{$wayptcolor}.
-                    "'}, \n".
+                    "color: 'black'\n".
+                "}, \n".
                 "  title: '$jname'});\n";
 
             # marker.setMap(map);
