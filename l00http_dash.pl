@@ -10,7 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, 
+my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $filtime, 
 $smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
 $dash_all = 'past';
 $hdronly = 0;
@@ -25,7 +25,7 @@ $outputsort = '';
 $dashwidth = 18;;
 $onlybang = '';
 $onlyhat = '';
-
+$filtime = '';
 
 sub l00http_dash_linewrap {
     my ($buffer) = @_;
@@ -176,6 +176,7 @@ sub l00http_dash_proc {
         $form->{'dash_all'} = 'past';
         $form->{'hdronly'} = '';
         $form->{'catflt'} = '.';
+        $form->{'filtime'} = '';
     }
 
 
@@ -199,6 +200,11 @@ sub l00http_dash_proc {
         $onlybang = 'checked';
     } else {
         $onlybang = '';
+    }
+    if ((defined ($form->{'filtime'})) && ($form->{'filtime'} eq 'on')) {
+        $filtime = 'checked';
+    } else {
+        $filtime = '';
     }
     if ((defined ($form->{'onlyhat'})) && ($form->{'onlyhat'} eq 'on')) {
         $onlyhat = 'checked';
@@ -293,7 +299,8 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-        print $sock "Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\">\n";
+        print $sock "(Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\">\n";
+        print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime> time)";
         print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -640,7 +647,7 @@ sub l00http_dash_proc {
                 } else {
                     $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
                 }
-                if ((($cat1 =~ /$catflt/i) || ($tim =~ /$catflt/))&& 
+                if ((($cat1 =~ /$catflt/i) || ($filtime eq 'checked'))&& 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
                     # or time
@@ -877,9 +884,10 @@ sub l00http_dash_proc {
 		}
         $nowbuf = &l00http_dash_linewrap($nowbuf);
 
-push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
-    "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
-            "||$nowbuf ||``tasksTime``");
+        # insert a list of now item in current time
+        push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
+            "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
+                    "||$nowbuf ||``tasksTime``");
 
         $cnt = 0;
         foreach $_ (sort keys %tasksTime) {
@@ -1012,6 +1020,12 @@ push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
             s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
+            if (($filtime eq 'checked') && (($tmp) = /^\|\|!*(.+?)\|\|/)) {
+                # apply $catflt on timestamp
+                if ($tmp !~ /$catflt/) {
+                    next;
+                }
+            }
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
