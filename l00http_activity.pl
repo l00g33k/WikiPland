@@ -58,6 +58,10 @@ sub l00http_activity_proc {
             $mime = "image/jpeg";
         } elsif ($path =~ /\.pdf$/i) {
             $mime = "application/pdf";
+        } elsif ($path =~ /\.kmz$/i) {
+            $mime = "application/vnd.google-earth.kml+xml";
+        } elsif ($path =~ /\.kml$/i) {
+            $mime = "application/vnd.google-earth.kml+xml";
         } elsif ($path =~ /\.wma$/i) {
             $mime = "audio/x-ms-wma";
         } elsif ($path =~ /\.wav$/i) {
