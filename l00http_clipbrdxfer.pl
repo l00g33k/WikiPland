@@ -65,19 +65,17 @@ sub l00http_clipbrdxfer_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Send Clipboard\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;end Clipboard\" accesskey=\"s\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"nofetch\">Don't fetch; generate URL</td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
 
     if (defined ($form->{'submit'})) {
-	    $tmp = '';
-		if ($ctrl->{'os'} eq 'and') {
-            $buf = &l00httpd::l00getCB($ctrl);
-            $tmp = &l00httpd::urlencode ($buf);
-            $tmp = "clip.htm?update=Copy+to+clipboard&clip=$tmp";
-        }
+        $buf = &l00httpd::l00getCB($ctrl);
+        $tmp = &l00httpd::urlencode ($buf);
+        $tmp = "clip.htm?update=Copy+to+clipboard&clip=$tmp";
+
 		$geturl = "http://$url/$tmp";
         if ((!defined ($form->{'nofetch'})) ||
             ($form->{'nofetch'} ne 'on')) {
