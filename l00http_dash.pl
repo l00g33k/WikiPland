@@ -774,7 +774,7 @@ sub l00http_dash_proc {
                                 } else {
                                     $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
                                 }
-                                if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
+                                if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/i)) {
                                     # keep for 'now' listing
                                     $nowbuf{$key} = $tasksSticky{$key};
                                 }
@@ -932,7 +932,7 @@ sub l00http_dash_proc {
                     }
                 }
                 if ($onlyhat eq 'checked') {
-                    if ($tmp =~ /\^/) {
+                    if ($tmp =~ /[\^~]/) {
                         # cat2 ends in !**
                         push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
                     }
