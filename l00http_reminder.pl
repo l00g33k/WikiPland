@@ -108,7 +108,7 @@ sub l00http_reminder_find {
             if ($found) {
                 $st = &l00http_reminder_date2j ($st);
                 if (/^#!/) {
-                    $mg = "#!HIDDEN $mg";
+                    $mg = "#!$mg";
                 }
 		        #print "st $st $_\n";
                 if (($st0 == 0) || ($st < $st0)) {
