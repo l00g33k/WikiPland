@@ -502,52 +502,82 @@ sub l00http_kml2gmap_proc {
 
 
     $fetchramjson = '';
-    if (&l00httpd::l00freadOpen($ctrl, 'l00://l00http_kml2gmap.json')) {
-        $buffer = &l00httpd::l00freadAll($ctrl);
-        $fetchramjson .= "\n$buffer\n";
+#    if (&l00httpd::l00freadOpen($ctrl, 'l00://l00http_kml2gmap.json')) {
+#        $buffer = &l00httpd::l00freadAll($ctrl);
+#        $fetchramjson .= "\n$buffer\n";
 
         $fetchramjson .= <<SCRIPTSRC;
 
-            function process() {
-                console.log("process() invoked");
+            var mapcenter, map;
+            var request;
+            var queryinput;
+            var completecnt;
+            var makenewmap = 1;
+            function process(init) {
+                if (init) {
+                    queryinput = JSON.parse(document.getElementById("queryinput").value);
+                    console.log("Parsed queryinput: " + JSON.stringify(queryinput));
+                    document.getElementById("results").value = 
+                        'Click submit to query first 10 of ' + queryinput.places.length + ' places';
+                    completecnt = 0;
+                    document.getElementById("status").firstChild.nodeValue = 
+                        "Read " + queryinput.places.length + " places. " +
+                        "Click submit to query 10 at a time.";
 
-                //var mapcenter = new google.maps.LatLng(-33.867, 151.195);
-                var mapcenter = new google.maps.LatLng(queryset.center_lat, queryset.center_lng);
-                var map = new google.maps.Map(
-                    document.getElementById('googleMap2'), {center: mapcenter, zoom: 5});
+                    if (makenewmap) {
+                        makenewmap = 0;
+                        mapcenter = new google.maps.LatLng(queryinput.center_lat, queryinput.center_lng);
+                        map = new google.maps.Map(
+                            document.getElementById('googleMap2'), {center: mapcenter, zoom: 5});
+                        service = new google.maps.places.PlacesService(map);
+                        document.getElementById("status").firstChild.nodeValue += 
+                            " Created new map.";
+                    }
+                } else {
+                    console.log("mapcenter: " + JSON.stringify(mapcenter));
+                    var loopend = completecnt + 10;
+                    if (loopend > queryinput.places.length) {
+                        loopend = queryinput.places.length;
+                    }
+                    if (completecnt == 0) {
+                        document.getElementById("results").value = '';
+                        document.getElementById("status").firstChild.nodeValue = 
+                            "Processing 10 of " + queryinput.places.length;
+                    } else {
+                        document.getElementById("status").firstChild.nodeValue += 
+                            " .." + (completecnt + 10);
+                    }
+                    for (var ii = completecnt; ii < loopend ; ii++) {
+                        console.log(ii + ": " + queryinput.places[ii]);
 
-                var request;
+                        request = {
+                            query: queryinput.places[ii],
+                            fields: ['name', 'geometry'],
+                        };
 
-                service = new google.maps.places.PlacesService(map);
+                        service.findPlaceFromQuery(request, function(results, status) {
+                            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                                for (var i = 0; i < results.length; i++) {
+                                    console.log(JSON.stringify({ index : i, 
+                                        name : results[i].name,
+                                        latlng : results[i].geometry.location
+                                        }));
+                                    createMarker(results[i]);
+                                    document.getElementById("results").value += 
+                                        "* " + 
+                                        results[i].name + 
+                                        "\\n" +
+                                        results[i].geometry.location.lat() + 
+                                        "," +
+                                        results[i].geometry.location.lng() + 
+                                        " " + results[i].name + "\\n\\n";
+                            }
+                          }
+                        });
 
-                document.getElementById("message").firstChild.nodeValue = 
-                    "Processing query<br>\\n";
-
-                console.log("mapcenter: " + JSON.stringify(mapcenter));
-                queryset.queries.forEach(function(place) {
-                    console.log("place: " + place);
-                    request = {
-                        query: place,
-                        fields: ['name', 'geometry'],
-                    };
-
-                    service.findPlaceFromQuery(request, function(results, status) {
-                        if (status === google.maps.places.PlacesServiceStatus.OK) {
-                            for (var i = 0; i < results.length; i++) {
-                                console.log(JSON.stringify({ index : i, 
-                                    name : results[i].name,
-                                    latlng : results[i].geometry.location
-                                    }));
-                                createMarker(results[i]);
-                                document.getElementById("message").firstChild.nodeValue += 
-                                    "name: " + results[i].name + " " +
-                                    "lat: " + results[i].geometry.location.lat() + " " +
-                                    "lng: " + results[i].geometry.location.lng() + "<br>";
-                        }
-                      }
-                    });
-                });
-
+                    }
+                    completecnt = loopend;
+                }
 
                 function createMarker(place) {
                     var marker = new google.maps.Marker({
@@ -557,16 +587,9 @@ sub l00http_kml2gmap_proc {
                 }
             }
 
-
-            function function2() {
-                console.log("function2() invoked");
-                document.getElementById("message").firstChild.nodeValue = 
-                    "function2() invoked";
-
-            }
 SCRIPTSRC
         $fetchramjson .= "\n\n";
-    }
+#    }
 
     $labeltable = '';
     $labeltable .= "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
@@ -1099,22 +1122,21 @@ SCRIPTSRC
 
     if ($fetchramjson ne '') {
         print $sock <<SCRIPTSRC2;
-        <button onClick="process();">Process</button>
+        <button onClick="process(1);">Prepare</button>
+        <button onClick="process(0);">Submit 10 queries</button>
+        <span id="status"> </span>
         <p>
-        <span id="message">Enter queryset into 
-            <a href="/view.htm?path=l00://l00http_kml2gmap.json">l00://l00http_kml2gmap.json<a>.
-            Then click Process.  Sample queryset:
-<pre>
-var queryset = {
-    center_lat : 47.37,
-    center_lng : 3.5,
-    queries : [
+        <textarea id="queryinput" cols="40" rows="7" accesskey="q">
+{
+    "center_lat" : 47.37,
+    "center_lng" : 3.5,
+    "places" : [
         "London, UK",
         "Paris, France"
     ]
-};
-</pre>
-        </span>
+}
+</textarea>
+        <textarea id="results" cols="40" rows="7" accesskey="r">(no results)</textarea>
         <p>
 
         <div id="googleMap2" style="width:${width}px;height:${height}px;"></div>
