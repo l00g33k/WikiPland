@@ -460,7 +460,7 @@ sub l00http_dash_proc {
             for ($ii = 0; $ii < $tmp; $ii++) {
                 $out .= "$alllines[$ii]\n";
             }
-            $out .= "==**newcat**==\n";
+            $out .= "==*g*newcat**==\n";
             my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
                 localtime (time);
             $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
@@ -1096,6 +1096,9 @@ sub l00http_dash_proc {
             print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
         }
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
+        if ($filtime eq 'checked') {
+            print $sock "<input type=\"hidden\" name=\"filtime\" value=\"on\">";
+        }
         print $sock "to checked items<p>\n";
         $tmp = 'style="height:1.4em; width:6.0em"';
         print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check All\" $tmp> ";
