@@ -558,6 +558,12 @@ sub l00http_kml2gmap_proc {
                         service.findPlaceFromQuery(request, function(results, status) {
                             if (status === google.maps.places.PlacesServiceStatus.OK) {
                                 for (var i = 0; i < results.length; i++) {
+                                    var extra;
+                                    if (i == 0) {
+                                        extra = '';
+                                    } else {
+                                        extra = "_" + i;
+                                    }
                                     console.log(JSON.stringify({ index : i, 
                                         name : results[i].name,
                                         latlng : results[i].geometry.location
@@ -565,7 +571,7 @@ sub l00http_kml2gmap_proc {
                                     createMarker(results[i]);
                                     document.getElementById("results").value += 
                                         "* " + 
-                                        results[i].name + 
+                                        results[i].name + extra +
                                         "\\n" +
                                         results[i].geometry.location.lat() + 
                                         "," +
