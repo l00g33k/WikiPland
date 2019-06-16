@@ -170,6 +170,8 @@ var markers = [];
 searchBox.addListener('places_changed', function() {
   var places = searchBox.getPlaces();
 
+console.log("their listener");
+
   if (places.length == 0) {
     return;
   }
@@ -264,7 +266,7 @@ sub l00http_kml2gmap_proc {
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
-    my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor, $icon);
+    my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor, $icon, $fetchramjson);
 
     $gpslon = '';
     $gpslat = '';
@@ -496,6 +498,74 @@ sub l00http_kml2gmap_proc {
     }
     if ($exclude eq 'checked') {
         $tmp .= '&exclude=on';
+    }
+
+
+    $fetchramjson = '';
+    if (&l00httpd::l00freadOpen($ctrl, 'l00://l00http_kml2gmap.json')) {
+        $buffer = &l00httpd::l00freadAll($ctrl);
+        $fetchramjson .= "\n$buffer\n";
+
+        $fetchramjson .= <<SCRIPTSRC;
+
+            function process() {
+                console.log("process() invoked");
+
+                //var mapcenter = new google.maps.LatLng(-33.867, 151.195);
+                var mapcenter = new google.maps.LatLng(queryset.center_lat, queryset.center_lng);
+                var map = new google.maps.Map(
+                    document.getElementById('googleMap2'), {center: mapcenter, zoom: 5});
+
+                var request;
+
+                service = new google.maps.places.PlacesService(map);
+
+                document.getElementById("message").firstChild.nodeValue = 
+                    "Processing query<br>\\n";
+
+                console.log("mapcenter: " + JSON.stringify(mapcenter));
+                queryset.queries.forEach(function(place) {
+                    console.log("place: " + place);
+                    request = {
+                        query: place,
+                        fields: ['name', 'geometry'],
+                    };
+
+                    service.findPlaceFromQuery(request, function(results, status) {
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            for (var i = 0; i < results.length; i++) {
+                                console.log(JSON.stringify({ index : i, 
+                                    name : results[i].name,
+                                    latlng : results[i].geometry.location
+                                    }));
+                                createMarker(results[i]);
+                                document.getElementById("message").firstChild.nodeValue += 
+                                    "name: " + results[i].name + " " +
+                                    "lat: " + results[i].geometry.location.lat() + " " +
+                                    "lng: " + results[i].geometry.location.lng() + "<br>";
+                        }
+                      }
+                    });
+                });
+
+
+                function createMarker(place) {
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: place.geometry.location
+                    });
+                }
+            }
+
+
+            function function2() {
+                console.log("function2() invoked");
+                document.getElementById("message").firstChild.nodeValue = 
+                    "function2() invoked";
+
+            }
+SCRIPTSRC
+        $fetchramjson .= "\n\n";
     }
 
     $labeltable = '';
@@ -857,6 +927,7 @@ sub l00http_kml2gmap_proc {
             "src=\"http://maps.googleapis.com/maps/api/js?key=$apikey&libraries=places\">\n" .
             $drawgriddo .
             $gmapscript1 .
+            $fetchramjson .
             "var  myCenter=new google.maps.LatLng($ctrlat,$ctrlon);\n" .
             $myCenters .
             $gmapscript2 .
@@ -1022,6 +1093,34 @@ sub l00http_kml2gmap_proc {
 
     print $sock "</table>\n";
     print $sock "</form>\n";
+
+
+    print $sock "<p>View: <a href=\"/view.htm?path=l00://l00http_kml2gmap.json\">l00://l00http_kml2gmap.json<a><p>\n";
+
+    if ($fetchramjson ne '') {
+        print $sock <<SCRIPTSRC2;
+        <button onClick="process();">Process</button>
+        <p>
+        <span id="message">Enter queryset into 
+            <a href="/view.htm?path=l00://l00http_kml2gmap.json">l00://l00http_kml2gmap.json<a>.
+            Then click Process.  Sample queryset:
+<pre>
+var queryset = {
+    center_lat : 47.37,
+    center_lng : 3.5,
+    queries : [
+        "London, UK",
+        "Paris, France"
+    ]
+};
+</pre>
+        </span>
+        <p>
+
+        <div id="googleMap2" style="width:${width}px;height:${height}px;"></div>
+SCRIPTSRC2
+    }
+
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
