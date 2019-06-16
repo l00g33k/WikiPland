@@ -1128,8 +1128,8 @@ SCRIPTSRC
 
     if ($fetchramjson ne '') {
         print $sock <<SCRIPTSRC2;
-        <button onClick="process(1);">Prepare</button>
-        <button onClick="process(0);">Submit 10 queries</button>
+        <button onClick="process(1);" accesskey="p">P&#818;repare</button>
+        <button onClick="process(0);" accesskey="b">Sub&#818;mit 10 queries</button>
         <span id="status"> </span>
         <p>
         <textarea id="queryinput" cols="40" rows="7" accesskey="q">
@@ -1142,7 +1142,7 @@ SCRIPTSRC
     ]
 }
 </textarea>
-        <textarea id="results" cols="40" rows="7" accesskey="r">(no results)</textarea>
+        <textarea id="results" cols="40" rows="7" accesskey="r">alt-sft-q=Query box, alt-sft-r=Result box</textarea>
         <p>
 
         <div id="googleMap2" style="width:${width}px;height:${height}px;"></div>
