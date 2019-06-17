@@ -555,7 +555,7 @@ sub l00http_kml2gmap_proc {
                             fields: ['name', 'geometry'],
                         };
 
-                        service.findPlaceFromQuery(request, function(results, status) {
+                        service.findPlaceFromQuery(request, function(place, results, status) {
                             if (status === google.maps.places.PlacesServiceStatus.OK) {
                                 for (var i = 0; i < results.length; i++) {
                                     var extra;
@@ -576,10 +576,11 @@ sub l00http_kml2gmap_proc {
                                         results[i].geometry.location.lat() + 
                                         "," +
                                         results[i].geometry.location.lng() + 
-                                        " " + results[i].name + "\\n\\n";
+                                        " " + results[i].name + "\\n" + 
+                                        "** " + place + "\\n\\n";
                             }
                           }
-                        });
+                        }.bind(this, queryinput.places[ii]));
 
                     }
                     completecnt = loopend;
