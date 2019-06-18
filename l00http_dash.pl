@@ -316,9 +316,9 @@ sub l00http_dash_proc {
         }
         print $sock "<input type=\"checkbox\" name=\"onlyhat\" $onlyhat>";
         if ($onlyhat ne 'checked') {
-            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlyhat=on&outputsort=&dash_all=past&hdronly=\">^itm</a></strong> - ";
+            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&onlyhat=on&outputsort=&dash_all=past&hdronly=\">^~itm</a></strong> - ";
         } else {
-            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">^itm</a></strong> - ";
+            print $sock "<strong><a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">^~itm</a></strong> - ";
         }
         print $sock  "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=on&dash_all=all&hdronly=hdr\"><strong>hdr</strong></a> -\n";
        #print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=past&hdronly=\">reset</a>)\n";
@@ -604,6 +604,7 @@ sub l00http_dash_proc {
                 $tmp =~ s/\[\[.+?\]\]//g;
                 $tmp =~ s/<.+?>//g;
                 $tmp =~ s/https*:\/\/[^ ]+//g;
+
                 if (@_ = $tmp =~ /([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)/g) {
                     # save them
                     push(@wikiword, @_);
@@ -752,6 +753,12 @@ sub l00http_dash_proc {
                                  $lineevallns{$key} = $lineevalln;
                     }
 
+                    # drop if prefixed by ^~
+                    if ($onlyhat eq 'checked') {
+                        if ($tmp !~ /[\^~]/) {
+                            next;
+                        }
+                    }
 
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
