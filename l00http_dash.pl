@@ -178,6 +178,7 @@ sub l00http_dash_proc {
         $form->{'hdronly'} = '';
         $form->{'catflt'} = '.';
         $form->{'filtime'} = '';
+        $form->{'fildesc'} = '';
     }
 
 
@@ -305,7 +306,7 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-        print $sock "(<input type=\"checkbox\" name=\"fildesc\" $fildesc>des";
+        print $sock "(<input type=\"checkbox\" name=\"fildesc\" $fildesc>desc";
         print $sock " Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\"> \n";
         print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime>time)";
         print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
