@@ -10,7 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $filtime, 
+my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $filtime, $fildesc,
 $smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
 $dash_all = 'past';
 $hdronly = 0;
@@ -26,6 +26,7 @@ $dashwidth = 18;;
 $onlybang = '';
 $onlyhat = '';
 $filtime = '';
+$fildesc = '';
 
 sub l00http_dash_linewrap {
     my ($buffer) = @_;
@@ -206,6 +207,11 @@ sub l00http_dash_proc {
     } else {
         $filtime = '';
     }
+    if ((defined ($form->{'fildesc'})) && ($form->{'fildesc'} eq 'on')) {
+        $fildesc = 'checked';
+    } else {
+        $fildesc = '';
+    }
     if ((defined ($form->{'onlyhat'})) && ($form->{'onlyhat'} eq 'on')) {
         $onlyhat = 'checked';
     } else {
@@ -299,8 +305,9 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
-        print $sock "(Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\">\n";
-        print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime> time)";
+        print $sock "(<input type=\"checkbox\" name=\"fildesc\" $fildesc>des";
+        print $sock " Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\"> \n";
+        print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime>time)";
         print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -500,7 +507,7 @@ sub l00http_dash_proc {
 
         $cat1 = 'cat1';
         $cat2 = 'cat2';
-        %nowbuf = undef;
+        undef %nowbuf;
         $nowbuf2 = '';
         $timetoday = 0;
         $time_start = 0;
@@ -648,7 +655,9 @@ sub l00http_dash_proc {
                 } else {
                     $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
                 }
-                if ((($cat1 =~ /$catflt/i) || ($filtime eq 'checked'))&& 
+                if ((($cat1 =~ /$catflt/i) || 
+                    ($filtime eq 'checked') || 
+                    ($fildesc eq 'checked')) && 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
                     # or time
@@ -721,6 +730,20 @@ sub l00http_dash_proc {
                         }
                     }
 
+                    # save timestamp of first (newest entered) entry
+                    if (!defined($firstTime{$key})) {
+                                 $firstTime{$key} = $tim;
+                                if ($dbg) {
+                                    print $sock "    FIRST $cat1    $cat2    $tim    $this\n";
+                                }
+                                 $tasksLine{$key} = $lnno - 1;
+                    }
+                    if ($fildesc eq 'checked') {
+                        # skip if description doesn't match filter
+                        if ($dsc !~ /$catflt/i) {
+                            next;
+                        }
+                    }
                     #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
                     #<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>
                     if (!defined($tasksTime{$key})) {
@@ -731,14 +754,6 @@ sub l00http_dash_proc {
                                 if ($dbg) {
                                     print $sock "    TIME  $tim    $key\n";
                                 }
-                    }
-                    # save timestamp of first (newest entered) entry
-                    if (!defined($firstTime{$key})) {
-                                 $firstTime{$key} = $tim;
-                                if ($dbg) {
-                                    print $sock "    FIRST $cat1    $cat2    $tim    $this\n";
-                                }
-                                 $tasksLine{$key} = $lnno - 1;
                     }
                     if ($this =~ /!!!$/) {
                                  $lnnostr = sprintf("%3d", $lnno);
@@ -1103,6 +1118,9 @@ sub l00http_dash_proc {
             print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
         }
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
+        if ($fildesc eq 'checked') {
+            print $sock "<input type=\"hidden\" name=\"fildesc\" value=\"on\">";
+        }
         if ($filtime eq 'checked') {
             print $sock "<input type=\"hidden\" name=\"filtime\" value=\"on\">";
         }
