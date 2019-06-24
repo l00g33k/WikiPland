@@ -1078,6 +1078,8 @@ sub l00http_dash_proc {
                    int($timetoday / 60 + 0.5)) . $out;
         }
         $out .= " \n";
+        # subs path=$ to target file
+        $out =~ s/path=\$/path=$pname$fname/gsm;
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
         print $sock $out;
