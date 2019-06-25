@@ -797,20 +797,20 @@ sub l00http_dash_proc {
                                 } else {
                                     $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
                                 }
-                                if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/i)) {
-                                    # keep for 'now' listing
-                                    $nowbuf{$key} = $tasksSticky{$key};
-                                }
+#                               if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/i)) {
+#                                   # keep for 'now' listing
+#                                   $nowbuf{$key} = $tasksSticky{$key};
+#                               }
                             }
                         }
                     } else {
                         # listing all !, i.e. listing ! and !!
                         if ($dsc =~ /^!{0,1}[^!]/) {
                             $tasksSticky{$key} .= "<br>$dsc";
-                            # keep for 'now' listing
-                            if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
-                                $nowbuf{$key} = $tasksSticky{$key};
-                            }
+#                           # keep for 'now' listing
+#                           if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
+#                               $nowbuf{$key} = $tasksSticky{$key};
+#                           }
                         }
                     }
                     if ($dsc =~ /^![^!]/) {
@@ -897,6 +897,11 @@ sub l00http_dash_proc {
             }
         }
         $nowbuf = '';
+        foreach $_ (sort keys %tasksTime) {
+            if ((defined($tasksSticky{$_})) && ($tasksSticky{$_} =~ /\/now\//)) {
+                $nowbuf .= $tasksSticky{$_};
+            }
+        }
         foreach $_ (keys %nowbuf) {
             $nowbuf .= $nowbuf{$_};
         }
