@@ -481,6 +481,7 @@ sub readl00httpdcfg {
         $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$cmdlnhome\">HOME</a>"
     }
 
+
     # tmp not defined in l00httpd.cfg
     if (!defined ($ctrl{'tmp'})) {
         $ctrl{'tmp'} = "$ctrl{'workdir'}/";      # make it available to modules
@@ -1963,6 +1964,9 @@ while(1) {
                 print $sock "<p>End of page.<p>\n";
 
                 # send HTML footer and ends
+                if (defined ($ctrl{'FOOT'})) {
+                    print $sock "$ctrl{'FOOT'}\n";
+                }
                 print $sock $ctrl{'htmlfoot'};
                 print "Completed host control page\n", if ($debug >= 5);
             }
