@@ -405,6 +405,16 @@ sub l00http_dash_proc {
         undef %addtimeval;
         $includefile = '';
         for ($ii = 0; $ii <= $#alllines; $ii++) {
+            # %DASHCATFIL:\/now\/
+            if ($alllines[$ii] =~ /^%DASHCATFIL:(.+)/) {
+                # filter to show whole category in 'now'
+                $nowCatFil = $1;
+            }
+            # %DASHITEMFIL:\/nmi\/
+            if ($alllines[$ii] =~ /^%DASHITEMFIL:(.+)/) {
+                $nowItemFil = $1;
+            }
+
             if ($alllines[$ii] =~ /^%BLOGTIME:(.+?)%/) {
                 $tmp = $1;
                 $addtimeval{$tmp} = 0;
@@ -439,6 +449,17 @@ sub l00http_dash_proc {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
+
+                # %DASHCATFIL:\/now\/
+                if ($_ =~ /^%DASHCATFIL:(.+)/) {
+                    # filter to show whole category in 'now'
+                    $nowCatFil = $1;
+                }
+                # %DASHITEMFIL:\/nmi\/
+                if ($_ =~ /^%DASHITEMFIL:(.+)/) {
+                    $nowItemFil = $1;
+                }
+
                 if (/^%BLOGTIME:(.+?)%/) {
                     $tmp = $1;
                     $addtimeval{$tmp} = 0;
@@ -456,17 +477,6 @@ sub l00http_dash_proc {
             }
         }
 
-        foreach $this (@alllines) {
-            # %DASHCATFIL:\/now\/
-            if ($this =~ /^%DASHCATFIL:(.+)/) {
-                # filter to show whole category in 'now'
-                $nowCatFil = $1;
-            }
-            # %DASHITEMFIL:\/nmi\/
-            if ($this =~ /^%DASHITEMFIL:(.+)/) {
-                $nowItemFil = $1;
-            }
-        }
 
         if (defined ($form->{'newtime'})) {
             # new time
@@ -758,7 +768,8 @@ sub l00http_dash_proc {
                     }
 
                     # filter matching item
-                    if ($dsc =~ /$nowItemFil/) {
+                    if (($nowItemFil ne '') &&
+                        ($dsc =~ /$nowItemFil/)) {
                         $nowbuf .= " $dsc";
                     }
 
@@ -920,7 +931,9 @@ sub l00http_dash_proc {
             }
         }
         foreach $_ (sort keys %tasksTime) {
-            if ((defined($tasksSticky{$_})) && ($tasksSticky{$_} =~ /$nowCatFil/)) {
+            if (($nowCatFil ne '') &&
+                defined($tasksSticky{$_}) && 
+                ($tasksSticky{$_} =~ /$nowCatFil/)) {
                 $nowbuf .= $tasksSticky{$_};
             }
         }
