@@ -1615,6 +1615,9 @@ sub l00http_ls_proc {
                 print $sock "</form>\n";
                 print $sock "</tr></table>\n";
             }
+            if (defined ($ctrl->{'FOOT'})) {
+                print $sock "$ctrl->{'FOOT'}\n";
+            }
         } else {
             print $sock "<p><a href=\"/ls.htm?path=$path2&submit=Submit&bare=&chno=\">form</a>\n";
         }
