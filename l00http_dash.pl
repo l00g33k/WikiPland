@@ -11,8 +11,7 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $filtime, $fildesc,
-$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target,
-$nowCatFil, $nowItemFil);
+$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
 
 $dash_all = 'past';
 $hdronly = 0;
@@ -29,8 +28,6 @@ $onlybang = '';
 $onlyhat = '';
 $filtime = '';
 $fildesc = '';
-$nowCatFil = '';
-$nowItemFil = '';
 
 sub l00http_dash_linewrap {
     my ($buffer) = @_;
@@ -161,7 +158,11 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup);
-    my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s);
+    my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil);
+
+
+    $nowCatFil = '';
+    $nowItemFil = '';
 
     $jumpcnt = 0;
     undef @jumpname;
