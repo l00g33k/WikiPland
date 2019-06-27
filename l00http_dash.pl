@@ -1269,6 +1269,9 @@ sub l00http_dash_proc {
 
 
     # send HTML footer and ends
+    if (defined ($ctrl->{'FOOT'})) {
+        print $sock "$ctrl->{'FOOT'}\n";
+    }
     print $sock $ctrl->{'htmlfoot'};
 }
 
