@@ -11,7 +11,9 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $filtime, $fildesc,
-$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
+$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target,
+$nowCatFil, $nowItemFil);
+
 $dash_all = 'past';
 $hdronly = 0;
 $listbang = '';
@@ -27,6 +29,8 @@ $onlybang = '';
 $onlyhat = '';
 $filtime = '';
 $fildesc = '';
+$nowCatFil = '';
+$nowItemFil = '';
 
 sub l00http_dash_linewrap {
     my ($buffer) = @_;
@@ -452,6 +456,18 @@ sub l00http_dash_proc {
             }
         }
 
+        foreach $this (@alllines) {
+            # %DASHCATFIL:\/now\/
+            if ($this =~ /^%DASHCATFIL:(.+)/) {
+                # filter to show whole category in 'now'
+                $nowCatFil = $1;
+            }
+            # %DASHITEMFIL:\/nmi\/
+            if ($this =~ /^%DASHITEMFIL:(.+)/) {
+                $nowItemFil = $1;
+            }
+        }
+
         if (defined ($form->{'newtime'})) {
             # new time
             $addtime = $addtimeval{$form->{'newtime'}};
@@ -509,6 +525,7 @@ sub l00http_dash_proc {
         $cat1 = 'cat1';
         $cat2 = 'cat2';
         undef %nowbuf;
+        $nowbuf = '';
         $nowbuf2 = '';
         $timetoday = 0;
         $time_start = 0;
@@ -739,6 +756,12 @@ sub l00http_dash_proc {
                                 }
                                  $tasksLine{$key} = $lnno - 1;
                     }
+
+                    # filter matching item
+                    if ($dsc =~ /$nowItemFil/) {
+                        $nowbuf .= " $dsc";
+                    }
+
                     if ($fildesc eq 'checked') {
                         # skip if description doesn't match filter
                         if ($dsc !~ /$catflt/i) {
@@ -896,9 +919,8 @@ sub l00http_dash_proc {
                 }
             }
         }
-        $nowbuf = '';
         foreach $_ (sort keys %tasksTime) {
-            if ((defined($tasksSticky{$_})) && ($tasksSticky{$_} =~ /\/now\//)) {
+            if ((defined($tasksSticky{$_})) && ($tasksSticky{$_} =~ /$nowCatFil/)) {
                 $nowbuf .= $tasksSticky{$_};
             }
         }
