@@ -10,7 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $freefmt, $filtime, $fildesc,
+my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $crlfchk, $crlf, $freefmt, $filtime, $fildesc,
 $smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
 
 $dash_all = 'past';
@@ -28,6 +28,8 @@ $onlybang = '';
 $onlyhat = '';
 $filtime = '';
 $fildesc = '';
+$crlf = '';
+$crlfchk = '';
 
 sub l00http_dash_linewrap {
     my ($buffer) = @_;
@@ -184,6 +186,7 @@ sub l00http_dash_proc {
         $form->{'catflt'} = '.';
         $form->{'filtime'} = '';
         $form->{'fildesc'} = '';
+        $form->{'crlf'} = '';
     }
 
 
@@ -260,6 +263,13 @@ sub l00http_dash_proc {
         } else {
             $newwin = '';
             $target = '';
+        }
+        if ((defined ($form->{'crlf'})) && ($form->{'crlf'} eq 'on')) {
+            $crlf = "<br>";
+            $crlfchk = 'checked';
+        } else {
+            $crlf = '';
+            $crlfchk = '';
         }
     }
     if (defined ($form->{'dbg'})) {
@@ -355,6 +365,7 @@ sub l00http_dash_proc {
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\">all</a>.\n";
         print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
         print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
+        print $sock "<input type=\"checkbox\" name=\"crlf\" $crlfchk>crlf\n";
         print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
         if ($freefmt ne 'checked') {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
@@ -771,7 +782,7 @@ sub l00http_dash_proc {
                     # filter matching item
                     if (($nowItemFil ne '') &&
                         ($dsc =~ /$nowItemFil/)) {
-                        $nowbuf .= " $dsc";
+                        $nowbuf .= " $crlf&#9670; $dsc";
                     }
 
                     if ($fildesc eq 'checked') {
@@ -828,9 +839,9 @@ sub l00http_dash_proc {
                             if (!defined($hidedays) || ($hidedays >= 0)) {
                                 # show days past hide, e.g. 3 days past: (3+)+5 do stuff
                                 if (defined($hidedays)) {
-                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; (<font style=\"color:red;background-color:silver\"><strong>$hidedays+</strong></font>)$dsc");
+                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; (<font style=\"color:red;background-color:silver\"><strong>$hidedays+</strong></font>)$dsc");
                                 } else {
-                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " &#9670; $dsc");
+                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; $dsc");
                                 }
 #                               if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/i)) {
 #                                   # keep for 'now' listing
@@ -927,7 +938,7 @@ sub l00http_dash_proc {
 #                   if (length($tmp) > $dashwidth) {
 #                       $nowbuf2 .= '\\n';
 #                   }
-                    $nowbuf2 .= " &#9670; $_";
+                    $nowbuf2 .= " $crlf&#9670; $_";
                 }
             }
         }
@@ -935,7 +946,7 @@ sub l00http_dash_proc {
             if (($nowCatFil ne '') &&
                 defined($tasksSticky{$_}) && 
                 ($tasksSticky{$_} =~ /$nowCatFil/)) {
-                $nowbuf .= $tasksSticky{$_};
+                $nowbuf .= " $crlf&#9670; $tasksSticky{$_}";
             }
         }
         foreach $_ (keys %nowbuf) {
