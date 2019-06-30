@@ -265,7 +265,7 @@ sub l00http_dash_proc {
             $target = '';
         }
         if ((defined ($form->{'crlf'})) && ($form->{'crlf'} eq 'on')) {
-            $crlf = "<br>";
+            $crlf = " <br>";
             $crlfchk = 'checked';
         } else {
             $crlf = '';
@@ -852,7 +852,7 @@ sub l00http_dash_proc {
                     } else {
                         # listing all !, i.e. listing ! and !!
                         if ($dsc =~ /^!{0,1}[^!]/) {
-                            $tasksSticky{$key} .= "<br>$dsc";
+                            $tasksSticky{$key} .= " <br>$dsc";
 #                           # keep for 'now' listing
 #                           if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
 #                               $nowbuf{$key} = $tasksSticky{$key};
