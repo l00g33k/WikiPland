@@ -231,7 +231,7 @@ sub l00http_scratch_proc {
     if ($notbare) {
         if (($tmp) = $scratch =~ /(https*:\/\/[^ \n\r\t]+)/) {
             # we have an URL
-            print $sock "<form action=\"$tmp\" method=\"get\">\n";
+            print $sock "<form action=\"$tmp\" method=\"get\" target=\"_blank\">\n";
             print $sock "<input type=\"submit\" name=\"null\" value=\"J&#818;ump to URL\" accesskey=\"j\"> \n";
             print $sock "</form><p>\n";
         }
