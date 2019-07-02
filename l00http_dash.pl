@@ -160,7 +160,7 @@ sub l00http_dash_proc {
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked);
-    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup);
+    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil);
 
 
@@ -171,6 +171,7 @@ sub l00http_dash_proc {
     undef @jumpname;
     undef %cat2tolnno;
     undef %cat1s;
+    undef %desccats;
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -808,6 +809,9 @@ sub l00http_dash_proc {
                             if ($dsc !~ /$catflt/i) {
                                 next;
                             }
+                        } elsif ($dsc =~ /$catflt/i) {
+                            # remember to display this cat2
+                            $desccats{$key} = 1;
                         }
                     }
                     #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
@@ -1122,10 +1126,14 @@ sub l00http_dash_proc {
             }
 
             if (($fildesc0itm1cat eq 'checked') && ($fildesc eq 'checked')) {
-                # itemized cat filter is not checked, 
-                # so we skip category only if non matching filter
-                if ($_ !~ /$catflt/i) {
-                    next;
+                if (($key) = /^\|\|.+?(\|\|.+?\|\|.+?)\|\|/) {
+                    # find key
+                    # itemized cat filter is not checked, 
+                    # so we skip category only if non matching filter
+                    if (!defined($desccats{$key})) {
+                        # skip if never matched filter
+                        next;
+                    }
                 }
             }
             # insert bangbang anchor
