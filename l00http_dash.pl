@@ -11,7 +11,7 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $crlfchk, $crlf, $freefmt, $filtime, $fildesc,
-$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target);
+$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target, $fildesc0itm1cat);
 
 $dash_all = 'past';
 $hdronly = 0;
@@ -30,6 +30,7 @@ $filtime = '';
 $fildesc = '';
 $crlf = '';
 $crlfchk = '';
+$fildesc0itm1cat = '';
 
 sub l00http_dash_linewrap {
     my ($buffer) = @_;
@@ -186,6 +187,7 @@ sub l00http_dash_proc {
         $form->{'catflt'} = '.';
         $form->{'filtime'} = '';
         $form->{'fildesc'} = '';
+        $form->{'fildesc0itm1cat'} = '';
         $form->{'crlf'} = '';
     }
 
@@ -221,6 +223,12 @@ sub l00http_dash_proc {
     } else {
         $fildesc = '';
     }
+    if ((defined ($form->{'fildesc0itm1cat'})) && ($form->{'fildesc0itm1cat'} eq 'on')) {
+        $fildesc0itm1cat = 'checked';
+    } else {
+        $fildesc0itm1cat = '';
+    }
+
     if ((defined ($form->{'onlyhat'})) && ($form->{'onlyhat'} eq 'on')) {
         $onlyhat = 'checked';
     } else {
@@ -322,8 +330,15 @@ sub l00http_dash_proc {
     } else {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
         print $sock "(<input type=\"checkbox\" name=\"fildesc\" $fildesc>desc";
+        if ($fildesc eq 'checked') {
+            print $sock "<input type=\"checkbox\" name=\"fildesc0itm1cat\" $fildesc0itm1cat>cat)";
+            print $sock "<input type=\"hidden\" name=\"filtime\" value=\"\">";
+        }
         print $sock " Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\"> \n";
-        print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime>time)";
+        if ($fildesc ne 'checked') {
+            print $sock "<input type=\"hidden\" name=\"fildesc0itm1cat\" value=\"\">";
+            print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime>time)";
+        }
         print $sock "<input type=\"submit\" name=\"process\" value=\"P&#818;rocess\" accesskey=\"p\"> \n";
         print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
         if (($dash_all ne 'all') && ($dash_all ne 'future')) {
@@ -787,8 +802,12 @@ sub l00http_dash_proc {
 
                     if ($fildesc eq 'checked') {
                         # skip if description doesn't match filter
-                        if ($dsc !~ /$catflt/i) {
-                            next;
+                        if ($fildesc0itm1cat ne 'checked') {
+                            # itemized cat filter is checked, 
+                            # so we skip item if not matching filter
+                            if ($dsc !~ /$catflt/i) {
+                                next;
+                            }
                         }
                     }
                     #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
@@ -1098,6 +1117,14 @@ sub l00http_dash_proc {
             if (($filtime eq 'checked') && (($tmp) = /^\|\|!*(.+?)\|\|/)) {
                 # apply $catflt on timestamp
                 if ($tmp !~ /$catflt/) {
+                    next;
+                }
+            }
+
+            if (($fildesc0itm1cat eq 'checked') && ($fildesc eq 'checked')) {
+                # itemized cat filter is not checked, 
+                # so we skip category only if non matching filter
+                if ($_ !~ /$catflt/i) {
                     next;
                 }
             }
