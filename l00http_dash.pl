@@ -159,8 +159,8 @@ sub l00http_dash_proc {
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, %nowbuf, $nowbuf, $nowbuf2);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
-    my (%addtimeval, @blocktime, $modified, $addtime, $checked);
-    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats);
+    my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey);
+    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats, $barekey);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil);
 
 
@@ -789,10 +789,12 @@ sub l00http_dash_proc {
                     # save timestamp of first (newest entered) entry
                     if (!defined($firstTime{$key})) {
                                  $firstTime{$key} = $tim;
-                                if ($dbg) {
+                                 if ($dbg) {
                                     print $sock "    FIRST $cat1    $cat2    $tim    $this\n";
-                                }
-                                 $tasksLine{$key} = $lnno - 1;
+                                 }
+                                 $barekey = $key;
+                                 $barekey =~ s/<.+?>//g;
+                                 $tasksLine{$barekey} = $lnno - 1;
                     }
 
                     # filter matching item
@@ -866,20 +868,12 @@ sub l00http_dash_proc {
                                 } else {
                                     $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; $dsc");
                                 }
-#                               if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/i)) {
-#                                   # keep for 'now' listing
-#                                   $nowbuf{$key} = $tasksSticky{$key};
-#                               }
                             }
                         }
                     } else {
                         # listing all !, i.e. listing ! and !!
                         if ($dsc =~ /^!{0,1}[^!]/) {
                             $tasksSticky{$key} .= " <br>$dsc";
-#                           # keep for 'now' listing
-#                           if (($key=~ /\*KIV\*.*\*now\*/) || ($key=~ /Do now/)) {
-#                               $nowbuf{$key} = $tasksSticky{$key};
-#                           }
                         }
                     }
                     if ($dsc =~ /^![^!]/) {
@@ -953,14 +947,6 @@ sub l00http_dash_proc {
                 if ($nowbuf2 eq '') {
                     $nowbuf2 = $_;
                 } else {
-#                   if ($nowbuf2 =~ /\\n([^\\]+?)$/m) {
-#                       $tmp = $1;
-#                   } else {
-#                       $tmp = $nowbuf2;
-#                   }
-#                   if (length($tmp) > $dashwidth) {
-#                       $nowbuf2 .= '\\n';
-#                   }
                     $nowbuf2 .= " $crlf&#9670; $_";
                 }
             }
@@ -990,9 +976,6 @@ sub l00http_dash_proc {
         $cnt = 0;
         foreach $_ (sort keys %tasksTime) {
             $cnt++;
-            if ($dbg) {
-                print $sock "    $_: $tasksTime{$_}  $tasksDesc{$_}\n";
-            }
             if (defined($countBang{$_}) && ($countBang{$_} > 0)) {
                 # if ($countBang{$_} > 0)
                 if ($listbang eq '') {
@@ -1021,6 +1004,9 @@ sub l00http_dash_proc {
                     int($logedTime{$_} / 3600 * 10 + 0.5) / 10);
             }
             if ((defined($tasksSticky{$_})) && ($hdronly == 0)) {
+                if ($dbg) {
+                    print $sock "    sticky: $_: $tasksTime{$_}  $tasksDesc{$_}\n";
+                }
                 $tmp = $tasksSticky{$_};
                 $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
                 if ($onlybang eq 'checked') {
@@ -1039,8 +1025,16 @@ sub l00http_dash_proc {
                     push (@tops, "||$tasksTime{$_}$_||$tmp2 $bang".           "$tmp ||``$_``");
                 }
             } else {
+                if ($dbg) {
+                    print $sock "          : $_: $tasksTime{$_}  $tasksDesc{$_}\n";
+                }
+                # strip line number for sticky tasks
+                # ||*f*KIV**||1179 ^ *s*bkmk**
+                # ||*f*KIV**||^ *s*bkmk**
+                $tasksTimeKey = $_;
+                $tasksTimeKey =~ s/^(\|\|.+?\|\|)\d+ /$1/;
                 if ($hdronly == 0) {
-                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$tasksTimeKey``");
                 } else {
                     # create matching jump anchor when hdr only
                     #$cat2 .= "<a name=\"cat2$jmp\">$jmp</a>";
@@ -1055,14 +1049,13 @@ sub l00http_dash_proc {
                         $tmp = $cat2tolnno{"cat2$jmp"};
                         $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#cat2$jmp\">$jmp</a>";
                         $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}&inscat2at=$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
-
                     } else {
                         $jmp = '';
                     }
-		    # ckechkbox for mass update
-		    #print "$lineevallns{$_}\" $checked>#$lineevallns{$_}\n";
+		            # ckechkbox for mass update
+		            #print "$lineevallns{$_}\" $checked>#$lineevallns{$_}\n";
                     $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
-                    push (@tops, "||$tasksTime{$_}$_||$tmp2$bang$jmp||``$_``");
+                    push (@tops, "||$tasksTime{$_}$_||$tmp2$bang$jmp||``$tasksTimeKey``");
                 }
             }
         }
@@ -1145,11 +1138,18 @@ sub l00http_dash_proc {
             s/^\|\|!+(.+?)\|\|/||<font style=\"color:black;background-color:silver\">$1<\/font>||/;
 
             s/``(.+)``$//;
-            if (defined($tasksLine{$1})) {
-                $cat1cat2 = $1;
-                #print $sock "$tasksLine{$cat1cat2} $1          ";
-               #s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star" $target>$1<\/a>||/;
-                s/^\|\|(.+?)\|\|/||<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$1<\/a>||/;
+            $key = $1;
+            $barekey = $key;
+            $barekey =~ s/<.+?>//g;
+            if (defined($tasksLine{$barekey})) {
+                $cat1cat2 = $barekey;
+                #print $sock "$tasksLine{$cat1cat2} $barekey          ";
+                # '!!' marks jump out lines and could have an anchor resulting in one of
+                # ||a22_0953||
+                # ||<font style="color:black;background-color:silver"><a name="bangbang"></a>618_2226</font>||
+                # ||<font style="color:black;background-color:silver">615_1529</font>||
+                # so we search for the a22_0953 pattern: ([0-9ab]\d\d_\d\d\d\d)
+                s/^(\|\|.*)([0-9ab]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
                 #print $sock "$_\n";
             }
             $out .= "$_\n";
