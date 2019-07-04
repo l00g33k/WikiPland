@@ -1148,8 +1148,8 @@ sub l00http_dash_proc {
                 # ||a22_0953||
                 # ||<font style="color:black;background-color:silver"><a name="bangbang"></a>618_2226</font>||
                 # ||<font style="color:black;background-color:silver">615_1529</font>||
-                # so we search for the a22_0953 pattern: ([0-9ab]\d\d_\d\d\d\d)
-                s/^(\|\|.*)([0-9ab]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
+                # so we search for the a22_0953 pattern: ([0-9abc]\d\d_\d\d\d\d)
+                s/^(\|\|.*)([0-9abc]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
                 #print $sock "$_\n";
             }
             $out .= "$_\n";
