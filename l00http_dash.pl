@@ -23,7 +23,7 @@ $freefmt = '';
 $smallhead = '';
 $catflt = '.';
 $outputsort = '';
-$dashwidth = 18;;
+$dashwidth = 18;
 $onlybang = '';
 $onlyhat = '';
 $filtime = '';
@@ -159,7 +159,7 @@ sub l00http_dash_proc {
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, %nowbuf, $nowbuf, $nowbuf2);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
-    my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey);
+    my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats, $barekey);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil);
 
@@ -1149,7 +1149,9 @@ sub l00http_dash_proc {
                 # ||<font style="color:black;background-color:silver"><a name="bangbang"></a>618_2226</font>||
                 # ||<font style="color:black;background-color:silver">615_1529</font>||
                 # so we search for the a22_0953 pattern: ([0-9abc]\d\d_\d\d\d\d)
-                s/^(\|\|.*)([0-9abc]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
+                ($part1, $part2) = /^(\|\|.+?\|\|)(.+)\|\|$/;
+                $part1 =~ s/^(\|\|.*)([0-9abc]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
+                $_ = "$part1$part2";
                 #print $sock "$_\n";
             }
             $out .= "$_\n";
