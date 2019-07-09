@@ -70,12 +70,12 @@ sub l00http_hello_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
     if ($ctrl->{'ishost'}) {
-        print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\">\n";
-        print $sock "        <input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
+        print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
+        print $sock "        <input type=\"submit\" name=\"clear\" value=\"C&#818;lear\" accesskey=\"c\"></td>\n";
     } else {
-        print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"Refresh\"></td>\n";
+        print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
     }
     print $sock "    </tr>\n";
 
