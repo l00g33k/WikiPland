@@ -381,7 +381,13 @@ sub l00http_dash_proc {
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\">all</a>.\n";
         print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
         print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
-        print $sock "<input type=\"checkbox\" name=\"crlf\" $crlfchk>crlf\n";
+#       print $sock "<input type=\"checkbox\" name=\"crlf\" $crlfchk>crlf\n";
+        if ($crlfchk eq 'checked') {
+            $_ = '';
+        } else {
+            $_ = '&crlf=on';
+        }
+        print $sock "<input type=\"checkbox\" name=\"crlf\" $crlfchk><a href=\"/dash.htm?process=Process&path=$form->{'path'}$_\">crlf</a>\n";
         print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
         if ($freefmt ne 'checked') {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
