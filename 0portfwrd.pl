@@ -30,6 +30,10 @@ while ($arg = shift) {
         print "If [srvr=#] is missing, report client address\n";
         exit;
     }
+    if ($arg =~ /all/) {
+        $all = 'checked';
+        print "ARGS all\n";
+    }
     if ($arg =~ /debug/) {
         $debug++;
         print "ARGS debug\n";
