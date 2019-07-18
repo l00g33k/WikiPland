@@ -531,6 +531,9 @@ while ($_ = shift) {
         $cmdlnhome = $1;
         print "home set to $cmdlnhome\n";
         $ctrl{'HOME'} = "<a href=\"/ls.htm/HOME.htm?path=$cmdlnhome\">HOME</a>"
+    } elsif (/^nopwmod=(.+)/) {
+        $nopwtimeout = ":$1:";
+        print "nopwmod is ':$nopwtimeout:'\n";
     } elsif (/^open$/) {
 	    $nopwtimeout = 0x7fffffff;
         $ctrl{'noclinav'}  = 0;
