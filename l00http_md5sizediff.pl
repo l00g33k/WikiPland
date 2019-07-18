@@ -469,14 +469,14 @@ sub l00http_md5sizediff_proc {
                             if ($sname eq 'THIS') {
                                 if ($filterthis ne '.') {
                                     # we are filtering input. Skip if matched
-                                    if ($pfname !~ /$filterthis/) {
+                                    if ($pfname =~ /$filterthis/i) {
                                         next;
                                     }
                                 }
                             } else {
                                 if ($filterthat ne '.') {
                                     # we are filtering input. Skip if matched
-                                    if ($pfname !~ /$filterthat/) {
+                                    if ($pfname =~ /$filterthat/i) {
                                         next;
                                     }
                                 }
@@ -1378,11 +1378,11 @@ sub l00http_md5sizediff_proc {
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "This: (input filter: <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
+    print $sock "This: (full name exclude regex: <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
     print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "That: (input filter: <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
+    print $sock "That: (full name exclude regex: <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
     print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thatpath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
