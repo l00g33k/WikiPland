@@ -65,8 +65,8 @@ sub l00http_hello_proc (\%) {
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td>Your message:</td>\n";
-    print $sock "            <td><textarea name=\"message\" cols=\"16\" rows=\"4\"></textarea></td>\n";
+    print $sock "            <td>Your message&#818;:</td>\n";
+    print $sock "            <td><textarea name=\"message\" cols=\"16\" rows=\"4\" accesskey=\"e\"></textarea></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
