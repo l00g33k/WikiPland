@@ -161,9 +161,10 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2);
     my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats, $barekey);
-    my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil);
+    my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
 
 
+    $timecolor = '';
     $nowCatFil = '';
     $nowItemFil = '';
 
@@ -573,7 +574,7 @@ sub l00http_dash_proc {
         $nowbuf = '';
         $nowbuf2 = '';
         $timetoday = 0;
-        $time_start = 0;
+        $time_start = 1;
         $jmp = '';
         $cat1ln = -1;
         $cat1font1 = '';
@@ -727,6 +728,16 @@ sub l00http_dash_proc {
                     # and ^==cat2==
 
                     # compute time.stop - time.start
+                    if ($dsc =~ /time\.stop/) {
+                        if ($timecolor eq '') {
+                            $timecolor = 'silver';
+                        }
+                    }
+                    if ($dsc =~ /time\.start/) {
+                        if ($timecolor eq '') {
+                            $timecolor = 'gold';
+                        }
+                    }
                     if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                         $time_start = &l00httpd::now_string2time($tim);
                     }
@@ -1170,7 +1181,10 @@ sub l00http_dash_proc {
         }
         $out =~ s/\\n/<br>/gm;
         if ($smallhead ne 'checked') {
-            $out = sprintf("<font style=\"color:black;background-color:silver\">Today: %d min</font>\n", 
+            if ($timecolor eq '') {
+                $timecolor = 'gray';
+            }
+            $out = sprintf("<font style=\"color:black;background-color:$timecolor\">Today: %d min</font>\n", 
                    int($timetoday / 60 + 0.5)) . $out;
         }
         $out .= " \n";
