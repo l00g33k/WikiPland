@@ -735,7 +735,7 @@ sub l00http_dash_proc {
                     }
                     if ($dsc =~ /time\.start/) {
                         if ($timecolor eq '') {
-                            $timecolor = 'gold';
+                            $timecolor = 'hotpink';
                         }
                     }
                     if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
