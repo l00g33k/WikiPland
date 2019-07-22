@@ -162,7 +162,7 @@ sub l00http_do_proc {
             print $sock "<p>'sec': insert HTML tag to automatically reload the page at specified seconds interval.<br><a href=\"#top\">Jump to top</a><p>\n";
 
             print $sock "<form action=\"/do.htm\" method=\"get\">\n";
-            print $sock "<input type=\"submit\" name=\"do\" value=\"Do m&#818;ore\">\n";
+            print $sock "<input type=\"submit\" name=\"do\" value=\"Do m&#818;ore\" accesskey=\"m\">\n";
             if ($refresh ne '') {
                 print $sock "<input type=\"submit\" name=\"stoprefresh\" value=\"Stop\">\n";
             }
@@ -170,7 +170,7 @@ sub l00http_do_proc {
             print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec.\n";
             print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide form.\n";
             print $sock "<input type=\"checkbox\" name=\"bare\" $bare>bare<br>\n";
-            print $sock "A&#818;rg1: <input type=\"text\" name=\"arg1\" size=\"12\" value=\"$arg1\" accesskey=\"a\"> \n";
+            print $sock "Arg1&#818;: <input type=\"text\" name=\"arg1\" size=\"12\" value=\"$arg1\" accesskey=\"1\"> \n";
             print $sock "Arg2&#818;: <input type=\"text\" name=\"arg2\" size=\"12\" value=\"$arg2\" accesskey=\"2\"> \n";
             print $sock "Arg3&#818;: <input type=\"text\" name=\"arg3\" size=\"12\" value=\"$arg3\" accesskey=\"3\"> \n";
             print $sock "</form>\n";
