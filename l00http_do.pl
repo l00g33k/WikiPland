@@ -125,7 +125,7 @@ sub l00http_do_proc {
     if ($bare ne 'checked') {
         if (($refresh eq '') && ($hide ne 'checked')) {
             print $sock "<form action=\"/do.htm\" method=\"get\">\n";
-            print $sock "<input type=\"submit\" name=\"do\" value=\"D&#818;o\" accesskey=\"d\">\n";
+            print $sock "<input type=\"submit\" name=\"do\" value=\"Do&#818;\" accesskey=\"o\">\n";
             if ($doplpathset && ($overwrite == 0)) {
                 print $sock "Arg1:<input type=\"text\" name=\"arg1\" size=\"6\" value=\"$form->{'arg1'}\"> \n";
                 print $sock "<input type=\"hidden\" name=\"path\" value=\"$doplpath\">\n";
