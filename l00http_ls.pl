@@ -498,7 +498,7 @@ sub l00http_ls_proc {
                                 if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                                     $tmp =~ s/\//\\/g;
                                 }
-                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                             } else {
                                 print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                                 # clip.pl with \ on Windows
@@ -506,7 +506,7 @@ sub l00http_ls_proc {
                                 if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                                     $tmp =~ s/\//\\/g;
                                 }
-                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path<br>\n";
+                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path<br>\n";
                             }
                             print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
                             print $sock "<a href=\"#end\">end</a>\n";
@@ -741,7 +741,7 @@ sub l00http_ls_proc {
                         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                     } else {
                         print $sock $ctrl->{'htmlhead'} . "<title>$path2 ls</title>" .$ctrl->{'htmlhead2'};
                         # clip.pl with \ on Windows
@@ -749,7 +749,7 @@ sub l00http_ls_proc {
                         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path2<br>\n";
+                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2<br>\n";
                     }
                     print $sock "$ctrl->{'home'} \n";
                     if ($path2 =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
@@ -1238,7 +1238,7 @@ sub l00http_ls_proc {
         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             $tmp =~ s/\//\\/g;
         }
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>:&nbsp;$path2\n";
+        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2\n";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
         print $sock "<a href=\"/dirnotes.htm?path=$path2"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";

@@ -300,7 +300,12 @@ sub l00http_dash_proc {
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
         print $sock "<a href=\"#end\">Jump to end</a>\n";
         if (defined ($form->{'path'})) {
-            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
+            # clip.pl with \ on Windows
+            $_ = $form->{'path'};
+            if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+                $_ =~ s/\//\\/g;
+            }
+            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\" target=\"_blank\">Path</a>: ";
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
             print $sock "- <a href=\"/view.htm?path=$form->{'path'}\">view</a> \n";
@@ -1284,7 +1289,12 @@ sub l00http_dash_proc {
         if ($smallhead eq 'checked') {
             print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
             print $sock "<a href=\"#end\">Jump to end</a>\n";
-            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=:hide+edit+$form->{'path'}%0D\">Path</a>: ";
+            # clip.pl with \ on Windows
+            $_ = $form->{'path'};
+            if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+                $_ =~ s/\//\\/g;
+            }
+            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\" target=\"_blank\">Path</a>: ";
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
             print $sock " <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
