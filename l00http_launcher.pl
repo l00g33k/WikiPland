@@ -33,7 +33,7 @@ sub l00http_launcher_proc {
         $path = $form->{'path'};
         $path =~ s/\r//g;
         $path =~ s/\n//g;
-        if ($ctrl->{'os'} eq 'win') {
+        if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             $path =~ s/\//\\/g;
         }
         print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$path\">Path</a>:";

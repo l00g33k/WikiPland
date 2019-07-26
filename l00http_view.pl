@@ -135,7 +135,7 @@ sub l00http_view_proc {
         }
         if ($nohdr eq '') {
             $tmp = $form->{'path'};
-            if ($ctrl->{'os'} eq 'win') {
+            if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                 $tmp =~ s/\//\\/g;
             }
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>: ";

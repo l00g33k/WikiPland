@@ -51,7 +51,7 @@ sub l00http_rptnetifcon2_proc {
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
     if (defined ($form->{'path'})) {
         $tmp = $path;
-        if ($ctrl->{'os'} eq 'win') {
+        if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\">Path</a>: ";
