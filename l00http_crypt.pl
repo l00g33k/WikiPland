@@ -357,7 +357,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "</form>\n";
 
     print $sock "<br><form action=\"/crypt.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear passphrase\">\n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"C&#818;lear passphrase\" accesskey=\"c\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<a href=\"#__toc__\">TOC</a>\n";
     print $sock "<a href=\"#___top___\">Top</a>\n";
