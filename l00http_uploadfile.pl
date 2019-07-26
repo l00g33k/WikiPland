@@ -38,7 +38,7 @@ sub l00http_uploadfile_proc {
     } else {
         if ($ctrl->{'os'} eq 'and') {
             $path = '/sdcard/z/';
-        } elsif ($ctrl->{'os'} eq 'win') {
+        } elsif (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             $path = 'c:/z/';
         } elsif ($ctrl->{'os'} eq 'lin') {
             $path = '/home/z/';

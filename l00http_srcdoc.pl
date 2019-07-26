@@ -165,7 +165,7 @@ if (defined ($form->{'navigate'})) {
                                                 if ($ctrl->{'os'} eq 'and') {
                                                     $fname =~ tr/\\/\//;
                                                 }
-                                                if ($ctrl->{'os'} eq 'win') {
+                                                if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                                                     $fname =~ tr/\//\\/;
                                                 }
                                                 $buffer .= "<pre>View <i><a target=\"_blank\" href=\"$form->{'url'}\">$fname($tgtln):</a></i>";

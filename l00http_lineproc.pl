@@ -46,7 +46,7 @@ sub l00http_lineproc_proc (\%) {
         $form->{'path'} =~ s/\r//g;
         $form->{'path'} =~ s/\n//g;
         $tmp = $form->{'path'};
-        if ($ctrl->{'os'} eq 'win') {
+        if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>: ";
