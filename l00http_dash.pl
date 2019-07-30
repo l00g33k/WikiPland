@@ -985,7 +985,7 @@ sub l00http_dash_proc {
             $nowbuf .= $nowbuf{$_};
         }
         if (($nowbuf ne '') && ($nowbuf2 ne '')) {
-            $nowbuf = "$nowbuf *y*RAM:** $nowbuf2";
+            $nowbuf = "$nowbuf  *y*RAM:**  $nowbuf2";
 		} else {
             $nowbuf = "$nowbuf$nowbuf2";
 		}
