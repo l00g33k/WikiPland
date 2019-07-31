@@ -290,7 +290,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
     print $sock "</td><td>\n";
     print $sock "password twice";
     print $sock "</td></tr>\n";
@@ -310,7 +310,7 @@ sub l00http_crypt_proc (\%) {
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<a name=\"saveram\"><input type=\"submit\" name=\"fromram\" value=\"save ram\">\n";
+    print $sock "<a name=\"saveram\"><input type=\"submit\" name=\"fromram\" value=\"Save R&#818;AM\" accesskey=\"r\">\n";
     print $sock "</td><td>\n";
     print $sock "<a href=\"/edit.htm?path=l00://crypt.txt\" target=\"_blank\">edit ram</a> \n";
     print $sock "</td></tr>\n";
