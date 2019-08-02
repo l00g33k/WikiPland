@@ -38,6 +38,9 @@ sub l00http_hello_proc (\%) {
 		}
     }
 
+    if (defined ($form->{'paste'})) {
+        $form->{'message'}) = &l00httpd::l00getCB($ctrl);
+    }
     if ((defined ($form->{'message'})) && 
         (length ($form->{'message'}) > 0) && 
         (defined ($form->{'submit'}))) {
@@ -73,7 +76,8 @@ sub l00http_hello_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
     if ($ctrl->{'ishost'}) {
         print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
-        print $sock "        <input type=\"submit\" name=\"clear\" value=\"C&#818;lear\" accesskey=\"c\"></td>\n";
+        print $sock "        <input type=\"submit\" name=\"clear\" value=\"C&#818;lear\" accesskey=\"c\">\n";
+        print $sock "        <input type=\"submit\" name=\"paste\" value=\"P&#818;aste\" accesskey=\"p\"></td>\n";
     } else {
         print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
     }
