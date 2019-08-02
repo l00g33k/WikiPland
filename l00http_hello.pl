@@ -39,7 +39,8 @@ sub l00http_hello_proc (\%) {
     }
 
     if (defined ($form->{'paste'})) {
-        $form->{'message'}) = &l00httpd::l00getCB($ctrl);
+        $form->{'submit'} = 1;
+        $form->{'message'} = &l00httpd::l00getCB($ctrl);
     }
     if ((defined ($form->{'message'})) && 
         (length ($form->{'message'}) > 0) && 
