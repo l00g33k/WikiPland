@@ -215,21 +215,6 @@ sub l00http_dash_proc {
     } else {
         $onlybang = '';
     }
-    if ((defined ($form->{'filtime'})) && ($form->{'filtime'} eq 'on')) {
-        $filtime = 'checked';
-    } else {
-        $filtime = '';
-    }
-    if ((defined ($form->{'fildesc'})) && ($form->{'fildesc'} eq 'on')) {
-        $fildesc = 'checked';
-    } else {
-        $fildesc = '';
-    }
-    if ((defined ($form->{'fildesc0itm1cat'})) && ($form->{'fildesc0itm1cat'} eq 'on')) {
-        $fildesc0itm1cat = 'checked';
-    } else {
-        $fildesc0itm1cat = '';
-    }
 
     if ((defined ($form->{'onlyhat'})) && ($form->{'onlyhat'} eq 'on')) {
         $onlyhat = 'checked';
@@ -280,6 +265,22 @@ sub l00http_dash_proc {
         } else {
             $crlf = '';
             $crlfchk = '';
+        }
+
+        if ((defined ($form->{'filtime'})) && ($form->{'filtime'} eq 'on')) {
+            $filtime = 'checked';
+        } else {
+            $filtime = '';
+        }
+        if ((defined ($form->{'fildesc'})) && ($form->{'fildesc'} eq 'on')) {
+            $fildesc = 'checked';
+        } else {
+            $fildesc = '';
+        }
+        if ((defined ($form->{'fildesc0itm1cat'})) && ($form->{'fildesc0itm1cat'} eq 'on')) {
+            $fildesc0itm1cat = 'checked';
+        } else {
+            $fildesc0itm1cat = '';
         }
     }
     if (defined ($form->{'dbg'})) {
