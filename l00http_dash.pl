@@ -833,7 +833,14 @@ sub l00http_dash_proc {
                             # itemized cat filter is checked, 
                             # so we skip item if not matching filter
                             if ($dsc !~ /$catflt/i) {
-                                next;
+                                # special regex to display full category
+                                if ($catflt !~ /\(.+\)/) {
+                                    # i.e. add ( and ) to display full cat
+                                    next;
+                                }
+                            } else {
+                                # else we matched and display full category
+                                $desccats{$key} = 1;
                             }
                         } elsif ($dsc =~ /$catflt/i) {
                             # remember to display this cat2
@@ -1153,6 +1160,19 @@ sub l00http_dash_proc {
                     }
                 }
             }
+
+            # if filtering desc, may display full category too
+            if (($fildesc0itm1cat ne 'checked') && ($fildesc eq 'checked')) {
+                if (($key) = /^\|\|.+?(\|\|.+?\|\|.+?)\|\|/) {
+                    # find key
+                    # display full category if asked to
+                    if (!defined($desccats{$key})) {
+                        # skip if never matched filter
+                        next;
+                    }
+                }
+            }
+
             # insert bangbang anchor
             if (/^\|\|!!(.+)/) {
                 $_ = "||!!$anchor$1";
