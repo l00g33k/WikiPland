@@ -80,6 +80,11 @@ sub l00http_view_proc {
         $findtext = '';
     }
 
+    if (defined ($form->{'cbpaste'})) {
+        $findtext = &l00httpd::l00getCB($ctrl);
+        $form->{'findtext'} = $findtext;
+    }
+
     if (defined ($form->{'update'})) {
         if (defined ($form->{'refresh'})) {
             $refresh = '';
@@ -591,7 +596,7 @@ sub l00http_view_proc {
     print $sock "Find in this file\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "RegE&#818;x (||):\n";
+    print $sock "RegE&#818;x (||): <input type=\"submit\" name=\"cbpaste\" value=\"C&#818;B\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\" accesskey=\"e\"> <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
     print $sock "</td></tr>\n";
