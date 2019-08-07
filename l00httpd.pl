@@ -63,6 +63,7 @@ my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
 my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
+my ($cmdlnmod, $cmdlnparam);
 
 # set listening port
 $ctrl_port = 20337;
@@ -91,6 +92,9 @@ $quitattimer = 0;
 $quitattime = 0x7fffffff;
 $quitmsg1 = "<font style=\"color:black;background-color:lime\">This demo will be wiped and restarted in ";
 $quitmsg2 = " seconds.</font> ";
+
+$cmdlnmod = '';
+$cmdlnparam = '';
 
 undef $timeout;
 
@@ -555,7 +559,16 @@ while ($_ = shift) {
                 $ctrl{$key} = $val;
             }
         }
-	}
+    } else {
+        # none of the above
+        # if it has '\' or '/', it's a path
+        # else it's a module name
+        if (/[\\\/]/) {
+            $cmdlnparam = "path=$_";
+        } else {
+            $cmdlnmod = $_;
+        }
+    }
 }
 $ctrl_port_first = $ctrl_port;
 
@@ -1127,6 +1140,14 @@ while(1) {
                 $modcalled = "ls";
                 $urlparams = "path=$1&raw=on";
             }
+
+            if (($modcalled eq '_none_') &&
+                ($cmdlnmod ne '') && 
+                ($cmdlnparam ne '')) {
+                $modcalled = $cmdlnmod;
+                $urlparams = $cmdlnparam;
+            }
+
             print "$ctrl{'now_string'}: $client_ip Auth>$idpw< /$modcalled\n", if ($debug >= 4);
 
             $needpw = 1;
