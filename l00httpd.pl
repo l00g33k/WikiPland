@@ -573,6 +573,11 @@ while ($_ = shift) {
 $ctrl_port_first = $ctrl_port;
 
 
+if (($cmdlnmod ne '') && ($cmdlnparam ne '')) {
+    # use command line supplied mod and path as HOME target
+    $ctrl{'HOME'} = "<a href=\"/$cmdlnmod.htm?$cmdlnparam\">HOME</a>";
+}
+
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^\d$/)) {
     $debug = $ctrl{'debug'};
 }
