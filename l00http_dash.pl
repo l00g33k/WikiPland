@@ -690,11 +690,11 @@ sub l00http_dash_proc {
                     }
                 }
                 # ^ color fushcia/yellow for do now
-                if ($dsc =~ /^(\+\d+ *)\^([^\[\]]+)(\|+[^\[\]]+)$/) {
+                if ($dsc =~ /^(\+\d+ *)\^([^\[\]]+?)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
                     $dsc = "$1^<strong><font style=\"color:yellow;background-color:fuchsia\">$2</font></strong>$3";
-                } elsif ($dsc =~ /^\^([^\[\]]+)(\|+[^\[\]]+)$/) {
+                } elsif ($dsc =~ /^\^([^\[\]]+?)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
                     $dsc = "^<strong><font style=\"color:yellow;background-color:fuchsia\">$1<\/font><\/strong>$2";
@@ -704,11 +704,11 @@ sub l00http_dash_proc {
                     $dsc =~ s/^\^(.+)$/^<strong><font style="color:yellow;background-color:fuchsia">$1<\/font><\/strong>/;
                 }
                 # ~ color fushcia/yellow for do now
-                if ($dsc =~ /^(\+\d+ *)~([^\[\]]+)(\|+[^\[\]]+)$/) {
+                if ($dsc =~ /^(\+\d+ *)~([^\[\]]+?)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
                     $dsc = "$1~<strong><font style=\"color:black;background-color:yellow\">$2</font></strong>$3";
-                } elsif ($dsc =~ /^~([^\[\]]+)(\|+[^\[\]]+)$/) {
+                } elsif ($dsc =~ /^~([^\[\]]+?)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
                     $dsc = "~<strong><font style=\"color:black;background-color:yellow\">$1<\/font><\/strong>$2";
@@ -718,7 +718,7 @@ sub l00http_dash_proc {
                     $dsc =~ s/^~(.+)$/~<strong><font style="color:black;background-color:yellow">$1<\/font><\/strong>/;
                 }
                 # . color lightGray/black for do now
-                if ($dsc =~ /^\.([^\[\]]+)(\|+[^\[\]]+)$/) {
+                if ($dsc =~ /^\.([^\[\]]+?)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
                     $dsc = ".<strong><font style=\"color:black;background-color:lightGray\">$1<\/font><\/strong>$2";
