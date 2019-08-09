@@ -564,7 +564,7 @@ while ($_ = shift) {
         # if it has '\' or '/', it's a path
         # else it's a module name
         if (/[\\\/]/) {
-            $cmdlnparam = "path=$_";
+            $cmdlnparam = $_;
         } else {
             $cmdlnmod = $_;
         }
@@ -575,7 +575,7 @@ $ctrl_port_first = $ctrl_port;
 
 if (($cmdlnmod ne '') && ($cmdlnparam ne '')) {
     # use command line supplied mod and path as HOME target
-    $ctrl{'HOME'} = "<a href=\"/$cmdlnmod.htm?$cmdlnparam\">HOME</a>";
+    $ctrl{'HOME'} = "<a href=\"/$cmdlnmod.htm?path=$cmdlnparam\">HOME</a>";
 }
 
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^\d$/)) {
@@ -739,6 +739,12 @@ print STDERR "ctrl_port http://localhost:$ctrl_port\n";
 print STDERR "cli_port  http://localhost:$cli_port\n";
 $_ = &getsvrip();
 print STDERR "cli_port  http://$_:$cli_port\n";
+
+if (($cmdlnmod ne '') && ($cmdlnparam ne '')) {
+    print STDERR "\n\nYou have specified the module '$cmdlnmod' ".
+        "for the target '$cmdlnparam'.  Visit it at this URL\n".
+        "\nhttp://localhost:$ctrl_port\n";
+}
 
 my $readable = IO::Select->new;     # Create a new IO::Select object
 $readable->add($ctrl_lstn_sock);    # Add the lstnsock to it
@@ -1150,7 +1156,7 @@ while(1) {
                 ($cmdlnmod ne '') && 
                 ($cmdlnparam ne '')) {
                 $modcalled = $cmdlnmod;
-                $urlparams = $cmdlnparam;
+                $urlparams = "path=$cmdlnparam";
             }
 
             print "$ctrl{'now_string'}: $client_ip Auth>$idpw< /$modcalled\n", if ($debug >= 4);
