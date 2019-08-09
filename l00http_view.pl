@@ -576,7 +576,7 @@ sub l00http_view_proc {
     print $sock "<form action=\"/view.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"dohilite\" value=\"H&#818;iLite\" accesskey=\"h\">\n";
+    print $sock "<input type=\"submit\" name=\"dohilite\" value=\"Hi&#818;Lite\" accesskey=\"i\">\n";
     print $sock "</td><td>\n";
     print $sock "regex <input type=\"text\" size=\"12\" name=\"hilitetext\" value=\"$hilitetext\">\n";
     print $sock "<input type=\"submit\" name=\"clrhilite\" value=\"clr\"></td></tr>\n";
@@ -648,6 +648,9 @@ sub l00http_view_proc {
         $tmpln += $tmp;
     }
 
+    if (defined ($ctrl->{'FOOT'})) {
+        print $sock "$ctrl->{'FOOT'}\n";
+    }
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
