@@ -766,7 +766,7 @@ sub periodictask {
             $retval = __PACKAGE__->$subname(\%ctrl);
             if (defined ($retval) && ($retval > 0)) {
                 if ($retval < 1000000) {
-                    &dlog (3, "perio: $mod:fn:perio -> $retval\n");
+                    &dlog (6, "perio: $mod:fn:perio -> $retval\n");
                 }
                 if ($tickdelta > $retval) {
                     $tickdelta = $retval;
@@ -1934,7 +1934,7 @@ while(1) {
                             $subname = $modsinfo{"$mod:fn:perio"};
                             $retval = 60;
                             $retval = __PACKAGE__->$subname(\%ctrl);
-                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 5);
+                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 6);
                             print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>$retval secs</td></tr>\n";
                         }
                     }
