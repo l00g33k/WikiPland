@@ -706,12 +706,8 @@ sub l00setCB {
         $clip = Win32::Clipboard();
         $clip->Set($buf);
     } elsif ($ctrl->{'os'} eq 'tmx') {
-        $buf =~ s/\\/\\\\/gm;
-        $buf =~ s/\//\\\//gm;
-#       $buf =~ s/|/\|/gm;
-        $buf =~ s/\(/\\\(/gm;
-        $buf =~ s/\)/\\\)/gm;
-        $buf =~ s/'/\\'/gm;
+        $buf =~ s/\\/\\\\\\\\/gm;
+        $buf =~ s/"/\\"/gm;
         `termux-clipboard-set "$buf"`;
     }
 }
