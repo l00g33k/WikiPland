@@ -578,7 +578,7 @@ sub l00http_view_proc {
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"dohilite\" value=\"Hi&#818;Lite\" accesskey=\"i\">\n";
     print $sock "</td><td>\n";
-    print $sock "regex <input type=\"text\" size=\"12\" name=\"hilitetext\" value=\"$hilitetext\">\n";
+    print $sock "regex&#818; <input type=\"text\" size=\"12\" name=\"hilitetext\" value=\"$hilitetext\" accesskey=\"x\">\n";
     print $sock "<input type=\"submit\" name=\"clrhilite\" value=\"clr\"></td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
