@@ -482,6 +482,22 @@ sub l00http_mobizoom_mobilize {
                 &l00httpd::l00fwriteBuf($ctrl, $wgetorg);
                 &l00httpd::l00fwriteClose($ctrl);
             }
+        } else {
+            # inspect header
+            # jpg?
+            $_ = unpack("L", substr($wgetorg, 6, 4));
+            if (0x4649464a == $_) {
+                $wget = "Target forced to jpg: <a href=\"/ls.htm?path=l00://mobizoom.jpg\">l00://mobizoom.jpg</a><p>".
+                        "<img src=\"/ls.htm?path=l00://mobizoom.jpg\">";
+                if (length ($wgetorg) > 200) {
+                    &l00httpd::l00fwriteOpen($ctrl, "l00://mobizoom.jpg");
+                    &l00httpd::l00fwriteBuf($ctrl, $wgetorg);
+                    &l00httpd::l00fwriteClose($ctrl);
+                }
+            } else {
+                $@ = unpack("4L", substr($wgetorg, 0, 16));
+printf ("%08x %08x %08x %08x\n", $_[0], $_[1], $_[2], $_[3]);
+            }
         }
 
         $_ = $title;
