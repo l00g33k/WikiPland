@@ -344,8 +344,8 @@ sub l00http_recedit_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Update\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"update\" value=\"Refresh\">\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
         $output = 'checked';
     } else {

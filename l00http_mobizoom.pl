@@ -495,8 +495,7 @@ sub l00http_mobizoom_mobilize {
                     &l00httpd::l00fwriteClose($ctrl);
                 }
             } else {
-                $@ = unpack("4L", substr($wgetorg, 0, 16));
-printf ("%08x %08x %08x %08x\n", $_[0], $_[1], $_[2], $_[3]);
+                $@ = unpack("L4", substr($wgetorg, 0, 16));
             }
         }
 
