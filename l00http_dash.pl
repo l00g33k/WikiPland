@@ -340,7 +340,7 @@ sub l00http_dash_proc {
         print $sock "<form action=\"/dash.htm\" method=\"get\">\n";
         print $sock "(<input type=\"checkbox\" name=\"fildesc\" $fildesc>desc";
         if ($fildesc eq 'checked') {
-            print $sock "<input type=\"checkbox\" name=\"fildesc0itm1cat\" $fildesc0itm1cat>cat)";
+            print $sock "<input type=\"checkbox\" name=\"fildesc0itm1cat\" $fildesc0itm1cat>all)";
             print $sock "<input type=\"hidden\" name=\"filtime\" value=\"\">";
         }
         print $sock " Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\"> \n";
