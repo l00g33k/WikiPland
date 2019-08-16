@@ -96,9 +96,13 @@ sub l00http_picannosvg_proc (\%) {
         }
     }
 
-
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>picannosvg</title>" . $ctrl->{'htmlhead2'};
+
+    if (defined($form->{'set'})) {
+        print $sock "anno: $anno<br>\n";
+    }
+
 
     if (open (IN, "<$path")) {
         close (IN);
@@ -117,7 +121,10 @@ sub l00http_picannosvg_proc (\%) {
 
     if (defined ($form->{'x'})) {
         print $sock "<br>Clicked pixel (x,y): $form->{'x'},$form->{'y'}\n";
+        print $sock "Pic (x,y): ", $form->{'x'} * 100 / $scale,',',$form->{'y'} * 100 / $scale,"<br>\n";
     }
+    print $sock "Max px (x,y): $mapwd,$mapht\n";
+    print $sock "Max pic (x,y): ", $mapwd * 100 / $scale,',',$mapht * 100 / $scale,"<br>\n";
 
 
     print $sock "<p>$ctrl->{'home'} \n";
