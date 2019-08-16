@@ -114,8 +114,8 @@ sub l00http_picannosvg_proc (\%) {
     } elsif (&l00httpd::l00fwriteOpen($ctrl, $map)) {
         &l00httpd::l00fwriteBuf($ctrl, "IMG_WD_HT=$mapwd,$mapht\n");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "Sample <a href=\"/view.htm?path=$map\">$map</a> created as it was missing.  ".
-            "<a href=\"/edit.htm?path=$map\">Edit</a> it for correct image size.<p>\n";
+        print $sock "Sample <a href=\"/view.htm?path=$map\" target=\"_blank\">$map</a> created as it was missing.  ".
+            "<a href=\"/edit.htm?path=$map\" target=\"_blank\">Edit</a> it for correct image size.<p>\n";
     }
 
 
@@ -151,8 +151,8 @@ sub l00http_picannosvg_proc (\%) {
 
     print $sock "<p>$ctrl->{'home'} \n";
     print $sock "$ctrl->{'HOME'} \n";
-    print $sock "Launch <a href=\"/launcher.htm?path=$path\">$path</a> - ".
-        "View <a href=\"/view.htm?path=$map\">$map</a><p>\n";
+    print $sock "Launch <a href=\"/launcher.htm?path=$path\" target=\"_blank\">$path</a> - ".
+        "View <a href=\"/view.htm?path=$map\" target=\"_blank\">$map</a><p>\n";
 
 
     print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
