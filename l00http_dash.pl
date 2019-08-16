@@ -160,7 +160,7 @@ sub l00http_dash_proc {
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2);
-    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats, $barekey);
+    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
 
 
@@ -1254,7 +1254,11 @@ sub l00http_dash_proc {
         print $sock "Add ";
         $tmp = 'style="height:1.4em; width:2.0em"';
         foreach $_ (@blocktime) {
-            print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp> ";
+            $access = '';
+            if (/(.)&#818;/) {
+                $access = "accesskey=\"$1\"";
+            }
+            print $sock "<input type=\"submit\" name=\"newtime\" value=\"$_\" $tmp $access> ";
         }
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">";
         if ($fildesc eq 'checked') {
@@ -1265,8 +1269,8 @@ sub l00http_dash_proc {
         }
         print $sock "to checked items<p>\n";
         $tmp = 'style="height:1.4em; width:6.0em"';
-        print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check All\" $tmp> ";
-        print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check None\" $tmp> ";
+        print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check A&#818;ll\" accesskey=\"a\" $tmp> ";
+        print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check N&#818;one\" accesskey=\"n\" $tmp> ";
         print $sock "</form>\n";
 
 
