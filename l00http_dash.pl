@@ -505,13 +505,16 @@ sub l00http_dash_proc {
                 if (/^%BLOGTIME:(.+?)%/) {
                     $tmp = $1;
                     $addtimeval{$tmp} = 0;
-                    if ($tmp =~ /(\d+)m/) {
+                    # remove underline
+                    $tmp2 = $tmp;
+                    $tmp2 =~ s/&#818;//;
+                    if ($tmp2 =~ /(\d+)m/) {
                         $addtimeval{$tmp} = 60 * $1;
                     }
-                    if ($tmp =~ /(\d+)h/) {
+                    if ($tmp2 =~ /(\d+)h/) {
                         $addtimeval{$tmp} = 3600 * $1;
                     }
-                    if ($tmp =~ /(\d+)d/) {
+                    if ($tmp2 =~ /(\d+)d/) {
                         $addtimeval{$tmp} = 24 * 3600 * $1;
                     }
                     push(@blocktime, $tmp);
@@ -521,8 +524,11 @@ sub l00http_dash_proc {
 
 
         if (defined ($form->{'newtime'})) {
+            $_ = $form->{'newtime'};
+            # revert character back to html entity 
+            s/\xcc\xb2/&#818;/;
             # new time
-            $addtime = $addtimeval{$form->{'newtime'}};
+            $addtime = $addtimeval{$_};
         } else {
             $addtime = 0;
         }
