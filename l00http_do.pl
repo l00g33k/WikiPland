@@ -153,6 +153,10 @@ sub l00http_do_proc {
         }
     } else {
         # default to disabled to non local clients^M
+        if ($rethash =~ /[a-zA-Z]+/ms) {
+            # wikitize output if return has alphabet instead numeric only
+            print $sock &l00wikihtml::wikihtml ($ctrl, "", $rethash, 0);
+        }
         if ($bare ne 'checked') {
             print $sock "<hr>Run completed<br>\n";
         }

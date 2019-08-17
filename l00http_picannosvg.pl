@@ -14,7 +14,7 @@ my $map = '';
 my $marker = 'X';
 my $color = 'ff0000';
 my $scale = 100;
-
+my $bare = '';
 
 my ($mapwd, $mapht);
 $mapwd = 800;
@@ -63,14 +63,29 @@ sub l00http_picannosvg_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $xx, $yy);
     my ($lond, $lonm, $lonc, $latd, $latm, $latc);
-    my ($coor, $tmp, $svg, %annos, $xy);
+    my ($coor, $tmp, $svg, %annos, $xy, $annofile);
 
     undef %annos;
 
+    if (defined ($form->{'annofile'})) {
+        $annofile = $form->{'annofile'};
+    } else {
+        $annofile = '';
+    }
+    $bare = '';
+    if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
+        $bare = 'checked';
+    }
+
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
-        $map = "$path.txt";
+        if ($annofile ne '') {
+            $map = $annofile;
+        } else {
+            $map = "$path.txt";
+        }
     }
+
     # map clicked
     if (defined ($form->{'x'})) {
         ($lon, $lat) = &annoxy2llsvg ($form->{'x'}, $form->{'y'});
@@ -138,47 +153,56 @@ sub l00http_picannosvg_proc (\%) {
         print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
         print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path&raw=on\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+        print $sock "<input type=\"hidden\" name=\"annofile\" value=\"$annofile\">\n";
+        print $sock "<input type=\"hidden\" name=\"annofile\" value=\"$annofile\">\n";
+        print $sock "<input type=\"hidden\" name=\"bare\" value=\"\">\n";
         print $sock "</form>\n";
     }
 
 
     if (defined ($form->{'x'})) {
-        print $sock "Clicked pixel (x,y): $form->{'x'},$form->{'y'}\n";
-        print $sock "Pic (x,y): ", $form->{'x'} * 100 / $scale,',',$form->{'y'} * 100 / $scale,"<br>\n";
+        if ($bare eq '') {
+            print $sock "Clicked pixel (x,y): $form->{'x'},$form->{'y'}\n";
+            print $sock "Pic (x,y): ", $form->{'x'} * 100 / $scale,',',$form->{'y'} * 100 / $scale,"<br>\n";
+        }
     }
-    print $sock "Max px (x,y): $mapwd,$mapht\n";
-    print $sock "Max pic (x,y): ", $mapwd * 100 / $scale,',',$mapht * 100 / $scale,"<br>\n";
+    if ($bare eq '') {
+        print $sock "Max px (x,y): $mapwd,$mapht\n";
+        print $sock "Max pic (x,y): ", $mapwd * 100 / $scale,',',$mapht * 100 / $scale,"<br>\n";
 
+        print $sock "<p>$ctrl->{'home'} \n";
+        print $sock "$ctrl->{'HOME'} \n";
+        print $sock "Launch <a href=\"/launcher.htm?path=$path\" target=\"_blank\">$path</a> - ".
+            "View <a href=\"/view.htm?path=$map\" target=\"_blank\">$map</a><p>\n";
 
-    print $sock "<p>$ctrl->{'home'} \n";
-    print $sock "$ctrl->{'HOME'} \n";
-    print $sock "Launch <a href=\"/launcher.htm?path=$path\" target=\"_blank\">$path</a> - ".
-        "View <a href=\"/view.htm?path=$map\" target=\"_blank\">$map</a><p>\n";
+        print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
-
-    print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
-    if (defined ($form->{'x'})) {
-        print $sock "        <tr>\n";
-        print $sock "            <td>A&#818;nnotation:</td>\n";
-        print $sock "            <td><input type=\"text\" size=\"16\" name=\"anno\" value=\"\" accesskey=\"a\">".
-                "<input type=\"hidden\" name=\"atx\" value=\"$form->{'x'}\">\n".
-                "<input type=\"hidden\" name=\"aty\" value=\"$form->{'y'}\">\n".
-                "</td>\n";
-        print $sock "        </tr>\n";
-    }
+        if (defined ($form->{'x'})) {
+            print $sock "        <tr>\n";
+            print $sock "            <td>A&#818;nnotation:</td>\n";
+            print $sock "            <td><input type=\"text\" size=\"16\" name=\"anno\" value=\"\" accesskey=\"a\">".
+                    "<input type=\"hidden\" name=\"atx\" value=\"$form->{'x'}\">\n".
+                    "<input type=\"hidden\" name=\"aty\" value=\"$form->{'y'}\">\n".
+                    "</td>\n";
+            print $sock "        </tr>\n";
+        }
                                                     
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"S&#818;et\" accesskey=\"s\">".
-                "            <input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
-    print $sock "        <td>Sc&#818;ale <input type=\"text\" size=\"6\" name=\"scale\" value=\"$scale\" accesskey=\"c\"></td>\n";
-    print $sock "    </tr>\n";
+        print $sock "    <tr>\n";
+        print $sock "        <td><input type=\"submit\" name=\"set\" value=\"S&#818;et\" accesskey=\"s\">".
+                    "            <input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
+        print $sock "        <td>Sc&#818;ale <input type=\"text\" size=\"6\" name=\"scale\" value=\"$scale\" accesskey=\"c\"></td>\n";
+        print $sock "    </tr>\n";
 
-    print $sock "</table>\n";
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
-    print $sock "</form>\n";
+        print $sock "    <tr>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"bare\" $bare>Bare page</td>\n";
+        print $sock "        <td>Notes: <input type=\"text\" size=\"16\" name=\"annofile\" value=\"$annofile\"></td>\n";
+        print $sock "    </tr>\n";
 
+        print $sock "</table>\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+        print $sock "</form>\n";
+    }
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
