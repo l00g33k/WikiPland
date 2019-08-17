@@ -30,8 +30,8 @@ sub annoll2xysvg {
     my ($lonhtm, $lathtm) = @_;
     my ($pixx, $pixy);
 
-    $pixx = int ($lonhtm * $scale / 100);
-    $pixy = int ($mapht * $scale / 100) - int ($lathtm * $scale / 100);
+    $pixx = int ($lonhtm * $scale / 100 + 0.5);
+    $pixy = int ($lathtm * $scale / 100 + 0.5);
 
     ($pixx, $pixy);
 }
@@ -41,8 +41,8 @@ sub annoxy2llsvg {
     my ($pixx, $pixy) = @_;
     my ($lonhtm, $lathtm);
 
-    $lonhtm = $pixx * 100 / $scale;
-    $lathtm = $mapht - $pixy * 100 / $scale;
+    $lonhtm = int ($pixx * 100 / $scale + 0.5);
+    $lathtm = int ($pixy * 100 / $scale + 0.5);
 
     ($lonhtm, $lathtm);
 }
@@ -96,16 +96,17 @@ sub l00http_picannosvg_proc (\%) {
                 $mapht = int ($mapht * $scale / 100);
 		    }
             # read annotation
-            if (/^(\d+,\d+): +(.+)$/) {
-                $annos{$1} = $2;
+            if (/^(\d+),(\d+): +(.+)$/) {
+                $annos{"$1,$2"} = $3;
             }
         }
         # write annotation and scale file if missing
         if (defined($form->{'set'}) &&
             defined($form->{'anno'}) && 
             (length($form->{'anno'}) > 0)) {
-            $annos{"$form->{'atx'},$form->{'aty'}"} = $form->{'anno'};
-            $buf .= "$form->{'atx'},$form->{'aty'}: $form->{'anno'}\n";
+            ($xx, $yy) = &annoxy2llsvg ($form->{'atx'}, $form->{'aty'});
+            $annos{"$xx,$yy"} = $form->{'anno'};
+            $buf .= "$xx,$yy: $form->{'anno'}\n";
             if (&l00httpd::l00fwriteOpen($ctrl, $map)) {
                 &l00httpd::l00fwriteBuf($ctrl, $buf);
                 &l00httpd::l00fwriteClose($ctrl);
@@ -129,7 +130,7 @@ sub l00http_picannosvg_proc (\%) {
         }
         # display annotations
         foreach $xy (keys %annos) {
-            ($pixx, $pixy) = split(',', $xy);
+            ($pixx, $pixy) = &annoll2xysvg (split(',', $xy));
             print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
             print $sock "<font color=\"$color\">$annos{$xy}</font></div>\n";
         }
