@@ -106,8 +106,8 @@ sub wgetfollow2 {
 sub l00http_mobizoom_mobilize {
     my ($ctrl, $url, $zoom, $wget, $saveinternal) = @_;
     my ($on_slashdot_org, $urlgiven, $wget2, $domain, $wgettmp);
-    my ($clip, $tmp, $last, $lnno, $wgetorg, $inhref);
-    my ($threads, $endanchor, $title, $freetag, $sectprelog);
+    my ($clip, $tmp, $last, $lnno, $wgetorg, $inhref, $sections, @sectdesc);
+    my ($threads, $endanchor, $title, $freetag, $sectprelog, $ii);
 
 
     # This trivial mobilizer will process in two different mode:
@@ -218,8 +218,6 @@ sub l00http_mobizoom_mobilize {
         $wget =~ s/<\/*div.*?>//gsi;
         $wget =~ s/<\/*aside.*?>//gsi;
         $wget =~ s/<\/*figure.*?>//gsi;
-        $wget =~ s/<\/*article.*?>//gsi;
-        $wget =~ s/<\/*section.*?>//gsi;
         $wget =~ s/<\/*main.*?>//gsi;
         $wget =~ s/<\/*menu.*?>//gsi;
         $wget =~ s/<\/*label.*?>//gsi;
@@ -317,6 +315,7 @@ sub l00http_mobizoom_mobilize {
         $clip = '';
         $lnno = 0;
         $inhref = 0;
+        undef @sectdesc;
         foreach $_ (split ("\n", $wget2)) {
             chomp;
             if (/^ *$/) {
@@ -410,6 +409,17 @@ sub l00http_mobizoom_mobilize {
                 }
             }
 
+            if (($tmp) = /<(article.*?)>/gsi) {
+                push(@sectdesc, $tmp);
+                s/<(article.*?)>/<a name="__sect$#sectdesc"<\/a>/gsi;
+            }
+            if (($tmp) = /<(section.*?)>/gsi) {
+                push(@sectdesc, $1);
+                s/<(section.*?)>/<a name="__sect$#sectdesc"<\/a>/gsi;
+            }
+            s/<\/article.*?>//gsi;
+            s/<\/section.*?>//gsi;
+
             $wget .= "$_\n";
             $last = $_;
         }
@@ -445,8 +455,13 @@ sub l00http_mobizoom_mobilize {
             $wget =~ s/&gt;/&gt;<\/font>/gs;
         }
 
-
         $endanchor = '';
+        $sections = "Goto sections:<br>\n";
+        for ($ii = 0; $ii <= $#sectdesc; $ii++) {
+            $sections .= "$ii: <a href=\"#__sect$ii\">$sectdesc[$ii]</a><br>";
+        }
+        $endanchor .= $sections;
+
         # web page interactive mode, render web page
         $endanchor .= "<hr><a name=\"__end__\"></a>";
         $endanchor .= "<p>Goto sections:\n";
@@ -500,7 +515,7 @@ sub l00http_mobizoom_mobilize {
         }
 
         $_ = $title;
-        $wget = "$title\nOriginal URL: <a href=\"$url\">$url</a><p>\n$threads\n$wget\n$threads$endanchor";
+        $wget = "$title\nOriginal URL: <a href=\"$url\">$url</a><br>$sections<p>\n$threads\n$wget\n$threads$endanchor";
     }
 
     $wget;
