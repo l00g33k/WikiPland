@@ -457,7 +457,7 @@ sub l00http_mobizoom_mobilize {
 
         $endanchor = '';
         $sections = "Goto sections:<br>\n";
-        for ($ii = 0; $ii <= $#sectdesc; $ii++) {
+        for ($ii = 0; ($ii <= $#sectdesc) && ($ii < 10); $ii++) {
             $sections .= "$ii: <a href=\"#__sect$ii\">$sectdesc[$ii]</a><br>";
         }
         $endanchor .= $sections;
