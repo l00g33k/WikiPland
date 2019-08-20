@@ -193,6 +193,11 @@ sub l00http_dash_proc {
         $form->{'crlf'} = '';
     }
 
+    if (defined($form->{'futurebtn'})) {
+        $form->{'process'} = 'Process';
+        $form->{'dash_all'} = 'future';
+    }
+
 
     if (defined($form->{'dash_all'})) {
         if ($form->{'dash_all'} eq 'all') {
@@ -378,8 +383,9 @@ sub l00http_dash_proc {
         } else {
             $_ = '';
         }
-        print $sock "<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>";
+        print $sock "(<input type=\"radio\" name=\"dash_all\" value=\"future\" $_>";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=future\">future</a>\n";
+        print $sock "<input type=\"submit\" name=\"futurebtn\" value=\"Fu&#818;ture\" accesskey=\"u\">)\n";
         if ($dash_all eq 'all') {
             $_ = 'checked';
         } else {
