@@ -1258,7 +1258,7 @@ sub l00http_dash_proc {
 
         # form elements
         print $sock "Add ";
-        $tmp = 'style="height:1.4em; width:2.0em"';
+        $tmp = 'style="height:1.7em; width:2.0em"';
         foreach $_ (@blocktime) {
             $access = '';
             if (/(.)&#818;/) {
@@ -1274,7 +1274,7 @@ sub l00http_dash_proc {
             print $sock "<input type=\"hidden\" name=\"filtime\" value=\"on\">";
         }
         print $sock "to checked items<p>\n";
-        $tmp = 'style="height:1.4em; width:6.0em"';
+        $tmp = 'style="height:1.7em; width:6.0em"';
         print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check A&#818;ll\" accesskey=\"a\" $tmp> ";
         print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check N&#818;one\" accesskey=\"n\" $tmp> ";
         print $sock "</form>\n";
