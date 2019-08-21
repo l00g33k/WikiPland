@@ -20,6 +20,10 @@ my ($mapwd, $mapht);
 $mapwd = 800;
 $mapht = 600;
 
+my($base64fname, $base64data);
+$base64fname = '';
+$base64data = '';
+
 
 my %config = (proc => "l00http_picannosvg_proc",
               desc => "l00http_picannosvg_desc");
@@ -62,8 +66,8 @@ sub l00http_picannosvg_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $xx, $yy);
-    my ($lond, $lonm, $lonc, $latd, $latm, $latc);
-    my ($coor, $tmp, $svg, %annos, $xy, $annofile);
+    my ($lond, $lonm, $lonc, $latd, $latm, $latc, $ext, $fname);
+    my ($coor, $tmp, $svg, %annos, $xy, $annofile, $overlaymap, $mapurl);
 
     undef %annos;
 
@@ -150,8 +154,45 @@ sub l00http_picannosvg_proc (\%) {
             print $sock "<font color=\"$color\">$annos{$xy}</font></div>\n";
         }
 
+
+# copied from l00http_gpsmapsvg.pl but not working
+#        ($fname) = $path =~ /\/([^\/]+)$/;
+#        $svg = "10,10 10,10 10,10 50,10 10,10";
+#
+#            $overlaymap  = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+#            $overlaymap .= "<svg width=\"$mapwd"."px\" height=\"$mapht"."px\" viewBox=\"0 0 $mapwd $mapht\" xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"> \n";
+#            $overlaymap .= "<image x=\"0\" y=\"0\" width=\"$mapwd\" height=\"$mapht\" ";
+#            if ($path ne $base64fname) {
+#                $base64fname = $path;
+#                $ext = '';
+#                if (open(IN,"<$base64fname")){
+#                    if ($base64fname =~ /\.(.+?$)/) {
+#                        $ext = $1;
+#                    }
+#                    binmode(IN);
+#                    local ($/);
+#                    undef $/;
+#                    $base64data = <IN>;
+#                    close(IN);
+#                    $base64data = l00base64::b64encode($base64data);
+#                    $base64data = "data:image/$ext;base64,$base64data";
+#                } else {
+#                    # Can't open $base64fname
+#                    $base64data = "/ls.htm?path=$path";
+#                }
+#            }
+#            $overlaymap .= " xlink:href=\"$base64data\" />\n";
+#            $overlaymap .= &l00svg::makesvgoverlaymap ($fname, $svg, $mapwd, $mapht, $path, '');
+#            $overlaymap .= "\n";
+#            $overlaymap .= "</svg>";
+#            l00svg::setsvg("$fname.overlay", $overlaymap);
+#
+#            $mapurl = "/svg.htm?graph=$fname.overlay";
+
+        $mapurl = "/ls.htm$path?path=$path&raw=on";
+
         print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
-        print $sock "<input type=image width=$mapwd height=$mapht src=\"/ls.htm$path?path=$path&raw=on\">\n";
+        print $sock "<input type=image width=$mapwd height=$mapht src=\"$mapurl\">\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
         print $sock "<input type=\"hidden\" name=\"annofile\" value=\"$annofile\">\n";
         print $sock "<input type=\"hidden\" name=\"annofile\" value=\"$annofile\">\n";
