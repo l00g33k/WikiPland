@@ -12,7 +12,7 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot, $atshutdown);
+my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot, $atshutdown, $ondemand);
 my %config = (proc => "l00http_cron_proc",
               desc => "l00http_cron_desc",
               perio => "l00http_cron_perio",
@@ -24,6 +24,7 @@ $filetime = 0;
 $toggle = 'Pause';
 $atboot = 1;
 $atshutdown = 0;
+$ondemand = '';
 
 sub l00http_cron_j2now_string {
     my ($secs) = @_;
@@ -248,6 +249,20 @@ sub l00http_cron_when_next {
                 }
                 $startin = $starttime0 - time;
                 l00httpd::dbp($config{'desc'}, "CRON: (\@shutdown $cmd) in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
+            } elsif (($ondemand ne '') && (($cmd) = (/^\^$ondemand +(.+)$/))) {
+                $secs = time + 0;
+                &l00httpd::l00fwriteBuf($ctrl, "# ORG($lnno):$_\n");
+
+                ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
+                    &l00http_cron_j2now_string ($secs);
+
+                &l00httpd::l00fwriteBuf($ctrl, "TIME:$secs: $nstring dayofweek $wday\n");
+                &l00httpd::l00fwriteBuf($ctrl, "CMD:$cmd\n\n");
+                if ($starttime0 > $secs) {
+                    $starttime0 = $secs;
+                }
+                $startin = $starttime0 - time;
+                l00httpd::dbp($config{'desc'}, "CRON: (^$ondemand $cmd) in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
             } elsif (($mnly, $hrly, $dyly, $mhly, $wkly, $cmd) = 
                 /^([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +([0-9*]+) +(.+)$/) {
                 # starting with current time
@@ -275,6 +290,9 @@ sub l00http_cron_when_next {
 
     $startin = $starttime0 - time;
     l00httpd::dbp($config{'desc'}, "CRON: final start in $startin sec\n"), if ($ctrl->{'debug'} >= 2);
+
+    # clear on demand
+    $ondemand = '';
 
     $starttime0;
 }
@@ -305,6 +323,17 @@ sub l00http_cron_proc {
         $starttime = &l00http_cron_when_next ($ctrl);
     }
 
+
+    if (defined ($form->{"ondemand"}) && 
+        defined ($form->{"ondemandname"}) &&
+        (length($form->{"ondemandname"}) > 0)) {
+        # trigger on demand
+        $ondemand = $form->{"ondemandname"};
+        l00httpd::dbp($config{'desc'}, "CRON: trigger on demand: $ondemand\n"), if ($ctrl->{'debug'} >= 2);
+        $starttime = &l00http_cron_when_next ($ctrl);
+    }
+
+
     if (defined ($form->{"toggle"})) {
         if ($toggle eq 'Pause') {
             $toggle = 'Resume';
@@ -325,8 +354,13 @@ sub l00http_cron_proc {
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td><input type=\"submit\" name=\"reload\" value=\"Reload\"></td>\n";
+    print $sock "            <td><input type=\"submit\" name=\"reload\" value=\"R&#818;eload\" accesskey=\"r\"></td>\n";
     print $sock "            <td><input type=\"submit\" name=\"toggle\" value=\"$toggle\"></td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td><input type=\"submit\" name=\"ondemand\" value=\"O&#818;n demand\" accesskey=\"o\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"10\" name=\"ondemandname\" value=\"\" accesskey=\"e\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "</table>\n";
