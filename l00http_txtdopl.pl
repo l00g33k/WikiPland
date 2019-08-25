@@ -178,9 +178,9 @@ sub l00http_txtdopl_proc (\%) {
                         $perl = '';
                     }
                 }
-                $_ = &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef);
+                $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
                 if (defined($_)) {
-                    $newfile .= &txtdopl ($sock, $ctrl, $dolncnt - 1, $this, $next, undef) . "\n";
+                    &txtdopl ($sock, $ctrl, $dolncnt, $next, undef, undef);
                 }
                 close (TXTDOPLIN);
                 # remove all crlf before compare
