@@ -116,6 +116,8 @@ sub l00http_reminder_find {
                 }
                 if (($st0 == 0) || (time - $utcoffsec >= $st)) {
                     l00httpd::dbp($config{'desc'}, "ON: $_\n"), if ($ctrl->{'debug'} >= 2);
+                    # ' # ' marks start of comment to be dropped
+                    $mg =~ s/ # .+$//;
                     if ($mgall eq '') {
                         $mgall = $mg;
                     } else {
