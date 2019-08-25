@@ -102,10 +102,19 @@ sub l00http_txtdopl_proc (\%) {
                 }
             }
             if ($dopl eq "$ctrl->{'plpath'}.l00_txtdopl.tmp") {
-                open (OU, ">$dopl");
-                print OU $doplbody;
-                print OU "#$dopl: extracted from: $form->{'path'}\n";
-                close (OU);
+                my ($diskfile);
+                local $/;
+                if (open (IN, "<$dopl")) {
+                    $diskfile = <IN>;
+                    close (IN);
+                    if ($diskfile ne $doplbody) {
+                        # write new file only if different
+                        open (OU, ">$dopl");
+                        print OU $doplbody;
+                        close (OU);
+                    }
+                }
+
             }
             $dorst = do $dopl;
             if (!defined ($dorst)) {
