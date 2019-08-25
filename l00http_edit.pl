@@ -434,7 +434,7 @@ sub l00http_edit_proc2 {
     }
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
     print $sock "<input type=\"text\" size=\"10\" name=\"path\" value=\"$form->{'path'}\">\n";
     # create shell script for vi
     if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
@@ -457,10 +457,10 @@ sub l00http_edit_proc2 {
 
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"cbtoedit\" value=\"CB to edit\">\n";
-    print $sock "<input type=\"submit\" name=\"edittocb\" value=\"to CB\">\n";
+    print $sock "<input type=\"submit\" name=\"edittocb\" value=\"t&#818;o CB\" accesskey=\"t\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
-    print $sock "<input type=\"submit\" name=\"reload\" value=\"Reload\">\n";
+    print $sock "<input type=\"submit\" name=\"reload\" value=\"R&#818;eload\" accesskey=\"r\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
