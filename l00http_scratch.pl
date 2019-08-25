@@ -120,7 +120,7 @@ sub l00http_scratch_proc {
         print $sock "<p><input type=\"submit\" name=\"update\" value=\"S&#818;et\" accesskey=\"s\"> \n";
         print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"P&#818;aste CB\" accesskey=\"p\"> \n";
         print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"cp2&#818;CB\" accesskey=\"2\"> \n";
-        print $sock "<input type=\"submit\" name=\"clear\" value=\"Clr\">\n";
+        print $sock "<input type=\"submit\" name=\"clear\" value=\"Cl&#818;r\" accesskey=\"l\">\n";
         print $sock "E&#818; for edit<br>\n";
         print $sock "<input type=\"submit\" name=\"append\" value=\"Append\"> \n";
         print $sock "<input type=\"submit\" name=\"prepend\" value=\"Prepend\">\n";
