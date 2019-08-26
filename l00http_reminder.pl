@@ -430,7 +430,9 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=300\">5h</a></li>\n";
     print $sock "<p>";
-                                                
+
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a><p>\n";
+
     print $sock "Interval: $interval Msg: $formmsg<br>\n";
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($starttime);
     print $sock sprintf ("Start: %04d/%02d/%02d %2d:%02d:%02d<br>\n", 
