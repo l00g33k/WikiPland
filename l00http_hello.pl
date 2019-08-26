@@ -25,6 +25,10 @@ sub l00http_hello_proc (\%) {
 
     #$history = "$ctrl->{'workdir'}l00_hello.txt";
     $history = "l00://hello.txt";
+    if (defined($ctrl->{'hello'})) {
+        $history = $ctrl->{'hello'};
+print "history $ctrl->{'hello'}\n";
+    }
 
     $hellomsg = '';
     if (defined ($form->{'clear'})) {
