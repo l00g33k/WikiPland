@@ -98,6 +98,7 @@ print "history $ctrl->{'hello'}\n";
     }
     if ($ctrl->{'ishost'}) {
         print $sock "View <a href=\"/view.htm?path=$history\">$history</a><p>\n";
+        print $sock "Change history file: <a href=\"/eval.htm?eval=%23+++%24ctrl-%3E%7B%27hello%27%7D%3D%22%24ctrl-%3E%7B%27workdir%27%7Dhello.text.local%22%3B\" target=\"_blank\">modify 'hello'</a> (remove # then Eval<p>\n";
     }
 
     # get submitted name and print greeting
