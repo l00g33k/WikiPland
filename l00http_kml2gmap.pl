@@ -1006,7 +1006,7 @@ SCRIPTSRC
     print $sock "<a href=\"#__toc__\">TOC</a> - \n";
     print $sock "<a href=\"#__form__\">form</a> - \n";
     print $sock "<a href=\"#___end___\">end</a> - \n";
-    print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}\">.kml</a> - \n";
+    print $sock "Download: <a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}&matched=$matched&exclude=$exclude&selregex=$selregex\">.kml</a> - \n";
     print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a> - \n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a><p>\n";
