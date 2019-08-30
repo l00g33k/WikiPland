@@ -7,10 +7,13 @@ use warnings;
 
 my %config = (proc => "l00http_scratch_proc",
               desc => "l00http_scratch_desc");
-my ($scratch, $scratchhtml, $tmp, $eval, $newwin, $wrapwidth);
+my ($scratch, $scratchhtml, $tmp, $eval, $newwin, $wrapwidth, $editwd, $editht, $editsz);
 $eval = '';
 $newwin = '';
 $wrapwidth = '';
+$editsz = 0;
+$editwd = 0;
+$editht = 0;
 
 sub l00http_scratch_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -25,6 +28,29 @@ sub l00http_scratch_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $notbare, $st, $en, $thisen, $wrapat, $ii);
+
+    if ($editwd == 0) {
+        if (defined($ctrl->{'txtwbig'})) {
+            $editwd = $ctrl->{'txtwbig'};
+        } else {
+            $editwd = 160;
+        }
+    }
+    if ($editht == 0) {
+        if (defined($ctrl->{'txthbig'})) {
+            $editht = $ctrl->{'txthbig'};
+        } else {
+            $editht = 30;
+        }
+    }
+
+    if (defined ($form->{'tempsize'})) {
+        $editsz = 1;
+        $editwd = $form->{'editwd'};
+        $editht = $form->{'editht'};
+    } elsif (defined ($form->{'defsize'})) {
+        $editsz = 0;
+    }
 
     # Do bare display?
     $notbare = 1;
@@ -116,7 +142,12 @@ sub l00http_scratch_proc {
 #    $tmp =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
     if ($notbare) {
         print $sock "<form action=\"/scratch.htm\" method=\"post\">\n";
-        print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$tmp</textarea>\n";
+#       print $sock "<textarea name=\"scratchbuf\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$tmp</textarea>\n";
+        if ($editsz) {
+            print $sock "<textarea name=\"scratchbuf\" cols=$editwd rows=$editht accesskey=\"e\">$tmp</textarea>\n";
+        } else{
+            print $sock "<textarea name=\"scratchbuf\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"e\">$tmp</textarea>\n";
+        }
         print $sock "<p><input type=\"submit\" name=\"update\" value=\"S&#818;et\" accesskey=\"s\"> \n";
         print $sock "<input type=\"submit\" name=\"cbmobi\" value=\"P&#818;aste CB\" accesskey=\"p\"> \n";
         print $sock "<input type=\"submit\" name=\"cbcopy\" value=\"cp2&#818;CB\" accesskey=\"2\"> \n";
@@ -244,6 +275,14 @@ sub l00http_scratch_proc {
         print $sock "<p><p><hr>\n";
         print $sock "<p><p><hr>\n";
         print $sock "<hr><a name=\"end\"></a><p><p>\n";
+
+        print $sock "<form action=\"/scratch.htm\" method=\"post\">\n";
+        print $sock "<input type=\"submit\" name=\"tempsize\" value=\"Edit box&#818; size\" accesskey=\"x\">\n";
+        print $sock "wd <input type=\"text\" size=\"4\" name=\"editwd\" value=\"$editwd\">\n";
+        print $sock "ht <input type=\"text\" size=\"4\" name=\"editht\" value=\"$editht\">\n";
+        print $sock "<input type=\"submit\" name=\"defsize\" value=\"D&#818;efault edit size\" accesskey=\"d\">\n";
+        print $sock "</form>\n";
+
     }
 
  
