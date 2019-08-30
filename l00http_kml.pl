@@ -142,16 +142,28 @@ sub l00http_kml_proc {
     my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
     my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $wayptcolor);
     my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow, $newbuf, $pathbase);
-    my (@polyline);
+    my (@polyline, $selregex, $exclude, $addthis);
 
 
     $rawkml = 0;
     $kmlheadernow = '';
     $kmlfooternow = $kmlfooter;
 
+
     if (defined($form->{'cb2file'})) {
         $form->{'path'} = &l00httpd::l00getCB($ctrl);
     }
+
+    $selregex = '';
+    if (defined($form->{'selregex'}) && (length($form->{'selregex'}) > 0)) {
+        $selregex = $form->{'selregex'};
+        if (defined($form->{'exclude'}) && (length($form->{'exclude'}) > 0)) {
+            $exclude = 1;
+        } else {
+            $exclude = 0;
+        }
+    }
+
 
     # create HTTP and HTML headers
     $httphdr = "$ctrl->{'httphead'}$ctrl->{'htmlhead'}$ctrl->{'htmlttl'}$ctrl->{'htmlhead2'}";
@@ -651,14 +663,32 @@ sub l00http_kml_proc {
                         }
                         $lat += $curlatoffset;
                         $lon += $curlonoffset;
-                        $kmlbuf .= 
-                            "\t\t<Placemark>\n".
-                            "\t\t\t<name>$name</name>\n".
-                            "\t\t\t<styleUrl>#msn_donut$wayptcolor</styleUrl>\n".
-                            "\t\t\t<Point>\n".
-                            "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
-                            "\t\t\t</Point>\n".
-                            "\t\t</Placemark>\n";
+
+                        $addthis = 1;
+                        if ($selregex ne '') {
+                            if ($exclude) {
+                                $addthis = 1;
+                                if ($name =~ /$selregex/i) {
+                                    $addthis = 0;
+                                }
+                            } else {
+                                $addthis = 0;
+                                if ($name =~ /$selregex/i) {
+                                    $addthis = 1;
+                                }
+                            }
+                        }
+
+                        if ($addthis) {
+                            $kmlbuf .= 
+                                "\t\t<Placemark>\n".
+                                "\t\t\t<name>$name</name>\n".
+                                "\t\t\t<styleUrl>#msn_donut$wayptcolor</styleUrl>\n".
+                                "\t\t\t<Point>\n".
+                                "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
+                                "\t\t\t</Point>\n".
+                                "\t\t</Placemark>\n";
+                        }
                     }
 
                     $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
