@@ -488,7 +488,11 @@ sub l00http_tree_proc {
                             }
                         }
                     }
-                    $export .= sprintf("|| %11d || %s ||\n", $size, $partpath);
+                    if ($stamp ne '') {
+                        $export .= sprintf("|| $fstamp || %11d || %s ||\n", $size, $partpath);
+                    } else {
+                        $export .= sprintf("|| %11d || %s ||\n", $size, $partpath);
+                    }
                 }
                 # show path from base down only
 			    $path2 = $path;
