@@ -168,7 +168,7 @@ sub l00http_cron_when_next {
     my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
     my ($vb, $vs, $vb0, $vs0, $secs, $lnno);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
-    my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $startin);
+    my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $startin, $tmp);
     my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0, $skip, $skipfilter);
 
     &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
@@ -206,6 +206,7 @@ sub l00http_cron_when_next {
             if (/^#/) {
                 next;
             }
+            # machine=~/TW700/
             if (/^machine=~\/(.+)\/ */) {
                 # new machine filter
                 $skipfilter = $1;
@@ -216,6 +217,20 @@ sub l00http_cron_when_next {
                     # no match, skipping
                     $skip = 1;
                 }
+            }
+            # machine:port=~/TW700:20347/
+            if (/^machine:port=~\/(.+)\/ */) {
+                # new machine filter
+                $skipfilter = $1;
+                $tmp = "$ctrl->{'machine'}:$ctrl->{'ctrl_port'}";
+                if ($tmp =~ /$skipfilter/) {
+                    # matched, don't skip
+                    $skip = 0;
+                } else {
+                    # no match, skipping
+                    $skip = 1;
+                }
+                next;
             }
             if ($skip) {
                 next;
