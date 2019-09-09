@@ -6,7 +6,7 @@ use l00backup;
 
 # do %TXTDOPL% in .txt
 my ($arg, $eval, $sort, $sortdec, $wholefile, $useform);
-my ($lineevalst, $lineevalen);
+my ($lineevalst, $lineevalen, $lineevalln);
 $arg = '';
 $eval = '';
 $sort = '';
@@ -15,6 +15,7 @@ $wholefile = '';
 $useform = '';
 $lineevalst = 0;
 $lineevalen = 0;
+$lineevalln = 0;
 
 my %config = (proc => "l00http_lineeval_proc",
               desc => "l00http_lineeval_desc");
@@ -69,6 +70,12 @@ sub l00http_lineeval_proc (\%) {
             $lineevalen = $1;
         } else {
             $lineevalen = 0;
+        }
+        if (defined ($form->{'rngln'}) && 
+            ($form->{'rngln'} =~ /(\d+)/)) {
+            $lineevalln = $1;
+        } else {
+            $lineevalln = 0;
         }
         if (($lineevalst == 0) || ($lineevalen == 0)) {
             $lineevalst = 0;
@@ -334,7 +341,9 @@ sub l00http_lineeval_proc (\%) {
                     }
                 }
 
-                if (($lnno & 1) == 0) {
+                if ($lnno == $lineevalln) {
+                    print $sock "<font style=\"color:black;background-color:lime\">";
+                } elsif (($lnno & 1) == 0) {
                     print $sock "<font style=\"color:black;background-color:lightGray\">";
                 }
                 printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a> ", $lnno);
@@ -356,7 +365,7 @@ sub l00http_lineeval_proc (\%) {
                         print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
                     }
                 }
-                if (($lnno & 1) == 0) {
+                if (($lnno == $lineevalln) || (($lnno & 1) == 0)) {
                     print $sock "</font>";
                 }
                 if (/$copy2clipboard/) {
