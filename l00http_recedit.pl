@@ -413,6 +413,10 @@ sub l00http_recedit_proc (\%) {
     
 
     # send HTML footer and ends
+    # send HTML footer and ends
+    if (defined ($ctrl->{'FOOT'})) {
+        print $sock "$ctrl->{'FOOT'}\n";
+    }
     print $sock $ctrl->{'htmlfoot'};
 }
 
