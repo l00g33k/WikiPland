@@ -454,19 +454,19 @@ sub l00http_blog_proc {
     print $sock "<input type=\"hidden\" name=\"stylecurr\" value=\"$stylenew\">\n";
     if ($stylenew eq 'log') {
         # log
-        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Blog sty&#818;le add\" accesskey=\"y\">>\n";
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Blog sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"star\">\n";
     } elsif ($stylenew eq 'star') {
         # star
-        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Star sty&#818;le add\" accesskey=\"y\">>\n";
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Star sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"blog\">\n";
     } elsif ($stylenew eq 'blog') {
         # blog
-        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Bare sty&#818;le add\" accesskey=\"y\">>\n";
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Bare sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"bare\">\n";
     } elsif ($stylenew eq 'bare') {
         # bare
-        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log sty&#818;le add\" accesskey=\"y\">>\n";
+        print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
     print $sock "<input type=\"checkbox\" name=\"keepnl\">Keep newline\n";
