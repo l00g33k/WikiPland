@@ -440,6 +440,13 @@ sub l00http_reminder_proc {
     if (($lastcalled > 0) && ($lastcalled < 0x7fffffff)) {
         ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($lastcalled + $pause + $interval * 2);
         print $sock sprintf ("Next: %04d/%02d/%02d %2d:%02d:%02d<br>\n", $year+1900, $mon+1, $mday, $hour, $min, $sec);
+		$_ = $starttime;
+		if ($_ < $lifestart) {
+			$_ = $lifestart;
+		}
+        print $sock sprintf("run time %dm %02ds<br>\n",
+                    int (((time - $utcoffsec) - $_) / 60),
+                    ((time - $utcoffsec) - $_) % 60);
     } else {
         print $sock sprintf ("Not running<br>\n");
     }
