@@ -114,6 +114,10 @@ sub l00http_sleep_proc {
             s/\r//g;
             s/\n//g;
             print $sock sprintf ("%04d: ", $lineno++) . "$_\n";
+            if ($lineno == 200) {
+                print $sock "view <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+                last;
+            }
         }
         close (IN);
         print $sock "</pre>\n";
