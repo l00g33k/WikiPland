@@ -52,10 +52,12 @@ sub l00http_lineeval_proc (\%) {
 
 
     if (defined ($form->{'run'})) {
-        if (defined ($form->{'useform'}) && ($form->{'useform'} eq 'on')) {
-            $useform = 'checked';
-        } else {
-            $useform = '';
+        if (defined ($form->{'useform'}) && ($form->{'useform'} ne 'keep')) {
+            if ($form->{'useform'} eq 'on') {
+                $useform = 'checked';
+            } else {
+                $useform = '';
+            }
         }
 
         # restricting display range
