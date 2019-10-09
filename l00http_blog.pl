@@ -108,7 +108,7 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
-    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp);
+    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp, $nouscore);
     my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly, $includefile, $pnameup);
 
     undef @blockquick;
@@ -134,18 +134,20 @@ sub l00http_blog_proc {
                     push(@blockquick, $1);
                 }
                 if (/^%BLOGTIME:(.+?)%/) {
-                    $tmp = $1;
-                    $addtimeval{$tmp} = 0;
-                    if ($tmp =~ /(\d+)m/) {
-                        $addtimeval{$tmp} = 60 * $1;
+                    $nouscore = $1;
+                    # remove underscore
+                    $nouscore =~ s/&#818;//;
+                    $addtimeval{$nouscore} = 0;
+                    if ($nouscore =~ /(\d+)m/) {
+                        $addtimeval{$nouscore} = 60 * $1;
                     }
-                    if ($tmp =~ /(\d+)h/) {
-                        $addtimeval{$tmp} = 3600 * $1;
+                    if ($nouscore =~ /(\d+)h/) {
+                        $addtimeval{$nouscore} = 3600 * $1;
                     }
-                    if ($tmp =~ /(\d+)d/) {
-                        $addtimeval{$tmp} = 24 * 3600 * $1;
+                    if ($nouscore =~ /(\d+)d/) {
+                        $addtimeval{$nouscore} = 24 * 3600 * $1;
                     }
-                    push(@blocktime, $tmp);
+                    push(@blocktime, $nouscore);
                 }
                 # %INCLUDE<./xxx.txt>%
                 if (/%INCLUDE<(.+?)>%/) {
@@ -177,18 +179,20 @@ sub l00http_blog_proc {
                         push(@blockquick, $1);
                     }
                     if (/^%BLOGTIME:(.+?)%/) {
-                        $tmp = $1;
-                        $addtimeval{$tmp} = 0;
-                        if ($tmp =~ /(\d+)m/) {
-                            $addtimeval{$tmp} = 60 * $1;
+                        $nouscore = $1;
+                        # remove underscore
+                        $nouscore =~ s/&#818;//;
+                        $addtimeval{$nouscore} = 0;
+                        if ($nouscore =~ /(\d+)m/) {
+                            $addtimeval{$nouscore} = 60 * $1;
                         }
-                        if ($tmp =~ /(\d+)h/) {
-                            $addtimeval{$tmp} = 3600 * $1;
+                        if ($nouscore =~ /(\d+)h/) {
+                            $addtimeval{$nouscore} = 3600 * $1;
                         }
-                        if ($tmp =~ /(\d+)d/) {
-                            $addtimeval{$tmp} = 24 * 3600 * $1;
+                        if ($nouscore =~ /(\d+)d/) {
+                            $addtimeval{$nouscore} = 24 * 3600 * $1;
                         }
-                        push(@blocktime, $tmp);
+                        push(@blocktime, $nouscore);
                     }
                 }
             }
@@ -270,6 +274,10 @@ sub l00http_blog_proc {
     $addtime = 0;
     if (defined ($form->{'newtime'})) {
         # new time
+        # remove underscore
+        $_ = chr(0xcc).chr(0xb2);
+        $form->{'newtime'} =~ s/$_//;
+
         $addtime = $addtimeval{$form->{'newtime'}};
         $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
         $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, $addtime);
