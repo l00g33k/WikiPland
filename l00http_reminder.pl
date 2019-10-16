@@ -256,6 +256,8 @@ sub l00http_reminder_proc {
     if (defined ($form->{"reload"})) {
         $interval = 0;
         $starttime = 0x7fffffff;
+        undef $ctrl->{'reminder'};
+        undef $ctrl->{'BANNER:reminder'};
         $lifestart = time - $utcoffsec;
         $lastcalled = 0;
         $pause = 0;
