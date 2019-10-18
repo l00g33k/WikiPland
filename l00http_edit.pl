@@ -430,8 +430,14 @@ sub l00http_edit_proc2 {
                     "<a href=\"#line$_\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".\n";
         print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
-
     }
+
+    if (defined ($form->{'edittocb'})) {
+#       print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
+        #http://127.0.0.1:30337/clip.htm?append=A%CC%B2ppend&clip=&url=%2Fls.htm%2Findex.txt.htm%3Fpath%3D%2Fsdcard%2Fl00httpd%2Findex.txt%23Logs
+        print $sock "<p><a href=\"/clip.htm?append=Append\">clip.htm</a><p>\n";
+    }
+
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";

@@ -156,12 +156,12 @@ sub l00http_timelog_proc {
     print $sock "<p>\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"save\" value=\"Save to file\">\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave to file\" accesskey=\"s\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
 
     print $sock "</td><td>\n";
 
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"New time\">\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ew time\" accesskey=\"n\">\n";
 
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
