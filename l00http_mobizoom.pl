@@ -554,6 +554,7 @@ sub l00http_mobizoom_part1 {
         print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=mobizoom&zoomradio=$_&url=$url\">$_</a> ";
     }
     print $sock "<input type=\"checkbox\" name=\"forcefetch\" $forcefetch>Force fetch.\n";
+    print $sock "<input type=\"submit\" name=\"forcefetch\" value=\"Force fetch\">\n";
     print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size.\n";
     if (-f $url) {
         # if we have a cached file
@@ -679,6 +680,10 @@ sub l00http_mobizoom_proc {
         } else {
             $imgsrclink = '';
         }
+    } elsif (defined($form->{'forcefetch'}) && ($form->{'forcefetch'} eq 'Force fetch')) {
+        $forcefetch = 'checked';
+        $form->{'paste'} = undef;
+        $form->{'fetch'} = 1;
     }
 
     $mode1online2offline4download = 0;
