@@ -285,9 +285,9 @@ sub l00http_filemgt_proc {
     print $sock "<form action=\"/filemgt.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"copy\" value=\"Copy\">\n";
-    print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
-    print $sock "<input type=\"submit\" name=\"append\" value=\"Append\">\n";
+    print $sock "<input type=\"submit\" name=\"copy\" value=\"C&#818;opy\" accesskey=\"c\">\n";
+    print $sock "<input type=\"submit\" name=\"move\" value=\"M&#818;ove\" accesskey=\"m\">\n";
+    print $sock "<input type=\"submit\" name=\"append\" value=\"A&#818;ppend\" accesskey=\"a\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">fr:</a> "; #<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";

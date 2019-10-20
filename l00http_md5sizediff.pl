@@ -319,6 +319,7 @@ sub l00http_md5sizediff_proc {
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist, $phase);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
     my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
+    my (%thisext, %thatext);
 
     if (defined ($form->{'mode'})) {
         if ($form->{'mode'} eq 'dos') {
@@ -355,13 +356,13 @@ sub l00http_md5sizediff_proc {
         (length($form->{'filterthis'}) > 0)) {
         $filterthis = $form->{'filterthis'};
     } else {
-        $filterthis = '.';
+        $filterthis = '';
     }
     if (defined ($form->{'filterthat'}) &&
         (length($form->{'filterthat'}) > 0)) {
         $filterthat = $form->{'filterthat'};
     } else {
-        $filterthat = '.';
+        $filterthat = '';
     }
 
 
@@ -399,6 +400,9 @@ sub l00http_md5sizediff_proc {
     if ((defined ($form->{'compare'})) &&
         (defined ($thispath) && 
         (length ($thispath) > 0))) {
+
+        undef %thisext;
+        undef %thatext;
 
         $jumper = "    ".
              "<a href=\"#top\">top</a> ".
@@ -467,18 +471,30 @@ sub l00http_md5sizediff_proc {
                             $md5sum =~ s/ *$//;
                             $pfname =~ s/ *$//;
                             if ($sname eq 'THIS') {
-                                if ($filterthis ne '.') {
+                                if ($filterthis ne '') {
                                     # we are filtering input. Skip if matched
                                     if ($pfname =~ /$filterthis/i) {
                                         next;
                                     }
                                 }
+                                # count extensions
+                                if ($pfname =~ /[\\\/][^\\\/]*\.([^.\\\/]+)$/i) {
+                                    $thisext{$1}++;
+                                } else {
+                                    $thisext{'(no ext)'}++;
+                                }
                             } else {
-                                if ($filterthat ne '.') {
+                                if ($filterthat ne '') {
                                     # we are filtering input. Skip if matched
                                     if ($pfname =~ /$filterthat/i) {
                                         next;
                                     }
+                                }
+                                # count extensions
+                                if ($pfname =~ /[\\\/][^\\\/]*\.([^.\\\/]+)$/i) {
+                                    $thatext{$1}++;
+                                } else {
+                                    $thatext{'(no ext)'}++;
                                 }
                             }
                             ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
@@ -1356,12 +1372,32 @@ sub l00http_md5sizediff_proc {
         print $sock "</td></tr>\n";
 
         print $sock "</table>\n";
+
+        print $sock "<br>File extension reports:<br>\n";
+        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.THIS.extensions.txt\">l00://md5sizediff.THIS.extensions.txt</a><br>\n";
+        print $sock "<a href=\"/ls.htm?path=l00://md5sizediff.THAT.extensions.txt\">l00://md5sizediff.THAT.extensions.txt</a><br>\n";
+        
+        $ctrl->{'l00file'}->{"l00://md5sizediff.THIS.extensions.txt"}  = "* Extensions in $thispath\n\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.THIS.extensions.txt"} .= "|| # || ext || counts ||\n";
+        $cnt = 0;
+        foreach $_ (sort keys %thisext) {
+            $cnt++;
+            $ctrl->{'l00file'}->{"l00://md5sizediff.THIS.extensions.txt"} .= "|| $cnt || $_ || $thisext{$_} ||\n";
+        }
+
+        $ctrl->{'l00file'}->{"l00://md5sizediff.THAT.extensions.txt"}  = "* Extensions in $thatpath\n\n";
+        $ctrl->{'l00file'}->{"l00://md5sizediff.THAT.extensions.txt"} .= "|| # || ext || counts ||\n";
+        $cnt = 0;
+        foreach $_ (sort keys %thatext) {
+            $cnt++;
+            $ctrl->{'l00file'}->{"l00://md5sizediff.THAT.extensions.txt"} .= "|| $cnt || $_ || $thatext{$_} ||\n";
+        }
     }
 
     print $sock "<form action=\"/md5sizediff.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\"> Use || to combine inputs\n";
+    print $sock "<input type=\"submit\" name=\"compare\" value=\"C&#818;ompare\" accesskey=\"c\"> Use || to combine inputs\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
