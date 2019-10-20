@@ -6,7 +6,7 @@ use l00backup;
 
 # do %TXTDOPL% in .txt
 my ($arg, $eval, $sort, $sortdec, $wholefile, $useform);
-my ($lineevalst, $lineevalen, $lineevalln);
+my ($lineevalst, $lineevalen, $lineevalln, @actionBkgn, @textBkgn);
 $arg = '';
 $eval = '';
 $sort = '';
@@ -16,6 +16,32 @@ $useform = '';
 $lineevalst = 0;
 $lineevalen = 0;
 $lineevalln = 0;
+
+@textBkgn   = (
+    '#F8F8F8', 
+    '#D8FFD8', 
+    '#FFD8FF', 
+    '#D8FFFF', 
+    '#F0F0D8', 
+    '#FFFFFF', 
+    '#D8F0D8', 
+    '#F0D8F0', 
+    '#D8F0F0', 
+    '#FFFFD8'
+);
+@actionBkgn = (
+    '#FFFFFF', 
+    '#B0F0B0', 
+    '#F0B0F0', 
+    '#B0F0F0', 
+    '#FFFFBF', 
+    '#F0F0F0', 
+    '#B0FFBF', 
+    '#FFBFFF', 
+    '#B0FFFF', 
+    '#F0F0B0'
+);
+
 
 my %config = (proc => "l00http_lineeval_proc",
               desc => "l00http_lineeval_desc");
@@ -32,7 +58,7 @@ sub l00http_lineeval_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals, $ii);
+    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals, $ii, $bkgn);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard, $includefile, $pnameup);
 
     # Send HTTP and HTML headers
@@ -52,11 +78,10 @@ sub l00http_lineeval_proc (\%) {
 
 
     if (defined ($form->{'run'})) {
-        if (defined ($form->{'useform'}) && ($form->{'useform'} ne 'keep')) {
-            if ($form->{'useform'} eq 'on') {
+        if ($form->{'useform'} ne 'keep') {
+            $useform = '';
+            if (defined ($form->{'useform'}) && ($form->{'useform'} eq 'on')) {
                 $useform = 'checked';
-            } else {
-                $useform = '';
             }
         }
 
@@ -345,8 +370,15 @@ sub l00http_lineeval_proc (\%) {
 
                 if ($lnno == $lineevalln) {
                     print $sock "<font style=\"color:black;background-color:lime\">";
-                } elsif (($lnno & 1) == 0) {
-                    print $sock "<font style=\"color:black;background-color:lightGray\">";
+                } else {
+                    $bkgn = $actionBkgn[$lnno % ($#actionBkgn + 1)];
+                    print $sock "<font style=\"color:black;background-color:$bkgn\">";
+
+#                    if (($lnno & 1) == 0) {
+#                        print $sock "<font style=\"color:black;background-color:lightGray\">";
+#                    } else {
+#                        print $sock "<font style=\"color:black;background-color:white\">";
+#                    }
                 }
                 printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a> ", $lnno);
                 print $sock "<a href=\"#__top__\">^</a> ";
@@ -367,9 +399,8 @@ sub l00http_lineeval_proc (\%) {
                         print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=eval&evalid=$tmp&ln=$lnno&anchor=$anchor#$anchor\">$evals[$tmp]</a> ";
                     }
                 }
-                if (($lnno == $lineevalln) || (($lnno & 1) == 0)) {
-                    print $sock "</font>";
-                }
+                print $sock "</font>";
+
                 if (/$copy2clipboard/) {
                     # paste the user regex string
                     $clipexp =  &l00httpd::urlencode ($1);
@@ -381,13 +412,16 @@ sub l00http_lineeval_proc (\%) {
                     defined($form->{'ln'})  && ($form->{'ln'} == $lnno)) {
                     print $sock "$clipurl <font style=\"color:black;background-color:lime\">$_</font>\n";
                 } else {
-                    if (($lnno & 1) == 0) {
-                        print $sock "<font style=\"color:black;background-color:WhiteSmoke\">";
-                        print $sock "$clipurl $_\n";
-                        print $sock "</font>";
-                    } else {
-                        print $sock "$clipurl $_\n";
-                    }
+                    $bkgn = $textBkgn[$lnno % ($#textBkgn + 1)];
+                    print $sock "<font style=\"color:black;background-color:$bkgn\">";
+
+#                    if (($lnno & 1) == 0) {
+#                        print $sock "<font style=\"color:black;background-color:WhiteSmoke\">";
+#                    } else {
+#                        print $sock "<font style=\"color:black;background-color:white\">";
+#                    }
+                    print $sock "$clipurl $_\n";
+                    print $sock "</font>";
                 }
             }
             print $sock "</pre>\n";

@@ -98,11 +98,15 @@ sub l00http_edit_proc2 {
     if (defined ($form->{'clip'})) {
         # A non-interactive feature. Allow [[/edit.htm?path=$&clip=30-45|edit.htm]]
         # to copy specified lines directly to clipboard
-        if (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)-(\d+)/) {
+        if ($form->{'clip'} =~ /(\d+)-(\d+)/) {
+            ($blklineno, $contextln) = ($1, $2);
             # but $contextln is provided as line number
             $contextln -= $blklineno - 1;
-        } elsif (($blklineno, $contextln) = $form->{'clip'} =~ /(\d+)_(\d+)/) {
+        } elsif ($form->{'clip'} =~ /(\d+)_(\d+)/) {
+            ($blklineno, $contextln) = ($1, $2);
             # $contextln is provided as number of lines
+		    $blkfname = $form->{'path'};
+            l00httpd::dbp($config{'desc'}, "parsed (\$blklineno=$blklineno, \$contextln=$contextln) from \$form->{'clip'}='$form->{'clip'}'\n"), if ($ctrl->{'debug'} >= 4);
         } else {
             $blklineno = 0;     # cancel block mode
             $contextln = 1;
@@ -146,6 +150,7 @@ sub l00http_edit_proc2 {
                	$contextln -= ($blklineno + $contextln - 1) - $form->{'blklineno'};
            	}
         }
+        l00httpd::dbp($config{'desc'}, "parsed (\$blklineno=$blklineno, \$contextln=$contextln) from \$form->{'blklineno'}='$form->{'blklineno'}'\n"), if ($ctrl->{'debug'} >= 4);
     }
     if (defined ($form->{'context'})) {
         # setting number of lines as context
@@ -204,6 +209,9 @@ sub l00http_edit_proc2 {
                 $blkbuf = '';
                 if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
                     $blkbuf = &l00httpd::l00freadAll($ctrl);
+                    l00httpd::dbp($config{'desc'}, "\$blklineno=$blklineno, read ".
+                        length($blkbuf).
+                        " bytes from '$form->{'path'}'\n"), if ($ctrl->{'debug'} >= 4);
                 }
             }
             if ((length ($buffer) == 0) &&
@@ -226,16 +234,21 @@ sub l00http_edit_proc2 {
                         $outbuf .= "$line\n";
                         $lineno++;
                     }
+                    l00httpd::dbp($config{'desc'}, "\$blklineno=$blklineno, kept $lineno lines from start\n"), if ($ctrl->{'debug'} >= 4);
                 }
                 $buffer =~ s/\r//g;
                 @alllines = split ("\n", $buffer);
+                $lineno = 0;
                 foreach $line (@alllines) {
                     $line =~ s/\n//g;
                     $outbuf .= "$line\n";
+                    $lineno++;
                 }
+                l00httpd::dbp($config{'desc'}, "wrote $lineno lines from buffer\n"), if ($ctrl->{'debug'} >= 4);
                 # block mode: write after context
                 if ($blklineno > 0) {
                     $lineno = 0;
+                    $tmp = 0;
                     foreach $line (split ("\n", $blkbuf)) {
                         $lineno++;
                         if ($lineno <= ($blklineno + $contextln - 1)) {
@@ -243,7 +256,9 @@ sub l00http_edit_proc2 {
                         }
                         $line =~ s/\n//g;
                         $outbuf .= "$line\n";
+                        $tmp++;
                     }
+                    l00httpd::dbp($config{'desc'}, "\wrote $tmp lines after block removed\n"), if ($ctrl->{'debug'} >= 4);
                 }
                 close (OUT);
 
@@ -430,8 +445,14 @@ sub l00http_edit_proc2 {
                     "<a href=\"#line$_\">$blklineno</a>", 
                     " through line ", $blklineno + $contextln - 1, ".\n";
         print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
-
     }
+
+    if (defined ($form->{'edittocb'})) {
+#       print $sock "<a href=\"/editsort.htm?init=on&pathorg=$form->{'path'}\">Sort selected block.</a><p>\n";
+        #http://127.0.0.1:30337/clip.htm?append=A%CC%B2ppend&clip=&url=%2Fls.htm%2Findex.txt.htm%3Fpath%3D%2Fsdcard%2Fl00httpd%2Findex.txt%23Logs
+        print $sock "<p><a href=\"/clip.htm?append=Append\">clip.htm</a><p>\n";
+    }
+
     print $sock "<table border=\"3\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";

@@ -1318,6 +1318,9 @@ sub l00http_dash_proc {
             foreach $cat1 (sort (keys %cat1s)) {
                 $help .= "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all&catflt=$cat1\"> $cat1s{$cat1} </a> - ";
             }
+            $help .= "\n\nKeys:\n";
+            $help .= "* ^: red highlighting\n";
+            $help .= "* ~: yellow highlighting\n";
         }
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
 

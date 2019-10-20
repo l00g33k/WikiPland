@@ -20,13 +20,14 @@ use l00wget;
 
 my %config = (proc => "l00http_mobizoom_proc",
               desc => "l00http_mobizoom_desc");
-my ($url, $zoom, $para, $here, $prolog, $freeimgsize, $imgsrclink, $backurl, $forcetarget);
+my ($url, $zoom, $para, $here, $prolog, $forcefetch, $freeimgsize, $imgsrclink, $backurl, $forcetarget);
 my ($mobiz_wget, $mobiz_sig);
 $mobiz_sig = '';
 $url = '';
 $zoom = 150;
 $para = 1;
 $freeimgsize = 'checked';
+$forcefetch = '';
 $imgsrclink = '';
 $backurl = '';
 $forcetarget = '';
@@ -552,6 +553,8 @@ sub l00http_mobizoom_part1 {
     foreach $_ ((100, 110, 121, 133, 146, 160, 176, 194, 240, 300, 400, 500, 600)) {
         print $sock "<input type=\"radio\" name=\"zoomradio\" value=\"$_\"><a href=\"/mobizoom.htm?fetch=mobizoom&zoomradio=$_&url=$url\">$_</a> ";
     }
+    print $sock "<input type=\"checkbox\" name=\"forcefetch\" $forcefetch>Force fetch.\n";
+    print $sock "<input type=\"submit\" name=\"forcefetch\" value=\"Force fetch\">\n";
     print $sock "<input type=\"checkbox\" name=\"freeimgsize\" $freeimgsize>Free image size.\n";
     if (-f $url) {
         # if we have a cached file
@@ -661,6 +664,11 @@ sub l00http_mobizoom_proc {
         }
     }
     if (defined ($form->{'paste'}) || defined ($form->{'fetch'})) {
+        if ((defined ($form->{'forcefetch'})) && ($form->{'forcefetch'} eq 'on')) {
+            $forcefetch = 'checked';
+        } else {
+            $forcefetch = '';
+        }
         if ((defined ($form->{'freeimgsize'})) && ($form->{'freeimgsize'} eq 'on')) {
             $freeimgsize = 'checked';
         } else {
@@ -672,6 +680,10 @@ sub l00http_mobizoom_proc {
         } else {
             $imgsrclink = '';
         }
+    } elsif (defined($form->{'forcefetch'}) && ($form->{'forcefetch'} eq 'Force fetch')) {
+        $forcefetch = 'checked';
+        $form->{'paste'} = undef;
+        $form->{'fetch'} = 1;
     }
 
     $mode1online2offline4download = 0;
@@ -773,7 +785,7 @@ sub l00http_mobizoom_proc {
         } else {
             # $mode1online2offline4download != 2
             # fetch for active reading or caching automation
-            if ($mobiz_sig ne "$url:$imgsrclink") {
+            if (($mobiz_sig ne "$url:$imgsrclink") || ($forcefetch eq 'checked')) {
                 ($hdr, $mobiz_wget, $domain, $journal) = &wgetfollow2($ctrl, $url);
             }
             $mobiz_sig = "$url:$imgsrclink";
