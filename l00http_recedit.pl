@@ -49,6 +49,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/&/%26/g;
             $tmp =~ s/=/%3D/g;
             $tmp =~ s/"/%22/g;
+            $tmp =~ s/#/%23/g;
             $tmp =~ s/\//%2F/g;
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
@@ -65,6 +66,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/&/%26/g;
             $tmp =~ s/=/%3D/g;
             $tmp =~ s/"/%22/g;
+            $tmp =~ s/#/%23/g;
             $tmp =~ s/\//%2F/g;
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
@@ -83,6 +85,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/&/%26/g;
             $tmp =~ s/=/%3D/g;
             $tmp =~ s/"/%22/g;
+            $tmp =~ s/#/%23/g;
             $tmp =~ s/\//%2F/g;
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
@@ -120,6 +123,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/&/%26/g;
             $tmp =~ s/=/%3D/g;
             $tmp =~ s/"/%22/g;
+            $tmp =~ s/#/%23/g;
             $tmp =~ s/\//%2F/g;
             $tmp =~ s/\|/%7C/g;
             $disp = substr($line,0,$displen);
