@@ -1321,6 +1321,7 @@ sub l00http_dash_proc {
             $help .= "\n\nKeys:\n";
             $help .= "* ^: red highlighting\n";
             $help .= "* ~: yellow highlighting\n";
+            $help .= "* .: lightGray highlighting\n";
         }
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
 
