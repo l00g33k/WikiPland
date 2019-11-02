@@ -506,7 +506,15 @@ sub l00http_reminder_perio {
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
             $lastcalled = time - $utcoffsec;
             $pause = 0; $ctrl->{'reminder'} = $msgtoast;
+
+            # include 'remex' in banner
+            $_ = '';
+            if (defined($ctrl->{'remex'})) {
+                $_ = $ctrl->{'remex'};
+            }
+
             $ctrl->{'BANNER:reminder'} = "<center><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
+                $_ .
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=1&bigbutton=on\">_1'_</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".

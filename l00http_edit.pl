@@ -258,7 +258,7 @@ sub l00http_edit_proc2 {
                         $outbuf .= "$line\n";
                         $tmp++;
                     }
-                    l00httpd::dbp($config{'desc'}, "\wrote $tmp lines after block removed\n"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, "\nwrote $tmp lines after block removed\n"), if ($ctrl->{'debug'} >= 4);
                 }
                 close (OUT);
 
