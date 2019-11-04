@@ -733,9 +733,9 @@ sub l00http_dash_proc {
                 if ($dsc =~ /^\.([^\[\]]+?)(\|+[^\[\]]+)$/) {
                     # special case : "desc | URL" and "desc ||clipboard"
                     # but not [[URL|desc]]
-                    $dsc = ".<strong><font style=\"color:black;background-color:lightGray\">$1<\/font><\/strong>$2";
+                    $dsc = ".<strong><font style=\"color:black;background-color:aqua\">$1<\/font><\/strong>$2";
                 } else {
-                    $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:lightGray">$1<\/font><\/strong>/;
+                    $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:aqua">$1<\/font><\/strong>/;
                 }
                 if ((($cat1 =~ /$catflt/i) || 
                     ($filtime eq 'checked') || 
@@ -836,7 +836,15 @@ sub l00http_dash_proc {
                     # filter matching item
                     if (($nowItemFil ne '') &&
                         ($dsc =~ /$nowItemFil/)) {
-                        $nowbuf .= " $crlf&#9670; $dsc";
+                        $tmp = $cat2;
+                        $tmp =~ s/<a name=.+?>.+?<\/a>//g;
+                        $tmp =~ s/<.+?>//g;
+                        $tmp =~ s/\^ //;
+                        $tmp =~ s/\*\*/_/g;  # remove ** highlight
+                        $tmp =~ s/\*.\*/_/g;
+                        $tmp =~ s/[^0-9A-Za-z]/_/g;
+
+                        $nowbuf .= " $crlf&#9670; $dsc <a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all#cat2$tmp\">$lnno</a>";
                     }
 
                     if ($fildesc eq 'checked') {
