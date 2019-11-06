@@ -318,7 +318,7 @@ sub l00http_dash_proc {
             print $sock "- <a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a>\n";
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#vvv\">vvv</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">Jump here</a></font> \n";
-            print $sock "- <font style=\"color:black;background-color:gold\"><a href=\"#bangbang\">Jump out</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:gold\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#bangbang\">Jump out</a></font> \n";
         }
     }
     print $sock "<p>\n";
