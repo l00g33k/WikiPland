@@ -109,6 +109,7 @@ sub urlencode {
         $buf =~ s/\[/%5B/g;
         $buf =~ s/\]/%5D/g;
         $buf =~ s/\^/%5E/g;
+        $buf =~ s/~/%7E/g;
 
         $buf =~    s/ /+/g;
 

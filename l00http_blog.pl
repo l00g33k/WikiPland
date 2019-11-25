@@ -305,7 +305,9 @@ sub l00http_blog_proc {
     foreach $_ (@blockquick) {
         $urlencode  = &l00httpd::urlencode ($_);
         $urlencode =~ s/\%2A/asterisk/g;
+        l00httpd::dbp($config{'desc'}, "blockquick: \$_= '$_' \$urlencode='$urlencode'\n"), if ($ctrl->{'debug'} >= 3);
         if (defined ($form->{$urlencode})) {
+            l00httpd::dbp($config{'desc'}, "blockquick: append '$_'\n"), if ($ctrl->{'debug'} >= 3);
             $form->{'buffer'} .= $_;
             last;
         }
