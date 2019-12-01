@@ -33,7 +33,7 @@ sub l00http_scratch_proc {
         if (defined($ctrl->{'txtwbig'})) {
             $editwd = $ctrl->{'txtwbig'};
         } else {
-            $editwd = 160;
+            $editwd = 120;
         }
     }
     if ($editht == 0) {
