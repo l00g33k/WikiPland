@@ -46,14 +46,14 @@ sub l00http_edit_proc2 {
         if (defined($ctrl->{'txtwbig'})) {
             $editwd = $ctrl->{'txtwbig'};
         } else {
-            $editwd = 160;
+            $editwd = 100;
         }
     }
     if ($editht == 0) {
         if (defined($ctrl->{'txthbig'})) {
             $editht = $ctrl->{'txthbig'};
         } else {
-            $editht = 30;
+            $editht = 20;
         }
     }
 
