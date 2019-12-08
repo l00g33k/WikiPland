@@ -569,10 +569,21 @@ sub l00http_edit_proc2 {
         print $sock &l00httpd::pcSyncCmdline($ctrl, $form->{'path'});
         #print $sock "You can connect from your desktop, copy the buffer content and paste into your favorite editor, and paste it back into the edit area after your editing.<p>\n";
 
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}.bak\">bak</a> \n";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}.2.bak\">2.bak</a> \n";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}.3.bak\">3.bak</a> \n";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}.-.bak\">(-.bak)</a> \n";
+#http://127.0.0.1:20347/diff.htm?compare=Compare&
+#width=20&
+#pathnew=/sdcard/l00httpd/l00_reminder.txt.2.bak&
+#pathold=/sdcard/l00httpd/l00_reminder.txt.bak&
+#maxline=4000
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.bak\">bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.2.bak\">2.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.3.bak\">3.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.4.bak\">4.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.5.bak\">5.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.6.bak\">6.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.7.bak\">7.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.8.bak\">8.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.9.bak\">9.bak</a> \n";
+        print $sock "<a href=\"/diff.htm?compare=Compare&hide=on&maxline=4000&pathnew=$form->{'path'}&pathold=$form->{'path'}.-.bak\">(-.bak)</a> \n";
         print $sock "<br>\n";
     }
 
