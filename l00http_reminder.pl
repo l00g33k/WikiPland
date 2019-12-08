@@ -537,8 +537,18 @@ sub l00http_reminder_perio {
                 &l00httpd::l00PopMsg($ctrl, "$life $msgtoast");
                 # if any message is a file ending in .pl, Perl do it
                 foreach $_ (split(' -- ', $msgtoast)) {
-                    if ((-f $_) && (/\.pl$/)) {
-                       do $_;
+                    if (/\.pl$/) {
+                        if (-f $_) {
+                            do $_;
+                        } elsif (/\.[\\\/]/) {
+                            # ./xxx or .\xxx
+                            # try workdir
+                            s/^\.[\\\/]//;
+                            $_ = "$ctrl->{'workdir'}$_";
+                            if (-f $_) {
+                               do $_;
+                            }
+                        }
                     }
                 }
             }
