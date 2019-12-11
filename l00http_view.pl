@@ -59,6 +59,9 @@ sub l00http_view_proc {
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
     my ($foundfullrst, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
+    my ($displayed);
+
+    $skip0  = 0;
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -293,6 +296,7 @@ sub l00http_view_proc {
     $lineno = 0;
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         $found = '';
+        $displayed = '';
 
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             # launch editor
@@ -454,6 +458,7 @@ sub l00http_view_proc {
                 }
                 s/\r//g;
                 s/\n//g;
+                $displayed .= "$_\n";
                 s/&/&amp;/g;
                 s/</&lt;/g;
                 s/>/&gt;/g;
@@ -527,6 +532,9 @@ sub l00http_view_proc {
                 }
             }
             print $sock "</pre>\n";
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://displayed.txt');
+            &l00httpd::l00fwriteBuf($ctrl, $displayed);
+            &l00httpd::l00fwriteClose($ctrl);
         }
     }
     print $sock "<hr><a name=\"end\"></a><p>\n";
@@ -570,6 +578,9 @@ sub l00http_view_proc {
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
     print $sock "ls between <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
     print $sock "with <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
+    if ($skip0 > 0) {
+        print $sock "View <a href=\"/view.htm?path=l00://displayed.txt\">l00://displayed.txt</a><p>\n";
+    }
 
     # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
