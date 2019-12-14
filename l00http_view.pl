@@ -178,9 +178,23 @@ sub l00http_view_proc {
     if (defined ($form->{'update'})) {
         if (defined ($form->{'maxln'})) {
             $maxln = $form->{'maxln'};
+            if ($maxln =~ /^ *(\d+) *([+-]) *(\d+) *$/) {
+                if ($2 eq '+') {
+                    $maxln = $1 + $3;
+                } else {
+                    $maxln = $1 - $3;
+                }
+            }
         }
         if (defined ($form->{'skip'})) {
             $skip = $form->{'skip'};
+            if ($skip =~ /^ *(\d+) *([+-]) *(\d+) *$/) {
+                if ($2 eq '+') {
+                    $skip = $1 + $3;
+                } else {
+                    $skip = $1 - $3;
+                }
+            }
         }
     }
 
