@@ -89,10 +89,16 @@ sub l00http_reminder_find {
                     $pathbase = "$ctrl->{'workdir'}l00_reminder.txt";
                     $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
                 }
-                if (&l00httpd::l00freadOpen($ctrl, "$pathbase$incpath")) {
-                    $bufinc .= &l00httpd::l00freadAll($ctrl);
+                if ((!defined($ctrl->{'remBannerDisabled'})) ||
+                    ($incpath =~ /l00:\/\//)) {
+                    # include file if reminder not disable, or
+                    # included file is a RAM file
+                    if (&l00httpd::l00freadOpen($ctrl, "$pathbase$incpath")) {
+                        $bufinc .= &l00httpd::l00freadAll($ctrl);
+                    }
                 }
-            } else {
+            } elsif (!defined($ctrl->{'remBannerDisabled'})) {
+                # ignore main file content when reminder disabled
                 $bufinc .= "$_\n";
             }
         }
@@ -496,8 +502,7 @@ sub l00http_reminder_perio {
     my ($retval, $life);
 
     # see notes in l00http_reminder_find() about time + $utcoffsec
-    if ((!defined($ctrl->{'remBannerDisabled'})) &&
-        (time - $utcoffsec >= $starttime)) {
+    if (time - $utcoffsec >= $starttime) {
         if (($interval > 0) && 
             (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
             &l00http_reminder_find ($ctrl);
