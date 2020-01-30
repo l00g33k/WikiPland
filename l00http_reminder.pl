@@ -493,6 +493,10 @@ sub l00http_reminder_proc {
     }
     print $sock "<a name=\"end\"></a>\n";
 
+    if (defined ($ctrl->{'FOOT'})) {
+        print $sock "$ctrl->{'FOOT'}\n";
+    }
+
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
 }
