@@ -9,10 +9,10 @@ use l00httpd;
 
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
-my ($record1, $displen, $add4h);
+my ($record1, $displen);
+
 $record1 = '^\d{8,8} \d{6,6} ';
 $displen = 50;
-$add4h = 5;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf) = @_;
@@ -25,7 +25,7 @@ sub l00http_recedit_output_row {
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a><font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
-        $html .= "            +${add4h}h<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
+        $html .= "            +2d<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
         $html .= "            <input type=\"checkbox\" name=\"id$id\">del</td>\n";
         $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
@@ -216,7 +216,7 @@ sub l00http_recedit_proc (\%) {
                             $yr -= 1900;
                             $mo--;
                             $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                            $tmp += $add4h * 3600;
+                            $tmp += 48 * 3600; # add4h
                             ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                             $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                 $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -229,7 +229,7 @@ sub l00http_recedit_proc (\%) {
                             $mi = 0;
                             $se = 0;
                             $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                            $tmp += $add4h * 3600;
+                            $tmp += 48 * 3600; # add4h
                             ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                             $obuf = sprintf ("%d/%d/%d%s", 
                                 $yr + 1900, $mo + 1, $da, $tmp2);
@@ -289,7 +289,7 @@ sub l00http_recedit_proc (\%) {
                         $yr -= 1900;
                         $mo--;
                         $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                        $tmp += $add4h * 3600;
+                        $tmp += 48 * 3600; # add4h
                         ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                         $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                             $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
