@@ -47,17 +47,22 @@ my @dayofweek = (
 );
 
 sub print_travel_plan {
-    my ($sock, $msg) = @_;
+    my ($sock, $path, $lnno, $msg) = @_;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
         gmtime (&l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0));
+    my ($topln);
 
-    printf $sock ("%04d/%02d/%02d %2d:%02d %s: %s\n", $yr, $mo, $da, $hr, $mi, $dayofweek[$wday], $msg);
+#    printf $sock ("%04d/%02d/%02d %2d:%02d %s: %s\n", $yr, $mo, $da, $hr, $mi, $dayofweek[$wday], $msg);
 
 #print $sock "date ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)\n";
 #    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
 #        gmtime (time);
 #print $sock "time ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)\n";
 
+    $topln = $lnno - 10;
+
+    sprintf ("%04d/%02d/%02d %2d:%02d %s: %s <a href=\"/view.htm?path=%s&hiliteln=%d&lineno=on#line%d\" target=\"_blank\">(%d)</a>\n", 
+        $yr, $mo, $da, $hr, $mi, $dayofweek[$wday], $msg, $path, $lnno, $topln, $lnno);
 }
 
 sub l00http_datetimeline_desc {
@@ -73,7 +78,7 @@ sub l00http_datetimeline_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($delimiter, $history, $ii, $lastlast, $secondlast);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
-    my ($pname, $fname, $plantime, $phase, $msg, $hours);
+    my ($pname, $fname, $plantime, $phase, $msg, $hours, $html, $lnno);
 
 
     # Send HTTP and HTML headers
@@ -88,9 +93,12 @@ sub l00http_datetimeline_proc (\%) {
     print $sock "<p>\n";
 
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
-        print $sock "Searching for \%DATETIMELINE:START\%<br>\n";
-        print $sock "<pre>\n";
         $phase = 0;
+        $html = '';
+        $lnno = 0;
+
+        $html .= "Searching for \%DATETIMELINE:START\%<br>\n";
+        $html .= "<pre>\n";
 
         # default to start on this year 1/1
         ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -99,22 +107,24 @@ sub l00http_datetimeline_proc (\%) {
         $da = 1;
 
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
+            $lnno++;
+
             if (/^\%DATETIMELINE:START\%/) {
                 $phase = 1;
-                print $sock "Found \%DATETIMELINE:START\%<br>\n";
+                $html .= "Found \%DATETIMELINE:START\%<br>\n";
                 next;
             }
             if ($phase == 0) {
                 next;
             }
             if (/^\%DATETIMELINE:END\%/) {
-                print $sock "Found \%DATETIMELINE:END\%<br>\n";
+                $html .= "\nFound \%DATETIMELINE:END\%<br>\n";
                 last;
             }
 
             s/\n//g;
             s/\r//g;
-            print $sock "                                                      --> $_\n", if ($ctrl->{'debug'} >= 3);
+            $html .= "                                                      --> $_\n", if ($ctrl->{'debug'} >= 3);
 
                  if (/@(\d+)\/(\d+)\/(\d+) +(\d+):(\d+)$/) {
                 ($yr, $mo, $da, $hr, $mi) = ($1, $2, $3, $4, $5);
@@ -129,7 +139,7 @@ sub l00http_datetimeline_proc (\%) {
             } elsif (/@(\d+)\/(\d+) +(\d+):(\d+) +(.+)$/) {
                 ($mo, $da, $hr, $mi, $msg) = ($1, $2, $3, $4, $5);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
-                print_travel_plan($sock, $msg);
+                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg);
                                                                             # ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($plantime);
                                                                             # print $sock "                                                          ## $_ == $plantime | $year $mon $mday $hour $min\n";
 
@@ -146,7 +156,7 @@ sub l00http_datetimeline_proc (\%) {
             } elsif (/^@(\d+):(\d+) +(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
-                print_travel_plan($sock, $msg);
+                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg);
                                                                             # ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($plantime);
                                                                             # print $sock "                                                          ## $_ == $plantime | $year $mon $mday $hour $min\n";
 
@@ -158,18 +168,18 @@ sub l00http_datetimeline_proc (\%) {
 
             } elsif (/^\^(\d+):(\d+) +(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
-                print $sock "<hr>\n";
+                $html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $hr * 3600 + $mi * 60;
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
-                print_travel_plan($sock, $msg);
+                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg);
                                                                             # ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($plantime);
                                                                             # print $sock "                                                          ## $_ == $plantime | $year $mon $mday $hour $min\n";
 
             } elsif (/^\^(\d+):(\d+)$/) {
-                print $sock "<hr>\n";
+                $html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $1 * 3600 + $2 * 60;
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
@@ -181,7 +191,7 @@ sub l00http_datetimeline_proc (\%) {
            } elsif (/^\+([.0-9]+) +(.+)$/) {
                ($hours, $msg) = ($1, $2);
                # +(real number hours)
-               print_travel_plan($sock, $msg);
+               $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, "$msg -- *s*$hours hours**");
                $plantime += $hours * 3600;
                ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                $yr += 1900;
@@ -197,16 +207,20 @@ sub l00http_datetimeline_proc (\%) {
                                                                             # ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($plantime);
                                                                             # print $sock "                                                          ## $_ == $plantime | $year $mon $mday $hour $min\n";
             } elsif (/^---/) {
-                print $sock "<hr>\n";
+                $html .= "<hr>\n";
             } elsif (/^[^#]/) {
                 s/^ +//;
                 if (!/^ *$/) {
-                    print_travel_plan($sock, $_);
+                    $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $_);
                 }
                #printf $sock ("%04d/%02d/%02d %2d:%02d: %s\n", $yr, $mo, $da, $hr, $mi, $_);
             }
         }
-        print $sock "</pre>\n";
+        $html .= "</pre>\n";
+
+        print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
+    } else {
+        print $sock "Unable to open '$form->{'path'}'<p>\n";
     }
 
 
