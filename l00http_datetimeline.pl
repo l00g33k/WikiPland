@@ -224,9 +224,7 @@ sub l00http_datetimeline_proc (\%) {
             } elsif (/^---/) {
                 $html .= "<hr>\n";
             } elsif (/^!(.*)$/) {
-                $msg = $1;
-                $msg =~ s/^ +//;
-                $html .= "$msg\n";
+                $html .= "$1\n";
             } elsif (/^[^#]/) {
                 s/^ +//;
                 if (!/^ *$/) {
