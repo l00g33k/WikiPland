@@ -34,7 +34,7 @@ CMT
 
 my %config = (proc => "l00http_datetimeline_proc",
               desc => "l00http_datetimeline_desc");
-my ($yr, $mo, $da, $hr, $mi);
+my ($yr, $mo, $da, $hr, $mi, $lastdate, $firstdate);
 
 my @dayofweek = (
 'Sun',
@@ -46,11 +46,13 @@ my @dayofweek = (
 'Sat'
 );
 
+$lastdate = '';
+
 sub print_travel_plan {
     my ($sock, $path, $lnno, $msg) = @_;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
         gmtime (&l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0));
-    my ($topln);
+    my ($topln, $thisdate, $printdate);
 
 #    printf $sock ("%04d/%02d/%02d %2d:%02d %s: %s\n", $yr, $mo, $da, $hr, $mi, $dayofweek[$wday], $msg);
 
@@ -61,8 +63,21 @@ sub print_travel_plan {
 
     $topln = $lnno - 10;
 
-    sprintf ("%04d/%02d/%02d %2d:%02d %s: %s <a href=\"/view.htm?path=%s&hiliteln=%d&lineno=on#line%d\" target=\"_blank\">(%d)</a>\n", 
-        $yr, $mo, $da, $hr, $mi, $dayofweek[$wday], $msg, $path, $lnno, $topln, $lnno);
+    if ($firstdate eq '') {
+        $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d: the starting time", 
+            $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
+    }
+
+    $thisdate = sprintf ("%02d/%02d %s", $mo, $da, $dayofweek[$wday], );
+    if ($thisdate ne $lastdate) {
+        $lastdate = $thisdate;
+        $printdate = $thisdate;
+    } else {
+        $printdate = '         ';
+    }
+
+    sprintf ("%s %2d:%02d: %s <a href=\"/view.htm?path=%s&hiliteln=%d&lineno=on#line%d\" target=\"_blank\">(%d)</a>\n", 
+        $printdate, $hr, $mi, $msg, $path, $lnno, $topln, $lnno);
 }
 
 sub l00http_datetimeline_desc {
@@ -96,9 +111,9 @@ sub l00http_datetimeline_proc (\%) {
         $phase = 0;
         $html = '';
         $lnno = 0;
+        $firstdate = '';
 
-        $html .= "Searching for \%DATETIMELINE:START\%<br>\n";
-        $html .= "<pre>\n";
+        print $sock "Searching for \%DATETIMELINE:START\%<br>\n";
 
         # default to start on this year 1/1
         ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -111,14 +126,14 @@ sub l00http_datetimeline_proc (\%) {
 
             if (/^\%DATETIMELINE:START\%/) {
                 $phase = 1;
-                $html .= "Found \%DATETIMELINE:START\%<br>\n";
+                print $sock "Found \%DATETIMELINE:START\%<br>\n";
                 next;
             }
             if ($phase == 0) {
                 next;
             }
             if (/^\%DATETIMELINE:END\%/) {
-                $html .= "\nFound \%DATETIMELINE:END\%<br>\n";
+                print $sock "\nFound \%DATETIMELINE:END\%<br>\n";
                 last;
             }
 
@@ -208,6 +223,10 @@ sub l00http_datetimeline_proc (\%) {
                                                                             # print $sock "                                                          ## $_ == $plantime | $year $mon $mday $hour $min\n";
             } elsif (/^---/) {
                 $html .= "<hr>\n";
+            } elsif (/^!(.*)$/) {
+                $msg = $1;
+                $msg =~ s/^ +//;
+                $html .= "$msg\n";
             } elsif (/^[^#]/) {
                 s/^ +//;
                 if (!/^ *$/) {
@@ -216,7 +235,8 @@ sub l00http_datetimeline_proc (\%) {
                #printf $sock ("%04d/%02d/%02d %2d:%02d: %s\n", $yr, $mo, $da, $hr, $mi, $_);
             }
         }
-        $html .= "</pre>\n";
+
+        $html = "<pre>$firstdate\n\n$html</pre>\n";
 
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
     } else {
