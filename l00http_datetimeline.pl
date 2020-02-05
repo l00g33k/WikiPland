@@ -64,7 +64,7 @@ sub print_travel_plan {
     $topln = $lnno - 10;
 
     if ($firstdate eq '') {
-        $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d: the starting time", 
+        $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d is the starting time", 
             $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
     }
 
@@ -91,7 +91,7 @@ sub l00http_datetimeline_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($delimiter, $history, $ii, $lastlast, $secondlast);
+    my ($delimiter, $history, $ii, $lastlast, $secondlast, $info);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
     my ($pname, $fname, $plantime, $phase, $msg, $hours, $html, $lnno);
 
@@ -110,10 +110,11 @@ sub l00http_datetimeline_proc (\%) {
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
         $phase = 0;
         $html = '';
+        $info = '';
         $lnno = 0;
         $firstdate = '';
 
-        print $sock "Searching for \%DATETIMELINE:START\%<br>\n";
+        $info .= "Searching for \%DATETIMELINE:START\%<br>\n";
 
         # default to start on this year 1/1
         ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -126,14 +127,14 @@ sub l00http_datetimeline_proc (\%) {
 
             if (/^\%DATETIMELINE:START\%/) {
                 $phase = 1;
-                print $sock "Found \%DATETIMELINE:START\%<br>\n";
+                $info .= "Found \%DATETIMELINE:START\%<br>\n";
                 next;
             }
             if ($phase == 0) {
                 next;
             }
             if (/^\%DATETIMELINE:END\%/) {
-                print $sock "\nFound \%DATETIMELINE:END\%<br>\n";
+                $info .= "\nFound \%DATETIMELINE:END\%<br>\n";
                 last;
             }
 
@@ -234,7 +235,7 @@ sub l00http_datetimeline_proc (\%) {
             }
         }
 
-        $html = "<pre>$firstdate\n\n$html</pre>\n";
+        $html = "<pre>$firstdate\n\n$html</pre>\n$info";
 
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
     } else {
