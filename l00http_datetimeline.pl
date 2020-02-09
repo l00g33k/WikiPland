@@ -22,7 +22,7 @@ my @dayofweek = (
 $lastdate = '';
 
 sub print_travel_plan {
-    my ($sock, $path, $lnno, $msg) = @_;
+    my ($sock, $path, $lnno, $msg, $msg2) = @_;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
         gmtime (&l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0));
     my ($topln, $thisdate, $printdate);
@@ -30,8 +30,9 @@ sub print_travel_plan {
     $topln = $lnno - 10;
 
     if ($firstdate eq '') {
-        $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d is the starting time", 
+        $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d is the starting time\n", 
             $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
+        $firstdate .= "color keys: t - *a*from**  *S*-&gt; dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks\n";
     }
 
     $thisdate = sprintf ("%02d/%02d %s", $mo, $da, $dayofweek[$wday], );
@@ -42,8 +43,29 @@ sub print_travel_plan {
         $printdate = '          ';
     }
 
-    sprintf ("%s%2d:%02d  %s <a href=\"/view.htm?path=%s&hiliteln=%d&lineno=on#line%d\" target=\"_blank\">(%d)</a>\n", 
-        $printdate, $hr, $mi, $msg, $path, $lnno, $topln, $lnno);
+    # t - from - dest : remarks
+         if ($msg =~ /^t - +(.+) - +(.+) : +(.+)$/) {
+             $msg = "*a*$1** *S*-&gt; $2** : $3";
+    # t - from - dest
+    } elsif ($msg =~ /^t - +(.+) - +(.+)$/) {
+             $msg = "*a*$1**  *S*-&gt; $2** ";
+    # s - place : remarks
+    } elsif ($msg =~ /^s - +(.+?) : +(.+)$/) {
+             $msg = "see: *l*$1** : $2";
+    # s - place
+    } elsif ($msg =~ /^s - +(.+)$/) {
+             $msg = "see: *l*$1** ";
+
+    # h - hotel : remarks
+    } elsif ($msg =~ /^h - +(.+?) : +(.+)$/) {
+             $msg = "hotel: *B*$1** : $2";
+    # h- hotel
+    } elsif ($msg =~ /^h - +(.+)$/) {
+             $msg = "hotel: *B*$1** ";
+    }
+
+    sprintf ("%s%2d:%02d  %s %s <a href=\"/view.htm?path=%s&hiliteln=%d&lineno=on#line%d\" target=\"_blank\">%d</a>\n", 
+        $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $topln, $lnno);
 }
 
 sub l00http_datetimeline_desc {
@@ -109,31 +131,39 @@ sub l00http_datetimeline_proc (\%) {
             s/\r//g;
             $html .= "                                                      --> $_\n", if ($ctrl->{'debug'} >= 3);
 
-                 if (/@(\d+)\/(\d+)\/(\d+) +(\d+):(\d+)$/) {
+            # @2020/1/15 13:00
+                 if (/@(\d+)\/(\d+)\/(\d+) +(\d+):(\d+) *$/) {
                 ($yr, $mo, $da, $hr, $mi) = ($1, $2, $3, $4, $5);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
                 # ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($plantime);
                 # print $sock "    ## $_ == $plantime | $year $mon $mday $hour $min\n";
-            } elsif (/@(\d+)\/(\d+) +(\d+):(\d+)$/) {
+            # @1/15 13:00
+            } elsif (/@(\d+)\/(\d+) +(\d+):(\d+) *$/) {
                 ($mo, $da, $hr, $mi) = ($1, $2, $3, $4);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+            # @1/15 13:00 remarks
             } elsif (/@(\d+)\/(\d+) +(\d+):(\d+) +(.+)$/) {
                 ($mo, $da, $hr, $mi, $msg) = ($1, $2, $3, $4, $5);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
-                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg);
-            } elsif (/^@(\d+)\/(\d+)\/(\d+)$/) {
+                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
+            # @2020/1/15
+            } elsif (/^@(\d+)\/(\d+)\/(\d+) *$/) {
                 ($yr, $mo, $da, $hr, $mi) = ($1, $2, $3, 0, 0);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
-            } elsif (/^@(\d+)\/(\d+)$/) {
+            # @1/15
+            } elsif (/^@(\d+)\/(\d+) *$/) {
                 ($mo, $da, $hr, $mi) = ($1, $2, 0, 0, 0);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+            # @13:00 remarks
             } elsif (/^@(\d+):(\d+) +(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
-                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg);
-            } elsif (/^@(\d+):(\d+)$/) {
+                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
+            # @13:00
+            } elsif (/^@(\d+):(\d+) *$/) {
                 ($hr, $mi) = ($1, $2);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+            # ^13:00 remarks
             } elsif (/^\^(\d+):(\d+) +(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
                 $html .= "<hr>\n";
@@ -142,36 +172,42 @@ sub l00http_datetimeline_proc (\%) {
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
-                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg);
-            } elsif (/^\^(\d+):(\d+)$/) {
+                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
+            # ^13:00
+            } elsif (/^\^(\d+):(\d+) *$/) {
                 $html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $1 * 3600 + $2 * 60;
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
-           } elsif (/^\+([.0-9]+) +(.+)$/) {
+            # +13 remarks
+            } elsif (/^\+([.0-9]+) +(.+)$/) {
                ($hours, $msg) = ($1, $2);
                # +(real number hours)
-               $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, "$msg - *s*$hours hours**");
+               $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, "*s*$hours hours**");
                $plantime += $hours * 3600;
                ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                $yr += 1900;
                $mo++;
+            # +13
             } elsif (/^\+([.0-9]+)/) {
                 # +(real number hours)
                 $plantime += $1 * 3600;
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
+            # ---
             } elsif (/^---/) {
                 $html .= "<hr>\n";
+            # !remarks
             } elsif (/^!(.*)$/) {
                 $html .= "$1\n";
+            # everything else except # comments
             } elsif (/^[^#]/) {
                 s/^ +//;
                 if (!/^ *$/) {
-                    $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $_);
+                    $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $_, '');
                 }
             }
         }
