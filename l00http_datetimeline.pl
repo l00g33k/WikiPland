@@ -32,7 +32,7 @@ sub print_travel_plan {
     if ($firstdate eq '') {
         $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d is the starting time\n", 
             $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
-        $firstdate .= "color keys: t - *a*from**  *S*-&gt; dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks\n";
+        $firstdate .= "color keys: t - *a*from** - *S*dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks\n";
     }
 
     $thisdate = sprintf ("%02d/%02d %s", $mo, $da, $dayofweek[$wday], );
