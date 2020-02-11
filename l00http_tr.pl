@@ -190,7 +190,8 @@ sub l00http_tr_proc {
     }
 
     # make an anchor to jump to current time    
-    print $sock "<a href=\"#now\">now</a><br>\n";
+    print $sock "<a href=\"#now\">now</a>\n";
+    print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a><br>\n";
     print $sock "<pre>\n";
 
     # 3) Display the time slots

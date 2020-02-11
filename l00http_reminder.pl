@@ -314,6 +314,9 @@ sub l00http_reminder_proc {
         print $sock "</form></p>\n";
     }
 
+    print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$form->{'path'}&reminder=on\">Recedit</a> - \n";
+    print $sock "<a href=\"/reminder.htm?reload=on\">Reload</a></li><br>\n";
+
     print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
