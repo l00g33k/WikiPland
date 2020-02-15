@@ -29,7 +29,9 @@ sub l00http_sleep_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><br>\n";
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+        print $sock "<a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a><br>\n";
     }
 
     $buffer = "";
