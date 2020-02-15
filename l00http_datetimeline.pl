@@ -64,8 +64,11 @@ sub print_travel_plan {
              $msg = "hotel: *B*$1** ";
     }
 
-    sprintf ("%s%2d:%02d  %s %s <a href=\"/view.htm?path=%s&hiliteln=%d&lineno=on#line%d\" target=\"_blank\">%d</a>\n", 
-        $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $topln, $lnno);
+                       #_ = "$_ <a href=\"/edit.htm?path=$path2&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
+    sprintf ("%s%2d:%02d  %s %s <a href=\"/edit.htm?path=%s&editline=on&blklineno=%d\" target=\"_blank\">%d</a>\n", 
+#       &hiliteln=%d&lineno=on#line%d\" target=\"_blank\">%d</a>\n", 
+        $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $lnno);
+#       $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $topln, $lnno);
 }
 
 sub l00http_datetimeline_desc {
