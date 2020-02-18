@@ -234,7 +234,8 @@ sub l00http_recedit_proc (\%) {
                             $obuf = sprintf ("%d/%d/%d%s", 
                                 $yr + 1900, $mo + 1, $da, $tmp2);
                         }
-                    } elsif (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
+                    }
+                    if (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
                         # add 1 day
                         if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
                             #20130408 100000:10:0:60:copy hurom
@@ -259,10 +260,9 @@ sub l00http_recedit_proc (\%) {
                             $obuf = sprintf ("%d/%d/%d%s", 
                                 $yr + 1900, $mo + 1, $da, $tmp2);
                         }
-                    } else {
-                        if (defined($form->{"id$id"}) && ($form->{"id$id"} eq 'on')) {
-                            $delete = '#';
-                        }
+                    }
+                    if (defined($form->{"id$id"}) && ($form->{"id$id"} eq 'on')) {
+                        $delete = '#';
                     }
                     if ($found) {
                         foreach $line (split("\n", $obuf)) {
