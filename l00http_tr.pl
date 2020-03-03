@@ -190,7 +190,8 @@ sub l00http_tr_proc {
     }
 
     # make an anchor to jump to current time    
-    print $sock "<a href=\"#now\">now</a><br>\n";
+    print $sock "<a href=\"#now\">now</a>\n";
+    print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a><br>\n";
     print $sock "<pre>\n";
 
     # 3) Display the time slots
@@ -199,7 +200,8 @@ sub l00http_tr_proc {
     $blkln = 0;
     for ($ii = $iist; $ii <= $iien; $ii++) {
         if ($ii == $now) {
-            print $sock "</pre><a name=\"now\">now</a> <a href=\"#__end__\">end</a> <a href=\"#__top__\">top</a> <pre>";
+            print $sock "</pre><a name=\"now\">now</a> - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+            print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
             $blkln = 0; # force time display for time 'now'
         }
         $blkln++;

@@ -675,7 +675,7 @@ sub l00http_dash_proc {
                 if ($lineevalst < 0) {
                     $lineevalst = 1;
                 }
-                $lineevalen = $lnno + 100;
+                $lineevalen = $lnno + 50;
                 $cat2 = "<a href=\"#top\">^</a> <a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}&rngst=${lineevalst}&rngen=${lineevalen}&rngln=${lineevalln}&run=run&useform=keep#line$lnno\" target=\"_blank\">$cat2</a>";
 
                 # jump mark

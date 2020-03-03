@@ -73,9 +73,10 @@ sub l00http_edit_proc2 {
 
     if (defined ($form->{'path'})) {
         ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
-        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}%0D\">Path</a>: ";
+        print $sock " - <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$form->{'path'}%0D\">Path</a>: ";
         print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
+        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> - \n";
+        print $sock "<a href=\"/view.htm/$fname.htm?path=$pname$fname\">view</a> - \n";
         print $sock " <a href=\"/ls.htm?path=$form->{'path'}&editline=on\">Edit line link</a>\n";
     }
     print $sock " <a href=\"/ls.htm?path=$form->{'path'}#__toc__\">toc</a>\n";

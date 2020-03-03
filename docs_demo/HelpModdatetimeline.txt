@@ -1,0 +1,57 @@
+%TOC%
+=Help for l00http_datetimeline.pl=
+* This module is useful for creating a timeline by date.  It is 
+designed for travel trip planning but its use is not limited.
+* The timeline is described by a simple set of specially formatted 
+statements.  These statements indicate one of the followings:
+** Set a date and/or time as the current time, and optionally print a remark
+** Descripts an event lasting for a number of hours.  The event 
+description is printed and the current time is advanced
+** Advances the current time to a specified time in the next day
+* These allow one to specify a starting time for a trip, calculate 
+the arrival time using the specified duration, and note the next 
+event as hotel check-in.  The 'next day' notation continues the 
+timeline from the next day.  This allows the stay at a particular 
+city to be extended or reduced and automatically adjust all subsequent 
+events accordingly.
+
+=Timeline Description Language=
+* The input to this module must be bracketed by the following pair 
+which means they can be embedded in a larger document"
+
+    %DATETIMELINE:START%
+
+    %DATETIMELINE:END%
+    
+* A number of keywords are recognized for creating the timeline.
+All active notations must start from the left most column
+
+    L1  !5/9 Sat -> 5/24 Sun  --  *a*city**  *B*hotel**  *l*attraction**
+    L2  !
+    L3  
+    L4  # Starting City -> Destination City
+    L5  @5/9 11:00
+    L6  +5              drive Starting City to *a*Destination City**
+    L7                  arrive LV, *B*Destination City hotel** check in
+    L8  +2              sightsee *l*Destination City**
+    L9  
+    L10 ^11:00
+    L11                 sightsee *l*Destination City**
+    L12 
+    L13 # Destination City -> Hurricane                    
+    L14 ^11:00
+    L15 +2              check out & Destination City hotel, drive to *a*Destination City**
+    L16 +3              sightsee *l*Destination City**
+    L17                 *B*Destination City** check in
+
+** L1 & L2: '!' causes the remainder of the line to be printed
+** The *X*word** notation causes the word to be printed using 
+a predefined color as described in the 'edit' module.
+** L4: # is a comment and will be ignored
+** L5: @5/9 11:00 sets the current time to May 9th 11am.  When 
+the year is omitted, the current year is assumed.
+Use 2021/5/9 19:00 to specify a different year than the current.
+** L6: +5 describes the duration of the activity
+** L7: simply describes an event at the calculated time
+** L10: ^11:00 advanced the current time to tomorrow 11am
+

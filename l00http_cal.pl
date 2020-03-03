@@ -439,7 +439,7 @@ sub l00http_cal_proc {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"today\">Mark NOW</td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
