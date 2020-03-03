@@ -1259,13 +1259,13 @@ sub wikihtml {
 
 
     if ($flaged ne '') {
-        $flaged = "<b><i>BOOKMARKS:</i></b><br>$flaged<hr>\n";
+        $flaged = "<b><i><a href=\"__toctoc__\">BOOKMARKS</a>:</i></b><br>$flaged<hr>\n";
     }
     if ($postsit ne '') {
         $postsit = join ("\n", sort (split ("\n", $postsit)));
-        $postsit = "<b><i>POSTS-IT NOTE:</i></b><br>$postsit<hr>\n";
+        $postsit = "<b><i><a href=\"__toctoc__\">POSTS-IT NOTE</a>:</i></b><br>$postsit<hr>\n";
     }
-    $toc = "<a name=\"__toc__\"></a>$postsit$flaged$toc<a name=\"__tocend__\"></a>";
+    $toc = "<a name=\"__toc__\"></a>$postsit$flaged<a name=\"__toctoc__\"></a>$toc<a name=\"__tocend__\"></a>";
 
     $toc =~ s/<br>$//;
 

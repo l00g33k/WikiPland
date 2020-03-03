@@ -314,9 +314,10 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$_\" target=\"_blank\">Path</a>: ";
             print $sock " <a href=\"/ls.htm?path=$pname\">$pname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> \n";
+            print $sock "- <a href=\"/ls.htm?path=$form->{'path'}#__toctoc__\">TOC</a>/";
+            print $sock "<a href=\"/view.htm?path=$form->{'path'}\">Vw</a> \n";
             print $sock "- <a href=\"/edit.htm?path=$form->{'path'}\">Ed</a>/";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
-            print $sock "- <a href=\"/view.htm?path=$form->{'path'}\">Vw</a> \n";
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#vvv\">vvv</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">Jump here</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:gold\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#bangbang\">Jump out</a></font> \n";
