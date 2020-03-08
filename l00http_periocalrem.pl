@@ -10,7 +10,6 @@ my %config = (proc => "l00http_periocalrem_proc",
 my($lastchkdate, %calremcolor, %calremfont);
 $lastchkdate = '';
 
-
 sub l00http_periocalrem_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -39,7 +38,7 @@ sub l00http_periocalrem_proc {
 sub l00http_periocalrem_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($date, $len, $todo, $eventnear, $days);
-    my ($thisweek, $julian, $juliannow, $color, $font);
+    my ($thisweek, $julian, $juliannow, $color, $font, $hidden);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst, $nowstamp);
 
     $days = 2;
@@ -66,6 +65,7 @@ sub l00http_periocalrem_perio {
             $year -= 1900;
             ($thisweek, $juliannow) = &l00mktime::weekno ($year, $mon, $mday);
             $eventnear = '';
+            $hidden = 0;
             undef %calremcolor;
             undef %calremfont;
 		    while (<IN>) {
@@ -87,27 +87,33 @@ sub l00http_periocalrem_perio {
                     ($year,$mon, $mday,) = split ('/', $date);
                     $year -= 1900;
                     ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
-                    if (($julian - $juliannow >= -15)  &&
-                        ($julian - $juliannow <= $days))  {
-                        l00httpd::dbp($config{'desc'}, "found >$todo<\n"), if ($ctrl->{'debug'} >= 5);
-                        $eventnear .= "$todo\n";
-                        if ($julian - $juliannow <= 0) {
-                            $calremcolor{$todo} = 'red';
-                            $calremfont{$todo} = 'yellow';
-                        } elsif ($julian - $juliannow <= 1) {
-                            $calremcolor{$todo} = 'yellow';
-                            $calremfont{$todo} = 'black';
-                        } elsif ($julian - $juliannow <= 2) {
-                            $calremcolor{$todo} = 'lime';
-                            $calremfont{$todo} = 'black';
-                        } elsif ($julian - $juliannow <= 3) {
-                            $calremcolor{$todo} = 'aqua';
-                            $calremfont{$todo} = 'black';
+                    if ($julian - $juliannow <= $days)  {
+                        if ($julian - $juliannow >= -15) {
+                            l00httpd::dbp($config{'desc'}, "found >$todo<\n"), if ($ctrl->{'debug'} >= 5);
+                            $eventnear .= "$todo\n";
+                            if ($julian - $juliannow <= 0) {
+                                $calremcolor{$todo} = 'red';
+                                $calremfont{$todo} = 'yellow';
+                            } elsif ($julian - $juliannow <= 1) {
+                                $calremcolor{$todo} = 'yellow';
+                                $calremfont{$todo} = 'black';
+                            } elsif ($julian - $juliannow <= 2) {
+                                $calremcolor{$todo} = 'lime';
+                                $calremfont{$todo} = 'black';
+                            } elsif ($julian - $juliannow <= 3) {
+                                $calremcolor{$todo} = 'aqua';
+                                $calremfont{$todo} = 'black';
+                            }
+                            #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
+                        } else {
+                            $hidden++;
                         }
-                        #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
                     }
 		    	}
 			}
+            if ($hidden > 0) {
+                $eventnear .= "$hidden hidden\n";
+            }
 		    close (IN);
 
             if ($eventnear ne '') {
@@ -165,3 +171,4 @@ sub l00http_periocalrem_perio {
 
 
 \%config;
+
