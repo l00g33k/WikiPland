@@ -19,7 +19,7 @@ $wraptext = '';
 $literal = '';
 $nohdr = '';
 $skip = 0;
-$maxln = 1000;
+$maxln = 200;
 $findskip = 0;
 $findmaxln = 1000;
 $hilitetext = '';
@@ -137,7 +137,7 @@ sub l00http_view_proc {
         if ($lastpath ne $form->{'path'}) {
             # reset skip and length for different file
             $skip = 0;
-            $maxln = 1000;
+            $maxln = 200;
             $lastpath = $form->{'path'};
             $nohdr = '';
         }
