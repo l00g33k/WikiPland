@@ -296,7 +296,9 @@ sub l00http_blogend_proc {
         $form->{'save'} = 1;
     }
     if (defined ($form->{'pastesave'})) {
+        $_ = &blog_get_msg ($form->{'buffer'}, $stylecurr) . ' ';
         $form->{'buffer'} = &blogend_make_hdr ($ctrl, $stylecurr, 0);
+        $form->{'buffer'} .= $_;
         $form->{'buffer'} .= &l00httpd::l00getCB($ctrl);
         $form->{'save'} = 1;
     }
