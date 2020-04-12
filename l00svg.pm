@@ -256,7 +256,11 @@ sub plotsvg {
             $tmp = 2 + $txh + ($txh * $ii);
             $svg .= "<text x=\"2\" y=\"$tmp\" font-size=\"$txz\" fill=\"$color\">$maxy</text>";
             $tmp = $ht - 2 - $mgb - ($txh * $ii);
-            $svg .= "<text x=\"2\" y=\"$tmp\" font-size=\"$txz\" fill=\"$color\">$miny</text>";
+            if ($ii == 0) {
+                $svg .= "<text x=\"2\" y=\"$tmp\" font-size=\"$txz\" fill=\"$color\">$miny</text>";
+            } else {
+                $svg .= "<text x=\"2\" y=\"$tmp\" font-size=\"$txz\" fill=\"$color\">$ii#$miny</text>";
+            }
             if ($ii == 0) {
                 $tmp = $ht - 5;
                 if (($minx > 946713600) && ($minx < 1577865600)) {
