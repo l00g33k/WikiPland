@@ -15,7 +15,7 @@ $record1 = '^\d{8,8} \d{6,6} ';
 $displen = 50;
 
 sub l00http_recedit_output_row {
-    my ($ctrl, $sock, $form, $line, $id, $obuf) = @_;
+    my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
     my ($tmp, $disp, $lf, $leading, $html, $color1, $color2);
 
     $html = '';
@@ -133,6 +133,7 @@ sub l00http_recedit_output_row {
         $html .= "$lf$line";
         $lf = "<br>\n";
     }
+    $html .= " - <a href=\"/edit.htm?path=$path&blklineno=$lnno\" target=\"_blank\">$lnno</a>";
     $html .= "</font></td>\n";
     $html .= "    </tr>\n";
 
@@ -151,7 +152,7 @@ sub l00http_recedit_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted);
+    my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted, $editln);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
 
 
@@ -377,7 +378,7 @@ sub l00http_recedit_proc (\%) {
                     # found start of new record
                     if ($found) {
                         if ($lnno > $afterline) {
-                            push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
+                            push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf, $path, $editln));
                         }
                         $id++;
                     }
@@ -386,11 +387,12 @@ sub l00http_recedit_proc (\%) {
                 }
                 if ($found) {
                     $obuf .= $_;
+                    $editln = $lnno;
                 }
             }
             if ($found) {
                 if ($lnno > $afterline) {
-                    push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf));
+                    push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $obuf, $path, $editln));
                 }
             }
             close (IN);
