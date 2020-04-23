@@ -113,7 +113,7 @@ sub l00http_periocalrem_perio {
 			}
             if ($hidden > 0) {
                 $todo = "+$hidden";
-                $calremcolor{$todo} = 'lightgray';
+                $calremcolor{$todo} = 'deepSkyBlue';
                 $calremfont{$todo} = 'black';
                 $eventnear .= "$todo\n";
             }

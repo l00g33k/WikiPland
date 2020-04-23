@@ -243,7 +243,8 @@ sub l00http_blog_proc {
 
     # display what will be pasted
     if (defined ($form->{'pastesave'})) {
-        $_ = &l00httpd::l00getCB($ctrl);
+        $_ = &blog_get_msg ($form->{'buffer'}, $stylecurr) . ' ';
+        $_ .= &l00httpd::l00getCB($ctrl);
         print $sock "<hr>$_<hr>\n";
     }
 
