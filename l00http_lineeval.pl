@@ -361,7 +361,7 @@ sub l00http_lineeval_proc (\%) {
                 s/\n//;
                 $lnno++;
 
-                if (($lineevalst > 0) && ($lineevalst < $lineevalen)) {
+                if (($lineevalst > 0) && ($lineevalst <= $lineevalen)) {
                     # restricting display range
                     if (($lnno < $lineevalst) || ($lnno > $lineevalen)) {
                         next;

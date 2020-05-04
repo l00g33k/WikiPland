@@ -448,8 +448,6 @@ sub l00http_blog_proc {
     }
 
     print $sock "<form action=\"/blog.htm\" method=\"get\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
-    print $sock "<p>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
     if ($url ne '') {
         # Quick URL provided in target file, make a button to redirect
@@ -484,6 +482,13 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
+
+    print $sock "<br><textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
+    print $sock "<p>\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
+    print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
+    print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
+
     print $sock "<input type=\"checkbox\" name=\"keepnl\">Keep newline\n";
 
     print $sock "<p>$url";

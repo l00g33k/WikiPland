@@ -164,7 +164,7 @@ sub l00http_reminder_proc {
     my ($pathbase, $incpath, $bufinc, $bufall);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
-    my ($life);
+    my ($life, $f0, $f1);
 
     $formmsg = '';
 
@@ -423,13 +423,22 @@ sub l00http_reminder_proc {
 #   print $sock "<li>Pause: <a href=\"/reminder.htm?pause=Pause&min=5\">5'</a> - \n";
     print $sock "<li>Pause: ";
     foreach $_ (1..29) {
-        print $sock "<a href=\"/reminder.htm?pause=Pause&min=$_\">$_'</a> - \n";
+        if (($_ % 5) == 0)  {
+            $f0 = "<font style=\"color:black;background-color:aqua\">";
+            $f1 = "</font>";
+        } else {
+            $f0 = '';
+            $f1 = '';
+        }
+        print $sock "<a href=\"/reminder.htm?pause=Pause&min=$_\">$f0$_'$f1</a> - \n";
     }
+    $f0 = "<font style=\"color:black;background-color:aqua\">";
+    $f1 = "</font>";
 #   print $sock "<a href=\"/reminder.htm?pause=Pause&min=10\">10'</a> - \n";
 #   print $sock "<a href=\"/reminder.htm?pause=Pause&min=15\">15'</a> - \n";
 #   print $sock "<a href=\"/reminder.htm?pause=Pause&min=20\">20'</a> - \n";
     print $sock " - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">30'</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=30\">${f0}30'$f1</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=35\">35'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=40\">40'</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=45\">45'</a> - \n";
