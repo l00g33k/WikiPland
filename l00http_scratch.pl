@@ -7,13 +7,15 @@ use warnings;
 
 my %config = (proc => "l00http_scratch_proc",
               desc => "l00http_scratch_desc");
-my ($scratch, $scratchhtml, $tmp, $eval, $newwin, $wrapwidth, $editwd, $editht, $editsz);
+my ($scratch, $scratchhtml, $tmp, $eval, $newwin, $wrapwidth, $editwd, 
+    $editht, $editsz, $twitter);
 $eval = '';
 $newwin = '';
 $wrapwidth = '';
 $editsz = 0;
 $editwd = 0;
 $editht = 0;
+$twitter = '';
 
 sub l00http_scratch_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -27,7 +29,7 @@ sub l00http_scratch_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $notbare, $st, $en, $thisen, $wrapat, $ii);
+    my (@alllines, $line, $notbare, $st, $en, $thisen, $wrapat, $ii, $thisline, $total);
 
     if ($editwd == 0) {
         if (defined($ctrl->{'txtwbig'})) {
@@ -57,6 +59,15 @@ sub l00http_scratch_proc {
     if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
         $notbare = 0;
     }
+
+    # text mode twitter char count flag
+    if (defined ($form->{'text'})) {
+        $twitter = '';
+        if (defined ($form->{'twitter'}) && ($form->{'twitter'} eq 'on')) {
+            $twitter = 'checked';
+        }
+    }
+
 
     if (defined ($form->{'eval'})) {
         $eval = $form->{'eval'};
@@ -173,9 +184,10 @@ sub l00http_scratch_proc {
         print $sock "<input type=\"submit\" name=\"mobi\" value=\"Mobilize\">\n";
         print $sock "<input type=\"submit\" name=\"html\" value=\"HTML\">\n";
         print $sock "<input type=\"submit\" name=\"wikitize\" value=\"W&#818;ikitize\" accesskey=\"w\">\n";
-        print $sock "<input type=\"submit\" name=\"text\" value=\"text\">\n";
+        print $sock "<input type=\"submit\" name=\"text\" value=\"t&#818;ext\" accesskey=\"t\">\n";
+        print $sock "<input type=\"checkbox\" name=\"twitter\" $twitter>Twitter #char ";
         print $sock "<input type=\"submit\" name=\"formatted\" value=\"F&#818;ormatted\" accesskey=\"f\">\n";
-        print $sock "<input type=\"checkbox\" name=\"bare\">Bare.";
+        print $sock "<input type=\"checkbox\" name=\"bare\">Bare. ";
         if (defined ($form->{'formatted'})) {
             print $sock " Wrap formatted to wi&#818;dth (blank for no wrap): <input type=\"text\" size=\"6\" name=\"wrapwidth\" value=\"$wrapwidth\" accesskey=\"i\">\n";
         }
@@ -190,6 +202,19 @@ sub l00http_scratch_proc {
     # get submitted name and print greeting
     if (defined ($form->{'text'})) {
         $scratchhtml = $scratch;
+        if ($twitter eq 'checked') {
+            $scratchhtml = '';
+            $total = 0;
+            foreach $_ (split("\n", $scratch)) {
+                $thisline = length($_);
+                $total += $thisline;
+                $line = sprintf("% 5d/% 4d", $total, $thisline);
+                $line =~ s/ /_/g;
+                $line .= ' : ';
+                $scratchhtml .= "$line$_\n";
+            }
+        }
+
         $scratchhtml =~ s/</&lt;/g;
         $scratchhtml =~ s/>/&gt;/g;
         $scratchhtml =~ s/\r\n/<br>/g;
