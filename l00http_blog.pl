@@ -485,6 +485,9 @@ sub l00http_blog_proc {
 
     print $sock "<br><textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
+    print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
+    print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
+    print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
 
     print $sock "<input type=\"checkbox\" name=\"keepnl\">Keep newline\n";
 
