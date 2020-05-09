@@ -158,9 +158,9 @@ sub l00http_dash_proc {
     my (%tasksTime, %tasksLine, %tasksDesc, %tasksSticky, %countBang, %firstTime, %logedTime, %tasksCat2);
     my ($cat1, $cat2, $timetoday, $time_start, $jmp, $dbg, $this, $dsc, $cnt, $help, $tmp, $tmp2, %nowbuf, $nowbuf, $nowbuf2);
     my (@tops, $out, $fir, @tops2, $anchor, $cat1cat2, $bang, %tops, $tim, $updateLast, %updateAge, %updateAgeVal);
-    my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln);
-    my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2);
-    my ($jumpcnt, @jumpname, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
+    my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln, %displaying);
+    my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
+    my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
 
 
@@ -170,6 +170,7 @@ sub l00http_dash_proc {
 
     $jumpcnt = 0;
     undef @jumpname;
+    undef @jumpcat;
     undef %cat2tolnno;
     undef %cat1s;
     undef %desccats;
@@ -584,9 +585,6 @@ sub l00http_dash_proc {
 
 
         print $sock "<form action=\"/dash.htm\" method=\"post\">\n";
-        if ($freefmt ne 'checked') {
-            print $sock "<pre>";
-        }
 
         $cat1 = 'cat1';
         $cat2 = 'cat2';
@@ -683,6 +681,10 @@ sub l00http_dash_proc {
                     $tmp = $cat2;
                     $tmp =~ s/<.+?>//g;
                     push (@jumpname, "$tmp???jump$jumpcnt");
+
+                    # jump cat2 for jump marks
+                    $jumpcat[$jumpcnt] = $jmp;  # cat2 anchor for jumps
+                    #print "jumpname $jmp: $tmp???jump$jumpcnt\n";
                     $cat2 .= "<a name=\"jump$jumpcnt\"></a>";
                     $jumpcnt++;
                 }
@@ -1115,6 +1117,7 @@ sub l00http_dash_proc {
 
         $out  = '';
         undef @tops2;
+        undef %displaying;
         if ($dbg) {
             print $sock "Sort and hide for output\n";
         }
@@ -1155,6 +1158,13 @@ sub l00http_dash_proc {
             }
             if ($dbg) {
                 print $sock "  disp $_\n";
+            }
+
+            # find cat lable for those being displayed    
+            @_ = split('\|\|', $_);
+            if ($_[2] =~ /#(.+)"/) {
+                $displaying{$1} = 1;
+                #print "disp cat2 $1\n";
             }
 
             push(@tops2, $_);
@@ -1240,15 +1250,15 @@ sub l00http_dash_proc {
         $out =~ s/path=\$/path=$pname$fname/gsm;
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
-        print $sock $out;
-
 
         if ($freefmt ne 'checked') {
-            print $sock "</pre>\n";
+            $out = "<pre>$out</pre>\n";
         }
 
+
         # jump mark
-        print $sock "<a name=\"quickcut\"></a>";
+        $jumphrefs = "<a name=\"quickcut\"></a>";
+        $jumphrefstop = '';
         if ($jumpcnt > 0) {
             $tmp = $jumpmarks;
             @jumpname = sort {
@@ -1267,10 +1277,32 @@ sub l00http_dash_proc {
                 }
                 ($desc, $anchor) = split ('\?\?\?', $jumpname[$ii]);
                 $tmp .= "<a href=\"#$anchor\">$desc</a>";
+
+                if ($anchor =~ /(\d+)/) {
+                    if (defined($displaying{$jumpcat[$1]})) {
+                        $jumphrefstop .= "<a href=\"#$anchor\">$desc</a>";
+                        #print "DISPLAYING --- ";
+                    }
+                    print "#$anchor : $jumpcat[$1] : $desc\n";
+                }
             }
             $tmp = &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);
-            print $sock "$tmp<p>\n";
+
+            $jumphrefstop = &l00wikihtml::wikihtml ($ctrl, $pname, $jumphrefstop, 6);
+
+            $jumphrefs .= "$tmp<p>\n";
         }
+
+        # put displayed jumhref at the top
+        print $sock $jumphrefstop;
+
+        # print main table
+        print $sock $out;
+
+        # put full jumphref at the bottom
+        print $sock $jumphrefs;
+
+
 
         # form elements
         print $sock "Add ";
