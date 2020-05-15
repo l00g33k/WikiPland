@@ -822,6 +822,14 @@ sub l00http_dash_proc {
                                 $bang = $1;
                                 $desc =~ s/^!+//;
                             }
+                            # this translation need protection so that the parameter https*://
+                            # isn't translated into another URL
+                            #yahoo|/activity.htm?path=https://finance.yahoo.com/
+                            #<a href="/activity.htm?path=https://finance.yahoo.com/" target="_blank">yahoo</a>
+                            if ($clip =~ /https*:\/\//) {
+                                $clip =~ s/(https*):\/\//$1%3A%2F%2F/g;
+                            }
+
                             $dsc = "$bang<a href=\"$clip\" target=\"_blank\">$desc</a>";
                         }
                     }
@@ -1283,7 +1291,7 @@ sub l00http_dash_proc {
                         $jumphrefstop .= "<a href=\"#$anchor\">$desc</a>";
                         #print "DISPLAYING --- ";
                     }
-                    print "#$anchor : $jumpcat[$1] : $desc\n";
+                    #print "#$anchor : $jumpcat[$1] : $desc\n";
                 }
             }
             $tmp = &l00wikihtml::wikihtml ($ctrl, $pname, $tmp, 6);

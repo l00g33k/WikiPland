@@ -133,7 +133,6 @@ sub l00http_activity_proc {
         print $sock "<input type=\"submit\" name=\"startlocal\" value=\"Start local\">\n";
         print $sock "<input type=\"text\" size=\"16\" name=\"localurl\" value=\"$localurl\"><p>\n";
     }
-    print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$path\"><p>\n";
     print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste CB\">\n";
     print $sock "</form>\n";
 
