@@ -127,13 +127,13 @@ sub l00http_activity_proc {
     }
 
     print $sock "<form action=\"/activity.htm\" method=\"get\">\n";
-    print $sock "<input type=\"submit\" name=\"start\" value=\"Start\">\n";
+    print $sock "<input type=\"submit\" name=\"start\" value=\"S&#818;tart\" accesskey=\"s\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$path\"><p>\n";
     if ($localurl ne '') {
         print $sock "<input type=\"submit\" name=\"startlocal\" value=\"Start local\">\n";
         print $sock "<input type=\"text\" size=\"16\" name=\"localurl\" value=\"$localurl\"><p>\n";
     }
-    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste CB\">\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"P&#818;aste CB\" accesskey=\"p\">\n";
     print $sock "</form>\n";
 
     print $sock "$htmlout<p>\n";
