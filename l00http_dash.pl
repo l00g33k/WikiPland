@@ -1369,7 +1369,7 @@ sub l00http_dash_proc {
         if ($smallhead ne 'checked') {
             if ($#descfind >= 0) {
                 $help .= "* Desc find: ";
-                foreach $_ (@descfind) {
+                foreach $_ (sort @descfind) {
                     if (($desc, $key) = /^([^|]+)\|\|(.+)$/) {
                         $key =~ s/\+/%2B/g;
                     } else {
