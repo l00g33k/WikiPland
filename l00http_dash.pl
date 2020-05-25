@@ -1370,10 +1370,15 @@ sub l00http_dash_proc {
             if ($#descfind >= 0) {
                 $help .= "* Desc find: ";
                 foreach $_ (@descfind) {
-                    $tmp = $_;
-                    $tmp =~ s/\+/%2B/g;
-                    $help .= "(<a href=\"/dash.htm?fildesc=on&catflt=$tmp&process=Process&path=$form->{'path'}&dash_all=all\">$_</a> - ";
-                    $help .= "<a href=\"/dash.htm?fildesc=on&catflt=($tmp)&process=Process&path=$form->{'path'}&dash_all=all\">exp</a>) ";
+                    if (($desc, $key) = /^([^|]+)\|\|(.+)$/) {
+                        $key =~ s/\+/%2B/g;
+                    } else {
+                        $desc = $_;
+                        $key = $_;
+                        $key =~ s/\+/%2B/g;
+                    }
+                    $help .= "(<a href=\"/dash.htm?fildesc=on&catflt=$key&process=Process&path=$form->{'path'}&dash_all=all\">$desc</a> - ";
+                    $help .= "<a href=\"/dash.htm?fildesc=on&catflt=($key)&process=Process&path=$form->{'path'}&dash_all=all\">...</a>) ";
                     $help .= "-- ";
                 }
                 $help .= "\n";
