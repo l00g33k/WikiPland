@@ -162,6 +162,7 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
+    my (@descfind);
 
 
     $timecolor = '';
@@ -174,6 +175,7 @@ sub l00http_dash_proc {
     undef %cat2tolnno;
     undef %cat1s;
     undef %desccats;
+    undef @descfind;
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -465,6 +467,10 @@ sub l00http_dash_proc {
             if ($alllines[$ii] =~ /^%DASHITEMFIL:(.+)/) {
                 $nowItemFil = $1;
             }
+            # %DESCFIND:'''%
+            if ($alllines[$ii] =~ /^%DESCFIND:(.+)%$/) {
+                push(@descfind, $1);
+            }
 
             if ($alllines[$ii] =~ /^%BLOGTIME:(.+?)%/) {
                 $tmp = $1;
@@ -509,6 +515,10 @@ sub l00http_dash_proc {
                 # %DASHITEMFIL:\/nmi\/
                 if ($_ =~ /^%DASHITEMFIL:(.+)/) {
                     $nowItemFil = $1;
+                }
+                # %DESCFIND:'''%
+                if ($_ =~ /^%DESCFIND:(.+)%$/) {
+                    push(@descfind, $1);
                 }
 
                 if (/^%BLOGTIME:(.+?)%/) {
@@ -692,6 +702,12 @@ sub l00http_dash_proc {
                 $cat2 .= "<a name=\"cat2$jmp\"></a>";
                 $cat2tolnno{"cat2$jmp"} = $lnno;
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
+                # cat1 = ---- cat2 = DESCFIND, desc is DESCFIND regex
+                if (($cat1 =~ /----/) && ($cat2 =~ /DESCFIND/) && ($dsc !~ /^ *$/)) {
+                   #print $sock "cat1 $cat1 cat2 $cat2 dsc $dsc<br>";
+                    push(@descfind, $dsc);
+                }
+
                 # find wikiwords. make a copy to zap [] and <> and http
                 $tmp = $dsc;
                 $tmp =~ s/\[\[.+?\]\]//g;
@@ -1351,6 +1367,17 @@ sub l00http_dash_proc {
 
         $help  = '';
         if ($smallhead ne 'checked') {
+            if ($#descfind >= 0) {
+                $help .= "* Desc find: ";
+                foreach $_ (@descfind) {
+                    $help .= "(<a href=\"/dash.htm?fildesc=on&catflt=$_&process=Process&path=$form->{'path'}&dash_all=all\">$_</a> - ";
+                    $help .= "<a href=\"/dash.htm?fildesc=on&catflt=($_)&process=Process&path=$form->{'path'}&dash_all=all\">exp</a>) ";
+                    $help .= "-- ";
+                }
+                $help .= "\n";
+            }
+
+
             $help .= "* Change 'dashwidth' using eval: ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D18\" target=\"_blank\">18</a> - ";
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D24\" target=\"_blank\">24</a> - ";
@@ -1364,7 +1391,7 @@ sub l00http_dash_proc {
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D120\" target=\"_blank\">120</a> - ";
             $help .= "Now $dashwidth\n";
 
-            $help .= "\n\nCat1's:\n";
+            $help .= "\n\nCat1 filter:\n";
             foreach $cat1 (sort (keys %cat1s)) {
                 $help .= "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all&catflt=$cat1\"> $cat1s{$cat1} </a> - ";
             }

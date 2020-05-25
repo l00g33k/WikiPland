@@ -53,6 +53,11 @@ spaces in document.)
 * Similar to anchor described above, adding ??? at the end 
 of a second level heading makes a link in the 'Jump marks' 
 list, e.g. ==my task==???(newline) makes a link to this heading.
+* %DESCFIND:regex% triggers the generation of the 'Desc find:' links at 
+tbe bottom for a shortcut to search for 'regex' in the description 
+field.  An additional link would produce search with details listed
+** This can also be triggered by the descriptions of the special 
+cat1='----' and cat2='DESCFIND'.
 
 =Custom category color=
 * %DASHCOLOR:black:Gold% for black on gold; use web color
