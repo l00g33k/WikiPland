@@ -162,7 +162,7 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
-    my (@descfind);
+    my (@descfind, $moving);
 
 
     $timecolor = '';
@@ -428,6 +428,7 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}\">small header</a>.\n";
         }
         print $sock "$out.\n";
+        print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
     
         print $sock "</form>\n";
     }
@@ -552,8 +553,17 @@ sub l00http_dash_proc {
             $addtime = 0;
         }
 
-        $out = '';
         $modified = 0;
+        # move
+        if (defined($form->{"movefrom"}) && ($form->{"movefrom"} =~ /^\d+$/) &&
+            defined($form->{"moveto"}) && ($form->{"moveto"} =~ /^\d+$/)) {
+            # move movefrom to moveto
+            $tmp = $alllines[$form->{"movefrom"} - 1];
+            $alllines[$form->{"movefrom"} - 1] = "#$tmp";
+            splice (@alllines, $form->{"moveto"}, 0, $tmp);
+            $modified = 1;
+        }
+        $out = '';
         # insert heading
         if ((defined($form->{"inscat2at"})) && 
             (($tmp) = $form->{"inscat2at"} =~ /(\d+)/)) {
@@ -608,7 +618,7 @@ sub l00http_dash_proc {
         $cat1font1 = '';
         $cat1font2 = '';
         if ($dbg) {
-            print $sock "Read input file to collect newest and !!! entries\n";
+            print $sock "<pre>Read input file to collect newest and !!! entries\n";
         }
 
 
@@ -926,6 +936,12 @@ sub l00http_dash_proc {
                         }
                     }
 
+                    if (defined($form->{'move'})) {
+                        $moving = "<font style=\"color:black;background-color:lime\"><a href=\"/dash.htm?path=$form->{'path'}&movefrom=$lnno&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">mv</a><\/font> ";
+                    } else {
+                        $moving = '';
+                    }
+
                     if ($listbang eq '') {
                         # not listing all !, i.e. listing !! only
                         if ($dsc =~ /^[^!]/) {
@@ -943,16 +959,16 @@ sub l00http_dash_proc {
                             if (!defined($hidedays) || ($hidedays >= 0)) {
                                 # show days past hide, e.g. 3 days past: (3+)+5 do stuff
                                 if (defined($hidedays)) {
-                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; (<font style=\"color:red;background-color:silver\"><strong>$hidedays+</strong></font>)$dsc");
+                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; $moving(<font style=\"color:red;background-color:silver\"><strong>$hidedays+</strong></font>)$dsc");
                                 } else {
-                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; $dsc");
+                                    $tasksSticky{$key} = &l00http_dash_linewrap($tasksSticky{$key} . " $crlf&#9670; $moving$dsc");
                                 }
                             }
                         }
                     } else {
                         # listing all !, i.e. listing ! and !!
                         if ($dsc =~ /^!{0,1}[^!]/) {
-                            $tasksSticky{$key} .= " <br>$dsc";
+                            $tasksSticky{$key} .= " <br>$moving$dsc";
                         }
                     }
                     if ($dsc =~ /^![^!]/) {
@@ -1117,6 +1133,7 @@ sub l00http_dash_proc {
                 } else {
                     # create matching jump anchor when hdr only
                     #$cat2 .= "<a name=\"cat2$jmp\">$jmp</a>";
+                    $tmp = '';
                     if (defined($tasksCat2{$_})) {
                         $jmp = $tasksCat2{$_};
                         $jmp =~ s/<a name=.+?>.+?<\/a>//g;
@@ -1134,7 +1151,12 @@ sub l00http_dash_proc {
 		            # ckechkbox for mass update
 		            #print "$lineevallns{$_}\" $checked>#$lineevallns{$_}\n";
                     $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
-                    push (@tops, "||$tasksTime{$_}$_||$tmp2$bang$jmp||``$tasksTimeKey``");
+                    if (defined($form->{'movefrom'})) {
+                        $moving = "<font style=\"color:black;background-color:lime\"><a href=\"/dash.htm?path=$form->{'path'}&moveto=$lineevallns{$_}&movefrom=$form->{'movefrom'}&process=Process&outputsort=&dash_all=past&hdronly=\">here</a><\/font> ";
+                    } else {
+                        $moving = '';
+                    }
+                    push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp||``$tasksTimeKey``");
                 }
             }
         }
@@ -1279,6 +1301,9 @@ sub l00http_dash_proc {
             $out = "<pre>$out</pre>\n";
         }
 
+        if ($dbg) {
+            print $sock "</pre>\n";
+        }
 
         # jump mark
         $jumphrefs = "<a name=\"quickcut\"></a>";
