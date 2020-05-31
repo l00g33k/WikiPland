@@ -16,20 +16,25 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
-    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2);
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel);
 
     $html = '';
 
     # record before the current record was a hit, print
     $html .= "    <tr>\n";
+    
+    $chkalldel = '';
+    if (defined ($form->{'chkall'})) {
+        $chkalldel = 'checked';
+    }
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a><font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
         $html .= "            +2d<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
-        $html .= "            <input type=\"checkbox\" name=\"id$id\">del</td>\n";
+        $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
-        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\">del</td>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
     }
     $html .= "        <td><font face=\"Courier New\">";
     $lf = '';
@@ -356,7 +361,9 @@ sub l00http_recedit_proc (\%) {
     } else {
         $output = '';
     }
-    print $sock "                <input type=\"checkbox\" name=\"reminder\" $output>Enable reminder specific</td>\n";
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $output>Enable reminder specific\n";
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk A&#818;ll del\" accesskey=\"a\">\n";
+    print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
     if (length($record1) > 0) {
