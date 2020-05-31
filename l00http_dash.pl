@@ -618,7 +618,7 @@ sub l00http_dash_proc {
         $cat1font1 = '';
         $cat1font2 = '';
         if ($dbg) {
-            print $sock "<pre>Read input file to collect newest and !!! entries\n";
+            print $sock "<pre>Read input file to collect newest and >>> entries\n";
         }
 
 
@@ -916,12 +916,12 @@ sub l00http_dash_proc {
                                     print $sock "    TIME  $tim    $key\n";
                                 }
                     }
-                    if ($this =~ /!!!$/) {
+                    if ($this =~ />>>$/) {
                                  $lnnostr = sprintf("%3d", $lnno);
                                  $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
                                  $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = &l00http_dash_linewrap($dsc);
                                 if ($dbg) {
-                                    print $sock "    !!! $this\n";
+                                    print $sock "    >>> $this\n";
                                 }
                     }
                     if (!defined($tasksSticky{$key})) {
