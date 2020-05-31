@@ -152,7 +152,7 @@ sub l00http_recedit_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted, $editln);
+    my ($path, $obuf, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
 
 
@@ -366,12 +366,14 @@ sub l00http_recedit_proc (\%) {
             $found = 0;
             $id = 1;
             $lnno = 0;
+            $keeplook = 1;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $lnno++;
                 if (/^ *$/) {
                     next;
                 }
                 if (/^#/) {
+                    $keeplook = 0;  # stop looking after #
                     next;
                 }
                 if (/$record1/) {
@@ -383,9 +385,10 @@ sub l00http_recedit_proc (\%) {
                         $id++;
                     }
                     $found = 1;
+                    $keeplook = 1;
                     $obuf = '';
                 }
-                if ($found) {
+                if ($found && $keeplook) {
                     $obuf .= $_;
                     $editln = $lnno;
                 }
