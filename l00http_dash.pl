@@ -1390,7 +1390,7 @@ sub l00http_dash_proc {
        #    $out .= "<br>\n";
        #}
 
-        $help  = '';
+        $help  = "<a name=\"end\"></a>";
         if ($smallhead ne 'checked') {
             if ($#descfind >= 0) {
                 $help .= "* Desc find: ";
@@ -1434,7 +1434,7 @@ sub l00http_dash_proc {
         }
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
 
-        print $sock "<hr><a name=\"end\"></a>";
+        print $sock "<hr>";
 
         if ($smallhead eq 'checked') {
             print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
