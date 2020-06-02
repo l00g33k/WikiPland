@@ -110,7 +110,7 @@ sub l00http_slideshow_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $file, @allpics, $phase, $outbuf, $ii, $tmp);
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $older, $newer, 
-        $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks);
+        $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks, $urlname);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
     my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
 
@@ -223,20 +223,22 @@ sub l00http_slideshow_proc {
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
                         if ($nonewline ne 'checked') {
+                            $urlname = "$path$allpics[$ii]";
+                            $urlname =~ s/\+/%2B/g;
 #                           $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
-#                               "$path$allpics[$ii]",
+#                               $urlname,
 #                               $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             if ($showname ne 'checked') {
                                $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%4d/%02d/%02d %02d:%02d:%02d</a>:", 
-                                    "$path$allpics[$ii]",
+                                    $urlname,
                                     $ii + 1, 
-                                    "$path$allpics[$ii]",
+                                    $urlname,
                                     1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             } else {
                                 $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%s</a>:", 
-                                    "$path$allpics[$ii]",
+                                    $urlname,
                                     $ii + 1, 
-                                    "$path$allpics[$ii]",
+                                    $urlname,
                                     $allpics[$ii]);
                             }
                             if ($gpstrk ne '') {
@@ -259,7 +261,9 @@ sub l00http_slideshow_proc {
                             }
                         }
                         $outbuf .= "$newline\n";
-                        $outbuf .= "<a href=\"/ls.htm/$file?path=$path$file\" target=\"_blank\"><img src=\"/ls.htm/$file?path=$path$file\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        $urlname = "$path$file";
+                        $urlname =~ s/\+/%2B/g;
+                        $outbuf .= "<a href=\"/ls.htm/$file?path=$urlname\" target=\"_blank\"><img src=\"/ls.htm/$file?path=$urlname\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
                         $outbuf .= "$newline\n";
                         $phase++;
                     }
