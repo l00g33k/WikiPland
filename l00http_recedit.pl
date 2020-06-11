@@ -357,11 +357,11 @@ sub l00http_recedit_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
-        $output = 'checked';
+        $_ = 'checked';
     } else {
-        $output = '';
+        $_ = '';
     }
-    print $sock "                <input type=\"checkbox\" name=\"reminder\" $output>Enable reminder specific\n";
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk A&#818;ll del\" accesskey=\"a\">\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
@@ -414,6 +414,20 @@ sub l00http_recedit_proc (\%) {
             print $sock $_;
         }
     }
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
+    if (defined ($form->{'reminder'})) {
+        $_ = 'checked';
+    } else {
+        $_ = '';
+    }
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk A&#818;ll del\" accesskey=\"a\">\n";
+    print $sock "    </td>\n";
+    print $sock "    </tr>\n";
+
 
     print $sock "</table>\n";
     print $sock "</form>\n";
