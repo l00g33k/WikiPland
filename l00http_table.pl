@@ -206,6 +206,9 @@ sub l00http_table_proc {
             }
         }
     }
+
+    print $sock "Table size is " . ($#alllines + 1) . " rows by " . $#cols . " columns<p>\n";
+
     #$nocols--;
     # make same width
     $tbl = "";
@@ -450,10 +453,10 @@ sub l00http_table_proc {
     if ($nolist ne 'checked') {
         # convert
         print $sock "<form action=\"/table.htm\" method=\"post\">\n";
-        print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\">$buffer</textarea>\n";
+        print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"submit\" name=\"convert\" value=\"Convert / Save\">\n";
+        print $sock "<input type=\"submit\" name=\"convert\" value=\"Convert / S&#818;ave\" accesskey=\"s\">\n";
         print $sock "<input type=\"checkbox\" name=\"nobak\" checked>Do not backup\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
         print $sock "</form>\n";

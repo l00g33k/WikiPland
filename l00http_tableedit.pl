@@ -133,12 +133,9 @@ sub l00http_tableedit_proc2 {
     $buffer = "";
     # read from file
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
-        if (open (IN, "<$form->{'path'}")) {
-            # http://www.perlmonks.org/?node_id=1952
-            local $/ = undef;
-            $buffer = <IN>;
-            close (IN);
-        }
+		if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $buffer = &l00httpd::l00freadAll($ctrl);
+		}
     }
 
 
@@ -258,13 +255,9 @@ sub l00http_tableedit_proc2 {
         } else {
             &l00backup::backupfile ($ctrl, $form->{'path'}, 0, 5);
         }
-        if (open (OUT, ">$form->{'path'}")) {
-            # http://www.perlmonks.org/?node_id=1952
-            print OUT $buffer;
-            close (OUT);
-        } else {
-            print $sock "Unable to write '$form->{'path'}'<p>\n";
-        }
+        &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+        &l00httpd::l00fwriteBuf($ctrl, $buffer);
+        &l00httpd::l00fwriteClose($ctrl);
     }
 
     # generate HTML buttons, etc.
