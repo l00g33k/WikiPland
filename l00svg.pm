@@ -263,22 +263,24 @@ sub plotsvg {
             }
             if ($ii == 0) {
                 $tmp = $ht - 5;
-                if (($minx > 946713600) && ($minx < 1577865600)) {
+                if (($minx > 946713600) && ($minx <= 2147483647)) {
                     # 946713600 is 2000/1/1 00:00:00, must be a date
                     # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                     # print "sec $dummy\n";
                     # 1577865600 is 2020/1/1 00:00:00, must be a date
+                    # 2147483647 is 2038/1/19 03:14:07
                     ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($minx);
                     $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                     $svg .= "<text x=\"$mgl\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$date</text>";
                 } else {
                     $svg .= "<text x=\"$mgl\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$minx</text>";
                 }
-                if (($maxx > 946713600) && ($maxx < 1577865600)) {
+                if (($maxx > 946713600) && ($maxx < 2147483647)) {
                     # 946713600 is 2000/1/1 00:00:00, must be a date
                     # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                     # print "sec $dummy\n";
                     # 1577865600 is 2020/1/1 00:00:00, must be a date
+                    # 2147483647 is 2038/1/19 03:14:07
                     ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($maxx);
                     $date = sprintf ("%02d%02d%02d:%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi);
                     $svg .= "<text x=\"".int($wd-$txw-$mgr)."\" y=\"$tmp\" font-size=\"$txz\" fill=\"black\">$date</text>";
