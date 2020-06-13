@@ -324,6 +324,7 @@ sub l00http_dash_proc {
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#vvv\">vvv</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">Jump here</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:gold\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#bangbang\">Jump out</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:aqua\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#descfind\">Desc find</a></font> \n";
         }
     }
     print $sock "<p>\n";
@@ -1393,7 +1394,7 @@ sub l00http_dash_proc {
         $help  = "<a name=\"end\"></a>";
         if ($smallhead ne 'checked') {
             if ($#descfind >= 0) {
-                $help .= "* Desc find: ";
+                $help .= "* <a name=\"descfind\"></a><font style=\"color:black;background-color:aqua\">Desc find</font>: ";
                 foreach $_ (sort @descfind) {
                     if (($desc, $key) = /^([^|]+)\|\|(.+)$/) {
                         $key =~ s/\+/%2B/g;
