@@ -453,9 +453,9 @@ sub l00http_blog_proc {
         # Quick URL provided in target file, make a button to redirect
         print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&U&#818;RL\" accesskey=\"u\">\n";
     }
-    print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
-    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
+    print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     if (defined($form->{'afterline'})) {
         print $sock "on line <input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
