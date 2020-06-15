@@ -107,7 +107,7 @@ sub l00http_blog_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname);
+    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname, $access);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp, $nouscore);
     my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly, $includefile, $pnameup);
 
@@ -494,7 +494,11 @@ sub l00http_blog_proc {
     print $sock "<p>$url";
     $tmp = 'style="height:1.4em; width:2.0em"';
     foreach $_ (@blocktime) {
-        print $sock "<input type=\"submit\" name=\"newtime\"  value=\"$_\"  $tmp>\n";
+        $access = '';
+        if (/(.)&#818;/) {
+            $access = "accesskey=\"$1\"";
+        }
+        print $sock "<input type=\"submit\" name=\"newtime\"  value=\"$_\" $tmp $access>\n";
     }
     if ($#blocktime >= 0) {
         print $sock "<input type=\"checkbox\" name=\"saveurl\" $quicktimesave>Save&URL\n";
