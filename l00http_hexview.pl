@@ -154,7 +154,7 @@ sub l00http_hexview_proc {
     print $sock "<hr><form action=\"/hexview.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"hexview\" value=\"View\">\n";
+    print $sock "<input type=\"submit\" name=\"hexview\" value=\"V&#818;iew\" accesskey=\"v\">\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"text\" name=\"path\" size=16 value=\"$form->{'path'}\">\n";
     print $sock "</td></tr>\n";
