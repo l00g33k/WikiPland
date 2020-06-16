@@ -501,12 +501,12 @@ sub l00http_edit_proc2 {
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"tempsize\" value=\"Edit box size\"><br>\n";
+    print $sock "<input type=\"submit\" name=\"tempsize\" value=\"Edit box&#818; size\" accesskey=\"x\"><br>\n";
     print $sock "wd <input type=\"text\" size=\"4\" name=\"editwd\" value=\"$editwd\">\n";
     print $sock "ht <input type=\"text\" size=\"4\" name=\"editht\" value=\"$editht\">\n";
     print $sock "</td><td>\n";
     print $sock "&nbsp;\n";
-    print $sock "<input type=\"submit\" name=\"defsize\" value=\"Default edit size\">\n";
+    print $sock "<input type=\"submit\" name=\"defsize\" value=\"D&#818;efault edit size\" accesskey=\"d\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"context\" value=\"Set #lines\"><br>\n";

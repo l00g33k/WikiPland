@@ -1373,6 +1373,7 @@ sub l00http_dash_proc {
         }
         print $sock "to checked items<p>\n";
         $tmp = 'style="height:1.7em; width:6.0em"';
+        print $sock "<a name=\"descfind\"></a>\n";
         print $sock "<input type=\"submit\" name=\"chkall\" value=\"Check A&#818;ll\" accesskey=\"a\" $tmp> ";
         print $sock "<input type=\"submit\" name=\"chknone\" value=\"Check N&#818;one\" accesskey=\"n\" $tmp> ";
         print $sock "</form>\n";
@@ -1394,7 +1395,7 @@ sub l00http_dash_proc {
         $help  = "<a name=\"end\"></a>";
         if ($smallhead ne 'checked') {
             if ($#descfind >= 0) {
-                $help .= "* <a name=\"descfind\"></a><font style=\"color:black;background-color:aqua\">Desc find</font>: ";
+                $help .= "* <font style=\"color:black;background-color:aqua\">Desc find</font>: ";
                 foreach $_ (sort @descfind) {
                     if (($desc, $key) = /^([^|]+)\|\|(.+)$/) {
                         $key =~ s/\+/%2B/g;
