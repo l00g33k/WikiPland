@@ -74,11 +74,11 @@ sub l00http_svg2_proc {
         print $sock "Click graph above.\n";
         if (defined ($form->{'x'})) {
             print $sock "You clicked: ($form->{'x'},$form->{'y'})<br>\n";
-            if (($x > 946713600) && ($x < 1577865600)) {
+            if (($x > 946713600) && ($x < 2147483647)) {
                 # 946713600 is 2000/1/1 00:00:00, must be a date
                 # $dummy = &l00mktime::mktime (120, 0, 1, 0, 0, 0);
                 # print "sec $dummy\n";
-                # 1577865600 is 2020/1/1 00:00:00, must be a date
+                # 2147483647 is 2037, must be a date
                 ($se,$mi,$hr,$da,$mo,$yr,$dummy,$dummy,$dummy) = gmtime ($x);
                 $date = sprintf ("%02d%02d%02d:%02d%02d%02d", $yr - 100, $mo + 1, $da, $hr, $mi, $se);
                 print $sock "Values: ($date, $y) [#$off]<br>\n";
@@ -93,7 +93,7 @@ sub l00http_svg2_proc {
                 ($graphname, $rnghi, $rnglo) = ($1, $2, $3);
             }
             if (defined($lastx)) {
-                if (($x > 946713600) && ($x < 1577865600)) {
+                if (($x > 946713600) && ($x < 2147483647)) {
                     print $sock "Delta: (", ($x - $lastx) / 3600, " hr, ", $y - $lasty, " ) [#", $off - $lastoff, "]<br>\n";
                 } else {
                     print $sock "Delta: (", $x - $lastx, ", ", $y - $lasty, " ) [#", $off - $lastoff, "]<br>\n";
