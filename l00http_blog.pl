@@ -460,7 +460,7 @@ sub l00http_blog_proc {
         print $sock "on line <input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
+    print $sock "<p><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
     print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
     # display button to switch style
 
