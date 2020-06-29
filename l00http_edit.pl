@@ -630,7 +630,8 @@ sub l00http_edit_proc2 {
                 &l00httpd::l00fwriteBuf($ctrl, "$line\n");
             }
         }
-        print $sock "<a name=\"line$lineno\"></a>";
+        $lineno1 = $lineno + 1;
+        print $sock "<a name=\"line$lineno1\"></a>";
 	    if (($lineno % 100) == 1) {
             print $sock "    jump to line ";
             print $sock "<a href=\"#top\">top</a> ";
@@ -651,7 +652,6 @@ sub l00http_edit_proc2 {
         $line =~ s/\n//g;
         $line =~ s/</&lt;/g;
         $line =~ s/>/&gt;/g;
-        $lineno1 = $lineno + 1;
         if ($blklineno == 0) {
             print $sock sprintf ("<a href=\"/edit.htm?path=$form->{'path'}&blklineno=$lineno1\">%04d</a>-%s: ", $lineno1, $lineclip) . "$line\n";
         } else {

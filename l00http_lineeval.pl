@@ -381,6 +381,7 @@ sub l00http_lineeval_proc (\%) {
 #                    }
                 }
                 printf $sock ("<a name=\"line$lnno\"></a><a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&anchor=line$lnno#line$lnno\">%4d</a> ", $lnno);
+                printf $sock ("<a href=\"/edit.htm?path=$form->{'path'}#line$lnno\">ed</a> ");
                 print $sock "<a href=\"#__top__\">^</a> ";
                 print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&run=run&cmd=rm&ln=$lnno&anchor=$anchor#$anchor\">rm</a> ";
                 print $sock "<a href=\"/lineeval.htm?rngst=$lineevalst&rngen=$lineevalen&run=run&path=$form->{'path'}&cmd=mk&ln=$lnno&anchor=$anchor#$anchor\">mk</a> ";

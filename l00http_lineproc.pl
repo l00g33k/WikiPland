@@ -5,11 +5,12 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile, $rmnewline, $nolnno);
+my ($arg, $eval, $sort, $sortdec, $dedup, $wholefile, $rmnewline, $nolnno);
 $arg = '';
 $eval = '';
 $sort = '';
 $sortdec = '';
+$dedup = '';
 $wholefile = '';
 $rmnewline = '';
 $nolnno = '';
@@ -78,6 +79,11 @@ sub l00http_lineproc_proc (\%) {
         } else {
             $sortdec = '';
         }
+        if (defined ($form->{'dedup'}) && ($form->{'dedup'} eq 'on')) {
+            $dedup = 'checked';
+        } else {
+            $dedup = '';
+        }
         if (defined ($form->{'nolnno'}) && ($form->{'nolnno'} eq 'on')) {
             $nolnno = 'checked';
         } else {
@@ -118,6 +124,7 @@ sub l00http_lineproc_proc (\%) {
     print $sock "            <br><input type=\"submit\" name=\"pasteeval\" value=\"CB to eval\">\n";
     print $sock "            <input type=\"checkbox\" name=\"sort\" $sort>Sort after processing; \n";
     print $sock "            <input type=\"checkbox\" name=\"sortdec\" $sortdec>in decresing order. \n";
+    print $sock "            <input type=\"checkbox\" name=\"dedup\" $dedup>dedup. \n";
     print $sock "            <input type=\"checkbox\" name=\"nolnno\" $nolnno>no line number. \n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
@@ -216,8 +223,16 @@ sub l00http_lineproc_proc (\%) {
 
             # write new file only if changed
             &l00httpd::l00fwriteOpen($ctrl, 'l00://lineproc_out.txt');
+            $last = '';
             foreach $_ (@newfile) {
+                if ($dedup eq 'checked') {
+                    if ($last eq $_) {
+                        next;
+                    }
+                }
                 &l00httpd::l00fwriteBuf($ctrl, $_);
+
+                $last = $_;
             }
             &l00httpd::l00fwriteClose($ctrl);
         }
