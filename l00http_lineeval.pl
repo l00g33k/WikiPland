@@ -352,6 +352,15 @@ sub l00http_lineeval_proc (\%) {
                 $year = chr(0x61 + ($year - 10));
             }
             $ctrl->{'ymddCODE'} = sprintf ("$year%1x%02d", $mon, $mday);
+            for ($ii = 0; $ii < 15; $ii++) {
+                my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time + $ii * 24 * 3600);
+                $mon++;
+                $year = $year % 20;
+                if ($year >= 10) {
+                    $year = chr(0x61 + ($year - 10));
+                }
+                $ctrl->{"ymddCODE$ii"} = sprintf ("$year%1x%02d", $mon, $mday);
+            }
             #printf $sock ("$ctrl->{'ymddCODE'}\n");
 
             $lnno = 0;
