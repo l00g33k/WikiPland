@@ -162,7 +162,7 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
-    my (@descfind, $moving);
+    my (@descfind, $moving, $color);
 
 
     $timecolor = '';
@@ -569,10 +569,19 @@ sub l00http_dash_proc {
         if ((defined($form->{"inscat2at"})) && 
             (($tmp) = $form->{"inscat2at"} =~ /(\d+)/)) {
             $tmp--;
+            $color = 'g';
             for ($ii = 0; $ii < $tmp; $ii++) {
                 $out .= "$alllines[$ii]\n";
+                # look for color
+                if ($alllines[$ii] =~ /^=\*([a-zA-Z])\*.+=/) {
+                    $color = $1;
+                }
             }
-            $out .= "==*g*newcat**==\n";
+            $_ = 'newcat';
+            if (defined($form->{"newtcat"})) {
+                $_ = $form->{"newtcat"};
+            }
+            $out .= "==*$color*$_**==\n";
             my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
                 localtime (time);
             $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 
@@ -1070,6 +1079,7 @@ sub l00http_dash_proc {
                     "||$nowbuf ||``tasksTime``");
 
         $cnt = 0;
+#print $sock "<pre>DBGDBG\n";
         foreach $_ (sort keys %tasksTime) {
             $cnt++;
             if (defined($countBang{$_}) && ($countBang{$_} > 0)) {
@@ -1099,6 +1109,7 @@ sub l00http_dash_proc {
                 $bang .= sprintf("<font style=\"color:black;background-color:silver\">%3.1fh</font>", 
                     int($logedTime{$_} / 3600 * 10 + 0.5) / 10);
             }
+#print $sock "||$tasksTime{$_}$_|| ``$_``\n";
             if ((defined($tasksSticky{$_})) && ($hdronly == 0)) {
                 if ($dbg) {
                     print $sock "    sticky: $_: $tasksTime{$_}  $tasksDesc{$_}\n";
@@ -1145,7 +1156,7 @@ sub l00http_dash_proc {
                         $jmp =~ s/[^0-9A-Za-z]/_/g;
                         $tmp = $cat2tolnno{"cat2$jmp"};
                         $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#cat2$jmp\">$jmp</a>";
-                        $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}&inscat2at=$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
+                        $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}&inscat2form=$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
                     } else {
                         $jmp = '';
                     }
@@ -1209,6 +1220,7 @@ sub l00http_dash_proc {
 
             # find cat lable for those being displayed    
             @_ = split('\|\|', $_);
+#print $sock "DBGDBG: $_\n";
             if ($_[2] =~ /#(.+)"/) {
                 $displaying{$1} = 1;
                 #print "disp cat2 $1\n";
@@ -1216,6 +1228,8 @@ sub l00http_dash_proc {
 
             push(@tops2, $_);
         }
+#print $sock "</pre>DBGDBG\n";
+
         $anchor = '<a name="bangbang"></a>';
         $jumpmarks = 'Jump marks: ';
         foreach $_ (sort l00http_dash_outputsort @tops2) {
@@ -1286,6 +1300,19 @@ sub l00http_dash_proc {
         }
         $out =~ s/\\n/<br>/gm;
         if ($smallhead ne 'checked') {
+            if (($hdronly != 0) && 
+                (defined($form->{"inscat2form"}) &&
+                ($form->{"inscat2form"} =~ /^\d+$/))) {
+                $out =  "<form action=\"/dash.htm\" method=\"get\">".
+                        "<input type=\"submit\" name=\"process\" value=\"Add\"> ".
+                        "cat2: <input type=\"text\" size=\"10\" name=\"newtcat\" value=\"newcat\">".
+                        " at line ".$form->{'inscat2form'}.
+                        "<input type=\"hidden\" name=\"inscat2at\" value=\"$form->{'inscat2form'}\">".
+                        "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
+                        "</form>\n".
+                        $out;
+            }
+
             if ($timecolor eq '') {
                 $timecolor = 'gray';
             }
