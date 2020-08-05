@@ -1232,6 +1232,7 @@ sub l00http_dash_proc {
 
         $anchor = '<a name="bangbang"></a>';
         $jumpmarks = 'Jump marks: ';
+#print $sock "<pre>DBGDBG\n";
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
             s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
@@ -1291,6 +1292,32 @@ sub l00http_dash_proc {
                 $_ = "$part1$part2";
                 #print $sock "$_\n";
             }
+#print $sock "DBGDBG: $_\n";
+#print "DBGDBG: $_\n";
+            $clip = $_;
+            # keep tail (items) after last ||
+            $clip =~ s/^.+\|\|//;
+            # remove prefix
+            # $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
+            # <input type="checkbox" name="ln191" >#191 <font style="color:black;background-color:silver">12d</font> 
+            $clip =~ s/^<.+?checkbox.+?>#\d+ +//;
+            # !#2 : hidden count
+            $clip =~ s/^<font.+?>.+?<\/font> *//;
+            # 4d : days old
+            $clip =~ s/^<font.+?>.+?<\/font> *//;
+
+            # <br> -> \n
+            $clip =~ s/ *\\n *//gm;
+            $clip =~ s/ *&#9670; */\n/gm;
+            $clip =~ s/ *&#8227; *//gm;
+            $clip =~ s/\[\[.+?\|(.+?)\]\]/ $1 /gm;
+            $clip =~ s/<.+?>/ /gm;
+            $clip =~ s/\*\*//gm;
+            $clip =~ s/\*[a-zA-Z]\*//gm;
+            $clip =~ s/\n */\n/gm;
+            $clip = &l00httpd::urlencode ($clip);
+            $clip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">&#8227;&#8227;&#8227;</a>";
+            $_ .= " $clip||";
             $out .= "$_\n";
             # [[#name]] is a shortcut for anchor in the list
             # let's make a jump list for them; 1 per line max
@@ -1298,6 +1325,7 @@ sub l00http_dash_proc {
                 $jumpmarks .= "<a href=\"#$1\">$1</a> - ";
             }
         }
+#print $sock "</pre>DBGDBG\n";
         $out =~ s/\\n/<br>/gm;
         if ($smallhead ne 'checked') {
             if (($hdronly != 0) && 
@@ -1322,6 +1350,7 @@ sub l00http_dash_proc {
         $out .= " \n";
         # subs path=$ to target file
         $out =~ s/path=\$/path=$pname$fname/gsm;
+#print "DBGDBG2: $out\n";
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
 
