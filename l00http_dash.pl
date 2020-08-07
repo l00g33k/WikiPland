@@ -1076,10 +1076,9 @@ sub l00http_dash_proc {
         # insert a list of now item in current time
         push (@tops, "||$ctrl->{'now_string'}|| *y*<a href=\"#bangbang\">now</a>** ".
             "||<a href=\"/blog.htm?path=l00://dash.txt&stylecurr=blog&setnewstyle=Bare+style+add&stylenew=bare\" target=\"_blank\">R:dash</a> ".
-                    "||$nowbuf ||``tasksTime``");
+                    "||$nowbuf ``tasksTime``");
 
         $cnt = 0;
-#print $sock "<pre>DBGDBG\n";
         foreach $_ (sort keys %tasksTime) {
             $cnt++;
             if (defined($countBang{$_}) && ($countBang{$_} > 0)) {
@@ -1109,7 +1108,6 @@ sub l00http_dash_proc {
                 $bang .= sprintf("<font style=\"color:black;background-color:silver\">%3.1fh</font>", 
                     int($logedTime{$_} / 3600 * 10 + 0.5) / 10);
             }
-#print $sock "||$tasksTime{$_}$_|| ``$_``\n";
             if ((defined($tasksSticky{$_})) && ($hdronly == 0)) {
                 if ($dbg) {
                     print $sock "    sticky: $_: $tasksTime{$_}  $tasksDesc{$_}\n";
@@ -1220,7 +1218,6 @@ sub l00http_dash_proc {
 
             # find cat lable for those being displayed    
             @_ = split('\|\|', $_);
-#print $sock "DBGDBG: $_\n";
             if ($_[2] =~ /#(.+)"/) {
                 $displaying{$1} = 1;
                 #print "disp cat2 $1\n";
@@ -1228,11 +1225,9 @@ sub l00http_dash_proc {
 
             push(@tops2, $_);
         }
-#print $sock "</pre>DBGDBG\n";
 
         $anchor = '<a name="bangbang"></a>';
         $jumpmarks = 'Jump marks: ';
-#print $sock "<pre>DBGDBG\n";
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
             s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
@@ -1292,8 +1287,8 @@ sub l00http_dash_proc {
                 $_ = "$part1$part2";
                 #print $sock "$_\n";
             }
-#print $sock "DBGDBG: $_\n";
-#print "DBGDBG: $_\n";
+
+            # link to clipboard for all items
             $clip = $_;
             # keep tail (items) after last ||
             $clip =~ s/^.+\|\|//;
@@ -1308,13 +1303,14 @@ sub l00http_dash_proc {
 
             # <br> -> \n
             $clip =~ s/ *\\n *//gm;
-            $clip =~ s/ *&#9670; */\n/gm;
+            $clip =~ s/ *&#9670; */\n* /gm;
             $clip =~ s/ *&#8227; *//gm;
             $clip =~ s/\[\[.+?\|(.+?)\]\]/ $1 /gm;
             $clip =~ s/<.+?>/ /gm;
             $clip =~ s/\*\*//gm;
             $clip =~ s/\*[a-zA-Z]\*//gm;
             $clip =~ s/\n */\n/gm;
+            $clip =~ s/^ *\n *//;
             $clip = &l00httpd::urlencode ($clip);
             $clip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">&#8227;&#8227;&#8227;</a>";
             $_ .= " $clip||";
@@ -1325,7 +1321,7 @@ sub l00http_dash_proc {
                 $jumpmarks .= "<a href=\"#$1\">$1</a> - ";
             }
         }
-#print $sock "</pre>DBGDBG\n";
+
         $out =~ s/\\n/<br>/gm;
         if ($smallhead ne 'checked') {
             if (($hdronly != 0) && 
@@ -1350,7 +1346,7 @@ sub l00http_dash_proc {
         $out .= " \n";
         # subs path=$ to target file
         $out =~ s/path=\$/path=$pname$fname/gsm;
-#print "DBGDBG2: $out\n";
+
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
 
