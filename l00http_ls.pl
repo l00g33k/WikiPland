@@ -1241,7 +1241,12 @@ sub l00http_ls_proc {
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2\n";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
-        print $sock "<a href=\"/dirnotes.htm?path=$path2"."NtDirNotes.txt\">NtDirNotes</a><hr>\n";
+        print $sock "<a href=\"/dirnotes.htm?path=$path2"."NtDirNotes.txt\">NtDirNotes</a> ";
+        print $sock "-- <a href=\"/ls.htm?path=$form->{'path'}&submit=Submit&sort=off\">(sort by name</a> \n";
+        print $sock "-- <a href=\"/ls.htm?path=$form->{'path'}&submit=Submit&sort=on\">time)</a> \n";
+        print $sock "<hr>\n";
+
+
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
         print $sock "<tr>\n";
