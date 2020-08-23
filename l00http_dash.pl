@@ -1303,7 +1303,7 @@ sub l00http_dash_proc {
 
             # <br> -> \n
             $clip =~ s/ *\\n *//gm;
-            $clip =~ s/ *&#9670; */\n* /gm;
+            $clip =~ s/ *&#9670; */\n/gm;
             $clip =~ s/ *&#8227; *//gm;
             $clip =~ s/\[\[.+?\|(.+?)\]\]/ $1 /gm;
             $clip =~ s/<.+?>/ /gm;
