@@ -11,7 +11,7 @@ my %config = (proc => "l00http_view_proc",
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
-my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors);
+my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -28,6 +28,9 @@ $refresh = '';
 $refreshfile = '';
 $eval = '';
 $evalbox = '';
+$lastfew = 0;
+$nextfew = 0;
+
 @colors = (
     'yellow',
     'aqua',
@@ -173,6 +176,12 @@ sub l00http_view_proc {
         }
         if (defined ($form->{'findskip'})) {
             $findskip = $form->{'findskip'};
+        }
+        if (defined ($form->{'lastfew'})) {
+            $lastfew = $form->{'lastfew'};
+        }
+        if (defined ($form->{'nextfew'})) {
+            $nextfew = $form->{'nextfew'};
         }
     }
     if (defined ($form->{'update'})) {
@@ -362,7 +371,7 @@ sub l00http_view_proc {
                 } else {
                     $literal = '';
                 }
-                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'));
+                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'), $lastfew, $nextfew);
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
@@ -650,6 +659,11 @@ sub l00http_view_proc {
     print $sock "Literal:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"literal\" $literal>show '&lt;' &amp; '&gt;'\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Pre context: <input type=\"text\" size=\"4\" name=\"lastfew\" value=\"$lastfew\">\n";
+    print $sock "</td><td>\n";
+    print $sock "Post context: <input type=\"text\" size=\"4\" name=\"nextfew\" value=\"$nextfew\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "File:\n";
