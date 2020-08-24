@@ -59,7 +59,7 @@ sub l00http_view_proc {
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
     my ($foundfullrst, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
-    my ($displayed);
+    my ($displayed, $onefindtext, $tmplnallhits);
 
     $skip0  = 0;
 
@@ -377,8 +377,36 @@ sub l00http_view_proc {
                                 ($findtext =~ /^\(.+[^\\]\)/)) {
                                 # found '(...)' and not '\(...\)'
                                 # strip and print all
-                                if (@_ = ($tmpln =~ /$findtext/)) {
-                                    $tmpln = join (' || ', @_);
+                                if ($findtext =~ /\|\|/) {
+                                    # multiple findtext
+                                    $tmplnallhits = '';
+# this is broken
+# $tmplnallhits .= ' xxx ';
+                                    foreach $onefindtext (split('\|\|', $findtext)) {
+                                        if (($onefindtext =~ /[^\\]\(.+[^\\]\)/) ||
+                                            ($onefindtext =~ /^\(.+[^\\]\)/)) {
+# $tmplnallhits .= ' xx1 ';
+# print "tmpln >$tmpln< =~ onefindtext />$onefindtext<\n";
+                                            if (@_ = $tmpln =~ /$onefindtext/) {
+# $tmplnallhits .= ' xx2 ';
+                                                $tmplnallhits .= join (' --- ', @_);
+                                            }
+                                        } else {
+# $tmplnallhits .= ' xx3 ';
+                                            if ($tmpln =~ /$onefindtext/) {
+# $tmplnallhits .= ' xx4 ';
+                                                $tmplnallhits .= $tmpln;
+                                            }
+                                        }
+                                    }
+# $tmplnallhits .= ' xx5 ';
+                                    $tmpln = $tmplnallhits;
+# print "END tmpln >$tmpln<\n";
+                                } else {
+                                    # one findtext
+                                    if (@_ = $tmpln =~ /$findtext/) {
+                                        $tmpln = join (' --- ', @_);
+                                    }
                                 }
                             }
 						    $tmptop = $tmpno - 20;
