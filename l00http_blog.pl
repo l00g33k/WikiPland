@@ -492,7 +492,7 @@ sub l00http_blog_proc {
     print $sock "<input type=\"checkbox\" name=\"keepnl\">Keep newline\n";
 
     print $sock "<p>$url";
-    $tmp = 'style="height:1.4em; width:2.0em"';
+    $tmp = 'style="height:1.7em; width:3.3em"';
     foreach $_ (@blocktime) {
         $access = '';
         if (/(.)&#818;/) {

@@ -182,8 +182,9 @@ sub findInBuf  {
     # $block    : text block marker
     # $buf      : find string in $buf
     # $literal  : if true, convert <> to &lt; &gt;
-    my ($findtext, $block, $buf, $literal) = @_;
-    my ($hit, $found, $blocktext, $line, $pattern, $lnno, $llnno, $invertfind, $ii, $color);
+    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew) = @_;
+    my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, 
+        $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln);
 
     if (!defined($literal)) {
         $literal = 0;
@@ -200,10 +201,19 @@ sub findInBuf  {
  
     # find them
     $hit = 0;
+    $hitpast = 0;
     $found = '';
     $blocktext = '';
     $llnno = 1;
+    if (!defined($lastfew)) {
+        $lastfew = 0;
+    }
+    if (!defined($nextfew)) {
+        $nextfew = 0;
+    }
+    undef @lastfewlns;
     foreach $line (split ("\n", $buf)) {
+        $lineorg = $line;
         # remove %l00httpd:lnno:$lnno% metadata
         # extract $lnno line number or count locally if not available
 		if (($lnno) = $line =~ /^%l00httpd:lnno:(\d+)%/) {
@@ -225,7 +235,15 @@ sub findInBuf  {
                     $blocktext .= "\n";
                 }
                 # report if found
+                if ($lastfew > 0) {
+                    @_ = splice(@lastfewlns, 1, $#lastfewlns - 1);
+                    $found .= join("", @_);
+                }
                 $found .= "$blocktext";
+                # post context;
+            } elsif ($hitpast) {
+                $hitpast--;
+                $found .= $nextln;
             }
             $hit = 0;
             $blocktext = '';
@@ -234,11 +252,29 @@ sub findInBuf  {
         foreach $pattern (split ('\|\|', $findtext)) {
             if ($line =~ /$pattern/i) {
                 $hit = 1;
+                $hitpast = $nextfew;
             }
         }
         if ($invertfind) {
             $hit = 1 - $hit;
+            if ($hit) {
+                $hitpast = $nextfew;
+            } else {
+                $hitpast = 0;
+            }
         }
+
+        # last few lines
+        if ($lastfew > 0) {
+            push (@lastfewlns, " $lnno$lineorg\n");
+            if ($#lastfewlns >= $lastfew + 2) {
+                shift (@lastfewlns);
+            }
+        }
+        if ($nextfew > 0) {
+            $nextln = " $lnno$lineorg\n";
+        }
+
         # insert a leading space to prevent special meaning for ^::
         $line =~ s/^::/ ::/;
         if (($blocktext eq '') && ($block ne '.')) {

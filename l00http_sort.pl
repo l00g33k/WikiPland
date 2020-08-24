@@ -13,7 +13,7 @@ my ($linessorted, @sortbuf, $sortkey, $sortdir);
 $linessorted = 0;
 $sortkey = '';
 
-sub sortfn {
+sub sortfn2 {
     my ($cmp, $akey, $bkey);
 
     if ($a =~ /$sortkey/) {
@@ -128,7 +128,7 @@ sub l00http_sort_proc {
                     l00httpd::dbp('l00http_sort_desc', "Ascending sortkey $sortkey\n");
                 }
             }
-            $outbuf = join("", sort sortfn (@inbuf));
+            $outbuf = join("", sort sortfn2 (@inbuf));
             &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
@@ -146,7 +146,7 @@ sub l00http_sort_proc {
                     l00httpd::dbp('l00http_sort_desc', "Dscending sortkey $sortkey\n");
                 }
             }
-            $outbuf = join("", sort sortfn (@inbuf));
+            $outbuf = join("", sort sortfn2 (@inbuf));
             &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
@@ -164,7 +164,7 @@ sub l00http_sort_proc {
                 push (@inbuf, $_);
                 $last = $_;
             }
-            $outbuf = join("", sort sortfn (@inbuf));
+            $outbuf = join("", sort sortfn2 (@inbuf));
             &l00httpd::l00fwriteOpen($ctrl, 'l00://editblock.txt');
             &l00httpd::l00fwriteBuf($ctrl, $outbuf);
             &l00httpd::l00fwriteClose($ctrl);
