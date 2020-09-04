@@ -715,7 +715,7 @@ sub l00http_dash_proc {
                     # jump cat2 for jump marks
                     $jumpcat[$jumpcnt] = $jmp;  # cat2 anchor for jumps
                     #print "jumpname $jmp: $tmp???jump$jumpcnt\n";
-                    $cat2 .= "<a name=\"jump$jumpcnt\"></a>";
+                    $cat2 = "<a name=\"jump$jumpcnt\"></a>$cat2";
                     $jumpcnt++;
                 }
                 # jump target when hdr only
