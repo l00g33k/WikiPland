@@ -106,9 +106,9 @@ sub l00http_filecrypt_proc (\%) {
         $hout .= "<form action=\"/filecrypt.htm\" method=\"post\">\n";
         $hout .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         $hout .= "<tr><td>\n";
-        $hout .= "Password:\n";
+        $hout .= "P&#818;assword:\n";
         $hout .= "</td><td>\n";
-        $hout .= "<input type=\"password\" size=\"10\" name=\"pass1\" value=\"$pass\">\n";
+        $hout .= "<input type=\"password\" size=\"10\" name=\"pass1\" value=\"$pass\" accesskey=\"p\">\n";
         $hout .= "</td></tr>\n";
         $hout .= "<tr><td>\n";
         $hout .= "Password again:\n";
@@ -126,7 +126,7 @@ sub l00http_filecrypt_proc (\%) {
         $hout .= "<input type=\"text\" size=\"10\" name=\"newext\" value=\"$newext\">\n";
         $hout .= "</td></tr>\n";
         $hout .= "<tr><td>\n";
-        $hout .= "<input type=\"submit\" name=\"setpass\" value=\"Set password\">\n";
+        $hout .= "<input type=\"submit\" name=\"setpass\" value=\"S&#818;et password\" accesskey=\"s\">\n";
         $hout .= "</td><td>\n";
         $hout .= "password twice";
         $hout .= "</td></tr>\n";
@@ -144,7 +144,7 @@ sub l00http_filecrypt_proc (\%) {
         $hout .= "</form>\n";
 
         $hout .= "<form action=\"/filecrypt.htm\" method=\"get\">\n";
-        $hout .= "<input type=\"submit\" name=\"clear\" value=\"Clear passphrase\">\n";
+        $hout .= "<input type=\"submit\" name=\"clear\" value=\"C&#818;lear passphrase\" accesskey=\"c\">\n";
         $hout .= "</form>\n";
     } else {
         # have password and target
