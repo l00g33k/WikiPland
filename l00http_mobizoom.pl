@@ -459,7 +459,11 @@ sub l00http_mobizoom_mobilize {
         $endanchor = '';
         $sections = "Goto sections:<br>\n";
         for ($ii = 0; ($ii <= $#sectdesc) && ($ii < 10); $ii++) {
-            $sections .= "$ii: <a href=\"#__sect$ii\">$sectdesc[$ii]</a><br>";
+            if ($sectdesc[$ii] =~ /main|primary/i) {
+                $sections .= "$ii: <font style=\"color:black;background-color:silver\"><a href=\"#__sect$ii\">$sectdesc[$ii]</a></font><br>";
+            } else {
+                $sections .= "$ii: <a href=\"#__sect$ii\">$sectdesc[$ii]</a><br>";
+            }
         }
         $endanchor .= $sections;
 
