@@ -538,7 +538,17 @@ sub l00http_view_proc {
                                 } else {
                                     $color = $colors[$#colors];
                                 }
-                                s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
+if($lineno < 10){
+print "xxxx $lineno: $pattern\n";
+}
+                                if ($pattern =~ /^\(\((\d+)\)\)$/) {
+                                    # highlight ((line_number))
+                                    if ($lineno == $1) {
+                                        $_ = "<font style=\"color:black;background-color:$color\">$_<\/font>";
+                                    }
+                                } else {
+                                    s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
+                                }
                                 $ii++;
                             }
                         }
@@ -561,7 +571,15 @@ sub l00http_view_proc {
                                 } else {
                                     $color = $colors[$#colors];
                                 }
-                                if (/$pattern/) {
+                                if ($pattern =~ /^\(\((\d+)\)\)$/) {
+                                    # highlight ((line_number))
+                                    if ($lineno == $1) {
+if($lineno < 10){
+print "yyyy $lineno: $pattern\n";
+}
+                                        $_ = "<font style=\"color:black;background-color:$color\">$_<\/font>";
+                                    }
+                                } elsif (/$pattern/) {
                                     s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
                                     $hit = 1;
                                 }

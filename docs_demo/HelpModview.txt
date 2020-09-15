@@ -1,0 +1,13 @@
+%TOC%
+=Help for l00http_view.pl=
+* Somewhat like an imporved 'less'
+=Text Coloring=
+* The 'HiLite' regex is used to highlight text with color when viewing.
+* Multiple regex can be entered by separating them with two || bars.  This 
+is an extension to the single | in regex.  The entire string is split using 
+the || which are then applied as a regex which may contain |.  Each of these 
+regex get its own color highlighting
+* In addition, a special regex of the form '((line_number))' highlights 
+the specified line number.
+
+%::INDEX::%
