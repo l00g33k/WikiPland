@@ -481,7 +481,7 @@ sub l00http_edit_proc2 {
     print $sock "<input type=\"submit\" name=\"cbtoedit\" value=\"CB to edit\">\n";
     print $sock "<input type=\"submit\" name=\"edittocb\" value=\"t&#818;o CB\" accesskey=\"t\">\n";
     print $sock "</td><td>\n";
-    print $sock "<input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+    print $sock "<input type=\"submit\" name=\"clear\" value=\"C&#818;lear\" accesskey=\"c\">\n";
     print $sock "<input type=\"submit\" name=\"reload\" value=\"R&#818;eload\" accesskey=\"r\">\n";
     print $sock "</td></tr>\n";
 
