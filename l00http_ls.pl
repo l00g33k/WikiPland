@@ -233,6 +233,7 @@ sub l00http_ls_proc {
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
+    my ($regex);
 
 
     $wikihtmlflags = 0;
@@ -1018,8 +1019,19 @@ sub l00http_ls_proc {
                             s/^\.\.\//$pnameup\//;
 
                             if (&l00httpd::l00freadOpen($ctrl, $_)) {
+                                $regex = '';
+                                while ($tmp2 = &l00httpd::l00freadLine($ctrl)) {
+                                    if ($tmp2 =~ /^%REGEX<(.+?)>%/) {
+                                        $regex = $1;
+                                        last;
+                                    }
+                                }
                                 # %INCLUDE%: here
+                                &l00httpd::l00freadOpen($ctrl, $_);
                                 while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                    if ($_ =~ /^%REGEX<(.+?)>%/) {
+                                        next;
+                                    }
                                     if (/^##/) {
                                         # skip to next ^#
                                         while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -1037,6 +1049,9 @@ sub l00http_ls_proc {
                                         if (defined($ctrl->{$1})) {
                                             s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
                                         }
+                                    }
+                                    if ($regex ne '') {
+                                        eval $regex;
                                     }
                                     $buf .= $_;
                                 }
