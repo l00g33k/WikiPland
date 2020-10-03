@@ -484,7 +484,8 @@ sub l00http_view_proc {
                 &l00httpd::l00fwriteBuf($ctrl, $foundfullrst);
                 &l00httpd::l00fwriteClose($ctrl);
 
-                $foundfullrst =~ s/<.+?>//gm;
+                $foundfullrst =~ s/<.+?>//gm;   # remove HTML tags
+                $foundfullrst =~ s/\n\d+ : /\n/gm;   # remove line numbers
                 &l00httpd::l00fwriteOpen($ctrl, 'l00://find.txt');
                 &l00httpd::l00fwriteBuf($ctrl, $foundfullrst);
                 &l00httpd::l00fwriteClose($ctrl);
