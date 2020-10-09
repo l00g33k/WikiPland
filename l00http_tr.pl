@@ -200,7 +200,7 @@ sub l00http_tr_proc {
     $blkln = 0;
     for ($ii = $iist; $ii <= $iien; $ii++) {
         if ($ii == $now) {
-            print $sock "</pre><a name=\"now\">now</a> - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+            print $sock "</pre><a name=\"now\">now</a> - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
             print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
             $blkln = 0; # force time display for time 'now'
         }
@@ -216,7 +216,7 @@ sub l00http_tr_proc {
     }
     print $sock "</pre>\n";
     if ($now >= $iien) {
-        print $sock "<a name=\"now\">now</a>\n";
+        print $sock "<a name=\"now\">now</a> ".substr($ctrl->{'now_string'}, 9, 4)."\n";
     }
 
 

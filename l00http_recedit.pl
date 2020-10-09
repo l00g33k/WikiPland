@@ -362,8 +362,8 @@ sub l00http_recedit_proc (\%) {
     } else {
         $_ = '';
     }
-    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk A&#818;ll del\" accesskey=\"a\">\n";
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
