@@ -290,6 +290,25 @@ sub l00http_reminder_proc {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    if ($bigbutton eq 'checked') {
+        $temp = '';
+        if (!($msgtoast =~ /^ *$/)) {
+            $_ = $starttime;
+            if ($_ < $lifestart) {
+                $_ = $lifestart;
+            }
+            $life = sprintf ("%d:%02d", 
+                int (((time - $utcoffsec) - $_) / 60),
+                ((time - $utcoffsec) - $_) % 60);
+            #print $sock "timer $life";
+            $temp = "timer $life";
+        }
+        print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
+        print $sock "<input type=\"submit\" name=\"pause\" value=\"Pause - $temp\" style=\"height:14em; width:20em\">\n";
+        print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
+        print $sock "<input type=\"hidden\" name=\"bigbutton\" value=\"on\">\n";
+        print $sock "</form></p>\n";
+    }
     print $sock "<a name=\"top\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a> \n";
     print $sock "<a href=\"#manage\">Manage</a> \n";
@@ -297,8 +316,8 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p> \n";
 
     if ($bigbutton eq 'checked') {
-    if (!($msgtoast =~ /^ *$/)) {
-        $_ = $starttime;
+        if (!($msgtoast =~ /^ *$/)) {
+            $_ = $starttime;
             if ($_ < $lifestart) {
                 $_ = $lifestart;
             }
