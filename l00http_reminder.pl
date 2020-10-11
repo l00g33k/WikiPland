@@ -524,7 +524,9 @@ sub l00http_reminder_perio {
             &l00http_reminder_find ($ctrl);
         }
         if (($interval > 0) && 
-            (($lastcalled == 0) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
+            (($lastcalled == 1) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
+            l00httpd::dbp($config{'desc'}, "\$interval=$interval \$lastcalled=$lastcalled (time=". time ." - \$utcoffsec=$utcoffsec)=". (time - $utcoffsec ) ."(\$lastcalled=$lastcalled + \$pause=$pause + \$interval=$interval)=". ($lastcalled + $pause + $interval)), if ($ctrl->{'debug'} >= 3);
+
             $lastcalled = time - $utcoffsec;
             $pause = 0; $ctrl->{'reminder'} = $msgtoast;
 
