@@ -315,24 +315,6 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a><p> \n";
 
-    if ($bigbutton eq 'checked') {
-        if (!($msgtoast =~ /^ *$/)) {
-            $_ = $starttime;
-            if ($_ < $lifestart) {
-                $_ = $lifestart;
-            }
-            $life = sprintf ("%d:%02d", 
-                int (((time - $utcoffsec) - $_) / 60),
-                ((time - $utcoffsec) - $_) % 60);
-            print $sock "timer $life";
-        }
-        print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"pause\" value=\"Pause\" style=\"height:14em; width:20em\">\n";
-        print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
-        print $sock "<input type=\"hidden\" name=\"bigbutton\" value=\"on\">\n";
-        print $sock "</form></p>\n";
-    }
-
     print $sock "<li><a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$form->{'path'}&reminder=on\">Recedit</a> - \n";
     print $sock "<a href=\"/reminder.htm?reload=on\">Reload</a></li><br>\n";
 
