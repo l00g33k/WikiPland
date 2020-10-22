@@ -1,0 +1,3 @@
+* Append '&redirecturl=...' to redirect to specified URL. e.g.
+
+    &redirecturl=%2Fls.htm%3Fpath%2Fpath%2Fto%2Ffile.txt

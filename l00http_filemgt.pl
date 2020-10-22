@@ -80,10 +80,17 @@ sub l00http_filemgt_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($buffer, $path2);
+    my ($buffer, $path2, $redirecturl);
+
+    $redirecturl = '';
+    if (defined ($form->{'redirecturl'}) && 
+        (length($form->{'redirecturl'}) > 0)) {
+        $redirecturl = "<meta http-equiv=\"refresh\" content=\"0; url=$form->{'redirecturl'}\">\n";
+    }
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $redirecturl . $ctrl->{'htmlttl'} . 
+            $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} - ";
     if ((defined ($form->{'path'}) && 
         (length ($form->{'path'}) > 0))) {
@@ -100,6 +107,8 @@ sub l00http_filemgt_proc {
     }
     print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}\">Refresh</a>\n";
     print $sock "<p>\n";
+
+
 
     if ((defined ($form->{'delete'})) &&
         (defined ($form->{'path'}) && 
