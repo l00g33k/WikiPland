@@ -158,6 +158,7 @@ sub l00http_view_proc {
                 print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
             }
             print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
+            print $sock "<a href=\"/view.htm?path=$form->{'path'}\">vw</a>/";
             print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
         }
     }
