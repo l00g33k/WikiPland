@@ -75,9 +75,12 @@ sub l00http_eval_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'}\n";
     print $sock "<a href=\"#end\">Jump to end</a><p>\n";
 
-    print $sock "<a href=\"/eval.htm?eval=%27Time+in+sec%3A+%27.time.%27+is+%27.l00httpd%3A%3Atime2now_string%28time%29&url=\">Example to invoke</a>:<br>\n";
+#    print $sock "<a href=\"/eval.htm?eval=%27Time+in+sec%3A+%27.time.%27+is+%27.l00httpd%3A%3Atime2now_string%28time%29&url=\">Example to invoke</a>:<br>\n";
+#                           /eval.htm?eval=%27Time+in+sec%3A+%27.time.%27+is+%27.l00httpd%3A%3Atime2now_string%28time%29%0D%0A%2719700102+000000+is+%27.l00httpd%3A%3Anow_string2time%28%2719700102+000000%27%29&url=
+    print $sock "<a href=\"/eval.htm?eval=%27Time+in+sec%3A+%27.time.%27+is+%27.l00httpd%3A%3Atime2now_string%28time%29%0D%0A%2719700102+000000+is+%27.l00httpd%3A%3Anow_string2time%28%2719700102+000000%27%29&url=\">Example to invoke</a>:<br>\n";
+#                           /eval.htm?submit=Ev%CC%B2al&eval=%27Time+in+sec%3A+%27.time.%27+is+%27.l00httpd%3A%3Atime2now_string%28time%29%0D%0A%2719700102+000000+is+%27.l00httpd%3A%3Anow_string2time%28%2719700102+000000%27%29%0D%0A
     print $sock "<pre>\n";
-    print $sock "'Time in sec: '.time.' is '.l00httpd::time2now_string(time)\n";
+    print $sock "'Time in sec: '.time.' is '.l00httpd::time2now_string(time)\n'19700102 000000 is '.l00httpd::now_string2time('19700102 000000')\n";
     print $sock "</pre>\n";
 
     print $sock "<a href=\"/eval.htm?eval=%24ctrl-%3E%7B%27droid%27%7D-%3EmakeToast%28%27Making+a+toast%27%29%3B\">Example to invoke</a>:<br>\n";
