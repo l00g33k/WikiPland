@@ -544,10 +544,10 @@ sub l00http_reminder_perio {
                 "<a href=\"/reminder.htm?pause=Pause&min=1&bigbutton=on\">_1'_</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=10#pause\">10'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=30#pause\">30'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=45#pause\">45'</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=60#pause\">60'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=20#pause\">20'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=60#pause\">1h</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=120#pause\">2h</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=180#pause\">3h</a> - ".
                 "<a href=\"/reminder.htm#manage\">:::</a> </center>";
 
             if ((!($msgtoast =~ /^ *$/)) &&
