@@ -45,6 +45,9 @@ sub blog_get_msg {
     if (!defined ($buffer)) {
         $buffer = '';
     }
+    if (!defined ($style)) {
+        $style = '';
+    }
 
     if ($style eq 'log') {
         # log
@@ -108,7 +111,7 @@ sub l00http_blog_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname, $access);
-    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp, $nouscore);
+    my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp, $nouscore, $pastesavebuf);
     my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly, $includefile, $pnameup);
 
     undef @blockquick;
@@ -246,7 +249,8 @@ sub l00http_blog_proc {
     if (defined ($form->{'pastesave'})) {
         $_ = &blog_get_msg ($form->{'buffer'}, $stylecurr) . ' ';
         $_ .= &l00httpd::l00getCB($ctrl);
-        print $sock "<hr>$_<hr>\n";
+        #print $sock "<hr>$_<hr>\n";
+        $pastesavebuf = $_;
     }
 
     $stylecurr = 'log';
@@ -460,6 +464,11 @@ sub l00http_blog_proc {
     if (defined($form->{'afterline'})) {
         print $sock "on line <input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
+    if (defined ($form->{'pastesave'})) {
+        print $sock "<hr>$pastesavebuf<hr>\n";
+    }
+
+
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<p><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
     print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
