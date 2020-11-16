@@ -301,10 +301,10 @@ sub l00http_reminder_proc {
                 int (((time - $utcoffsec) - $_) / 60),
                 ((time - $utcoffsec) - $_) % 60);
             #print $sock "timer $life";
-            $temp = "$life - ";
+            $temp = " - $life";
         }
         print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"pause\" value=\"${temp}Pause\" style=\"height:7em; width:20em\">\n";
+        print $sock "<input type=\"submit\" name=\"pause\" value=\"Pause${temp}\" style=\"height:7em; width:20em\">\n";
         print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
         print $sock "<input type=\"hidden\" name=\"bigbutton\" value=\"on\">\n";
         print $sock "</form></p>\n";
