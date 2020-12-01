@@ -707,7 +707,8 @@ SCRIPTSRC
 
                 $myMarkers .= $polybuf;
                 $mySetMap .= "polypath$polyidx.setMap(map);\n";
-            } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+(.+)/) {
+#           } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+(.+)/) {
+            } elsif (($lat, $lon, $name) = /([0-9.+-]{4,20}?),([0-9.+-]{4,20}?)[, ]+(.+)/) {
                 # match, falls thru
                 if ($starname ne '') {
                     # * name from line above over writes name from URL
