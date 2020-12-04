@@ -357,7 +357,7 @@ sub l00http_blockfilter_proc {
     &l00http_blockfilter_form($sock, $form, 'blkstop',     'Block End',         \@blkstop,      'e');
     &l00http_blockfilter_form($sock, $form, 'blkrequired', 'Block Required',    \@blkrequired,  'r');
     &l00http_blockfilter_form($sock, $form, 'blkexclude',  'Block Exclude (!!)',\@blkexclude);
-    &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color);
+    &l00http_blockfilter_form($sock, $form, 'color',       'Colorize ()',       \@color,        'c');
     &l00http_blockfilter_form($sock, $form, 'eval',        'Perl eval',         \@eval);
     &l00http_blockfilter_form($sock, $form, 'preeval',     'Pre eval',          \@preeval);
     &l00http_blockfilter_form($sock, $form, 'preblkeval',  'Pre blk eval',      \@preblkeval);
