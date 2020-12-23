@@ -36,25 +36,27 @@ $colorlookup{'_B'} = 'ff60a4f4';   #SandyBrown
 $colorlookup{'_h'} = 'ffb469ff';   #HotPink
 $colorlookup{'_u'} = 'ffff0000';   #blue
 
+#https://support.maps.me/hc/en-us/articles/115002081729-How-to-change-the-color-of-all-pins-in-kml-file-at-once
+#red, pink, purple, deeppurple, blue, lightblue, cyan, teal, green, lime, yellow, orange, deeporange, brown, gray, bluegray.
 $symlookup{'__'} = 'red';
 $symlookup{'_r'} = 'red';
 $symlookup{'_y'} = 'yellow';
 $symlookup{'_l'} = 'lime';
 $symlookup{'_s'} = 'silver';
-$symlookup{'_a'} = 'aqua';
-$symlookup{'_f'} = 'fuchsia';
+$symlookup{'_a'} = 'cyan';
+$symlookup{'_f'} = 'deeporange';
 $symlookup{'_g'} = 'gray';
 $symlookup{'_o'} = 'olive';
-$symlookup{'_d'} = 'gold';
+$symlookup{'_d'} = 'orange';
 $symlookup{'_G'} = 'green';
-$symlookup{'_D'} = 'DeepPink';
-$symlookup{'_b'} = 'Brown';
-$symlookup{'_S'} = 'DeepSkyBlue';
-$symlookup{'_p'} = 'Purple';
-$symlookup{'_L'} = 'LightGray';
-$symlookup{'_T'} = 'Teal';
+$symlookup{'_D'} = 'pink';
+$symlookup{'_b'} = 'brown';
+$symlookup{'_S'} = 'lightblue';
+$symlookup{'_p'} = 'purple';
+$symlookup{'_L'} = 'bluegray';
+$symlookup{'_T'} = 'teal';
 $symlookup{'_B'} = 'SandyBrown';
-$symlookup{'_h'} = 'HotPink';
+$symlookup{'_h'} = 'deeppurple';
 $symlookup{'_u'} = 'blue';
 
 #my (%colorcode);
