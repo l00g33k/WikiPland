@@ -7,4 +7,53 @@ and a space delimited latitude,longitude pairs
     * poly_name
     poly: 40.730206194012574,-74.03105175812993 40.744062308099,-73.937410477002
 
+Append !!!# where # is color code, e.g. for lime waypoint:
 
+Color code:
+
+    r   red
+    y   yellow
+    l   lime
+    s   silver
+    a   aqua
+    f   fuchsia
+    g   gray
+    o   olive
+    d   gold
+    G   green
+    D   DeepPink
+    b   Brown
+    S   DeepSkyBlue
+    p   Purple
+    L   LightGray
+    T   Teal
+    B   SandyBrown
+    h   HotPink
+    u   blue
+
+=Color Waypoints=
+Append !!!# where # is color code, e.g. for lime waypoint:
+
+    * waypoint_name!!!l
+
+    r   red *
+    y   yellow *
+    l   lime *
+    s   silver
+    a   cyan *
+    f   deeporange
+    g   gray *
+    o   olive
+    d   orange *
+    G   green *
+    D   pink *
+    b   brown *
+    S   lightblue
+    p   purple *
+    L   bluegray
+    T   teal
+    B   SandyBrown
+    h   deeppurple
+    u   blue
+
+    * distinct colors

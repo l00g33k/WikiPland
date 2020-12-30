@@ -13,7 +13,7 @@ my ($kmlheader1, $kmlheader2, $kmlheader2a, $kmlheader2b, $kmlheader2c,
     $kmlfooter, $trackheight, $trackmark);
 my ($latoffset, $lonoffset, $applyoffset, $color, $thiscolor, $thisname);
 
-my (%colorlookup);
+my (%colorlookup, %symlookup);
 #$colorlukeys = 'rylsafgodGDbSpLTBhu';
 $colorlookup{'__'} = 'ff0000ff';   #red
 $colorlookup{'_r'} = 'ff0000ff';   #red
@@ -35,6 +35,30 @@ $colorlookup{'_T'} = 'ff808000';   #Teal
 $colorlookup{'_B'} = 'ff60a4f4';   #SandyBrown
 $colorlookup{'_h'} = 'ffb469ff';   #HotPink
 $colorlookup{'_u'} = 'ffff0000';   #blue
+
+#https://support.maps.me/hc/en-us/articles/115002081729-How-to-change-the-color-of-all-pins-in-kml-file-at-once
+#red, pink, purple, deeppurple, blue, lightblue, cyan, teal, green, lime, yellow, orange, deeporange, brown, gray, bluegray.
+$symlookup{'__'} = 'red';
+$symlookup{'_r'} = 'red';
+$symlookup{'_y'} = 'yellow';
+$symlookup{'_l'} = 'lime';
+$symlookup{'_s'} = 'silver';
+$symlookup{'_a'} = 'cyan';
+$symlookup{'_f'} = 'deeporange';
+$symlookup{'_g'} = 'gray';
+$symlookup{'_o'} = 'olive';
+$symlookup{'_d'} = 'orange';
+$symlookup{'_G'} = 'green';
+$symlookup{'_D'} = 'pink';
+$symlookup{'_b'} = 'brown';
+$symlookup{'_S'} = 'lightblue';
+$symlookup{'_p'} = 'purple';
+$symlookup{'_L'} = 'bluegray';
+$symlookup{'_T'} = 'teal';
+$symlookup{'_B'} = 'SandyBrown';
+$symlookup{'_h'} = 'deeppurple';
+$symlookup{'_u'} = 'blue';
+
 #my (%colorcode);
 ##$colorlukeys = 'rylsafgodGDbSpLTBhu';
 #$colorcode{'_'} = 'ff0000ff';   #red
@@ -140,7 +164,7 @@ sub l00http_kml_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $buffer, $rawkml, $httphdr, $kmlbuf, $size);
     my ($lat, $lon, $name, $starname, $trkname, $trkmarks, $lnno, $pointno);
-    my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $wayptcolor);
+    my ($gpxtime, $fname, $curlatoffset, $curlonoffset, $symbolcolor);
     my ($toKmlCnt, $frKmlCnt, $kmlheadernow, $kmlfooternow, $newbuf, $pathbase);
     my (@polyline, $selregex, $exclude, $addthis);
 
@@ -624,14 +648,14 @@ sub l00http_kml_proc {
                                 $name = $starname;
                                 $starname = '';
                             } else {
-                                $wayptcolor = '_r';
+                                $symbolcolor = '_r';
                             }
-                            if ($wayptcolor eq '__') {
-                                $wayptcolor = '_r';
+                            if ($symbolcolor eq '__') {
+                                $symbolcolor = '_r';
                             }
                             if (/^poly:/) {
                                 $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .
-                                           "\t\t\t<Style id=\"lc\"><LineStyle><color>$colorlookup{$wayptcolor}</color><width>4</width></LineStyle></Style>\n" .
+                                           "\t\t\t<Style id=\"lc\"><LineStyle><color>$colorlookup{$symbolcolor}</color><width>4</width></LineStyle></Style>\n" .
                                            "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
                                            "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
                                            "\t\t\t<coordinates>\n";
@@ -652,9 +676,9 @@ sub l00http_kml_proc {
                             # https://www.google.com/maps/@31.1956864,121.3522793,15z
                             $starname = $1;
                             if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
-                                $wayptcolor = "_$1";
+                                $symbolcolor = "_$1";
                             } else {
-                                $wayptcolor = '__';
+                                $symbolcolor = '__';
                             }
                             next;
                         } else {
@@ -683,7 +707,7 @@ sub l00http_kml_proc {
                             $kmlbuf .= 
                                 "\t\t<Placemark>\n".
                                 "\t\t\t<name>$name</name>\n".
-                                "\t\t\t<styleUrl>#msn_donut$wayptcolor</styleUrl>\n".
+                                "\t\t\t<styleUrl>#placemark-$symlookup{$symbolcolor}</styleUrl>\n".
                                 "\t\t\t<Point>\n".
                                 "\t\t\t\t<coordinates>$lon,$lat,0</coordinates>\n".
                                 "\t\t\t</Point>\n".
