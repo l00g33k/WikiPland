@@ -248,6 +248,8 @@ sub l00http_filecrypt_proc (\%) {
                 $hout .= "image/gif\r\n";
             } elsif ($fname =~ /\.png$/i) {
                 $hout .= "image/png\r\n";
+            } elsif ($fname =~ /\.pdf$/i) {
+                $hout .= "application/pdf\r\n";
             } elsif (($fname =~ /\.html$/i) ||
                      ($fname =~ /\.htm$/i) ||
                      ($fname =~ /\.txt$/i)) {
