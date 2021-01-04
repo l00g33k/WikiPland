@@ -83,7 +83,7 @@ sub l00http_view_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
-    my ($foundfullrst, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
+    my ($foundfullrst, $foundfullrstnew, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
     my ($displayed, $onefindtext, $tmplnallhits);
 
     $skip0  = 0;
@@ -408,7 +408,7 @@ sub l00http_view_proc {
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
                     $found .= "<pre>\n";
-				    $tmp = '';
+				    $foundfullrstnew = '';
                     $foundcnt = 0;
 					foreach $_ (@foundfullarray) {
                         $foundcnt++;
@@ -476,7 +476,7 @@ sub l00http_view_proc {
                                 " <a href=\"/view.htm?path=$pname$fname&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
                                 "$tmpln";
 						}
-					    $tmp .= "$_\n";
+					    $foundfullrstnew .= "$_\n";
                         if ($findskip >= 0) {
                             if ($foundcnt <= $findmaxln) {
                                 $found .= "$_\n";
@@ -487,7 +487,7 @@ sub l00http_view_proc {
                             }
                         }
 					}
-                    $foundfullrst = "<pre>\n$tmp\n</pre>\n";
+                    $foundfullrst = "<pre>\n$foundfullrstnew\n</pre>\n";
                     $found .= "</pre>\n";
                 } else {
                     $foundcnt = 0;
