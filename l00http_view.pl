@@ -11,7 +11,7 @@ my %config = (proc => "l00http_view_proc",
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
-my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew);
+my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew, $ansi, %ansicode);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -30,6 +30,28 @@ $eval = '';
 $evalbox = '';
 $lastfew = 0;
 $nextfew = 0;
+$ansi = 0;
+
+%ansicode = (
+    '[30m' => '<font style="color:black;background-color:white">',
+    '[31m' => '<font style="color:red;background-color:white">',
+    '[32m' => '<font style="color:lime;background-color:white">',
+    '[33m' => '<font style="color:#FFC706;background-color:white">',
+    '[34m' => '<font style="color:blue;background-color:white">',
+    '[35m' => '<font style="color:magenta;background-color:white">',
+    '[36m' => '<font style="color:aqua;background-color:white">',
+    '[37m' => '<font style="color:silver;background-color:white">',
+    '[90m' => '<font style="color:gray;background-color:white">',
+    '[91m' => '<font style="color:red;background-color:white">',
+    '[92m' => '<font style="color:green;background-color:white">',
+    '[93m' => '<font style="color:yellow;background-color:white">',
+    '[94m' => '<font style="color:blue;background-color:white">',
+    '[95m' => '<font style="color:hotpink;background-color:white">',
+    '[96m' => '<font style="color:aqua;background-color:white">',
+    '[97m' => '<font style="color:white;background-color:white">',
+    '[0m' => '</font>'
+);
+
 
 @colors = (
     'yellow',
@@ -169,6 +191,15 @@ sub l00http_view_proc {
     } elsif (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 0)) {
         $hilitetext = $form->{'hilitetext'};
     }
+
+    if (defined ($form->{'dohilite'})) {
+        if (defined ($form->{'ansi'})) {
+            $ansi = 'checked';
+        } else {
+            $ansi = '';
+        }
+    }
+
 
     print $sock "<p>\n";
     if (defined ($form->{'find'})) {
@@ -381,6 +412,19 @@ sub l00http_view_proc {
                     $foundcnt = 0;
 					foreach $_ (@foundfullarray) {
                         $foundcnt++;
+
+                        # do ANSI color
+                        if ($ansi ne '') {
+                            if(/\x1b\[\d+m/) {
+                                foreach $ii (keys %ansicode) {
+                                    $tmp = "\\$ii";
+                                    s/$tmp/$ansicode{$ii}/g;
+                                }
+                                # patch up unknown code
+                                s/\x1b\[\d+m/<font style="color:gray;background-color:white">/g;
+                            }                            
+                        }
+
 					    if (($tmpno, $tmpln) = /^(\d+):(.+)$/) {
                             # extract if we find parathesis
                             if (($findtext =~ /[^\\]\(.+[^\\]\)/) ||
@@ -532,6 +576,17 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock "<font style=\"color:black;background-color:lime\">$_</font>\n";
                     } else {
+                        # do ANSI color
+                        if ($ansi ne '') {
+                            if(/\x1b\[\d+m/) {
+                                foreach $ii (keys %ansicode) {
+                                    $tmp = "\\$ii";
+                                    s/$tmp/$ansicode{$ii}/g;
+                                }
+                                # patch up unknown code
+                                s/\x1b\[\d+m/<font style="color:gray;background-color:white">/g;
+                            }                            
+                        }
                         if (length($hilitetext) > 0) {
                             $ii = 0;
                             foreach $pattern (split ('\|\|', $hilitetext)) {
@@ -540,9 +595,6 @@ sub l00http_view_proc {
                                 } else {
                                     $color = $colors[$#colors];
                                 }
-if($lineno < 10){
-print "xxxx $lineno: $pattern\n";
-}
                                 if ($pattern =~ /^\(\((\d+)\)\)$/) {
                                     # highlight ((line_number))
                                     if ($lineno == $1) {
@@ -554,6 +606,7 @@ print "xxxx $lineno: $pattern\n";
                                 $ii++;
                             }
                         }
+
                         print $sock "$_\n";
                     }
                 } else {
@@ -564,6 +617,17 @@ print "xxxx $lineno: $pattern\n";
                         print $sock $clip;
                         print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$form->{'path'}&blklineno=%d\">:</a> ", $lineno, $lineno) . "$_</font>\n";
                     } else {
+                        # do ANSI color
+                        if ($ansi ne '') {
+                            if(/\x1b\[\d+m/) {
+                                foreach $ii (keys %ansicode) {
+                                    $tmp = "\\$ii";
+                                    s/$tmp/$ansicode{$ii}/g;
+                                }
+                                # patch up unknown code
+                                s/\x1b\[\d+m/<font style="color:gray;background-color:white">/g;
+                            }                            
+                        }
                         if (length($hilitetext) > 0) {
                             $hit = 0;
                             $ii = 0;
@@ -576,9 +640,6 @@ print "xxxx $lineno: $pattern\n";
                                 if ($pattern =~ /^\(\((\d+)\)\)$/) {
                                     # highlight ((line_number))
                                     if ($lineno == $1) {
-if($lineno < 10){
-print "yyyy $lineno: $pattern\n";
-}
                                         $_ = "<font style=\"color:black;background-color:$color\">$_<\/font>";
                                     }
                                 } elsif (/$pattern/) {
@@ -670,6 +731,7 @@ print "yyyy $lineno: $pattern\n";
     $_ = $hilitetext;
     s/"/&quot;/g;   # can't use " in input value
     print $sock "regex&#818; <input type=\"text\" size=\"12\" name=\"hilitetext\" value=\"$_\" accesskey=\"x\">\n";
+    print $sock "<input type=\"checkbox\" name=\"ansi\" $ansi>ANSI\n";
     print $sock "<input type=\"submit\" name=\"clrhilite\" value=\"clr\"></td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
