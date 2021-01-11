@@ -787,6 +787,24 @@ sub l00http_view_proc {
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
+
+    # print hilite regex:
+    if ($hilitetext ne '') {
+        print $sock "<pre>Sorted hilite regex:\n";
+        foreach $_ (sort (split('\|\|', $hilitetext))) {
+            print $sock "$_\n";
+        }
+        print $sock "</pre>\n";
+    }
+    # print find regex:
+    if ($findtext ne '') {
+        print $sock "<pre>Sorted find regex:\n";
+        foreach $_ (sort (split('\|\|', $findtext))) {
+            print $sock "$_\n";
+        }
+        print $sock "</pre>\n";
+    }
+
     print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
