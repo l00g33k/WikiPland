@@ -410,6 +410,15 @@ sub l00http_blog_proc {
             s/\r//g;
             s/\n//g;
             # extract special keywords
+            if (($key) = /^%BLOG!!:([^%]+)%/) {
+                if ($keys != 0) {
+                    print $sock " - ";
+                }
+                $key =~ s/ /+/g;
+                # /blog.htm?timesave=&buffer=20140307+135828+key&save=Save&path=C%3A%2Fx%2Fdel.txt
+                print $sock "!!<a href=\"/blog.htm?buffer=20140101+000000+$key&path=$form->{'path'}\">$key</a>\n";
+                $keys++;
+            }
             if (($key) = /^%BLOG:([^%]+)%/) {
                 if ($keys != 0) {
                     print $sock " - ";
