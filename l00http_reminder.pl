@@ -8,7 +8,7 @@ use l00mktime;
 # this is a simple template, a good starting point to make your own modules
 
 my ($lastcalled, $interval, $starttime, $lifestart, $msgtoast, $vibra, $vibracnt, 
-    $utcoffsec, $wake, $vmsec, $pause, $filetime, $bigbutton, $pausewant);
+    $utcoffsec, $wake, $vmsec, $pause, $filetime, $bigbutton, $pausewant, $script);
 my %config = (proc => "l00http_reminder_proc",
               desc => "l00http_reminder_desc",
               perio => "l00http_reminder_perio");
@@ -25,6 +25,25 @@ $filetime = 0;
 $lifestart = 0;
 $bigbutton = 'checked';
 $pausewant = '30';
+
+$script = <<EOB;
+<script Language="JavaScript">
+
+var timeleft = 60;
+
+function updateClock () {
+
+    // Update the time display
+    document.getElementById("pausebtn").value = fixtext + '(' + timeleft + ')';
+    timeleft -= 1;
+
+    setTimeout("updateClock()",1000);
+}
+
+</script>
+
+</head>\x0D\x0A<body onload="updateClock();">
+EOB
 
 sub l00http_reminder_date2j {
 # convert from date to seconds
@@ -289,7 +308,7 @@ sub l00http_reminder_proc {
     }
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $script; # . $ctrl->{'htmlhead2'};
     if ($bigbutton eq 'checked') {
         $temp = '';
         if (!($msgtoast =~ /^ *$/)) {
@@ -303,8 +322,11 @@ sub l00http_reminder_proc {
             #print $sock "timer $life";
             $temp = " - $life";
         }
+
+        # set fix button text
+        print $sock "<script>var fixtext='Pause${temp}';</script>";
         print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"pause\" value=\"Pause${temp}\" style=\"height:7em; width:20em\">\n";
+        print $sock "<input type=\"submit\" id=\"pausebtn\" name=\"pause\" value=\"Pause${temp}\" style=\"height:7em; width:20em\">\n";
         print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
         print $sock "<input type=\"hidden\" name=\"bigbutton\" value=\"on\">\n";
         print $sock "</form></p>\n";
