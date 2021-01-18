@@ -29,13 +29,12 @@ $pausewant = '30';
 $script = <<EOB;
 <script Language="JavaScript">
 
-var timeleft = 60;
-
 function updateClock () {
+    var currentTime = new Date ( ), timeleft;
 
     // Update the time display
+    timeleft = Math.trunc(firetime - currentTime.valueOf() / 1000);
     document.getElementById("pausebtn").value = fixtext + '(' + timeleft + ')';
-    timeleft -= 1;
 
     setTimeout("updateClock()",1000);
 }
@@ -202,6 +201,7 @@ sub l00http_reminder_proc {
     if (defined ($form->{"pause"}) && ($form->{"min"} >= 0)) {
         $pause = $form->{"min"} * 60;
         $pausewant = $form->{"min"};
+        $lastcalled = time - $utcoffsec;
         if ((defined ($form->{'bigbutton'})) && ($form->{'bigbutton'} eq 'on')) {
             $bigbutton = 'checked';
         } else {
@@ -324,7 +324,12 @@ sub l00http_reminder_proc {
         }
 
         # set fix button text
-        print $sock "<script>var fixtext='Pause${temp}';</script>";
+        if ($lastcalled == 0) {
+            $ii = (time - $utcoffsec + $pause + $interval) + $utcoffsec;
+        } else {
+            $ii = ($lastcalled + $pause + $interval) + $utcoffsec;
+        }
+        print $sock "<script>var fixtext='Pause${temp}', firetime=$ii;</script>";
         print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
         print $sock "<input type=\"submit\" id=\"pausebtn\" name=\"pause\" value=\"Pause${temp}\" style=\"height:7em; width:20em\">\n";
         print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
