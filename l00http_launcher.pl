@@ -25,6 +25,8 @@ sub l00http_launcher_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $file, $name, $col, $extra, $path, $fname);
     my ($lpname, $lfname, $pathuri, $plpath);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks);
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -47,7 +49,15 @@ sub l00http_launcher_proc {
     } else {
         $path = '';
     }
-    print $sock "<p>\n";
+    #print $sock "<br>\n";
+
+    ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+     $size, $atime, $mtime, $ctime, $blksize, $blocks)
+     = stat($form->{'path'});
+    ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+     = localtime($mtime);
+    printf $sock ("<pre>%9d %4d/%02d/%02d %02d:%02d:%02d</pre>\n", 
+        $size, 1900+$year, 1+$mon, $mday, $hour, $min, $sec) ;
 
 
     if ($#targets == -1) {
@@ -120,6 +130,13 @@ sub l00http_launcher_proc {
     print $sock "</table>\n";
 
     print $sock "<p>Update l00http_launcher.pl to add new target<p>\n";
+
+    print $sock "<p>".
+                "<form action=\"/view.htm\" method=\"get\">".
+                "<input type=\"submit\" name=\"submit\" value=\"V&#818;iew\" accesskey=\"v\">".
+                "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
+                "</form>".
+                "<p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
