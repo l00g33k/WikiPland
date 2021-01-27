@@ -560,7 +560,7 @@ sub l00http_tree_proc {
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Scan\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
-    print $sock "<br>Filter (fullpath): <input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\">\n";
+    print $sock "<br>Exclude file filter (fullpath): <input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\">\n";
     print $sock "<input type=\"checkbox\" name=\"fileinclu\" $fileinclu>include matched (case sensitive)\n";
     print $sock "<br><input type=\"checkbox\" name=\"crc32\">compute CRC32 (pure Perl CRC32 is slow)\n";
     if ($ctrl->{'os'} eq 'and') {
