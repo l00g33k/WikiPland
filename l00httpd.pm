@@ -16,12 +16,12 @@ $debuglog = '';
 $debuglogstate = 0;
 $usewinclipboard = 0;
 @colors = (
-    'yellow',
     'aqua',
     'lime',
     'deepPink',
     'deepSkyBlue',
     'fuchsia',
+    'yellow',
     'silver',
     'brown',
     'red',
