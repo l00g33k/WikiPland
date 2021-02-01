@@ -461,7 +461,7 @@ sub l00http_blog_proc {
         }
     }
 
-    print $sock "<form action=\"/blog.htm\" method=\"get\">\n";
+    print $sock "<br><form action=\"/blog.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
     if ($url ne '') {
         # Quick URL provided in target file, make a button to redirect

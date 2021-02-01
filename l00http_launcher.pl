@@ -82,6 +82,12 @@ sub l00http_launcher_proc {
             }
         }
     }
+    print $sock "<form action=\"/view.htm\" method=\"get\">".
+                "<input type=\"submit\" name=\"submit\" value=\"V&#818;iew\" accesskey=\"v\">".
+                "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
+                "</form>".
+                "<p>\n";
+
 
 
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -130,13 +136,6 @@ sub l00http_launcher_proc {
     print $sock "</table>\n";
 
     print $sock "<p>Update l00http_launcher.pl to add new target<p>\n";
-
-    print $sock "<p>".
-                "<form action=\"/view.htm\" method=\"get\">".
-                "<input type=\"submit\" name=\"submit\" value=\"V&#818;iew\" accesskey=\"v\">".
-                "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
-                "</form>".
-                "<p>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
