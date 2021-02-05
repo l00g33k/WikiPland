@@ -54,7 +54,7 @@ sub l00http_cal_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
-    my ($day1, $dayno, $wkno, $dayno2, $wkno2);
+    my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos);
 
     # get current date/time
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -88,7 +88,8 @@ sub l00http_cal_proc {
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
 			    $lnno++;
 				if ($lnno == $form->{'lnno'}) {
-                    ($date, $len, $todo) = split (',', $_);
+                    ($date, $len, @todos) = split (',', $_);
+                    $todo = join(',', @todos);
 			        $buf .= "$form->{'moveto'},$len,$todo\n";
 				} else {
 				    $buf .= $_;
@@ -155,7 +156,8 @@ sub l00http_cal_proc {
                 # not matching filter
                 next;
             }
-            ($date, $len, $todo) = split (',', $_);
+            ($date, $len, @todos) = split (',', $_);
+            $todo = join(',', @todos);
             if (defined ($date) && defined ($len) && defined ($todo)) {
                 if (defined ($form->{'movefrom'})) {
 				    # selected movefrom date, list items for picking
@@ -202,7 +204,8 @@ sub l00http_cal_proc {
 
     undef  %list;
     foreach $k (sort keys %db) {
-        ($date, $len, $todo) = split ('`', $k);
+        ($date, $len, @todos) = split ('`', $k);
+        $todo = join(',', @todos);
         # repeating
         $rpt = 0;
         if ($date =~ /^(.+)\+(.+)$/) {
