@@ -262,7 +262,7 @@ sub l00http_view_proc {
 
     if ($nohdr eq '') {
         print $sock "<form action=\"/view.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" name=\"update\" value=\"Skip\">\n";
+        print $sock "<input type=\"submit\" name=\"update\" value=\"S&#818;kip\" accesskey=\"s\">\n";
         print $sock "<input type=\"text\" size=\"4\" name=\"skip\" value=\"$skip\">\n";
         print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
