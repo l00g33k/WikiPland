@@ -1615,6 +1615,16 @@ sub l00http_ls_proc {
                 print $sock "<td><input type=\"submit\" name=\"launchit\" value=\"$target\"></td>\n";
                 print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
                 print $sock "</form>\n";
+
+                print $sock "</tr><tr>\n";
+
+                print $sock "<form action=\"/view.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"view\" value=\"V&#818;iew\" accesskey=\"v\"></td>\n";
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+                print $sock "</form>\n";
+
+                print $sock "<td>&nbsp;</td>\n";
+                print $sock "<td>&nbsp;</td>\n";
                 print $sock "</tr></table>\n";
             }
 
