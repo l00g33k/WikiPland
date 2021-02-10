@@ -34,9 +34,9 @@ function updateClock () {
 
     // Update the time display
     timeleft = Math.trunc(firetime - currentTime.valueOf() / 1000);
-    document.getElementById("pausebtn").value = fixtext + '(' + timeleft + ')';
+    document.getElementById("pausebtn").value = fixtext1 + '(' + timeleft + ') - ' + fixtext2;
 
-    setTimeout("updateClock()",1000);
+    setTimeout("updateClock()",999);
 }
 
 </script>
@@ -177,7 +177,7 @@ sub l00http_reminder_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($ii, $temp, $timstr, $selected, $formmsg);
+    my ($ii, $temp, $tmp2, $timstr, $selected, $formmsg);
     my ($yr, $mo, $da, $hr, $mi, $se);
     my ($pathbase, $incpath, $bufinc, $bufall);
     # see notes in l00http_reminder_find() about time + $utcoffsec
@@ -320,7 +320,7 @@ sub l00http_reminder_proc {
                 int (((time - $utcoffsec) - $_) / 60),
                 ((time - $utcoffsec) - $_) % 60);
             #print $sock "timer $life";
-            $temp = " - $life";
+            $temp = "$life";
         }
 
         # set fix button text
@@ -329,9 +329,10 @@ sub l00http_reminder_proc {
         } else {
             $ii = ($lastcalled + $pause + $interval) + $utcoffsec;
         }
-        print $sock "<script>var fixtext='Pause${temp}', firetime=$ii;</script>";
+        $tmp2 = $pause + $interval;
+        print $sock "<script>var fixtext1='${temp}', fixtext2='Pause', firetime=$ii;</script>";
         print $sock "<form action=\"/reminder.htm\" method=\"get\">\n";
-        print $sock "<input type=\"submit\" id=\"pausebtn\" name=\"pause\" value=\"Pause${temp}\" style=\"height:7em; width:20em\">\n";
+        print $sock "<input type=\"submit\" id=\"pausebtn\" name=\"pause\" value=\"${temp}($tmp2) - Pause\" style=\"height:7em; width:20em; text-align:left;\">\n";
         print $sock "<input type=\"hidden\" name=\"min\" value=\"$pausewant\">\n";
         print $sock "<input type=\"hidden\" name=\"bigbutton\" value=\"on\">\n";
         print $sock "</form></p>\n";
