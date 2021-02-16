@@ -74,7 +74,8 @@ cat1='----' and cat2='DESCFIND'.
 * * 20171005 001200 time.start and * 20171005 001200 time.stop to record time spent
 * ^text, to mark a do now item, in yellow on fuchsia
 * ~text, to mark a do next item, in black on yellow
-* .text, to mark a watch item, in black on silver
+* .text, to mark a watch item, in black on aqua
+* `text, to mark an out of sight item, in black on silver
 
 ==See Here==
 * The following shortcut will create a link to visit the rendered 
