@@ -717,9 +717,8 @@ sub l00http_view_proc {
     print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
     print $sock "ls between <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
     print $sock "with <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
-    if ($skip0 > 0) {
-        print $sock "View <a href=\"/view.htm?path=l00://displayed.txt\">l00://displayed.txt</a><p>\n";
-    }
+    print $sock "View <a href=\"/view.htm?path=l00://displayed.txt\" target=\"_blank\">l00://displayed.txt</a> - \n";
+    print $sock "<a href=\"/filemgt.htm?copy=copy&path=l00://displayed.txt&path2=l00://$fname.$skip-$maxln.txt\" target=\"_blank\">filemgt</a><p>\n";
 
     # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
