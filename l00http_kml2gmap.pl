@@ -267,6 +267,7 @@ sub l00http_kml2gmap_proc {
     my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
     my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor, $icon, $fetchramjson);
+    my ($gpstrackwastrack, $gpstrackhaspts, $gpstracktimenow, $gpstracktimelast);
 
     $gpslon = '';
     $gpslat = '';
@@ -653,6 +654,10 @@ SCRIPTSRC
         $starname = '';
         $nomarkers = 0;
         $lnno = 0;
+        $gpstrackhaspts = 0;        # collected GPS track points
+        $gpstracktimenow = '';
+        $gpstracktimelast = '';
+        $wayptcolor = '_r';
         foreach $_ (split ("\n", $buffer)) {
             $htmlout .= "$_\n";
             $lnno++;
@@ -662,6 +667,9 @@ SCRIPTSRC
             if (/^#/) {
                 next;
             }
+            # 0=not parsing GPS tracks
+            # 1=parsing GPS tracks
+            $gpstrackwastrack = 0;      # last coordinate was GPS track
             #https://www.google.com/maps/PVG@31.151045,121.8012844,15z
             #http://www.google.cn/maps/@31.3228158,120.6269192,502m/data=!3m1!1e3
             if (($name, $lat, $lon) = /\.google\..+?\/maps\/(.*)@([0-9.+-]+),([0-9.+-]+),/) {
@@ -739,10 +747,47 @@ SCRIPTSRC
                 if ($1 eq 'S') {
                     $lat = -$lat;
                 }
-                $name = "L$lnno";
+                $name = sprintf ("L%04d", $lnno);
+
+                $gpstrackwastrack = 1;      # last coordinate was GPS track
+                if ($gpstrackhaspts == 0) {
+                    $gpstrackhaspts = 1;    # start new track
+                    $polyidx++;
+                    $polybuf = "var polycoor$polyidx = [\n";
+                }
+                $polybuf .= "    {lat: $lat, lng: $lon},\n";
+                # ; gps 20171104 005423
+                if (/; gps (\d{8,8} \d\d)/) {
+                    $gpstracktimenow = $1;
+                }
             } else {
                 #$starname = '';
                 next;
+            }
+            if ($gpstrackhaspts != 0) {
+                if ($gpstrackwastrack == 0) {
+                    $gpstrackhaspts = 0;
+
+                    $polybuf .= 
+                    "  ];\n".
+                    "  var polypath$polyidx = new google.maps.Polyline({\n".
+                    "    path: polycoor$polyidx,\n".
+                    "    geodesic: true,\n".
+                    "    strokeColor: '#$colorlookup{$wayptcolor}',\n".
+                    "    strokeOpacity: 1.0,\n".
+                    "    strokeWeight: 2\n".
+                    "  });\n";
+
+                    $myMarkers .= $polybuf;
+                    $mySetMap .= "polypath$polyidx.setMap(map);\n";
+                } else {
+                    if ($gpstracktimelast eq $gpstracktimenow) {
+                        next;
+                    }
+                    $gpstracktimelast = $gpstracktimenow;
+                }
+                $gpstracktimenow =~ s/ /_/g;
+                $name .= "_$gpstracktimenow";
             }
 
             # select marker by regex
@@ -860,6 +905,21 @@ SCRIPTSRC
             # marker.setMap(map);
             $mySetMap .= "marker$nowypts.setMap(map);\n";
             $nowypts++;
+        }
+        # in case GPS track at the end of the file
+        if ($gpstrackhaspts != 0) {
+            $polybuf .= 
+            "  ];\n".
+            "  var polypath$polyidx = new google.maps.Polyline({\n".
+            "    path: polycoor$polyidx,\n".
+            "    geodesic: true,\n".
+            "    strokeColor: '#$colorlookup{$wayptcolor}',\n".
+            "    strokeOpacity: 1.0,\n".
+            "    strokeWeight: 2\n".
+            "  });\n";
+
+            $myMarkers .= $polybuf;
+            $mySetMap .= "polypath$polyidx.setMap(map);\n";
         }
     }
 
