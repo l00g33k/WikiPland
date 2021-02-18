@@ -1259,6 +1259,7 @@ sub wikihtml {
 
 
     if ($flaged ne '') {
+        $flaged = &l00wikihtml_fontsty($flaged);
         $flaged = "<b><i><a href=\"__toctoc__\">BOOKMARKS</a>:</i></b><br>$flaged<hr>\n";
     }
     if ($postsit ne '') {
