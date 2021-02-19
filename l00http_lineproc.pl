@@ -67,6 +67,15 @@ sub l00http_lineproc_proc (\%) {
     if (defined ($form->{'pasteeval'})) {
         $eval = &l00httpd::l00getCB($ctrl);
     }
+    if (defined ($form->{'space2newline'})) {
+        $eval = "s/ +/\\n/g;";
+        $form->{'run'} = 'force run';
+    }
+    if (defined ($form->{'options2newline'})) {
+        $eval = "s/ +-/\\n-/g;";
+        $form->{'run'} = 'force run';
+    }
+
 
     if ((defined ($form->{'path'})) && (defined ($form->{'run'}))) {
         if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
@@ -126,6 +135,8 @@ sub l00http_lineproc_proc (\%) {
     print $sock "            <input type=\"checkbox\" name=\"sortdec\" $sortdec>in decresing order. \n";
     print $sock "            <input type=\"checkbox\" name=\"dedup\" $dedup>dedup. \n";
     print $sock "            <input type=\"checkbox\" name=\"nolnno\" $nolnno>no line number. \n";
+    print $sock "            <br>Preset expressions: <input type=\"submit\" name=\"space2newline\" value=\"Space to newline\">\n";
+    print $sock "            <input type=\"submit\" name=\"options2newline\" value=\"-options to newline\">\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
