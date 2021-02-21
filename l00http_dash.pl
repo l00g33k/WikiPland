@@ -1153,7 +1153,8 @@ sub l00http_dash_proc {
                 $tasksTimeKey = $_;
                 $tasksTimeKey =~ s/^(\|\|.+?\|\|)\d+ /$1/;
                 if ($hdronly == 0) {
-                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$tasksTimeKey``");
+#                   push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$tasksTimeKey``");
+                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ``$tasksTimeKey``");   # caused extra colume
                 } else {
                     # create matching jump anchor when hdr only
                     #$cat2 .= "<a name=\"cat2$jmp\">$jmp</a>";
@@ -1180,7 +1181,8 @@ sub l00http_dash_proc {
                     } else {
                         $moving = '';
                     }
-                    push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp||``$tasksTimeKey``");
+#                   push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp||``$tasksTimeKey``");   # caused extra colume
+                    push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp ``$tasksTimeKey``");
                 }
             }
         }
