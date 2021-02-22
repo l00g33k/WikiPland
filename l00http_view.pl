@@ -81,12 +81,16 @@ sub l00http_view_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($lineno, $buffer, $pname, $fname, $hilite, $clip, $tmp, $hilitetextidx);
+    my ($lineno, $buffer, $pname, $pnameurl, $fname, $fnameurl, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
     my ($foundfullrst, $foundfullrstnew, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
-    my ($displayed, $onefindtext, $tmplnallhits);
+    my ($displayed, $onefindtext, $tmplnallhits, $pnameurl2, $fnameurl2);
 
     $skip0  = 0;
+    $pnameurl = '';
+    $fnameurl = '';
+    $pnameurl2 = '';
+    $fnameurl2 = '';
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -173,15 +177,23 @@ sub l00http_view_proc {
             }
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>: ";
             if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
+                $pnameurl = $pname;
+                $fnameurl = $fname;
+                $pnameurl =~ s/\+/%2B/g;
+                $fnameurl =~ s/\+/%2B/g;
+                $pnameurl2 = $pnameurl;
+                $fnameurl2 = $fnameurl;
+                $pnameurl2 =~ s/%/%%/g;
+                $fnameurl2 =~ s/%/%%/g;
                 # not ending in / or \, not a dir
-                print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a>";
-                print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a>\n";
+                print $sock "<a href=\"/ls.htm?path=$pnameurl\">$pname</a>";
+                print $sock "<a href=\"/ls.htm?path=$pnameurl/$fname\">$fname</a>\n";
             } else {
-                print $sock " <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a>\n";
+                print $sock " <a href=\"/ls.htm?path=$pnameurl$fnameurl\">$form->{'path'}</a>\n";
             }
-            print $sock " <a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
-            print $sock "<a href=\"/view.htm?path=$form->{'path'}\">vw</a>/";
-            print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
+            print $sock " <a href=\"/edit.htm?path=$pnameurl$fnameurl\">Edit</a>/";
+            print $sock "<a href=\"/view.htm?path=$pnameurl$fnameurl\">vw</a>/";
+            print $sock "<a href=\"/view.htm?path=$pnameurl$fnameurl&exteditor=on\">ext</a>\n";
         }
     }
 
@@ -267,7 +279,7 @@ sub l00http_view_proc {
         print $sock "and display at most <input type=\"text\" size=\"4\" name=\"maxln\" value=\"$maxln\"> lines\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
         print $sock "<input type=\"checkbox\" name=\"hidelnno\">\n";
-        print $sock "<a href=\"/view.htm?path=$form->{'path'}&hidelnno=on\">Hide line number.</a>\n";
+        print $sock "<a href=\"/view.htm?path=$pnameurl$fnameurl&hidelnno=on\">Hide line number.</a>\n";
         print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
         print $sock "Auto-refresh (0=off) <input type=\"text\" size=\"3\" name=\"refresh\" value=\"\"> sec.\n";
 
@@ -286,7 +298,7 @@ sub l00http_view_proc {
         } else {
             $tmp = 0;
         }
-        print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">line $tmp</a>\n";
+        print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">line $tmp</a>\n";
         # skip forward $maxln
         if ($skip >= 0) {
             # only if skipping from the start
@@ -297,21 +309,21 @@ sub l00http_view_proc {
         } else {
             $tmp = 0;
         }
-        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
         if ($skip >= 0) {
             # only if skipping from the start
             $tmp = int ($skip + $maxln / 2);
         } else {
             $tmp = 0;
         }
-        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
         if ($skip >= 0) {
             # only if skipping from the start
             $tmp = int ($skip + $maxln);
         } else {
             $tmp = 0;
         }
-        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$form->{'path'}\">$tmp</a>\n";
+        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
         print $sock "</form>\n";
     }
 
@@ -322,28 +334,28 @@ sub l00http_view_proc {
             $tmp = 1;
         }
         print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>.\n";
-        print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$form->{'path'}&blklineno=$hilite\">single line edit mode</a>.\n";
+        print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$pnameurl$fnameurl&blklineno=$hilite\">single line edit mode</a>.\n";
         print $sock "Expand ";
         $tmp = $hilite - 200;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf ("<a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $tmp, 600, $hilite);
+        print $sock sprintf ("<a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $tmp, 600, $hilite);
         $tmp = $hilite - 500;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $tmp, 2000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $tmp, 2000, $hilite);
         $tmp = $hilite - 1000;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $tmp, 3000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $tmp, 3000, $hilite);
         $tmp = $hilite - 2000;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf (", <a href=\"view.htm?path=$form->{'path'}&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $tmp, 5000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $tmp, 5000, $hilite);
         print $sock " lines of context.";
     }
 
@@ -380,6 +392,14 @@ sub l00http_view_proc {
 
             if (defined ($form->{'find'})) {
                 ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
+                $pnameurl = $pname;
+                $fnameurl = $fname;
+                $pnameurl =~ s/\+/%2B/g;
+                $fnameurl =~ s/\+/%2B/g;
+                $pnameurl2 = $pnameurl;
+                $fnameurl2 = $fnameurl;
+                $pnameurl2 =~ s/%/%%/g;
+                $fnameurl2 =~ s/%/%%/g;
                 $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>. ";
                 $found .= "View <a href=\"/view.htm?path=l00://find.htm\" target=\"_blank\">l00://find.htm</a> - ";
                 $found .= "<a href=\"/view.htm?path=l00://find.txt\" target=\"_blank\">.txt</a>; ";
@@ -472,8 +492,8 @@ sub l00http_view_proc {
 #                                $tmpln =~ s/</&lt;/g;
 #                                $tmpln =~ s/>/&gt;/g;
                             }
-						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pname$fname\">$tmpno</a>".
-                                " <a href=\"/view.htm?path=$pname$fname&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
+						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pnameurl$fnameurl\">$tmpno</a>".
+                                " <a href=\"/view.htm?path=$pnameurl$fnameurl&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
                                 "$tmpln";
 						}
 					    $foundfullrstnew .= "$_\n";
@@ -518,9 +538,9 @@ sub l00http_view_proc {
                 $found .= "<hr>\n";
 
                 # path=./ substitution
-                $found =~ s/path=\.\//path=$pname/g;
+                $found =~ s/path=\.\//path=$pnameurl/g;
                 # path=$ substitution
-                $found =~ s/path=\$/path=$pname$fname/g;
+                $found =~ s/path=\$/path=$pnameurl$fnameurl/g;
 
                 print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $found, 0);
                 print $sock "<p>\n";
@@ -615,7 +635,7 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
-                        print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$form->{'path'}&blklineno=%d\">:</a> ", $lineno, $lineno) . "$_</font>\n";
+                        print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$pnameurl2$fnameurl2&blklineno=%d\">:</a> ", $lineno, $lineno) . "$_</font>\n";
                     } else {
                         # do ANSI color
                         if ($ansi ne '') {
@@ -660,12 +680,12 @@ sub l00http_view_proc {
                             } else {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
-                                print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"view.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
+                                print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"view.htm?path=$pnameurl2$fnameurl2&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                             }
                         } else {
                             print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                             print $sock $clip;
-                            print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"view.htm?path=$form->{'path'}&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
+                            print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"view.htm?path=$pnameurl2$fnameurl2&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                         }
                     }
                 }
@@ -697,26 +717,26 @@ sub l00http_view_proc {
     print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
 
     # skip backward $maxln
-    print $sock "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$form->{'path'}#end\">10</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$form->{'path'}#end\">200</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$form->{'path'}#end\">500</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$form->{'path'}#end\">1000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=2000&path=$form->{'path'}#end\">2000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=5000&path=$form->{'path'}#end\">5000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$form->{'path'}#end\">10000</a> lines.<p>\n";
+    print $sock "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$pnameurl$fnameurl#end\">10</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$pnameurl$fnameurl#end\">200</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$pnameurl$fnameurl#end\">500</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$pnameurl$fnameurl#end\">1000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=2000&path=$pnameurl$fnameurl#end\">2000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=5000&path=$pnameurl$fnameurl#end\">5000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$pnameurl$fnameurl#end\">10000</a> lines.<p>\n";
 
     # view first X lines
-    print $sock "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$form->{'path'}#top\">10</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$form->{'path'}#top\">200</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$form->{'path'}#top\">500</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$form->{'path'}#top\">1000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=2000&path=$form->{'path'}#top\">2000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$form->{'path'}#top\">5000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$form->{'path'}#top\">10000</a> lines.<p>\n";
+    print $sock "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$pnameurl$fnameurl#top\">10</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$pnameurl$fnameurl#top\">200</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$pnameurl$fnameurl#top\">500</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$pnameurl$fnameurl#top\">1000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=2000&path=$pnameurl$fnameurl#top\">2000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$pnameurl$fnameurl#top\">5000</a>,\n";
+    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$pnameurl$fnameurl#top\">10000</a> lines.<p>\n";
 
-    print $sock "Click <a href=\"/view.htm?path=$form->{'path'}&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
-    print $sock "ls between <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
-    print $sock "with <a href=\"/ls.htm?path=$form->{'path'}&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
+    print $sock "Click <a href=\"/view.htm?path=$pnameurl$fnameurl&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
+    print $sock "ls between <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
+    print $sock "with <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
     print $sock "View <a href=\"/view.htm?path=l00://displayed.txt\" target=\"_blank\">l00://displayed.txt</a> - \n";
     print $sock "<a href=\"/filemgt.htm?copy=copy&path=l00://displayed.txt&path2=l00://$fname.$skip-$maxln.txt\" target=\"_blank\">filemgt</a><p>\n";
 
@@ -807,8 +827,8 @@ sub l00http_view_proc {
     print $sock "Blockmark: Regex matching start of block. e.g. '^=' or '^\\* '\n";
 
     print $sock "<p><a href=\"#top\">Jump to top</a> - \n";
-    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a> - \n";
-    print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&path=$form->{'path'}\">Find in this file</a>\n";
+    print $sock "<a href=\"/launcher.htm?path=$pnameurl$fnameurl\">Launcher</a> - \n";
+    print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&path=$pnameurl$fnameurl\">Find in this file</a>\n";
 
     print $sock "<p>Jump to line: ";
     print $sock "<a href=\"#top\">top</a> - \n";

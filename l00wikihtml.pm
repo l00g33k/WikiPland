@@ -193,7 +193,7 @@ sub wikihtml {
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
     my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx, $seenEqualStar);
     my ($mode0unknown1twiki2markdown, $mdChanged2Tw, $markdownparanobr, $loop);
-    my ($hideBlkActive, $hideBlkId);
+    my ($hideBlkActive, $hideBlkId, $pnameurl, $fnameurl);
 
     undef @chlvls;
     undef $lastchlvl;
@@ -204,6 +204,14 @@ sub wikihtml {
     if (!defined($fname)) {
         $fname = '(undef)';
     }
+
+    # escape + for URL
+    $pnameurl = $pname;
+    $fnameurl = $fname;
+    $pnameurl =~ s/\+/%2B/g;
+    $fnameurl =~ s/\+/%2B/g;
+
+
     $bookmarkkeyfound = 0;
     if (($flags & 1) == 0) {
         # not specified for BOOKMARK
@@ -664,14 +672,12 @@ sub wikihtml {
         }
         # - bullets
         if ($mode0unknown1twiki2markdown == 2) {
-print __LINE__." MARKDOWN:$_\n",if($lnno<20);
             # handle - as bullet
             $tmp = $_;
             while ($tmp =~ s/^( *)&nbsp;/$1 /) {
             }
             if ($tmp =~ /^( *)- (.+)$/) {
                 $_ = '*' x (length($1) / 2 + 1) . " $2";
-print __LINE__." MARKDOWN:$_\n";
                 $mdChanged2Tw = 1;
             }
             # handle table wit one |
@@ -952,9 +958,9 @@ print __LINE__." MARKDOWN:$_\n";
                 $toc .= $jump;
                 $_ = $el[1];
                 # wikiword links
-                s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+                s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
                 # special case when wiki word is the first word without leading space
-                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
+                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
                 # !not wiki
                 s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
                 if ($flags & 4) {
@@ -973,9 +979,9 @@ print __LINE__." MARKDOWN:$_\n";
                          " <a href=\"#___top___\">^</a>" .
                          " <a href=\"#__toc__\">toc</a>" .
                           "<a href=\"#toc_$tag\">@</a>" .   # jump to this entry in TOC
-                         " <a href=\"/blog.htm?path=$pname$fname&afterline=$lnnoinfo\">lg</a>" .
-                         " <a href=\"/edit.htm?path=$pname$fname&editline=on&blklineno=$lnnoinfo\">ed</a>" .
-                         " <a href=\"/view.htm?path=$pname$fname&update=Skip&skip=$lnnoinfo&maxln=200\">$lnnoinfo</a>" .
+                         " <a href=\"/blog.htm?path=$pnameurl$fnameurl&afterline=$lnnoinfo\">lg</a>" .
+                         " <a href=\"/edit.htm?path=$pnameurl$fnameurl&editline=on&blklineno=$lnnoinfo\">ed</a>" .
+                         " <a href=\"/view.htm?path=$pnameurl$fnameurl&update=Skip&skip=$lnnoinfo&maxln=200\">$lnnoinfo</a>" .
                          sprintf("</h%d>",length($el[2])) .
                          "<a name=\"${tag}_\"></a>".
                          $el[3];
@@ -1120,9 +1126,9 @@ print __LINE__." MARKDOWN:$_\n";
             @cols = split ("``", $_);
             for ($ii = 1; $ii <= $#cols; $ii++) {
                 # wikiword links
-                $cols[$ii] =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+                $cols[$ii] =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
                 # special case when wiki word is the first word without leading space
-                $cols[$ii] =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
+                $cols[$ii] =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
                 # !not wiki
                 $cols[$ii] =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
 
@@ -1184,9 +1190,9 @@ print __LINE__." MARKDOWN:$_\n";
                 }
             }
             # wikiword links
-            $tx =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+            $tx =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
             # special case when wiki word is the first word without leading space
-            $tx =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
+            $tx =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
             # !not wiki
             $tx =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
             # rebase: fix wiki base directory when the l00httpd direct has been changed, like viewing on PC
@@ -1220,11 +1226,11 @@ print __LINE__." MARKDOWN:$_\n";
             }
             # wikiword links
             # Palm TX wants to see ending in .htm
-            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pname$2.txt\">$2</a>|g;
+            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
             # special case without space in front
-            s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|g;
+            s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|g;
             # special case when wiki word is the first word without leading space
-            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pname$1.txt\">$1</a>|;
+            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
             # !not wiki
             s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
             if (/<pre>/) {

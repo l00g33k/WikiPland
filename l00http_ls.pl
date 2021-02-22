@@ -1135,7 +1135,7 @@ sub l00http_ls_proc {
                                     if ($tmp2 < 1) {
                                         $tmp2 = 1;
                                     }
-                                    $_ = "<a href=\"/view.htm?path=$path2&skip=$tmp2#line$1\">".sprintf("%05d", $1)."</a>: $_";
+                                    $_ = "<a href=\"/view.htm?path=$path2&skip=$tmp2#line$1\">".sprintf("%05d", $1)."xxyyzz</a>: $_";
                                 }
                                 $tmp .= "$_\n";
                             }
