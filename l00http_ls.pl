@@ -799,6 +799,11 @@ sub l00http_ls_proc {
                             $ctrl->{'msglog'} .= "ls:table >$_<\n";
                         }
                     }
+                    # count markdown links
+                    if (/\[(.+?)\]\((.+?)\)/) {
+                        $wikihtmlflags |= 64;
+                        $hits++;
+                    }
                     if ($hits >= 1) {
                         last;
                     }

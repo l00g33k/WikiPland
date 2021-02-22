@@ -182,6 +182,7 @@ sub wikihtml {
     #        8=open link in 'newwin'
     #       16=newline is always <br>
     #       32=if link is graphics, embedded instead of linking to it
+    #       64=markdown
     # $ctrl: system variables
     # $pname: current path for relateive wikiword links
     my ($ctrl, $pname, $inbuf, $flags, $fname) = @_;
@@ -436,7 +437,11 @@ sub wikihtml {
     $lnno = 0;
     $flaged = '';
     $postsit = '';
-    $mode0unknown1twiki2markdown = 0;
+    if (($flags & 64) == 0) {
+        $mode0unknown1twiki2markdown = 0;
+    } else {
+        $mode0unknown1twiki2markdown = 2;
+    }
     $markdownparanobr = 0;
     @inputcache = split ("\n", $inbuf); # allows look forward
     $seenEqualStar = 0;
@@ -579,6 +584,13 @@ sub wikihtml {
                     $mode0unknown1twiki2markdown = 2;
                     $mdChanged2Tw = 1;
                 }
+                # Markdown link: [example link](http://example.com/).
+                if ($tmp =~ /\[(.+?)\]\((.+?)\)/) {
+                    # occurance of markdwon link says we are in markdown mode
+                    $mode0unknown1twiki2markdown = 2;
+                    $mdChanged2Tw = 1;
+                }
+                # markdown bullets
             }
         }
         # allow markdown bullet list to span multiple lines. Look ahead
@@ -649,6 +661,21 @@ sub wikihtml {
             # convert only if we are in markdown mode
             $_ = '=' x length($1) . $2 . '=' x length($1) . "\n";
             $mdChanged2Tw = 1;
+        }
+        # - bullets
+        if ($mode0unknown1twiki2markdown == 2) {
+            # handle - as bullet
+            $tmp = $_;
+            while ($tmp =~ s/^( *)&nbsp;/$1 /) {
+            }
+            if ($tmp =~ /^( *)- (.+)$/) {
+                $_ = '*' x (length($1) / 2) . " $2";
+                $mdChanged2Tw = 1;
+            }
+            # handle table wit one |
+            if (/^\|.*\|$/) {
+                s/\|/\|\|/g;
+            }
         }
 
         # images
