@@ -664,12 +664,14 @@ sub wikihtml {
         }
         # - bullets
         if ($mode0unknown1twiki2markdown == 2) {
+print __LINE__." MARKDOWN:$_\n",if($lnno<20);
             # handle - as bullet
             $tmp = $_;
             while ($tmp =~ s/^( *)&nbsp;/$1 /) {
             }
             if ($tmp =~ /^( *)- (.+)$/) {
-                $_ = '*' x (length($1) / 2) . " $2";
+                $_ = '*' x (length($1) / 2 + 1) . " $2";
+print __LINE__." MARKDOWN:$_\n";
                 $mdChanged2Tw = 1;
             }
             # handle table wit one |
@@ -1158,7 +1160,7 @@ sub wikihtml {
                     # $tmp is next line (looking ahead)
                     if ($tmp =~ /^$/) {
                         last;
-                    } elsif ($tmp =~ /^[^ *=:&|]/) {
+                    } elsif ($tmp =~ /^[^ *=:&|\-]/) {
                         # looks like a normal line, concatenate it
                         #print "+)>$tmp<(\n";
                         $_ .= " $tmp";
