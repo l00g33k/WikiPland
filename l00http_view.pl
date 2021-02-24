@@ -10,7 +10,7 @@ my %config = (proc => "l00http_view_proc",
               desc => "l00http_view_desc");
 my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
-my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext);
+my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext, $sortfind);
 my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew, $ansi, %ansicode);
 $hostpath = "c:\\x\\";
 $findtext = '';
@@ -31,6 +31,7 @@ $evalbox = '';
 $lastfew = 0;
 $nextfew = 0;
 $ansi = 0;
+$sortfind = '';
 
 %ansicode = (
     '[30m' => '<font style="color:black;background-color:white">',
@@ -423,7 +424,12 @@ sub l00http_view_proc {
                 } else {
                     $literal = '';
                 }
-                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'), $lastfew, $nextfew);
+                if (defined ($form->{'sortfind'})) {
+                    $sortfind = 'checked';
+                } else {
+                    $sortfind = '';
+                }
+                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'), $lastfew, $nextfew, ($sortfind eq 'checked'));
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
@@ -788,6 +794,7 @@ sub l00http_view_proc {
     print $sock "Literal:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"literal\" $literal>show '&lt;' &amp; '&gt;'\n";
+    print $sock "<input type=\"checkbox\" name=\"sortfind\" $sortfind>sort'\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Pre context: <input type=\"text\" size=\"4\" name=\"lastfew\" value=\"$lastfew\">\n";

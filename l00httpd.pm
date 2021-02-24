@@ -176,18 +176,24 @@ sub dumphash {
     }
 }
 
-#$found .= &l00httpd::findInBuf ($findtext, $block, $buf, [$literal]);
+#$found .= &l00httpd::findInBuf ($findtext, $block, $buf, [$literal], $lastfew, $nextfew, [$sort]);
 sub findInBuf  {
     # $findtext : string to find
     # $block    : text block marker
     # $buf      : find string in $buf
     # $literal  : if true, convert <> to &lt; &gt;
-    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew) = @_;
-    my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, 
+    # $lastfew  : leading context
+    # $nextfew  : tailing context
+    # $sort     : if true, sort find results
+    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort) = @_;
+    my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, @founds, 
         $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln);
 
     if (!defined($literal)) {
         $literal = 0;
+    }
+    if (!defined($sort)) {
+        $sort = 0;
     }
 
     if ($findtext =~ /^!!/) {
@@ -203,6 +209,7 @@ sub findInBuf  {
     $hit = 0;
     $hitpast = 0;
     $found = '';
+    undef @founds;
     $blocktext = '';
     $llnno = 1;
     if (!defined($lastfew)) {
@@ -240,6 +247,9 @@ sub findInBuf  {
                     $found .= join("", @_);
                 }
                 $found .= "$blocktext";
+                if ($sort) {
+                    push (@founds, "$blocktext");
+                }
                 # post context;
             } elsif ($hitpast) {
                 $hitpast--;
@@ -321,6 +331,10 @@ sub findInBuf  {
             $blocktext .= "\n";
         }
         $found .= "$blocktext";
+    }
+    if ($sort) {
+        @founds = sort ({my($aa, $bb) = ($a, $b); $aa =~ s/\d+: +//; $bb =~ s/\d+: +//; $aa cmp $bb} @founds);
+        $found = join ('', @founds);
     }
     $found;
 }
