@@ -254,6 +254,10 @@ sub findInBuf  {
             } elsif ($hitpast) {
                 $hitpast--;
                 $found .= $nextln;
+                if ($sort) {
+                    # append to last found
+                    $founds[$#founds] .= "$nextln";
+                }
             }
             $hit = 0;
             $blocktext = '';
@@ -331,6 +335,8 @@ sub findInBuf  {
             $blocktext .= "\n";
         }
         $found .= "$blocktext";
+        # append to last found
+        $founds[$#founds] .= "$blocktext";
     }
     if ($sort) {
         @founds = sort ({my($aa, $bb) = ($a, $b); $aa =~ s/\d+: +//; $bb =~ s/\d+: +//; $aa cmp $bb} @founds);
