@@ -119,7 +119,7 @@ sub l00http_diff_proc {
     print $sock "<form action=\"/diff.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"compare\" value=\"Compare\">\n";
+    print $sock "<input type=\"submit\" name=\"compare\" value=\"C&#818;ompare\" accesskey=\"c\">\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
     print $sock "</td></tr>\n";
 
