@@ -185,15 +185,21 @@ sub findInBuf  {
     # $lastfew  : leading context
     # $nextfew  : tailing context
     # $sort     : if true, sort find results
-    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort) = @_;
+    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort, $findstart, $findlen) = @_;
     my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, @founds, 
-        $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln);
+        $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln, $dsplnno);
 
     if (!defined($literal)) {
         $literal = 0;
     }
     if (!defined($sort)) {
         $sort = 0;
+    }
+    if (!defined($findstart)) {
+        $findstart = 0;
+    }
+    if (!defined($findlen)) {
+        $findlen = 0;
     }
 
     if ($findtext =~ /^!!/) {
@@ -224,6 +230,7 @@ sub findInBuf  {
         # remove %l00httpd:lnno:$lnno% metadata
         # extract $lnno line number or count locally if not available
 		if (($lnno) = $line =~ /^%l00httpd:lnno:(\d+)%/) {
+            $dsplnno = $lnno;
             $lnno = sprintf("%04d: ", $lnno);
 #           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $lnno);
 		    $line =~ s/^%l00httpd:lnno:\d+%//;
@@ -231,6 +238,13 @@ sub findInBuf  {
             $lnno = sprintf("%04d: ", $llnno);
 #           $lnno = sprintf("<a href=\"/view.htm?path=$\">%04d</a>: ", $llnno);
             $llnno++;
+            $dsplnno = $llnno;
+        }
+        # limit find range
+        if ($findlen > 0) {
+            if (($dsplnno < $findstart) || ($dsplnno > ($findstart + $findlen))) {
+                next;
+            }
         }
         if (($block eq '.') || ($line =~ /$block/i)) {
             # found new block, or line mode
@@ -336,7 +350,9 @@ sub findInBuf  {
         }
         $found .= "$blocktext";
         # append to last found
-        $founds[$#founds] .= "$blocktext";
+        if ($#founds >= 0) {
+            $founds[$#founds] .= "$blocktext";
+        }
     }
     if ($sort) {
         @founds = sort ({my($aa, $bb) = ($a, $b); $aa =~ s/\d+: +//; $bb =~ s/\d+: +//; $aa cmp $bb} @founds);

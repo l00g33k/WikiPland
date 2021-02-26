@@ -12,6 +12,7 @@ my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext, $sortfind);
 my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew, $ansi, %ansicode);
+my ($findstart, $findlen);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
@@ -32,6 +33,8 @@ $lastfew = 0;
 $nextfew = 0;
 $ansi = 0;
 $sortfind = '';
+$findstart = 0;
+$findlen = 0;
 
 %ansicode = (
     '[30m' => '<font style="color:black;background-color:white">',
@@ -227,6 +230,13 @@ sub l00http_view_proc {
         }
         if (defined ($form->{'nextfew'})) {
             $nextfew = $form->{'nextfew'};
+        }
+
+        if (defined ($form->{'findstart'})) {
+            $findstart = $form->{'findstart'};
+        }
+        if (defined ($form->{'findlen'})) {
+            $findlen = $form->{'findlen'};
         }
     }
     if (defined ($form->{'update'})) {
@@ -429,7 +439,7 @@ sub l00http_view_proc {
                 } else {
                     $sortfind = '';
                 }
-                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'), $lastfew, $nextfew, ($sortfind eq 'checked'));
+                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'), $lastfew, $nextfew, ($sortfind eq 'checked'), $findstart, $findlen);
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
@@ -810,6 +820,11 @@ sub l00http_view_proc {
     print $sock "Skip <input type=\"text\" size=\"4\" name=\"findskip\" value=\"$findskip\">\n";
     print $sock "</td><td>\n";
     print $sock "max. <input type=\"text\" size=\"4\" name=\"findmaxln\" value=\"$findmaxln\"> lines\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Find start <input type=\"text\" size=\"4\" name=\"findstart\" value=\"$findstart\">\n";
+    print $sock "</td><td>\n";
+    print $sock "Find len <input type=\"text\" size=\"4\" name=\"findlen\" value=\"$findlen\"> lines\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
