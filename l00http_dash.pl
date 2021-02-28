@@ -940,7 +940,7 @@ sub l00http_dash_proc {
                                     print $sock "    TIME  $tim    $key\n";
                                 }
                     }
-                    if ($this =~ />>>$/) {
+                    if (($this =~ />>>$/) && ($hdronly == 0)) {
                                  $lnnostr = sprintf("%3d", $lnno);
                                  $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
                                  $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = &l00http_dash_linewrap($dsc);
@@ -1153,8 +1153,7 @@ sub l00http_dash_proc {
                 $tasksTimeKey = $_;
                 $tasksTimeKey =~ s/^(\|\|.+?\|\|)\d+ /$1/;
                 if ($hdronly == 0) {
-#                   push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}||``$tasksTimeKey``");
-                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_} ``$tasksTimeKey``");   # caused extra colume
+                    push (@tops, "||$tasksTime{$_}$_||$bang$tasksDesc{$_}``$tasksTimeKey``");
                 } else {
                     # create matching jump anchor when hdr only
                     #$cat2 .= "<a name=\"cat2$jmp\">$jmp</a>";
@@ -1167,22 +1166,29 @@ sub l00http_dash_proc {
                         $jmp =~ s/\*\*/_/g;  # remove ** highlight
                         $jmp =~ s/\*.\*/_/g;
                         $jmp =~ s/[^0-9A-Za-z]/_/g;
-                        $tmp = $cat2tolnno{"cat2$jmp"};
+                        if (defined($cat2tolnno{"cat2$jmp"})) {
+                            $tmp = '&inscat2form='.$cat2tolnno{"cat2$jmp"};
+                        } else {
+                            $tmp = '';
+                        }
                         $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#cat2$jmp\">$jmp</a>";
-                        $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}&inscat2form=$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
+                        $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
                     } else {
                         $jmp = '';
                     }
 		            # ckechkbox for mass update
 		            #print "$lineevallns{$_}\" $checked>#$lineevallns{$_}\n";
-                    $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
+                    if (defined($lineevallns{$_})) {
+                        $tmp2 = "<input type=\"checkbox\" name=\"ln$lineevallns{$_}\" $checked>#$lineevallns{$_}";
+                    } else {
+                        $tmp2 = "";
+                    }
                     if (defined($form->{'movefrom'})) {
                         $moving = "<font style=\"color:black;background-color:lime\"><a href=\"/dash.htm?path=$form->{'path'}&moveto=$lineevallns{$_}&movefrom=$form->{'movefrom'}&process=Process&outputsort=&dash_all=past&hdronly=\">here</a><\/font> ";
                     } else {
                         $moving = '';
                     }
-#                   push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp||``$tasksTimeKey``");   # caused extra colume
-                    push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp ``$tasksTimeKey``");
+                    push (@tops, "||$tasksTime{$_}$_||$moving$tmp2$bang$jmp||``$tasksTimeKey``");
                 }
             }
         }
@@ -1330,6 +1336,7 @@ sub l00http_dash_proc {
             $clip = &l00httpd::urlencode ($clip);
             $clip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">&#8227;&#8227;&#8227;</a>";
             $_ .= " $clip||";
+
             $out .= "$_\n";
             # [[#name]] is a shortcut for anchor in the list
             # let's make a jump list for them; 1 per line max
