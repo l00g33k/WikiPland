@@ -190,8 +190,13 @@ sub l00http_view_proc {
                 $pnameurl2 =~ s/%/%%/g;
                 $fnameurl2 =~ s/%/%%/g;
                 # not ending in / or \, not a dir
-                print $sock "<a href=\"/ls.htm?path=$pnameurl\">$pname</a>";
-                print $sock "<a href=\"/ls.htm?path=$pnameurl/$fname\">$fname</a>\n";
+                if ($pnameurl eq 'l00://') {
+                    print $sock "<a href=\"/#ram\">l00://</a>";
+                    print $sock "<a href=\"/ls.htm?path=l00://$fname\">$fname</a>\n";
+                } else {
+                    print $sock "<a href=\"/ls.htm?path=$pnameurl\">$pname</a>";
+                    print $sock "<a href=\"/ls.htm?path=$pnameurl/$fname\">$fname</a>\n";
+                }
             } else {
                 print $sock " <a href=\"/ls.htm?path=$pnameurl$fnameurl\">$form->{'path'}</a>\n";
             }
