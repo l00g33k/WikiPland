@@ -517,6 +517,28 @@ sub l00http_view_proc {
                                 " <a href=\"/view.htm?path=$pnameurl$fnameurl&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
                                 "$tmpln";
 						}
+
+                        # hilite text
+                        if (length($hilitetext) > 0) {
+                            $ii = 0;
+                            foreach $pattern (split ('\|\|', $hilitetext)) {
+                                if ($ii <= $#colors) {
+                                    $color = $colors[$ii];
+                                } else {
+                                    $color = $colors[$#colors];
+                                }
+                                if ($pattern =~ /^\(\((\d+)\)\)$/) {
+                                    # highlight ((line_number))
+                                    if ($lineno == $1) {
+                                        $_ = "<font style=\"color:black;background-color:$color\">$_<\/font>";
+                                    }
+                                } else {
+                                    s/($pattern)/<font style=\"color:black;background-color:$color\">$1<\/font>/gi;
+                                }
+                                $ii++;
+                            }
+                        }
+
 					    $foundfullrstnew .= "$_\n";
                         if ($findskip >= 0) {
                             if ($foundcnt <= $findmaxln) {
