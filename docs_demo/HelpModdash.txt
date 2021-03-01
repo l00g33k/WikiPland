@@ -58,6 +58,9 @@ tbe bottom for a shortcut to search for 'regex' in the description
 field.  An additional link would produce search with details listed
 ** This can also be triggered by the descriptions of the special 
 cat1='----' and cat2='DESCFIND'.
+* %DASHBANNER:banner_text% will wikitize the 'banner_text' and display as a banner near the top of the page.  This allows quick jumps to be put near the top of the page.  Example to jump to anchor 'abc', [[#abc]] :
+
+    %DASHBANNER:*d*[[#abc|Jump to KIVtmp]]**%
 
 =Custom category color=
 * %DASHCOLOR:black:Gold% for black on gold; use web color

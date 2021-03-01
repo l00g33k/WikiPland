@@ -162,12 +162,13 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
-    my (@descfind, $moving, $color);
+    my (@descfind, $moving, $color, $dashbanner);
 
 
     $timecolor = '';
     $nowCatFil = '';
     $nowItemFil = '';
+    $dashbanner = '';
 
     $jumpcnt = 0;
     undef @jumpname;
@@ -434,7 +435,6 @@ sub l00http_dash_proc {
         print $sock "</form>\n";
     }
 
-
     if (defined ($form->{'path'})) {
         undef %tasksTime;
         undef %tasksLine;
@@ -472,6 +472,10 @@ sub l00http_dash_proc {
             # %DESCFIND:'''%
             if ($alllines[$ii] =~ /^%DESCFIND:(.+)%$/) {
                 push(@descfind, $1);
+            }
+            # %DASHBANNER:[[#abc|jump to abc]]%
+            if ($alllines[$ii] =~ /^%DASHBANNER:(.+)%$/) {
+                $dashbanner = $1;
             }
 
             if ($alllines[$ii] =~ /^%BLOGTIME:(.+?)%/) {
@@ -543,6 +547,9 @@ sub l00http_dash_proc {
             }
         }
 
+        if ($dashbanner ne '') {
+            print $sock &l00wikihtml::wikihtml ($ctrl, '', " $dashbanner ", 4);
+        }
 
         if (defined ($form->{'newtime'})) {
             $_ = $form->{'newtime'};
@@ -1304,9 +1311,10 @@ sub l00http_dash_proc {
                 # ||<font style="color:black;background-color:silver"><a name="bangbang"></a>618_2226</font>||
                 # ||<font style="color:black;background-color:silver">615_1529</font>||
                 # so we search for the a22_0953 pattern: ([0-9abc]\d\d_\d\d\d\d)
-                ($part1, $part2) = /^(\|\|.+?\|\|)(.+)\|\|$/;
-                $part1 =~ s/^(\|\|.*)([0-9abc]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
-                $_ = "$part1$part2";
+                if (($part1, $part2) = /^(\|\|.+?\|\|)(.+)\|\|$/) {
+                    $part1 =~ s/^(\|\|.*)([0-9abc]\d\d_\d\d\d\d)(.*\|\|)/$1<a href="\/blog.htm?path=$form->{'path'}&afterline=$tasksLine{$cat1cat2}&setnewstyle=yes&stylenew=star">$2<\/a>$3/;
+                    $_ = "$part1$part2";
+                }
                 #print $sock "$_\n";
             }
 
