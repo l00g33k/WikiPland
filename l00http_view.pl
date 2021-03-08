@@ -195,7 +195,7 @@ sub l00http_view_proc {
                     print $sock "<a href=\"/ls.htm?path=l00://$fname\">$fname</a>\n";
                 } else {
                     print $sock "<a href=\"/ls.htm?path=$pnameurl\">$pname</a>";
-                    print $sock "<a href=\"/ls.htm?path=$pnameurl/$fname\">$fname</a>\n";
+                    print $sock "<a href=\"/ls.htm?path=$pnameurl$fname\">$fname</a>\n";
                 }
             } else {
                 print $sock " <a href=\"/ls.htm?path=$pnameurl$fnameurl\">$form->{'path'}</a>\n";
