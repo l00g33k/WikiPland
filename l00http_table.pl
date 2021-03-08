@@ -100,6 +100,7 @@ sub l00http_table_proc {
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname table</title>" .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+    print $sock "<hr><a name=\"top\"></a>\n";
     if (defined ($form->{'path'})) {
         print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         # create shell script for vi
@@ -110,7 +111,8 @@ sub l00http_table_proc {
     } else {
         $form->{'path'} = "$ctrl->{'plpath'}l00_table.txt";
     }
-    print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
+    print $sock " - <a href=\"#theform\">Jump form</a>\n";
+    print $sock " - <a href=\"#end\">Jump to end</a><hr>\n";
 
     if ((defined ($form->{'nolist'})) && ($form->{'nolist'} eq 'on')) {
         $nolist = 'checked';
@@ -448,7 +450,6 @@ sub l00http_table_proc {
 
         
     # generate HTML buttons, etc.
-    print $sock "<hr><a name=\"end\"></a>\n";
 
     if ($nolist ne 'checked') {
         # convert
@@ -473,6 +474,9 @@ sub l00http_table_proc {
         print $sock "Execution log: $exelog<p>\n";
     }
     
+    print $sock "<hr><a name=\"theform\"></a>\n";
+
+
     # editing column
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
@@ -533,6 +537,9 @@ sub l00http_table_proc {
         }
         print $sock "</pre>\n";
     }
+
+    print $sock "<p><a name=\"end\"></a><a href=\"#top\">Jump to top</a><p>\n";
+
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
