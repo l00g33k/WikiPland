@@ -1167,19 +1167,19 @@ sub l00http_dash_proc {
                     $tmp = '';
                     if (defined($tasksCat2{$_})) {
                         $jmp = $tasksCat2{$_};
-                        $jmp =~ s/<a name=.+?>.+?<\/a>//g;
-                        $jmp =~ s/<.+?>//g;
-                        $jmp =~ s/\^ //;
-                        $jmp =~ s/\*\*/_/g;  # remove ** highlight
-                        $jmp =~ s/\*.\*/_/g;
-                        $jmp =~ s/[^0-9A-Za-z]/_/g;
-                        if (defined($cat2tolnno{"cat2$jmp"})) {
-                            $tmp = '&inscat2form='.$cat2tolnno{"cat2$jmp"};
+                        if ($jmp =~ /a name="(cat2.+?)"/) {
+                            $jmp = $1;
+                        }
+
+                        if (defined($cat2tolnno{"$jmp"})) {
+                            $tmp = '&inscat2form='.$cat2tolnno{"$jmp"};
+                            $tmp2 = $cat2tolnno{"$jmp"};
                         } else {
                             $tmp = '';
+                            $tmp2 = '';
                         }
-                        $jmp = " --&gt; <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#cat2$jmp\">$jmp</a>";
-                        $jmp .= " -- +cat2 <a href=\"/dash.htm?path=$form->{'path'}$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">$tmp</a>";
+                        $jmp = " <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#$jmp\">vw:$jmp</a>";
+                        $jmp .= " -- <a href=\"/dash.htm?path=$form->{'path'}$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">+cat2:$tmp2</a>";
                     } else {
                         $jmp = '';
                     }
