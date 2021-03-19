@@ -715,15 +715,16 @@ sub l00http_view_proc {
                             if ($hit) {
                                 print $sock "<a name=\"hilitetext_$hilitetextidx\"></a>";
                                 $tmp = $hilitetextidx - 1;
-                                print $sock sprintf ("<a name=\"line%d\"></a><a href=\"#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
+                                print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/view.htm?path=$pnameurl2$fnameurl2&hiliteln=$lineno&lineno=on#hilitetext_$tmp\">&lt;</a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
                                 $tmp = $hilitetextidx + 1;
-                                print $sock sprintf ("\" target=\"_blank\">%04d</a><a href=\"#hilitetext_$tmp\">&gt;</a>", $lineno) . " $_\n";
+                                #line%d
+                                print $sock sprintf ("\" target=\"_blank\">%04d</a><a href=\"/view.htm?path=$pnameurl2$fnameurl2&hiliteln=$lineno&lineno=on#hilitetext_$tmp\">&gt;</a>", $lineno) . " $_\n";
                                 $hilitetextidx++;
                             } else {
                                 print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                                 print $sock $clip;
-                                print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"view.htm?path=$pnameurl2$fnameurl2&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
+                                print $sock sprintf ("\" target=\"_blank\">%04d</a> <a href=\"/view.htm?path=$pnameurl2$fnameurl2&hiliteln=$lineno&lineno=on#line%d\">:</a> ", $lineno, $lineno - 5) . "$_\n";
                             }
                         } else {
                             print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
