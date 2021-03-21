@@ -239,9 +239,13 @@ sub l00http_view_proc {
 
         if (defined ($form->{'findstart'})) {
             $findstart = $form->{'findstart'};
+        } else {
+            $findstart = 0;
         }
         if (defined ($form->{'findlen'})) {
             $findlen = $form->{'findlen'};
+        } else {
+            $findlen = 0;
         }
     }
     if (defined ($form->{'update'})) {
@@ -420,6 +424,11 @@ sub l00http_view_proc {
                 $found .= "View <a href=\"/view.htm?path=l00://find.htm\" target=\"_blank\">l00://find.htm</a> - ";
                 $found .= "<a href=\"/view.htm?path=l00://find.txt\" target=\"_blank\">.txt</a>; ";
                 $found .= "<a href=\"/filemgt.htm?path=l00://find.htm&path2=l00://find.htm.$fname\" target=\"_blank\">copy it to</a>...\n";
+
+                if ($findlen != 0) { 
+                    $found .= "<strong>Find range limited to starting from line $findstart for $findlen lines.</strong>\n";
+                }
+
                 if (defined ($form->{'findtext'})) {
                     $findtext = $form->{'findtext'};
                 }
