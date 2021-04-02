@@ -115,7 +115,7 @@ sub l00http_slideshow_proc {
     my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>slideshow</title>" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"top\"></a>$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">end</a> -- \n";
 
     if (defined ($form->{'set'})) {
@@ -225,21 +225,26 @@ sub l00http_slideshow_proc {
                         if ($nonewline ne 'checked') {
                             $urlname = "$path$allpics[$ii]";
                             $urlname =~ s/\+/%2B/g;
-#                           $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: %4d/%02d/%02d %02d:%02d:%02d:", 
-#                               $urlname,
-#                               $ii + 1, 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
                             if ($showname ne 'checked') {
-                               $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%4d/%02d/%02d %02d:%02d:%02d</a>:", 
+                               $outbuf .= sprintf ("<a name=\"pic%d\"</a><a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%4d/%02d/%02d %02d:%02d:%02d</a>: <a href=\"#pic%d\">&lt;&lt;</a> - <a href=\"#pic%d\">&gt;&gt;</a>", 
+                                    $ii + 1, 
                                     $urlname,
                                     $ii + 1, 
                                     $urlname,
-                                    1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                                    1900+$year, 1+$mon, $mday, $hour, $min, $sec,
+                                    $ii + 0, 
+                                    $ii + 2, 
+                                    );
                             } else {
-                                $outbuf .= sprintf ("<a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%s</a>:", 
+                               $outbuf .= sprintf ("<a name=\"pic%d\"</a><a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%s</a>: <a href=\"#pic%d\">&lt;&lt;</a> - <a href=\"#pic%d\">&gt;&gt;</a>", 
+                                    $ii + 1, 
                                     $urlname,
                                     $ii + 1, 
                                     $urlname,
-                                    $allpics[$ii]);
+                                    $allpics[$ii],
+                                    $ii + 0, 
+                                    $ii + 2, 
+                                    );
                             }
                             if ($gpstrk ne '') {
                                 #::now::#1
