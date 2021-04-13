@@ -523,7 +523,9 @@ sub l00fwriteOpenAppend {
 sub l00fwriteBuf {
     my ($ctrl, $buf) = @_;
 
-    $writeBuf .= $buf;
+    if (defined($buf)) {
+        $writeBuf .= $buf;
+    }
 
     1;
 }
