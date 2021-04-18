@@ -448,7 +448,7 @@ sub l00http_blogend_proc {
     }
 
     print $sock "<form action=\"/blogend.htm\" method=\"get\">\n";
-    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
+    print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=2 accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"S&#818;ave\" accesskey=\"s\">\n";
     if ($url ne '') {
