@@ -48,7 +48,7 @@ sub l00http_timestamp_proc {
                 $date2name[$ctrl->{'now_day'}];
 
     print $sock "<br><form action=\"/timestamp.htm\" method=\"get\">\n";
-    print $sock "<input type=\"text\" size=\"20\" name=\"timestamp\" value=\"$timestamp\">\n";
+    print $sock "<input type=\"text\" size=\"20\" name=\"timestamp\" value=\"$timestamp\" accesskey=\"en\">\n";
     print $sock "<p><input type=\"submit\" name=\"update\" value=\"N&#818;ew time\" accesskey=\"n\">\n";
     #print $sock "<input type=\"radio\" name=\"mode\" value=\"format1\">Format 1:20100926 190321 <br>\n";
     #print $sock "<input type=\"radio\" name=\"mode\" value=\"format2\">Format 2:?? <br>\n";
