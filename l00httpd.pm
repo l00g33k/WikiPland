@@ -736,8 +736,8 @@ sub l00getCB {
     } elsif ($ctrl->{'os'} eq 'tmx') {
         $buf = `termux-clipboard-get`;
     } else {
-        &l00freadOpen($ctrl, 'l00://clipboard.txt');
-        $buf = &l00freadAll($ctrl);
+        # Linux, using xclip
+        $buf = `xclip -sel clip -o`;
     }
     if (!defined ($buf)) {
         $buf = ''; }
@@ -784,7 +784,36 @@ sub l00setCB {
         $buf =~ s/\\/\\\\\\\\/gm;
         $buf =~ s/"/\\"/gm;
         `termux-clipboard-set "$buf"`;
+    } else {
+        # Linux, using xclip
+        my ($pid);
+        if ($pid = fork) {
+        } else {
+            # http://www.oreilly.com/openbook/cgi/ch10_10.html
+            # child process
+            system ("echo \"$buf\" | xclip -sel clip");
+            exit (0);
+        }
     }
+if(0){
+#           # launch editor
+#           if (defined ($form->{'exteditor'})) {
+#               if ($ctrl->{'os'} eq 'and') {
+#                   $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path2", "text/plain");
+#               } elsif (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
+#                   my ($pid);
+#                   if ($pid = fork) {
+#                   } else {
+#                       # http://www.oreilly.com/openbook/cgi/ch10_10.html
+#                       # child process
+#                       $_ = $path2;
+#                       s/\//\\/g;
+#                       system ("cmd /c \"start notepad ^\"$path2^\"\"");
+#                       exit (0);
+#                   }
+#               }
+#           }
+}
 }
 
 #&l00httpd::l00PopMsg($ctrl, $buf);
