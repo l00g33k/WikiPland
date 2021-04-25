@@ -559,6 +559,11 @@ while ($_ = shift) {
                 $ctrl{$key} = $val;
             }
         }
+	} elsif (($key) = /(\w+)\^$/) {
+        if ((defined ($key)) &&
+            (length ($key) > 0)) {
+            undef $ctrl{$key};
+        }
     } else {
         # none of the above
         # if it has '\' or '/', it's a path
