@@ -18,13 +18,13 @@ sub l00http_timestamp_desc {
 my (@date2name);
 
 @date2name = (
+    'Sun',
     'Mon',
     'Tue',
     'Wed',
     'Thu',
     'Fri',
-    'Sat',
-    'Sun'
+    'Sat'
 );
 
 sub l00http_timestamp_proc {
@@ -48,7 +48,8 @@ sub l00http_timestamp_proc {
                 $date2name[$ctrl->{'now_day'}];
 
     print $sock "<br><form action=\"/timestamp.htm\" method=\"get\">\n";
-    print $sock "<input type=\"text\" size=\"20\" name=\"timestamp\" value=\"$timestamp\">\n";
+    print $sock "<input type=\"text\" size=\"30\" name=\"timestamp\" value=\"$timestamp\" accesskey=\"e\"><br>\n";
+    print $sock "<input type=\"text\" size=\"30\" name=\"timestampwal\" value=\"$clipdate\" accesskey=\"d\">\n";
     print $sock "<p><input type=\"submit\" name=\"update\" value=\"N&#818;ew time\" accesskey=\"n\">\n";
     #print $sock "<input type=\"radio\" name=\"mode\" value=\"format1\">Format 1:20100926 190321 <br>\n";
     #print $sock "<input type=\"radio\" name=\"mode\" value=\"format2\">Format 2:?? <br>\n";
@@ -56,7 +57,7 @@ sub l00http_timestamp_proc {
     print $sock "</form>\n";
 
     print $sock "<code>$timestamp</code><br>\n";
-    print $sock "<code>$clipdate</code><br>\n";
+    print $sock "<code>$clipdate -- $ctrl->{'now_day'}</code><br>\n";
     print $sock "<br>\n";
 
     if (defined($ctrl->{'FORM'}->{'clipdate'})) {

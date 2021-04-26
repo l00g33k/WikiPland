@@ -474,7 +474,6 @@ sub l00http_edit_proc2 {
     } else {
         print $sock "<input type=\"checkbox\" name=\"nobak\">No backup\n";
     }
-    print $sock "<input type=\"submit\" name=\"arc\" value=\"arc\">\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
@@ -532,8 +531,10 @@ sub l00http_edit_proc2 {
 
     print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
     print $sock "<input type=\"submit\" name=\"cancel\" value=\"Cancel\">\n";
+    print $sock "<input type=\"submit\" name=\"lsfile\" value=\"l&#818;s\" accesskey=\"l\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
+
 
 
     print $sock "<p>\n";

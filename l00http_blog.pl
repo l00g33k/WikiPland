@@ -9,10 +9,10 @@ use l00httpd;
 
 my %config = (proc => "l00http_blog_proc",
               desc => "l00http_blog_desc");
-my ($buffer, $lastbuf, $quicktimesave);
+my ($buffer, $lastbuf, $quicktimesave, $keepnl);
 $lastbuf = '';
 $quicktimesave = 'checked';
-
+$keepnl = '';
 
 sub blog_make_hdr {
     my ($ctrl, $style, $addtime) = @_;
@@ -123,6 +123,13 @@ sub l00http_blog_proc {
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
         ($pname, $fname) = $path =~ /^(.+[\\\/])([^\\\/]+)$/;
+
+        if (defined ($form->{'keepnl'}) && ($form->{'keepnl'} eq 'on')) {
+            $keepnl = 'checked';
+        } else {
+            $keepnl = '';
+        }
+
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             $includefile = '';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -361,9 +368,8 @@ sub l00http_blog_proc {
                     foreach $line (@alllines) {
                         $line =~ s/\r//g;
                         $line =~ s/\n//g;
-                        if (($stylecurr eq 'blog') ||
+                        if (($stylecurr eq 'blog') || ($keepnl eq 'checked')) {
                             # overwrite to keep newline
-                            (defined ($form->{'keepnl'}) && ($form->{'keepnl'} eq 'on'))) {
                             # blog
                             &l00httpd::l00fwriteBuf($ctrl, "$line\n");
                         } else {
@@ -508,7 +514,7 @@ sub l00http_blog_proc {
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
 
-    print $sock "<input type=\"checkbox\" name=\"keepnl\">Keep newline\n";
+    print $sock "<input type=\"checkbox\" name=\"keepnl\" $keepnl>Keep newline\n";
 
     print $sock "<p>$url";
     $tmp = 'style="height:1.7em; width:3.3em"';
@@ -527,9 +533,14 @@ sub l00http_blog_proc {
     foreach $_ (@blockquick) {
         $tmp = $_;
         $tmp =~ s/\*/asterisk/g;
-        print $sock "<input type=\"submit\" name=\"$tmp\"  value=\"$_\">\n";
+        print $sock "<input type=\"submit\" name=\"$tmp\" value=\"$_\">\n";
     }
 
+    print $sock "</form>\n";
+
+    print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
+    print $sock "<input type=\"submit\" name=\"lsfile\" value=\"l&#818;s\" accesskey=\"l\">\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "</form>\n";
 
     print $sock "$output";
