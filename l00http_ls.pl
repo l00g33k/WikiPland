@@ -34,6 +34,13 @@ my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
 my ($lfisbr, $embedpic, $chno, $bare, $hilite);
 
+
+# $skipto debugging
+my ($dbgskipto);
+$dbgskipto = 1;
+#$dbgskipto = 0;    # was taken out during debug...
+
+
 my $path;
 my $read0raw1 = 0;
 $intbl = 0;
@@ -539,6 +546,37 @@ sub l00http_ls_proc {
                         foreach $_ (split ("\n", $filedata)) {
                             $_ .= "\n";
                             $lnno++;
+if ($dbgskipto) {
+                            if (($skipto ne '') && ($lnno < $skipto)) {
+                                next;
+                            }
+                            if ($stopat ne '') {
+                                $skiptohdr  = "Content limited to between line $skipto-$lnno. Show: ";
+                                $length = $lnno - $skipto;
+
+                                $start = $skipto - $length;
+                                if ($start < 1) {
+                                    $start = 1;
+                                }
+                                $end = $start + $length;
+                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                                $start = $skipto - int($length/2);
+                                if ($start < 1) {
+                                    $start = 1;
+                                }
+                                $end = $start + $length;
+                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                                $start = $skipto + int($length/2);
+                                $end = $start + $length;
+                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                                $start = $skipto + $length;
+                                $end = $start + $length;
+                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
+                            }
+                            if (($stopat ne '') && ($lnno > $stopat)) {
+                                last;
+                            }
+}
 
                             if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
 								    if (defined($1)) {
@@ -613,6 +651,9 @@ sub l00http_ls_proc {
                             $_ = "%l00httpd:lnno:$lnno%$_";
                             $buf .= $_;
 			            }
+if ($dbgskipto) {
+                        $buf = "$skiptohdr$buf<br>\n$skiptohdr\n";
+}
                 
                         $buf = &l00wikihtml::wikihtml ($ctrl, $pname, $buf, $wikihtmlflags, $fname);
                         if (defined ($form->{'hiliteln'})) {
@@ -839,6 +880,7 @@ sub l00http_ls_proc {
                     my ($length, $start, $end);
                     while (<FILE>) {
                         $lnno++;
+if ($dbgskipto) {
                         if (($skipto ne '') && ($lnno < $skipto)) {
                             next;
                         }
@@ -868,6 +910,7 @@ sub l00http_ls_proc {
                         if (($stopat ne '') && ($lnno > $stopat)) {
                             last;
                         }
+}
 
                         # special case for wikispaces
                         # images has the form:
@@ -1071,6 +1114,7 @@ sub l00http_ls_proc {
                         $_ = "%l00httpd:lnno:$lnno%$_";
                         $buf .= $_;
                     }
+if ($dbgskipto) {
                     if ($stopat ne '') {
                         # not displaying entire file, but let's count them any way
                         while (<FILE>) {
@@ -1084,6 +1128,7 @@ sub l00http_ls_proc {
                         $skiptohdr .= " top of file: <a href=\"/ls.htm?path=$path2&setskipto=1&skipto=1&stopat=$length\">1-$length</a> - \n";
                         $skiptohdr .= " end of file: <a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a><br>\n";
                     }
+}
                     if (%showdir) {
                         if ($bare ne 'checked') {
                             $found = "---\n<b><i>SHOWTAG directory</i></b>\n"; # borrow variable
