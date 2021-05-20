@@ -489,7 +489,7 @@ sub l00http_find_proc {
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
-    print $sock "            <td><input type=\"checkbox\" name=\"recursive\" $recursive>Recursive</td>\n";
+    print $sock "            <td><input type=\"checkbox\" name=\"recursive\" $recursive accesskey=\"r\">R&#818;ecursive</td>\n";
     print $sock "            <td>Sort offset: <input type=\"text\" size=\"4\" name=\"sortoffset\" value=\"$sortoffset\"></td>\n";
     print $sock "        </tr>\n";
 

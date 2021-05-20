@@ -791,7 +791,7 @@ sub l00setCB {
         } else {
             # http://www.oreilly.com/openbook/cgi/ch10_10.html
             # child process
-            system ("echo \"$buf\" | xclip -sel clip");
+            system ("echo -n \"$buf\" | xclip -sel clip");
             exit (0);
         }
     }
