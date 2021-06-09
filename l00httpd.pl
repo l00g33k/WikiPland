@@ -437,6 +437,11 @@ sub readl00httpdcfg {
                 $ctrl{$key} =~ s/%WORKDIR%/$ctrl{'workdir'}/g;
                 print "$ctrl{$key}\n";
             }
+            if ($ctrl{$key} =~ /%WORKDIR2%/) {
+                print "$ctrl{$key} => ";
+                $ctrl{$key} =~ s/%WORKDIR2%/$ctrl{'workdir2'}/g;
+                print "$ctrl{$key}\n";
+            }
         }
     }
 
