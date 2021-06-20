@@ -166,7 +166,7 @@ sub makeanchor {
     }
 
     # Handle !NonWikiWord
-    $ttl =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+    $ttl =~ s|!([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
 
     $url = "<a href=\"#$tag\">$ttl</a>";
     $jump .= "$url<br>\n";
@@ -958,11 +958,11 @@ sub wikihtml {
                 $toc .= $jump;
                 $_ = $el[1];
                 # wikiword links
-                s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
+                s|([ ])([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
                 # special case when wiki word is the first word without leading space
-                s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
+                    s|^([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
                 # !not wiki
-                s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+                s|!([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
                 if ($flags & 4) {
                     # 'bare'
                     $_ = $anchor .
@@ -1126,11 +1126,11 @@ sub wikihtml {
             @cols = split ("``", $_);
             for ($ii = 1; $ii <= $#cols; $ii++) {
                 # wikiword links
-                $cols[$ii] =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
+                $cols[$ii] =~ s|([ ])([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
                 # special case when wiki word is the first word without leading space
-                $cols[$ii] =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
+                $cols[$ii] =~ s|^([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
                 # !not wiki
-                $cols[$ii] =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+                $cols[$ii] =~ s|!([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
 
                 if ($cols[$ii] =~ /^ *$/) {
                     $oubuf .= "<td>&nbsp;</td>\n";
@@ -1190,11 +1190,11 @@ sub wikihtml {
                 }
             }
             # wikiword links
-            $tx =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
+            $tx =~ s|([ ])([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
             # special case when wiki word is the first word without leading space
-            $tx =~ s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
+            $tx =~ s|^([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
             # !not wiki
-            $tx =~ s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+            $tx =~ s|!([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
             # rebase: fix wiki base directory when the l00httpd direct has been changed, like viewing on PC
             # in l00httpd.cfg
             #rebasefr^path=/sdcard/
@@ -1226,13 +1226,13 @@ sub wikihtml {
             }
             # wikiword links
             # Palm TX wants to see ending in .htm
-            s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
+            s|([ ])([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm/$2.htm?path=$pnameurl$2.txt\">$2</a>|g;
             # special case without space in front
-            s|>([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|g;
+            s|>([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|><a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|g;
             # special case when wiki word is the first word without leading space
-            s|^([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
+            s|^([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|<a href=\"/ls.htm/$1.htm?path=$pnameurl$1.txt\">$1</a>|;
             # !not wiki
-            s|!([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
+            s|!([A-Z]+[0-9a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1|g;
             if (/<pre>/) {
                 $ispre = 1;
             }
