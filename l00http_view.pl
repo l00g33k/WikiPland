@@ -355,7 +355,8 @@ sub l00http_view_proc {
         }
         print $sock "Jump to <a href=\"#line$tmp\">line $hilite</a>.\n";
         print $sock "<a href=\"/blog.htm?path=$pnameurl$fnameurl&stylecurr=blog&setnewstyle=Bare+sty%CC%B2le+add&stylenew=bare&keepnl=on&afterline=$hilite\">Blog insert</a> after line $hilite.\n";
-        print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$pnameurl$fnameurl&blklineno=$hilite\">single line edit mode</a>.\n";
+#       print $sock "Open highlighted line in editor <a href=\"/edit.htm?path=$pnameurl$fnameurl&blklineno=$hilite\">single line edit mode</a>.\n";
+        print $sock "Send highlighted line to <a href=\"/blog.htm?path=$pnameurl$fnameurl&setnewstyle=yes&stylenew=star&afterline=$hilite\">blog</a>.\n";
         print $sock "Expand ";
         $tmp = $hilite - 200;
         if ($tmp < 1) {
