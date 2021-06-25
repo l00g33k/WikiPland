@@ -60,7 +60,7 @@ sub dbp {
     }
 
     if (length($debuglog) > 1000000) {
-        $debuglog = substr($debuglog, length($debuglog) - 1000000, 1000000);
+        $debuglog = substr($debuglog, length($debuglog) - 700000, 700000);
     }
 
     1;
