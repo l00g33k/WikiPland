@@ -174,7 +174,7 @@ sub l00http_do_proc {
             print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec.\n";
             print $sock "<input type=\"checkbox\" name=\"hide\" $hide>Hide form.\n";
             print $sock "<input type=\"checkbox\" name=\"bare\" $bare>bare<br>\n";
-            print $sock "Arg1&#818;: <input type=\"text\" name=\"arg1\" size=\"12\" value=\"$arg1\" accesskey=\"1\"> \n";
+            print $sock "Ar&#818;g1: <input type=\"text\" name=\"arg1\" size=\"12\" value=\"$arg1\" accesskey=\"r\"> \n";
             print $sock "Arg2&#818;: <input type=\"text\" name=\"arg2\" size=\"12\" value=\"$arg2\" accesskey=\"2\"> \n";
             print $sock "Arg3&#818;: <input type=\"text\" name=\"arg3\" size=\"12\" value=\"$arg3\" accesskey=\"3\"> \n";
             print $sock "</form>\n";
