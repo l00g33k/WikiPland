@@ -26,6 +26,74 @@ my ($blanks, $desc, $hr, $ii, $iien, $iist, $len, $minoff);
 my ($mn, $now, $prefix, $skip, $suffix);
 my (@db, @outs);
 my $itvmin = 5;     # length of each time slot
+my ($tr_clockhtml, $tr_clockjs);
+
+$tr_clockjs = <<EOB;
+<style type="text/css">
+#clock   { font-family: Arial, Helvetica, sans-serif; font-size: 1.0em; color: white; background-color: black; border: 2px solid purple; padding: 2px; }
+</style>
+
+<script Language="JavaScript">
+var timerID = null;
+var timerRunning = false;
+var startsec;
+
+
+function stopclock (){
+    if(timerRunning)
+        clearTimeout(timerID);
+    timerRunning = false;
+}
+
+function startclock () {
+    // Make sure the clock is stopped
+    stopclock();
+    var currentTime = new Date ( );
+
+    var currentHours = currentTime.getHours ( );
+    var currentMinutes = currentTime.getMinutes ( );
+    var currentSeconds = currentTime.getSeconds ( );
+    startsec = currentSeconds + currentMinutes * 60 + currentHours * 3600;
+
+    updateClock();
+}
+
+function updateClock () {
+    var currentTime = new Date ( );
+
+    var currentHours = currentTime.getHours ( );
+    var currentMinutes = currentTime.getMinutes ( );
+    var currentSeconds = currentTime.getSeconds ( );
+
+    // Pad the minutes and seconds with leading zeros, if required
+    currentHours   = ( currentHours < 10 ? "0" : "" ) + currentHours;
+    currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
+    currentSeconds = ( currentSeconds < 10 ? "0" : "" ) + currentSeconds;
+    // Compose the string for display
+    var currentTimeString = currentHours + ":" + currentMinutes + ":" + currentSeconds;
+    // Update the time display
+    document.getElementById("clock").firstChild.nodeValue = currentTimeString;
+
+    timerID = setTimeout("updateClock()",1000);
+    timerRunning = true;
+}
+
+</script>
+EOB
+
+$tr_clockhtml = <<EOB;
+<table border=1 cellpadding=5 cellspacing=0>
+    <tr><td>
+        <span id="clock">00:00:00</span>
+    </td><td>
+        <form name="clock" onSubmit="0">
+            <input type="button" name="start" value="&gt;&gt;"  onClick="startclock()">
+            <input type="button" name="stop"  value="&nbsp;||&nbsp;" onClick="stopclock()">
+        </form>
+    </td></tr>
+</table>
+EOB
+
 
 sub l00http_tr_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -46,7 +114,7 @@ sub l00http_tr_proc {
         $form->{'fname'} = "$ctrl->{'workdir'}l00_tr.txt";
     }
 
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>tr</title>" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>tr</title>\n$tr_clockjs" . $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a href=\"#__end__\">end</a> - \n";
@@ -192,6 +260,7 @@ sub l00http_tr_proc {
     # make an anchor to jump to current time    
     print $sock "<a href=\"#now\">now</a>\n";
     print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a><br>\n";
+    print $sock "$tr_clockhtml\n";
     print $sock "<pre>\n";
 
     # 3) Display the time slots
