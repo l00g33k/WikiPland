@@ -28,16 +28,19 @@ my (@db, @outs);
 my $itvmin = 5;     # length of each time slot
 my ($tr_clockhtml, $tr_clockjs);
 
+$blanks = 0;
+
 $tr_clockjs = <<EOB;
 <style type="text/css">
-#clock   { font-family: Arial, Helvetica, sans-serif; font-size: 1.0em; color: white; background-color: black; border: 2px solid purple; padding: 2px; }
+#clock   { font-family: Arial, Helvetica, sans-serif; font-size: 0.9em; color: white; background-color: black; border: 2px solid purple; padding: 2px; }
 </style>
 
 <script Language="JavaScript">
 var timerID = null;
 var timerRunning = false;
 var startsec;
-
+var nowidx, nows;
+var itvmin;
 
 function stopclock (){
     if(timerRunning)
@@ -65,6 +68,17 @@ function updateClock () {
     var currentMinutes = currentTime.getMinutes ( );
     var currentSeconds = currentTime.getSeconds ( );
 
+    // calculate nowidx before padding leading 0
+    nowidx = Math.floor ((currentHours * 60 + currentMinutes) / itvmin); 
+    if (currentHours < 4) {
+        nowidx += 24 * 60 / itvmin;
+    }
+    nowidx = 'ln' + ( nowidx < 10 ? "0" : "") + 
+                    ( nowidx < 100 ? "0" : "") + 
+                    ( nowidx < 1000 ? "0" : "") + 
+                    nowidx;
+    //console.log(currentHours, ':', currentMinutes, ' nowidx = ', nowidx, ' itvmin = ', itvmin);
+
     // Pad the minutes and seconds with leading zeros, if required
     currentHours   = ( currentHours < 10 ? "0" : "" ) + currentHours;
     currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
@@ -73,6 +87,28 @@ function updateClock () {
     var currentTimeString = currentHours + ":" + currentMinutes + ":" + currentSeconds;
     // Update the time display
     document.getElementById("clock").firstChild.nodeValue = currentTimeString;
+
+    // search all element list for current time id
+    var el, ii, text;
+    //nows.forEach((now)=> { // Palm doesn't support forEach/=> ??
+    for (ii = 0; ii <= nows.length; ii++) {
+        now = nows[ii];
+        el = document.getElementById(now);
+        if (el) {
+            if (now == nowidx) {
+                // still doesn't work on Palm
+                el.setAttribute("style","background:cyan;");
+                text = el.firstChild.nodeValue;
+                // append * if not already; find/search failed on Palm
+                if (text.length < 6) {
+                    el.firstChild.nodeValue = text + ' --- ';
+                }
+            } else {
+                el.setAttribute("style","background:white;");
+            }
+        }
+    //});
+    }
 
     timerID = setTimeout("updateClock()",1000);
     timerRunning = true;
@@ -87,7 +123,7 @@ $tr_clockhtml = <<EOB;
         <span id="clock">00:00:00</span>
     </td><td>
         <form name="clock" onSubmit="0">
-            <input type="button" name="start" value="&gt;&gt;"  onClick="startclock()">
+            <input type="button" name="start" value="&gt;"  onClick="startclock()">
             <input type="button" name="stop"  value="&nbsp;||&nbsp;" onClick="stopclock()">
         </form>
     </td></tr>
@@ -110,6 +146,9 @@ sub l00http_tr_proc {
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
+    if ((defined ($form->{'itvmin'})) && ($form->{'itvmin'} =~ /(\d+)/)) {
+        $itvmin = $1;
+    }
     if ((!defined ($form->{'fname'})) || (length ($form->{'fname'}) < 6)) {
         $form->{'fname'} = "$ctrl->{'workdir'}l00_tr.txt";
     }
@@ -133,7 +172,11 @@ sub l00http_tr_proc {
             $prefix = "";
             $suffix = " ";
         }
-        $outs [$ii] = sprintf ("$prefix%02d%02d$suffix", int ((($itvmin * $ii) % (24 * 60)) / 60), ($itvmin * $ii) % 60);
+#       $outs [$ii] = sprintf ("$prefix%02d%02d$suffix", int ((($itvmin * $ii) % (24 * 60)) / 60), ($itvmin * $ii) % 60);
+        $outs [$ii] = sprintf ("<span id=\"ln%04d\">$prefix%02d%02d$suffix</span>", $ii, int ((($itvmin * $ii) % (24 * 60)) / 60), ($itvmin * $ii) % 60);
+        if ($blanks == 0) {
+            $blanks = length($outs [$ii]);
+        }
         if (defined ($form->{'diff'})) {
             if (($citydiff) = $form->{'diff'} =~ /(\d+)/) {
                 if (($citydiff > -24) && 
@@ -195,7 +238,7 @@ sub l00http_tr_proc {
                 next;
             }
             if (/^@ *$/) {
-                $minoff = $hour * 60 + int ($min / 5) * 5;
+                $minoff = $hour * 60 + int ($min / $itvmin) * $itvmin;
             } elsif (($hr,$mn) = /^@(\d\d)(\d\d)/) {
                 #    @1430 : start time in 24 hour format
                 if ($hr < 4) {
@@ -210,8 +253,8 @@ sub l00http_tr_proc {
                 }
                 $minoff = $ii;
             } elsif (($desc) = / *(.+) */) {
-                # default to 5 min
-                $outs [int ($minoff / $itvmin)] .= " $desc (5)";
+                # default to $itvmin min
+                $outs [int ($minoff / $itvmin)] .= " $desc ($itvmin)";
                 $minoff += $itvmin;
             }
         }
@@ -226,14 +269,15 @@ sub l00http_tr_proc {
     $now = int ($now / $itvmin);
 
     # calculate spacing for dual timezone display
-    $blanks = 5;
+#   $blanks = 5;
     if (defined ($form->{'diff'})) {
         if (($citydiff) = $form->{'diff'} =~ /(\d+)/) {
             if (($citydiff > -24) && 
                 ($citydiff < 24) && 
                 ($citydiff != 0)) {
                 # display a second column of time in a different timezone, nice for timezone crossing flight
-                $blanks = 10;
+#               $blanks = 10;
+                $blanks *= 2;
             }
         }
     }
@@ -260,18 +304,20 @@ sub l00http_tr_proc {
     # make an anchor to jump to current time    
     print $sock "<a href=\"#now\">now</a>\n";
     print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a><br>\n";
-    print $sock "$tr_clockhtml\n";
+    #print $sock "$tr_clockhtml\n";
     print $sock "<pre>\n";
 
     # 3) Display the time slots
 
     # display the time slot
     $blkln = 0;
+    printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
     for ($ii = $iist; $ii <= $iien; $ii++) {
         if ($ii == $now) {
-            print $sock "</pre><a name=\"now\">now</a> - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+            print $sock "</pre>$tr_clockhtml\n<a name=\"now\">now</a> - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
             print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
             $blkln = 0; # force time display for time 'now'
+            #print "$now $outs[$ii]\n";
         }
         $blkln++;
         if (defined ($form->{'allhours'}) && ($form->{'allhours'} eq 'on')) {
@@ -282,8 +328,10 @@ sub l00http_tr_proc {
         } elsif ($blkln < 2) {
             print $sock "$outs[$ii]\n\n\n";
         }
+        printf $sock ("<script Language=\"JavaScript\">nows.push('ln%04d');</script>", $ii);
     }
     print $sock "</pre>\n";
+
     if ($now >= $iien) {
         print $sock "<a name=\"now\">now</a> ".substr($ctrl->{'now_string'}, 9, 4)."\n";
     }
@@ -349,6 +397,13 @@ sub l00http_tr_proc {
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
     print $sock "        <td>&nbsp;</td>\n";
     print $sock "    </tr>\n";
+
+    print $sock "<tr>\n";
+    print $sock "<td>Slot length (min.):</td>\n";
+#   print $sock "<td><input type=\"text\" size=\"5\" name=\"rcity\" value=\"$rcity\"></td>\n";
+    print $sock "<td><input type=\"text\" size=\"3\" name=\"itvmin\" value=\"$itvmin\"></td>\n";
+    print $sock "</tr>\n";
+
 
     print $sock "</table>\n";
     print $sock "</form>\n";
