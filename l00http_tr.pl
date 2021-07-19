@@ -95,16 +95,19 @@ function updateClock () {
         now = nows[ii];
         el = document.getElementById(now);
         if (el) {
+            text = el.firstChild.nodeValue;
             if (now == nowidx) {
                 // still doesn't work on Palm
                 el.setAttribute("style","background:cyan;");
-                text = el.firstChild.nodeValue;
                 // append * if not already; find/search failed on Palm
                 if (text.length < 6) {
-                    el.firstChild.nodeValue = text + ' --- ';
+                    el.firstChild.nodeValue = '-- ' + text;
                 }
             } else {
                 el.setAttribute("style","background:white;");
+                if (text.length > 6) {
+                    el.firstChild.nodeValue = text.substr(4, 5);
+                }
             }
         }
     //});
@@ -304,7 +307,6 @@ sub l00http_tr_proc {
     # make an anchor to jump to current time    
     print $sock "<a href=\"#now\">now</a>\n";
     print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a><br>\n";
-    #print $sock "$tr_clockhtml\n";
     print $sock "<pre>\n";
 
     # 3) Display the time slots
@@ -314,7 +316,7 @@ sub l00http_tr_proc {
     printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
     for ($ii = $iist; $ii <= $iien; $ii++) {
         if ($ii == $now) {
-            print $sock "</pre>$tr_clockhtml\n<a name=\"now\">now</a> - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+            print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
             print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
             $blkln = 0; # force time display for time 'now'
             #print "$now $outs[$ii]\n";
