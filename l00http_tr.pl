@@ -33,6 +33,7 @@ $blanks = 0;
 $tr_clockjs = <<EOB;
 <style type="text/css">
 #clock   { font-family: Arial, Helvetica, sans-serif; font-size: 0.9em; color: white; background-color: black; border: 2px solid purple; padding: 2px; }
+#swatch   { font-family: Arial, Helvetica, sans-serif; font-size: 0.9em; color: white; background-color: black; border: 2px solid purple; padding: 2px; }
 </style>
 
 <script Language="JavaScript">
@@ -41,6 +42,8 @@ var timerRunning = false;
 var startsec;
 var nowidx, nows;
 var itvmin;
+var countAstat = 1;
+var countAtime = 0;
 
 function stopclock (){
     if(timerRunning)
@@ -57,6 +60,10 @@ function startclock () {
     var currentMinutes = currentTime.getMinutes ( );
     var currentSeconds = currentTime.getSeconds ( );
     startsec = currentSeconds + currentMinutes * 60 + currentHours * 3600;
+
+    countAtime = (currentTime.getTime () -
+                  currentTime.getTime () % 1000) / 1000;
+    countAstat = 1;
 
     updateClock();
 }
@@ -88,6 +95,7 @@ function updateClock () {
     // Update the time display
     document.getElementById("clock").firstChild.nodeValue = currentTimeString;
 
+
     // search all element list for current time id
     var el, ii, text;
     //nows.forEach((now)=> { // Palm doesn't support forEach/=> ??
@@ -115,6 +123,25 @@ function updateClock () {
 
     timerID = setTimeout("updateClock()",1000);
     timerRunning = true;
+
+    var tmp = (currentTime.getTime () -
+               currentTime.getTime () % 1000) / 1000;
+    if (countAstat) {
+        tmp = tmp - countAtime;
+    } else {
+        tmp = countAtime;
+    }
+    currentSeconds = tmp % 60;
+    tmp = (tmp - currentSeconds) / 60;
+    currentMinutes = tmp;
+
+    // Pad the minutes and seconds with leading zeros, if required
+    currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
+    currentSeconds = ( currentSeconds < 10 ? "0" : "" ) + currentSeconds;
+    // Compose the string for display
+    var currentTimeString = currentMinutes + ":" + currentSeconds;
+    // Update the stopwatch display
+    document.getElementById("swatch").firstChild.nodeValue = currentTimeString;
 }
 
 </script>
@@ -129,6 +156,8 @@ $tr_clockhtml = <<EOB;
             <input type="button" name="start" value="&gt;"  onClick="startclock()">
             <input type="button" name="stop"  value="&nbsp;||&nbsp;" onClick="stopclock()">
         </form>
+    </td><td>
+        <span id="swatch">00:00</span>
     </td></tr>
 </table>
 EOB
