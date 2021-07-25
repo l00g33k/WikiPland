@@ -4,6 +4,28 @@
 
 $dbg = 0;
 
+$samplecfg = <<CFG;
+#Test configuration, set bash variables:
+#CMD1='ssh t@localhost -p 30339'
+#FILE1='/sdcard/z/zz'
+#CMD2='bash -c'
+#FILE2='zz'
+#Make sure these bash expansions work:
+#\$CMD1 "md5sum \$FILE1"
+#\$CMD2 "md5sum \$FILE2"
+#\$CMD1 "cat \$FILE1" | \$CMD2 "cat > \$FILE2"
+#\$CMD2 "cat \$FILE2" | \$CMD1 "cat > \$FILE1"
+#CMD1 ` FILE1 ` CMD2 ` FILE2
+#` is delimiter. spaces before and after ` are trimmed
+#leading <space> or # is comment line
+
+ssh t@localhost -p 30339    `   /sdcard/z/zz    `   bash -c     `   zz
+
+#some examples
+#sshpass -p password ssh id@host -p port    `   /sdcard/z/zz    `   bash -c     `   zz
+#sshpass -p password ssh id@host -p port    `   /sdcard/z/zz    `   sshpass -p password2 ssh id2@host2 -p port2     `   zz
+CFG
+
 $help = <<HELP;
 
 
@@ -26,20 +48,8 @@ How To Run:
 Create a configuration file and make sure the CMDs work 
 correctly and the paths are correct.
 
-#Test configuration, set bash variables:
-#CMD1='ssh t@localhost -p 30339'
-#FILE1='/sdcard/z/zz'
-#CMD2='bash -c'
-#FILE2='zz'
-#Make sure these bash expansions work:
-#\$CMD1 "md5sum \$FILE1"
-#\$CMD2 "md5sum \$FILE2"
-#\$CMD1 "cat \$FILE1" | \$CMD2 "cat > \$FILE2"
-#\$CMD2 "cat \$FILE2" | \$CMD1 "cat > \$FILE1"
-#CMD1 ` FILE1 ` CMD2 ` FILE2
-#` is delimiter. spaces before and after ` are trimmed
-#leading <space> or # is comment line
-ssh t@localhost -p 30339    `   /sdcard/z/zz    `   bash -c     `   zz
+$samplecfg
+
 
 #Start it
 perl sshsync.pl < sshsync.in
@@ -99,6 +109,9 @@ if (open(IN, "<$filespecfname")) {
     print "filespec sig: $filespecinsig\n";
 } else {
     print "Filespec from file STDIN\n";
+    print "Pipe this sample to a file 'perl sshsync.pl 2> sshsync.in'\n";
+    print STDERR "$samplecfg\n";
+    print "^C now and edit, then launch 'perl sshsync.pl < sshsync.in'\n";
     while (<>) {
         push(@filespecin, $_);
     }
@@ -126,6 +139,7 @@ sub scanSpecFileSig {
         }
     }
     print "\n", if ($dbg >= 5);
+
 
 
     print "File specifications and md5sum:\n";
