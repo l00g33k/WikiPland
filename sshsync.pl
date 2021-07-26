@@ -153,10 +153,12 @@ sub scanSpecFileSig {
         if (/([0-9a-f]{32,32})/) {
             # looks like md5sum
             print "   FILE1: $cmd\n    => $_\n";
-            $file1sum{$FILE1} = $1;
+            $file1sum = $1;
+            $file1sig{$FILE1} = $_;
         } else {
             print "   FILE1: $cmd\n    => FILE MISSING\n";
-            $file1sum{$FILE1} = '';
+            $file1sum = '';
+            $file1sig{$FILE1} = '';
         }
 
         $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
@@ -165,27 +167,39 @@ sub scanSpecFileSig {
         if (/([0-9a-f]{32,32})/) {
             # looks like md5sum
             print "   FILE2: $cmd\n    => $_\n";
-            $file2sum{$FILE2} = $1;
+            $file2sum = $1;
+            $file2sig{$FILE2} = $_;
         } else {
             print "   FILE2: $cmd\n    => FILE MISSING\n";
-            $file2sum{$FILE2} = '';
+            $file2sum = '';
+            $file2sig{$FILE2} = '';
         }
 
         # if both missing, ignore
-        if (($file1sum{$FILE1} eq '') && ($file2sum{$FILE2} eq '')) {
+        if (($file1sum eq '') && ($file2sum eq '')) {
             print "   BOTH MISSING, IGNORE\n";
-        } elsif (($file1sum{$FILE1} ne '') && ($file2sum{$FILE2} ne '')) {
-            print "   BOTH EXIST, COPY FROM FILE1 $FILE1 to FILE2 $FILE2\n";
-            $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
-            $_ = `$cmd`;
-        } elsif ($file1sum{$FILE1} ne '') {
+        } elsif (($file1sum ne '') && ($file2sum ne '')) {
+            if ($file1sum eq $file2sum) {
+                print "    ($file1sum eq $file2sum), NOT COPY FROM FILE1 $FILE1 to FILE2 $FILE2\n";
+            } else {
+                print "    ($file1sum ne $file2sum), COPY FROM FILE1 $FILE1 to FILE2 $FILE2\n";
+                $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                $_ = `$cmd`;
+                $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                $file2sig{$FILE2} = `$cmd`;
+            }
+        } elsif ($file1sum ne '') {
             print "   $FILE1 EXIST, COPY to FILE2 $FILE2\n";
             $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
             $_ = `$cmd`;
-        } elsif ($file2sum{$FILE2} ne '') {
+            $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+            $file2sig{$FILE2} = `$cmd`;
+        } elsif ($file2sum ne '') {
             print "   $FILE2 EXIST, COPY to FILE1 $FILE1\n";
             $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
             $_ = `$cmd`;
+            $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+            $file1sig{$FILE1} = `$cmd`;
         }
     }
 }
@@ -214,54 +228,54 @@ while (1) {
 
         $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
-        $_ = `$cmd`;
-        print "   FILE1: $cmd\n    => $_\n", if ($dbg >= 5);
-        if (/([0-9a-f]{32,32})/) {
+        $newsig = `$cmd`;
+        print "   FILE1: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
+        if ($newsig =~ /([0-9a-f]{32,32})/) {
             # looks like md5sum
-            print "    md5sum: old: $file1sum{$FILE1} cmp new: $1\n", if ($dbg >= 5);
-            if ($file1sum{$FILE1} ne $1) {
+            print "    old $file1sig{$FILE1}\n", if ($dbg >= 5);
+            if ($file1sig{$FILE1} ne $newsig) {
                 # save it
-                $file1sum{$FILE1} = $1;
+                $file1sig{$FILE1} = $newsig;
                 print "$t\n", if ($dbg < 1);
-                print "    Push to FILE2 as FILE1 changed: $_\n";
+                print "    Push to FILE2 as FILE1 changed: $newsig\n";
 
                 $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
                 $_ = `$cmd`;
                 print "     => FILE2: $cmd\n", if ($dbg >= 3);
 
                 $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-                $_ = `$cmd`;
+                $newsig = `$cmd`;
                 print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
-                if (/([0-9a-f]{32,32})/) {
+                if ($newsig =~ /([0-9a-f]{32,32})/) {
                     # looks like md5sum
-                    $file2sum{$FILE2} = $1;
+                    $file2sig{$FILE2} = $newsig;
                 }
             }
         }
 
         $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
-        $_ = `$cmd`;
-        print "   FILE2: $cmd\n    => $_\n", if ($dbg >= 5);
-        if (/([0-9a-f]{32,32})/) {
+        $newsig = `$cmd`;
+        print "   FILE2: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
+        if ($newsig =~ /([0-9a-f]{32,32})/) {
             # looks like md5sum
-            print "    md5sum: old: $file2sum{$FILE2} cmp new: $1\n", if ($dbg >= 5);
-            if ($file2sum{$FILE2} ne $1) {
+            print "    old $file2sig{$FILE2}\n", if ($dbg >= 5);
+            if ($file2sig{$FILE2} ne $newsig) {
                 # save it
-                $file2sum{$FILE2} = $1;
+                $file2sig{$FILE2} = $newsig;
                 print "$t\n", if ($dbg < 1);
-                print "    Push to FILE1 as FILE2 changed: $_\n";
+                print "    Push to FILE1 as FILE2 changed: $newsig\n";
 
                 $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
                 $_ = `$cmd`;
                 print "     => FILE1: $cmd\n", if ($dbg >= 3);
 
                 $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
-                $_ = `$cmd`;
+                $newsig = `$cmd`;
                 print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
-                if (/([0-9a-f]{32,32})/) {
+                if ($newsig =~ /([0-9a-f]{32,32})/) {
                     # looks like md5sum
-                    $file1sum{$FILE1} = $1;
+                    $file1sig{$FILE1} = $newsig;
                 }
             }
         }
