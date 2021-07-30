@@ -32,20 +32,20 @@ $help = <<HELP;
 Synopsis:
 
 A no install method for bidirectional file sync using ssh and md5sum.
-The md5sum of file1 and file2 are monitored.  If either sum has changed, 
+The md5sum of file1 and file2 are monitored.  If either sum has changed,
 it is fetched to replace the other file, in either direction.
 
-On start up, if one file is missing, the other file is fetched so 
-both side are the same.  And if both files already exist, and the 
+On start up, if one file is missing, the other file is fetched so
+both side are the same.  And if both files already exist, and the
 sums are different, file1 is fetched to replace file2.
 
-After start up the sums of all files are monitored and sync to the 
+After start up the sums of all files are monitored and sync to the
 counterpart whenever the sum has changed.
 
 
 How To Run:
 
-Create a configuration file and make sure the CMDs work 
+Create a configuration file and make sure the CMDs work
 correctly and the paths are correct.
 
 $samplecfg
@@ -57,9 +57,9 @@ perl sshsync.pl < sshsync.in
 
 How It Works:
 
-A configuration file is piped into the script to describe the files 
-to be sync'ed using the following format.  There are 4 parts per line to 
-describe a pair of files.  The bash expansions show how the md5sum 
+A configuration file is piped into the script to describe the files
+to be sync'ed using the following format.  There are 4 parts per line to
+describe a pair of files.  The bash expansions show how the md5sum
 are computed and how the files are copied.
 
 These 3 CMD patterns work:
@@ -75,6 +75,7 @@ Theory Of Script Operation:
 
 HELP
 
+$diffonly = 0;
 $filespecfname = '';
 
 #TOO0: Scan CMD line options
@@ -82,6 +83,8 @@ while ($_ = shift) {
     if (/-dbg=(\d)/) {
         $dbg = $1;
         print "OPTION: -dbg=$dbg\n";
+    } elsif (/--diffonly/) {
+        $diffonly = 1;
     } elsif (/--help/) {
         print $help;
         exit 0;
@@ -150,6 +153,8 @@ sub scanSpecFileSig {
         $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
         $_ = `$cmd`;
+        # drop filename after md5sum
+        s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         if (/([0-9a-f]{32,32})/) {
             # looks like md5sum
             print "   FILE1: $cmd\n    => $_\n";
@@ -164,6 +169,8 @@ sub scanSpecFileSig {
         $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
         $_ = `$cmd`;
+        # drop filename after md5sum
+        s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         if (/([0-9a-f]{32,32})/) {
             # looks like md5sum
             print "   FILE2: $cmd\n    => $_\n";
@@ -173,6 +180,11 @@ sub scanSpecFileSig {
             print "   FILE2: $cmd\n    => FILE MISSING\n";
             $file2sum = '';
             $file2sig{$FILE2} = '';
+        }
+
+        if ($diffonly != 0) {
+            print "    MD5SUM DIFF ($file1sum eq $file2sum)\n";
+            next;
         }
 
         # if both missing, ignore
@@ -208,7 +220,7 @@ sub scanSpecFileSig {
 scanSpecFileSig();
 
 $loop = 0;
-while (1) {
+while ($diffonly == 0) {
     $loop++;
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     $t = sprintf ("%05d: %4d%02d%02d %02d%02d%02d", $loop, $year + 1900, $mon+1, $mday, $hour, $min, $sec);
@@ -220,15 +232,21 @@ while (1) {
 
     for ($cnt = 0; $cnt <= $#filespec; $cnt++) {
         ($CMD1, $FILE1, $CMD2, $FILE2) = split ('`', $filespec[$cnt]);
+        $file1name = $FILE1;
+        $file2name = $FILE2;
+        $file1name =~ s/.*\/([^\/]+)$/$1/;
+        $file2name =~ s/.*\/([^\/]+)$/$1/;
         if ($dbg >= 1) {
-            print "  $cnt: $CMD1 ` $FILE1 ` $CMD2 ` $FILE2\n";
+            print "  $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name\n";
         } else {
-            print "$t: $cnt: $CMD1 ` $FILE1 ` $CMD2 ` $FILE2   \r";
+            print "$t: $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name \r";
         }
 
         $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
         $newsig = `$cmd`;
+        # drop filename after md5sum
+        $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         print "   FILE1: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
         if ($newsig =~ /([0-9a-f]{32,32})/) {
             # looks like md5sum
@@ -256,6 +274,8 @@ while (1) {
         $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
         $newsig = `$cmd`;
+        # drop filename after md5sum
+        $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         print "   FILE2: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
         if ($newsig =~ /([0-9a-f]{32,32})/) {
             # looks like md5sum
@@ -284,6 +304,8 @@ while (1) {
     if (-f $filespecfname) {
         $cmd = "bash -c 'ls --full-time $filespecfname | tr \"\\n\" \" \" ; md5sum $filespecfname | tr \"\\n\" \" \"'";
         $_ = `$cmd`;
+        # drop filename after md5sum
+        s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         if ($filespecinsig ne $_) {
             $filespecinsig = $_;
             print "filespec sig changed, new: $filespecinsig\n";
@@ -299,6 +321,8 @@ while (1) {
 
                 $cmd = "bash -c 'ls --full-time $filespecfname | tr \"\\n\" \" \" ; md5sum $filespecfname | tr \"\\n\" \" \"'";
                 $filespecinsig = `$cmd`;
+                # drop filename after md5sum
+                $filespecinsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
                 print "filespec sig: $filespecinsig\n";
             }
 
@@ -308,3 +332,4 @@ while (1) {
 
     sleep(1);
 }
+
