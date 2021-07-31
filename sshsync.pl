@@ -125,6 +125,7 @@ sub scanSpecFileSig {
     print "Reading file specifications (make sure bash command FILE1/FILE2 can execute):\n";
 
     @filespec = ();
+    @chgspec = ();
     $lnno = 0;
     $fcnt = 0;
     foreach $_ (@filespecin) {
@@ -140,6 +141,13 @@ sub scanSpecFileSig {
             print "Found: ($cmd1, $file1, $cmd2, $file2)\n", if ($dbg >= 3);
             push(@filespec, "$cmd1`$file1`$cmd2`$file2");
         }
+        # Do something if file changed
+        # delimited by ``, trim leading/trailing spaces
+        # execute (bash -c) $cmd2 if file changed
+        if (($cmd1, $file1, $cmd2) = /^([^ #].+?) *`` *(.+?) *`` *(.+?) *$/) {
+            print "Found: ($cmd1, $file1, $cmd2)\n", if ($dbg >= 3);
+            push(@chgspec, "$cmd1``$file1``$cmd2");
+        }
     }
     print "\n", if ($dbg >= 5);
 
@@ -148,7 +156,7 @@ sub scanSpecFileSig {
     print "File specifications and md5sum:\n";
     for ($cnt = 0; $cnt <= $#filespec; $cnt++) {
         ($CMD1, $FILE1, $CMD2, $FILE2) = split ('`', $filespec[$cnt]);
-        print "$cnt: $CMD1 ` $FILE1 ` $CMD2 ` $FILE2\n";
+        print "DIF $cnt: $CMD1 ` $FILE1 ` $CMD2 ` $FILE2\n";
 
         $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
@@ -214,6 +222,29 @@ sub scanSpecFileSig {
             $file1sig{$FILE1} = `$cmd`;
         }
     }
+
+    print "Change specifications and md5sum:\n";
+    for ($cnt = 0; $cnt <= $#chgspec; $cnt++) {
+        ($CMD1, $FILE1, $CMD2) = split ('``', $chgspec[$cnt]);
+        print "CHG: $cnt: $CMD1 ` $FILE1 ` $CMD2\n";
+
+        $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+        # ffe51486284a93a4c6769e8b95056c9a
+        $_ = `$cmd`;
+        # drop filename after md5sum
+        s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+        if (/([0-9a-f]{32,32})/) {
+            # looks like md5sum
+            print "   FILE1: $cmd\n    => $_\n";
+            $chgsum = $1;
+            $chgsig{$FILE1} = $_;
+        } else {
+            print "   FILE1: $cmd\n    => FILE MISSING\n";
+            $chgsum = '';
+            $chgsig{$FILE1} = '';
+        }
+    }
+
 }
 
 
@@ -239,7 +270,7 @@ while ($diffonly == 0) {
         if ($dbg >= 1) {
             print "  $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name\n";
         } else {
-            print "$t: $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name \r";
+            print "$t: $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name  \r";
         }
 
         $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
@@ -263,6 +294,7 @@ while ($diffonly == 0) {
 
                 $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
                 $newsig = `$cmd`;
+                $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
                 print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
                 if ($newsig =~ /([0-9a-f]{32,32})/) {
                     # looks like md5sum
@@ -292,6 +324,7 @@ while ($diffonly == 0) {
 
                 $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
                 $newsig = `$cmd`;
+                $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
                 print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
                 if ($newsig =~ /([0-9a-f]{32,32})/) {
                     # looks like md5sum
@@ -300,6 +333,39 @@ while ($diffonly == 0) {
             }
         }
     }
+
+    for ($cnt = 0; $cnt <= $#chgspec; $cnt++) {
+        ($CMD1, $FILE1, $CMD2) = split ('``', $chgspec[$cnt]);
+        $file1name = $FILE1;
+        $file1name =~ s/.*\/([^\/]+)$/$1/;
+        if ($dbg >= 1) {
+            print "  $cnt: $CMD1 ` $file1name ` $CMD2\n";
+        } else {
+            print "$t: $cnt: $CMD1 ` $file1name ` $CMD2  \r";
+        }
+
+        $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+        # ffe51486284a93a4c6769e8b95056c9a
+        $newsig = `$cmd`;
+        # drop filename after md5sum
+        $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+        print "   FILE: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
+        if ($newsig =~ /([0-9a-f]{32,32})/) {
+            # looks like md5sum
+            print "    old $chgsig{$FILE1}\n", if ($dbg >= 5);
+            if ($chgsig{$FILE1} ne $newsig) {
+                # save it
+                $chgsig{$FILE1} = $newsig;
+                print "$t\n", if ($dbg < 1);
+                print "    Chg cmd for FILE changed: $newsig\n";
+
+                $cmd = "$CMD1 \"$CMD2\"";
+                $_ = `$cmd`;
+                print "     == FILE: $cmd => $_\n";
+            }
+        }
+    }
+
 
     if (-f $filespecfname) {
         $cmd = "bash -c 'ls --full-time $filespecfname | tr \"\\n\" \" \" ; md5sum $filespecfname | tr \"\\n\" \" \"'";
@@ -332,4 +398,5 @@ while ($diffonly == 0) {
 
     sleep(1);
 }
+
 
