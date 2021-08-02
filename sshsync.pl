@@ -24,6 +24,13 @@ ssh t@localhost -p 30339    `   /sdcard/z/zz    `   bash -c     `   zz
 #some examples
 #sshpass -p password ssh id@host -p port    `   /sdcard/z/zz    `   bash -c     `   zz
 #sshpass -p password ssh id@host -p port    `   /sdcard/z/zz    `   sshpass -p password2 ssh id2@host2 -p port2     `   zz
+
+#alternatively, supply the configuraton on the command line in a one liner:
+echo -e "\\
+bash -c  \\`  file1  \\`  bash -c  \\`  file2\\n\\
+" | perl sshsync.pl
+
+
 CFG
 
 $help = <<HELP;
@@ -76,6 +83,26 @@ Theory Of Script Operation:
 HELP
 
 $diffonly = 0;
+
+$RST="\x1b[0m";
+$GREEN="\x1b[32m";
+$RED="\x1b[91m";
+$YELLOW="\e[33m";
+$BLUE="\x1b[94m";
+$CYAN="\e[36m";
+$MAGENTA="\x1b[95m";
+$GRAY="\e[37m";
+$CMDLN="\x1b[34m";
+
+print "${GREEN}GREEN${RST} text\n";
+print "${RED}RED${RST} text\n";
+print "${YELLOW}YELLOW${RST} text\n";
+print "${BLUE}BLUE${RST} text\n";
+print "${CYAN}CYAN${RST} text\n";
+print "${MAGENTA}MAGENTA${RST} text\n";
+print "${GRAY}GRAY${RST} text\n";
+
+
 $filespecfname = '';
 
 #TOO0: Scan CMD line options
@@ -152,11 +179,10 @@ sub scanSpecFileSig {
     print "\n", if ($dbg >= 5);
 
 
-
     print "File specifications and md5sum:\n";
     for ($cnt = 0; $cnt <= $#filespec; $cnt++) {
         ($CMD1, $FILE1, $CMD2, $FILE2) = split ('`', $filespec[$cnt]);
-        print "DIF $cnt: $CMD1 ` $FILE1 ` $CMD2 ` $FILE2\n";
+        print "${GREEN}spec $cnt${RST}: ${BLUE}$CMD1 ` $FILE1 ` $CMD2 ` $FILE2${RST}\n";
 
         $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
         # ffe51486284a93a4c6769e8b95056c9a
@@ -165,7 +191,7 @@ sub scanSpecFileSig {
         s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         if (/([0-9a-f]{32,32})/) {
             # looks like md5sum
-            print "   FILE1: $cmd\n    => $_\n";
+            print "   FILE1: $cmd\n    => ${BLUE}$_${RST}\n";
             $file1sum = $1;
             $file1sig{$FILE1} = $_;
         } else {
@@ -181,7 +207,7 @@ sub scanSpecFileSig {
         s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
         if (/([0-9a-f]{32,32})/) {
             # looks like md5sum
-            print "   FILE2: $cmd\n    => $_\n";
+            print "   FILE2: $cmd\n    => ${BLUE}$_${RST}\n";
             $file2sum = $1;
             $file2sig{$FILE2} = $_;
         } else {
@@ -200,13 +226,43 @@ sub scanSpecFileSig {
             print "   BOTH MISSING, IGNORE\n";
         } elsif (($file1sum ne '') && ($file2sum ne '')) {
             if ($file1sum eq $file2sum) {
-                print "    ($file1sum eq $file2sum), NOT COPY FROM FILE1 $FILE1 to FILE2 $FILE2\n";
+                print "     ($file1sum eq $file2sum), ${GREEN}BOTH IDENTICAL, NOT COPYING${RST}\n";
             } else {
-                print "    ($file1sum ne $file2sum), COPY FROM FILE1 $FILE1 to FILE2 $FILE2\n";
-                $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
-                $_ = `$cmd`;
-                $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-                $file2sig{$FILE2} = `$cmd`;
+                print "     ($file1sum ne $file2sum), ${MAGENTA}FILES ARE DIFFERENT${RST} FILE1 ${BLUE}$FILE1${RST} and FILE2 ${BLUE}$FILE2${RST}\n";
+
+                if (open(TTY, "</dev/tty")) {
+                    print "${RED}Please choose action:${RST}\n";
+                    print "1) to copy FILE1 ${BLUE}$FILE1${RST} ${MAGENTA}to replace${RST} FILE2 ${BLUE}$FILE2${RST}\n";
+                    print "2) to copy FILE2 ${BLUE}$FILE2${RST} ${MAGENTA}to replace${RST} FILE1 ${BLUE}$FILE1${RST}\n";
+                    $_ = <TTY>;
+                    ($_) = /(\d)/;
+                    if ($_ == 1) {
+                        print "You have entered 1\n";
+                        $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                        $_ = `$cmd`;
+                        $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                        $file2sig{$FILE2} = `$cmd`;
+                        print "FILE1 ${BLUE}$FILE1${RST} ${MAGENTA}replaced${RST} FILE2 ${BLUE}$FILE2${RST}\n";
+                    } elsif ($_ == 2) {
+                        print "You have entered 2\n";
+                        $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
+                        $_ = `$cmd`;
+                        $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+                        $file1sig{$FILE1} = `$cmd`;
+                        print "FILE2 ${BLUE}$FILE2${RST} ${MAGENTA}replaced${RST} FILE1 ${BLUE}$FILE1${RST}\n";
+                    } else {
+                        print "You have entered invalid choice.  No action taken\n";
+                    }
+                    close(TTY);
+                } else {
+                    print "   ${MAGENTA}Either delete one file and restart, or rewrite one to be pushed to the other${RST}\n";
+
+                    #print "   ${RED}COPY FILE1 to overwrite FILE2${RST}\n";
+                    #$cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                    #$_ = `$cmd`;
+                    #$cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                    #$file2sig{$FILE2} = `$cmd`;
+                }
             }
         } elsif ($file1sum ne '') {
             print "   $FILE1 EXIST, COPY to FILE2 $FILE2\n";
@@ -286,7 +342,7 @@ while ($diffonly == 0) {
                 # save it
                 $file1sig{$FILE1} = $newsig;
                 print "$t\n", if ($dbg < 1);
-                print "    Push to FILE2 as FILE1 changed: $newsig\n";
+                print "    FILE1 ${RED}changed${RST}: ${BLUE}$newsig${RST} , ${RED}so push to${RST} FILE2\n";
 
                 $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
                 $_ = `$cmd`;
@@ -316,7 +372,7 @@ while ($diffonly == 0) {
                 # save it
                 $file2sig{$FILE2} = $newsig;
                 print "$t\n", if ($dbg < 1);
-                print "    Push to FILE1 as FILE2 changed: $newsig\n";
+                print "    FILE2 ${RED}changed${RST}: ${BLUE}$newsig${RST} , ${RED}so push to${RST} FILE1\n";
 
                 $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
                 $_ = `$cmd`;
