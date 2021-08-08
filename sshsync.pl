@@ -171,7 +171,8 @@ sub scanSpecFileSig {
         # execute (bash -c) $cmd2 if file changed
         if (($cmd1, $file1, $cmd2) = /^([^ #].+?) *`` *(.+?) *`` *(.+?) *$/) {
             print "Found: ($cmd1, $file1, $cmd2)\n", if ($dbg >= 3);
-            push(@chgspec, "$cmd1``$file1``$cmd2");
+#            push(@chgspec, "$cmd1``$file1``$cmd2");
+            push(@filespec, "$cmd1``$file1``$cmd2");
         }
     }
     print "\n", if ($dbg >= 5);
@@ -179,101 +180,125 @@ sub scanSpecFileSig {
 
     print "File specifications and md5sum:\n";
     for ($cnt = 0; $cnt <= $#filespec; $cnt++) {
-        ($CMD1, $FILE1, $CMD2, $FILE2) = split ('`', $filespec[$cnt]);
-        print "${GREEN}spec $cnt${RST}: ${BLUE}$CMD1 ` $FILE1 ` $CMD2 ` $FILE2${RST}\n";
+        # push(@filespec, "$cmd1`$file1`$cmd2`$file2");
+        if (($CMD1, $FILE1, $CMD2, $FILE2) = 
+            $filespec[$cnt] =~ /^([^`]+?)`([^`]+?)`([^`]+?)`([^`]+?)$/) {
+            print "${GREEN}spec $cnt${RST}: ${BLUE}$CMD1 ` $FILE1 ` $CMD2 ` $FILE2${RST}\n";
 
-        $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
-        # ffe51486284a93a4c6769e8b95056c9a
-        $_ = `$cmd`;
-        # drop filename after md5sum
-        s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
-        if (/([0-9a-f]{32,32})/) {
-            # looks like md5sum
-            print "   FILE1: $cmd\n    => ${BLUE}$_${RST}\n";
-            $file1sum = $1;
-            $file1sig{$FILE1} = $_;
-        } else {
-            print "   FILE1: $cmd\n    => FILE MISSING\n";
-            $file1sum = '';
-            $file1sig{$FILE1} = '';
-        }
-
-        $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-        # ffe51486284a93a4c6769e8b95056c9a
-        $_ = `$cmd`;
-        # drop filename after md5sum
-        s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
-        if (/([0-9a-f]{32,32})/) {
-            # looks like md5sum
-            print "   FILE2: $cmd\n    => ${BLUE}$_${RST}\n";
-            $file2sum = $1;
-            $file2sig{$FILE2} = $_;
-        } else {
-            print "   FILE2: $cmd\n    => FILE MISSING\n";
-            $file2sum = '';
-            $file2sig{$FILE2} = '';
-        }
-
-        if ($diffonly != 0) {
-            print "    MD5SUM DIFF ($file1sum eq $file2sum)\n";
-            next;
-        }
-
-        # if both missing, ignore
-        if (($file1sum eq '') && ($file2sum eq '')) {
-            print "   BOTH MISSING, IGNORE\n";
-        } elsif (($file1sum ne '') && ($file2sum ne '')) {
-            if ($file1sum eq $file2sum) {
-                print "     ($file1sum eq $file2sum), ${GREEN}BOTH IDENTICAL, NOT COPYING${RST}\n";
-            } else {
-                print "     ($file1sum ne $file2sum), ${MAGENTA}FILES ARE DIFFERENT${RST} FILE1 ${BLUE}$FILE1${RST} and FILE2 ${BLUE}$FILE2${RST}\n";
-
-                if (open(TTY, "</dev/tty")) {
-                    print "${RED}Please choose action:${RST}\n";
-                    print "1) to copy FILE1 ${BLUE}$FILE1${RST} ${MAGENTA}to replace${RST} FILE2 ${BLUE}$FILE2${RST}\n";
-                    print "2) to copy FILE2 ${BLUE}$FILE2${RST} ${MAGENTA}to replace${RST} FILE1 ${BLUE}$FILE1${RST}\n";
-                    $_ = <TTY>;
-                    ($_) = /(\d)/;
-                    if ($_ == 1) {
-                        print "You have entered 1\n";
-                        $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
-                        $_ = `$cmd`;
-                        $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-                        $file2sig{$FILE2} = `$cmd`;
-                        print "FILE1 ${BLUE}$FILE1${RST} ${MAGENTA}replaced${RST} FILE2 ${BLUE}$FILE2${RST}\n";
-                    } elsif ($_ == 2) {
-                        print "You have entered 2\n";
-                        $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
-                        $_ = `$cmd`;
-                        $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
-                        $file1sig{$FILE1} = `$cmd`;
-                        print "FILE2 ${BLUE}$FILE2${RST} ${MAGENTA}replaced${RST} FILE1 ${BLUE}$FILE1${RST}\n";
-                    } else {
-                        print "You have entered invalid choice.  No action taken\n";
-                    }
-                    close(TTY);
-                } else {
-                    print "   ${MAGENTA}Either delete one file and restart, or rewrite one to be pushed to the other${RST}\n";
-
-                    #print "   ${RED}COPY FILE1 to overwrite FILE2${RST}\n";
-                    #$cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
-                    #$_ = `$cmd`;
-                    #$cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-                    #$file2sig{$FILE2} = `$cmd`;
-                }
-            }
-        } elsif ($file1sum ne '') {
-            print "   $FILE1 EXIST, COPY to FILE2 $FILE2\n";
-            $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
-            $_ = `$cmd`;
-            $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-            $file2sig{$FILE2} = `$cmd`;
-        } elsif ($file2sum ne '') {
-            print "   $FILE2 EXIST, COPY to FILE1 $FILE1\n";
-            $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
-            $_ = `$cmd`;
             $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
-            $file1sig{$FILE1} = `$cmd`;
+            # ffe51486284a93a4c6769e8b95056c9a
+            $_ = `$cmd`;
+            # drop filename after md5sum
+            s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+            if (/([0-9a-f]{32,32})/) {
+                # looks like md5sum
+                print "   FILE1: $cmd\n    => ${BLUE}$_${RST}\n";
+                $file1sum = $1;
+                $file1sig{$FILE1} = $_;
+            } else {
+                print "   FILE1: $cmd\n    => FILE MISSING\n";
+                $file1sum = '';
+                $file1sig{$FILE1} = '';
+            }
+
+            $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+            # ffe51486284a93a4c6769e8b95056c9a
+            $_ = `$cmd`;
+            # drop filename after md5sum
+            s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+            if (/([0-9a-f]{32,32})/) {
+                # looks like md5sum
+                print "   FILE2: $cmd\n    => ${BLUE}$_${RST}\n";
+                $file2sum = $1;
+                $file2sig{$FILE2} = $_;
+            } else {
+                print "   FILE2: $cmd\n    => FILE MISSING\n";
+                $file2sum = '';
+                $file2sig{$FILE2} = '';
+            }
+
+            if ($diffonly != 0) {
+                print "    MD5SUM DIFF ($file1sum eq $file2sum)\n";
+                next;
+            }
+
+            # if both missing, ignore
+            if (($file1sum eq '') && ($file2sum eq '')) {
+                print "   BOTH MISSING, IGNORE\n";
+            } elsif (($file1sum ne '') && ($file2sum ne '')) {
+                if ($file1sum eq $file2sum) {
+                    print "     ($file1sum eq $file2sum), ${GREEN}BOTH IDENTICAL, NOT COPYING${RST}\n";
+                } else {
+                    print "     ($file1sum ne $file2sum), ${MAGENTA}FILES ARE DIFFERENT${RST} FILE1 ${BLUE}$FILE1${RST} and FILE2 ${BLUE}$FILE2${RST}\n";
+
+                    if (open(TTY, "</dev/tty")) {
+                        print "${RED}Please choose action:${RST}\n";
+                        print "1) to copy FILE1 ${BLUE}$FILE1${RST} ${MAGENTA}to replace${RST} FILE2 ${BLUE}$FILE2${RST}\n";
+                        print "2) to copy FILE2 ${BLUE}$FILE2${RST} ${MAGENTA}to replace${RST} FILE1 ${BLUE}$FILE1${RST}\n";
+                        $_ = <TTY>;
+                        ($_) = /(\d)/;
+                        if ($_ == 1) {
+                            print "You have entered 1\n";
+                            $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                            $_ = `$cmd`;
+                            $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                            $file2sig{$FILE2} = `$cmd`;
+                            print "FILE1 ${BLUE}$FILE1${RST} ${MAGENTA}replaced${RST} FILE2 ${BLUE}$FILE2${RST}\n";
+                        } elsif ($_ == 2) {
+                            print "You have entered 2\n";
+                            $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
+                            $_ = `$cmd`;
+                            $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+                            $file1sig{$FILE1} = `$cmd`;
+                            print "FILE2 ${BLUE}$FILE2${RST} ${MAGENTA}replaced${RST} FILE1 ${BLUE}$FILE1${RST}\n";
+                        } else {
+                            print "You have entered invalid choice.  No action taken\n";
+                        }
+                        close(TTY);
+                    } else {
+                        print "   ${MAGENTA}Either delete one file and restart, or rewrite one to be pushed to the other${RST}\n";
+
+                        #print "   ${RED}COPY FILE1 to overwrite FILE2${RST}\n";
+                        #$cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                        #$_ = `$cmd`;
+                        #$cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                        #$file2sig{$FILE2} = `$cmd`;
+                    }
+                }
+            } elsif ($file1sum ne '') {
+                print "   $FILE1 EXIST, COPY to FILE2 $FILE2\n";
+                $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                $_ = `$cmd`;
+                $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                $file2sig{$FILE2} = `$cmd`;
+            } elsif ($file2sum ne '') {
+                print "   $FILE2 EXIST, COPY to FILE1 $FILE1\n";
+                $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
+                $_ = `$cmd`;
+                $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+                $file1sig{$FILE1} = `$cmd`;
+            }
+        }
+        # push(@chgspec, "$cmd1``$file1``$cmd2");
+        if (($CMD1, $FILE1, $CMD2) = 
+            $chgspec[$cnt] =~ /^([^`]+?)``([^`]+?)``([^`]+?)$/) {
+            print "CHG: $cnt: $CMD1 ` $FILE1 ` $CMD2\n";
+
+            $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+            # ffe51486284a93a4c6769e8b95056c9a
+            $_ = `$cmd`;
+            # drop filename after md5sum
+            s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+            if (/([0-9a-f]{32,32})/) {
+                # looks like md5sum
+                print "   FILE1: $cmd\n    => $_\n";
+                $chgsum = $1;
+                $chgsig{$FILE1} = $_;
+            } else {
+                print "   FILE1: $cmd\n    => FILE MISSING\n";
+                $chgsum = '';
+                $chgsig{$FILE1} = '';
+            }
         }
     }
 
@@ -316,73 +341,108 @@ while ($diffonly == 0) {
     }
 
     for ($cnt = 0; $cnt <= $#filespec; $cnt++) {
-        ($CMD1, $FILE1, $CMD2, $FILE2) = split ('`', $filespec[$cnt]);
-        $file1name = $FILE1;
-        $file2name = $FILE2;
-        $file1name =~ s/.*\/([^\/]+)$/$1/;
-        $file2name =~ s/.*\/([^\/]+)$/$1/;
-        if ($dbg >= 1) {
-            print "  $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name\n";
-        } else {
-            print "$t: $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name  \r";
-        }
+        # push(@filespec, "$cmd1`$file1`$cmd2`$file2");
+        if (($CMD1, $FILE1, $CMD2, $FILE2) = 
+            $filespec[$cnt] =~ /^([^`]+?)`([^`]+?)`([^`]+?)`([^`]+?)$/) {
+            $file1name = $FILE1;
+            $file2name = $FILE2;
+            $file1name =~ s/.*\/([^\/]+)$/$1/;
+            $file2name =~ s/.*\/([^\/]+)$/$1/;
+            if ($dbg >= 1) {
+                print "  $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name\n";
+            } else {
+                print "$t: $cnt: $CMD1 ` $file1name ` $CMD2 ` $file2name  \r";
+            }
 
-        $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
-        # ffe51486284a93a4c6769e8b95056c9a
-        $newsig = `$cmd`;
-        # drop filename after md5sum
-        $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
-        print "   FILE1: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
-        if ($newsig =~ /([0-9a-f]{32,32})/) {
-            # looks like md5sum
-            print "    old $file1sig{$FILE1}\n", if ($dbg >= 5);
-            if ($file1sig{$FILE1} ne $newsig) {
-                # save it
-                $file1sig{$FILE1} = $newsig;
-                print "$t\n", if ($dbg < 1);
-                print "    FILE1 ${RED}changed${RST}: ${BLUE}$newsig${RST} , ${RED}so push to${RST} FILE2\n";
+            $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+            # ffe51486284a93a4c6769e8b95056c9a
+            $newsig = `$cmd`;
+            # drop filename after md5sum
+            $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+            print "   FILE1: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
+            if ($newsig =~ /([0-9a-f]{32,32})/) {
+                # looks like md5sum
+                print "    old $file1sig{$FILE1}\n", if ($dbg >= 5);
+                if ($file1sig{$FILE1} ne $newsig) {
+                    # save it
+                    $file1sig{$FILE1} = $newsig;
+                    print "$t\n", if ($dbg < 1);
+                    print "    FILE1 ${RED}changed${RST}: ${BLUE}$newsig${RST} , ${RED}so push to${RST} FILE2\n";
 
-                $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
-                $_ = `$cmd`;
-                print "     => FILE2: $cmd\n", if ($dbg >= 3);
+                    $cmd = "$CMD1 'cat $FILE1' | $CMD2 'cat > $FILE2'";
+                    $_ = `$cmd`;
+                    print "     => FILE2: $cmd\n", if ($dbg >= 3);
 
-                $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-                $newsig = `$cmd`;
-                $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
-                print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
-                if ($newsig =~ /([0-9a-f]{32,32})/) {
-                    # looks like md5sum
+                    $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+                    $newsig = `$cmd`;
+                    $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+                    print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
+                    if ($newsig =~ /([0-9a-f]{32,32})/) {
+                        # looks like md5sum
+                        $file2sig{$FILE2} = $newsig;
+                    }
+                }
+            }
+
+            $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
+            # ffe51486284a93a4c6769e8b95056c9a
+            $newsig = `$cmd`;
+            # drop filename after md5sum
+            $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+            print "   FILE2: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
+            if ($newsig =~ /([0-9a-f]{32,32})/) {
+                # looks like md5sum
+                print "    old $file2sig{$FILE2}\n", if ($dbg >= 5);
+                if ($file2sig{$FILE2} ne $newsig) {
+                    # save it
                     $file2sig{$FILE2} = $newsig;
+                    print "$t\n", if ($dbg < 1);
+                    print "    FILE2 ${RED}changed${RST}: ${BLUE}$newsig${RST} , ${RED}so push to${RST} FILE1\n";
+
+                    $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
+                    $_ = `$cmd`;
+                    print "     => FILE1: $cmd\n", if ($dbg >= 3);
+
+                    $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+                    $newsig = `$cmd`;
+                    $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+                    print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
+                    if ($newsig =~ /([0-9a-f]{32,32})/) {
+                        # looks like md5sum
+                        $file1sig{$FILE1} = $newsig;
+                    }
                 }
             }
         }
+        # push(@chgspec, "$cmd1``$file1``$cmd2");
+        if (($CMD1, $FILE1, $CMD2) = 
+            $chgspec[$cnt] =~ /^([^`]+?)``([^`]+?)``([^`]+?)$/) {
+            $file1name = $FILE1;
+            $file1name =~ s/.*\/([^\/]+)$/$1/;
+            if ($dbg >= 1) {
+                print "  $cnt: $CMD1 ` $file1name ` $CMD2\n";
+            } else {
+                print "$t: $cnt: $CMD1 ` $file1name ` $CMD2  \r";
+            }
 
-        $cmd = "$CMD2 'ls --full-time $FILE2 | tr \"\\n\" \" \" ; md5sum $FILE2 | tr \"\\n\" \" \"'";
-        # ffe51486284a93a4c6769e8b95056c9a
-        $newsig = `$cmd`;
-        # drop filename after md5sum
-        $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
-        print "   FILE2: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
-        if ($newsig =~ /([0-9a-f]{32,32})/) {
-            # looks like md5sum
-            print "    old $file2sig{$FILE2}\n", if ($dbg >= 5);
-            if ($file2sig{$FILE2} ne $newsig) {
-                # save it
-                $file2sig{$FILE2} = $newsig;
-                print "$t\n", if ($dbg < 1);
-                print "    FILE2 ${RED}changed${RST}: ${BLUE}$newsig${RST} , ${RED}so push to${RST} FILE1\n";
+            $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
+            # ffe51486284a93a4c6769e8b95056c9a
+            $newsig = `$cmd`;
+            # drop filename after md5sum
+            $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
+            print "   FILE: $cmd\n    ==> $newsig\n", if ($dbg >= 5);
+            if ($newsig =~ /([0-9a-f]{32,32})/) {
+                # looks like md5sum
+                print "    old $chgsig{$FILE1}\n", if ($dbg >= 5);
+                if ($chgsig{$FILE1} ne $newsig) {
+                    # save it
+                    $chgsig{$FILE1} = $newsig;
+                    print "$t\n", if ($dbg < 1);
+                    print "    Chg cmd for FILE changed: $newsig\n";
 
-                $cmd = "$CMD2 'cat $FILE2' | $CMD1 'cat > $FILE1'";
-                $_ = `$cmd`;
-                print "     => FILE1: $cmd\n", if ($dbg >= 3);
-
-                $cmd = "$CMD1 'ls --full-time $FILE1 | tr \"\\n\" \" \" ; md5sum $FILE1 | tr \"\\n\" \" \"'";
-                $newsig = `$cmd`;
-                $newsig =~ s/^(.+[0-9a-f]{32,32})( .+)$/$1/;
-                print "      new sum: $cmd\n       => $_\n", if ($dbg >= 5);
-                if ($newsig =~ /([0-9a-f]{32,32})/) {
-                    # looks like md5sum
-                    $file1sig{$FILE1} = $newsig;
+                    $cmd = "$CMD1 \"$CMD2\"";
+                    $_ = `$cmd`;
+                    print "     == FILE: $cmd => $_\n";
                 }
             }
         }
