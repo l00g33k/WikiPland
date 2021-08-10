@@ -82,24 +82,24 @@ sub l00http_cal_proc {
         #            <a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
         print $sock "<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a>\n";
 
-		if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
+        if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
             $buf = '';
             $lnno = 0;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
-			    $lnno++;
-				if ($lnno == $form->{'lnno'}) {
+                $lnno++;
+                if ($lnno == $form->{'lnno'}) {
                     ($date, $len, @todos) = split (',', $_);
                     $todo = join(',', @todos);
-			        $buf .= "$form->{'moveto'},$len,$todo\n";
-				} else {
-				    $buf .= $_;
-				}
-			}
+                    $buf .= "$form->{'moveto'},$len,$todo\n";
+                } else {
+                    $buf .= $_;
+                }
+            }
             &l00backup::backupfile ($ctrl, $fullpathname, 0, 0);
             &l00httpd::l00fwriteOpen($ctrl, $fullpathname);
             &l00httpd::l00fwriteBuf($ctrl, $buf);
             &l00httpd::l00fwriteClose($ctrl);
-		}
+        }
         print $sock "<p><a href=\"/cal.htm?path=$fullpathname\">Return to calendar</a>\n";
         print $sock $ctrl->{'htmlfoot'};
         return;
@@ -108,7 +108,7 @@ sub l00http_cal_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<a href=\"/recedit.htm?record1=^\\d%2B\\%2F\\d%2B\\%2F\\d%2B\\%2B%2A\\d%2A,\\d%2B,&path=$fullpathname\">Recedit</a> - \n";
-	print $sock "<a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
+    print $sock "<a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
     print $sock "<a name=\"top\"></a>\n";
 
     # remember parameters if new ones are provided
@@ -139,53 +139,56 @@ sub l00http_cal_proc {
     # 1) Read a description file
 
     undef %db;
-	if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
+    if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
         $lnno = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             chomp;
             $lnno++;
             if (/^#/) {
-	        # # in column 1 is remark
+            # # in column 1 is remark
                 next;
             }
             if (!/^\d/) {
-	        # must start with numeric
+            # must start with numeric
                 next;
             }
             if (!/$filter/i) {
                 # not matching filter
                 next;
             }
-            ($date, $len, @todos) = split (',', $_);
-            $todo = join(',', @todos);
-            if (defined ($date) && defined ($len) && defined ($todo)) {
-                if (defined ($form->{'movefrom'})) {
-				    # selected movefrom date, list items for picking
-                    if ($date eq $form->{'movefrom'}) {
-                        print $sock "<br>Choose to move: <a href=\"/cal.htm?path=$fullpathname&movelnno=$lnno\">$_</a>\n";
+            # 2021/9/17,4,todo
+            if (/^20\d\d\/\d\d*\/\d\d*,\d+,/) {
+                ($date, $len, @todos) = split (',', $_);
+                $todo = join(',', @todos);
+                if (defined ($date) && defined ($len) && defined ($todo)) {
+                    if (defined ($form->{'movefrom'})) {
+                        # selected movefrom date, list items for picking
+                        if ($date eq $form->{'movefrom'}) {
+                            print $sock "<br>Choose to move: <a href=\"/cal.htm?path=$fullpathname&movelnno=$lnno\">$_</a>\n";
+                        }
                     }
-                }
-                if (defined ($form->{'movelnno'})) {
-				    # Announce item to move picked
-                    if ($lnno == $form->{'movelnno'}) {
-                        print $sock "<br>Moving: $_<br>Pick 'to' date on left half of date<br>\n";
+                    if (defined ($form->{'movelnno'})) {
+                        # Announce item to move picked
+                        if ($lnno == $form->{'movelnno'}) {
+                            print $sock "<br>Moving: $_<br>Pick 'to' date on left half of date<br>\n";
+                        }
                     }
+                    print "cal: >$todo<>$len<>$date<\n", if ($ctrl->{'debug'} >= 3);
+                    if ($len < -1) {
+                        # negative length means given date is the last day.
+                        # adjust $date backward so duration ends on the given date
+                        $len = -$len;
+                        ($year,$mon, $mday,) = split ('/', $date);
+                        $year -= 1900;
+                        ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+                        ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                       gmtime (($julian - $len + 1) * 3600 * 24);
+                        $gsmon++;
+                        $gsyear += 1900;
+                        $date = "$gsyear/$gsmon/$gsmday";
+                    }
+                    @db{"$date`$len`$todo"} = 'x';
                 }
-                print "cal: >$todo<>$len<>$date<\n", if ($ctrl->{'debug'} >= 3);
-                if ($len < -1) {
-                    # negative length means given date is the last day.
-                    # adjust $date backward so duration ends on the given date
-                    $len = -$len;
-                    ($year,$mon, $mday,) = split ('/', $date);
-                    $year -= 1900;
-                    ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
-                    ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
-                                   gmtime (($julian - $len + 1) * 3600 * 24);
-                    $gsmon++;
-                    $gsyear += 1900;
-                    $date = "$gsyear/$gsmon/$gsmday";
-                }
-                @db{"$date`$len`$todo"} = 'x';
             }
         }
         if (defined ($form->{'today'}))  {
@@ -212,12 +215,12 @@ sub l00http_cal_proc {
             $date = $1;
             $rpt = $2;
         } elsif ($len <= 3) {
-		    # color $todo
-		    $todo = "<font style=\"color:black;background-color:aqua\">$todo</font>";
-		} else {
-		    # color $todo
-		    $todo = "<font style=\"color:black;background-color:silver\">$todo</font>";
-		}
+            # color $todo
+            $todo = "<font style=\"color:black;background-color:aqua\">$todo</font>";
+        } else {
+            # color $todo
+            $todo = "<font style=\"color:black;background-color:silver\">$todo</font>";
+        }
         if ($ldate ne $date) {
             ($year,$mon, $mday,) = split ('/', $date);
             $year -= 1900;
