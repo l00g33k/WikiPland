@@ -8,7 +8,7 @@ use l00wikihtml;
 
 my %config = (proc => "l00http_slideshow_proc",
               desc => "l00http_slideshow_desc");
-my ($width, $height, $llspath, $picsperpage, $nonewline, $gpstrk, $gpstrk0, %locs);
+my ($width, $height, $llspath, $picsperpage, $nonewline, $logpic, $gpstrk, $gpstrk0, %locs);
 my ($showname);
 $width = '100%';
 $height = '';
@@ -17,6 +17,7 @@ $nonewline = '';
 $showname = '';;
 $gpstrk0 = '.';
 $gpstrk = '';
+$logpic = '';
 
 sub l00http_slideshow_j2date {
     my ($datetimestr) = @_;
@@ -141,6 +142,13 @@ sub l00http_slideshow_proc {
         if (defined ($form->{'gpstrk'}) &&
             (length($form->{'gpstrk'}) > 0)) {
             $gpstrk = $form->{'gpstrk'};
+        }
+        if (defined ($form->{'logpic'})) {
+            if (length($form->{'logpic'}) > 0) {
+                $logpic = $form->{'logpic'};
+            } else {
+                $logpic = '';
+            }
         }
     }
 
@@ -269,6 +277,9 @@ sub l00http_slideshow_proc {
                         $urlname = "$path$file";
                         $urlname =~ s/\+/%2B/g;
                         $outbuf .= "<a href=\"/ls.htm/$file?path=$urlname\" target=\"_blank\"><img src=\"/ls.htm/$file?path=$urlname\" alt=\"$file\" width=\"$width\" height=\"$height\"><a/>\n";
+                        if ($logpic ne '') {
+                            $outbuf .= "<a href=\"/blog.htm?save=save&&stylecurr=bare&stylenew=log&path=$logpic&buffer=$path$file\" target=\"_blank\">&lt;+<a/>\n";
+                        }
                         $outbuf .= "$newline\n";
                         $phase++;
                     }
@@ -361,7 +372,7 @@ aassdd
     print $sock "<a/><form action=\"/slideshow.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
-    print $sock "<input type=\"submit\" name=\"set\" value=\"Set\"><br>Image size, e.g.: 1024 or 100%\n";
+    print $sock "<input type=\"submit\" name=\"set\" value=\"S&#818;et\" accesskey=\"s\"><br>Image size, e.g.: 1024 or 100%\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Width: <input type=\"text\" size=\"4\" name=\"width\" value=\"$width\">\n";
@@ -381,6 +392,9 @@ aassdd
     print $sock "<tr><td>\n";
     print $sock "GPS trk: <input type=\"text\" size=\"6\" name=\"gpstrk\" value=\"$gpstrk\">\n";
     print $sock "<input type=\"checkbox\" name=\"reloadgps\">Reload\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "log pic: <input type=\"text\" size=\"6\" name=\"logpic\" value=\"$logpic\">\n";
     print $sock "</td></tr>\n";
     print $sock "</table>\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
