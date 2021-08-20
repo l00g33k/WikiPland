@@ -185,7 +185,10 @@ sub findInBuf  {
     # $lastfew  : leading context
     # $nextfew  : tailing context
     # $sort     : if true, sort find results
-    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort, $findstart, $findlen) = @_;
+    # $findstart: 
+    # $findlen  :
+    # $excludeinfound : exclude in found
+    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort, $findstart, $findlen, $excludeinfound) = @_;
     my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, @founds, 
         $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln, $dsplnno);
 
@@ -279,8 +282,23 @@ sub findInBuf  {
         # $findtext could be multiple pattern separated by ||
         foreach $pattern (split ('\|\|', $findtext)) {
             if ($line =~ /$pattern/i) {
+                # it's a hit
                 $hit = 1;
                 $hitpast = $nextfew;
+                # but is it excluded?
+                if ($excludeinfound ne '') {
+                    # exclude in found specified
+                    foreach $pattern (split ('\|\|', $excludeinfound)) {
+                        if ($line =~ /$pattern/i) {
+                            # clear hit flags
+                            $hit = 0;
+                            $hitpast = 0;
+                            last;
+                        }
+                    }
+                } else {
+                    last;
+                }
             }
         }
         if ($invertfind) {

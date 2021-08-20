@@ -12,10 +12,11 @@ my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext, $sortfind);
 my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew, $ansi, %ansicode);
-my ($findstart, $findlen);
+my ($findstart, $findlen, $excludeinfound);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
+$excludeinfound = '';
 $wraptext = '';
 $literal = '';
 $nohdr = '';
@@ -434,6 +435,9 @@ sub l00http_view_proc {
                 if (defined ($form->{'findtext'})) {
                     $findtext = $form->{'findtext'};
                 }
+                if (defined ($form->{'excludeinfound'})) {
+                    $excludeinfound = $form->{'excludeinfound'};
+                }
                 if (defined ($form->{'block'})) {
                     $block = $form->{'block'};
                     if (length($block) <= 0) {
@@ -455,7 +459,11 @@ sub l00http_view_proc {
                 } else {
                     $sortfind = '';
                 }
-                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, $buffer, ($literal eq 'checked'), $lastfew, $nextfew, ($sortfind eq 'checked'), $findstart, $findlen);
+print "\n\nexcludeinfound >$excludeinfound<\n\n";
+                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, 
+                    $buffer, ($literal eq 'checked'), $lastfew, 
+                    $nextfew, ($sortfind eq 'checked'), $findstart, 
+                    $findlen, $excludeinfound);
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
@@ -828,6 +836,11 @@ sub l00http_view_proc {
     $_ = $findtext;
     s/"/&quot;/g;   # can't use " in input value
     print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$_\" accesskey=\"e\"> <input type=\"submit\" name=\"clr\" value=\"clr\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Exclude in found:\n";
+    print $sock "</td><td>\n";
+    print $sock "<input type=\"text\" size=\"12\" name=\"excludeinfound\" value=\"$excludeinfound\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Block mark:\n";
