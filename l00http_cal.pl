@@ -157,7 +157,9 @@ sub l00http_cal_proc {
                 next;
             }
             # 2021/9/17,4,todo
-            if (/^20\d\d\/\d\d*\/\d\d*,\d+,/) {
+            # 2010/10/14+7,1,trash
+            if (/^20\d\d\/\d\d*\/\d\d*,\d+,/ ||
+                /^20\d\d\/\d\d*\/\d\d*\+\d+,\d+,/) {
                 ($date, $len, @todos) = split (',', $_);
                 $todo = join(',', @todos);
                 if (defined ($date) && defined ($len) && defined ($todo)) {
