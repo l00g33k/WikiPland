@@ -838,7 +838,12 @@ if(0){
 sub l00PopMsg {
     my ($ctrl, $buf) = @_;
 
-    if ($ctrl->{'os'} eq 'and') {
+    if (defined($ctrl->{'toastapp'}) && 
+        (-f $ctrl->{'toastapp'}) && 
+        defined($ctrl->{'toastopt'})) {
+print "TOAST : $ctrl->{'toastapp'} $ctrl->{'toastopt'}\n";
+        `$ctrl->{'toastapp'} $ctrl->{'toastopt'} $buf`;
+    } elsif ($ctrl->{'os'} eq 'and') {
         $ctrl->{'droid'}->makeToast($buf);
     } elsif ($ctrl->{'os'} eq 'win') {
         `msg %USERNAME% /TIME:1 $buf`;
