@@ -115,6 +115,8 @@ sub l00http_view_proc {
     if (defined ($form->{'clr'})) {
         undef $form->{'findtext'};
         $findtext = '';
+        undef $form->{'excludeinfound'};
+        $excludeinfound = '';
     }
 
     if (defined ($form->{'cbpaste'})) {
