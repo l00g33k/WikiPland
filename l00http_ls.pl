@@ -1349,8 +1349,9 @@ if ($dbgskipto) {
             # dirfilter
             if ($dirfilter ne '') {
                 $skip = 1;
+                $tmp = $path2.$file;
                 foreach $pattern (split ('\|\|', $dirfilter)) {
-                    if ($file =~ /$pattern/i) {
+                    if ($tmp =~ /$pattern/i) {
                         # it's a hit
                         $skip = 0;
                         last;
