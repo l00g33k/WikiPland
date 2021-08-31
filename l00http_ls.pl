@@ -32,7 +32,7 @@ my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
 my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
-my ($lfisbr, $embedpic, $chno, $bare, $hilite);
+my ($lfisbr, $embedpic, $chno, $bare, $hilite, $dirfilter);
 
 
 # $skipto debugging
@@ -57,6 +57,7 @@ $embedpic = '';
 $chno = '';
 $bare = '';
 $hilite = '';
+$dirfilter = '';
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -240,7 +241,7 @@ sub l00http_ls_proc {
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
-    my (@regexs, $regex);
+    my (@regexs, $regex, $skip, $pattern);
 
 
     $wikihtmlflags = 0;
@@ -289,7 +290,7 @@ sub l00http_ls_proc {
             }
         }
     }
-    if ((defined ($form->{'submit'})) && ($form->{'submit'} eq 'Submit')) {
+    if (defined ($form->{'submit'})) {
         if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) {
             $sortkey1name2date = 2;
         } else {
@@ -319,6 +320,9 @@ sub l00http_ls_proc {
         if (defined ($form->{'hilite'})) {
             $hilite = $form->{'hilite'};
         }
+        if (defined ($form->{'dirfilter'})) {
+            $dirfilter = $form->{'dirfilter'};
+        }
 
         if (defined ($form->{'skipto'}) && ($form->{'skipto'} =~ /(\d+)/)) {
             $skipto = $1;
@@ -345,7 +349,7 @@ sub l00http_ls_proc {
     print "ls: path >$path<\n", if ($ctrl->{'debug'} >= 3);
 
     if ($ctrl->{'ishost'}) {
-        if ((defined ($form->{'submit'})) && ($form->{'submit'} eq 'Submit')) {
+        if (defined ($form->{'submit'})) {
             if ((defined ($form->{'noclinav'})) && ($form->{'noclinav'} eq 'on')) {
                 $ctrl->{'noclinav'} = 1;
                 $ctrl->{'clipath'} = $path;
@@ -1310,6 +1314,9 @@ if ($dbgskipto) {
         print $sock "-- <a href=\"/ls.htm?path=$form->{'path'}&submit=Submit&sort=on\">time)</a> \n";
         print $sock "<hr>\n";
 
+        if ($dirfilter ne '') {
+            print $sock "Dir. filter active: $dirfilter<p>\n";
+        }
 
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
 
@@ -1339,6 +1346,21 @@ if ($dbgskipto) {
             @dirs = sort llstricmp readdir (DIR);
         }
         foreach $file (@dirs) {
+            # dirfilter
+            if ($dirfilter ne '') {
+                $skip = 1;
+                foreach $pattern (split ('\|\|', $dirfilter)) {
+                    if ($file =~ /$pattern/i) {
+                        # it's a hit
+                        $skip = 0;
+                        last;
+                    }
+                }
+                if ($skip) {
+                    # hit, skip it
+                    next;
+                }
+            }
             if (-d $path2.$file) {
                 # it's a directory, print a link to a directory
                 if ($file =~ /^\.$/) {
@@ -1540,6 +1562,11 @@ if ($dbgskipto) {
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
+            print $sock "        <td>&nbsp;</td>\n";
+            print $sock "        <td>D&#818;ir. filter: <input type=\"text\" size=\"12\" name=\"dirfilter\" value=\"$dirfilter\" accesskey=\"d\"></td>\n";
+            print $sock "    </tr>\n";
+
+            print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"chno\" $chno>Show chapter #.\n";
             print $sock "            <input type=\"checkbox\" name=\"lineno\">line#</td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"newwin\">Open new window</td>\n";
@@ -1565,7 +1592,7 @@ if ($dbgskipto) {
 
             }
             print $sock "    <tr>\n";
-            print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+            print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"showbak\">Show .bak files</td>\n";
             print $sock "    </tr>\n";
 
