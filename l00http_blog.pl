@@ -157,6 +157,15 @@ sub l00http_blog_proc {
                     if ($nouscore =~ /(\d+)d/) {
                         $addtimeval{$nouscore} = 24 * 3600 * $1;
                     }
+                    if ($nouscore =~ /-(\d+)m/) {
+                        $addtimeval{$nouscore} = -60 * $1;
+                    }
+                    if ($nouscore =~ /-(\d+)h/) {
+                        $addtimeval{$nouscore} = -3600 * $1;
+                    }
+                    if ($nouscore =~ /-(\d+)d/) {
+                        $addtimeval{$nouscore} = -24 * 3600 * $1;
+                    }
                     push(@blocktime, $nouscore);
                 }
                 # %INCLUDE<./xxx.txt>%
@@ -201,6 +210,15 @@ sub l00http_blog_proc {
                         }
                         if ($nouscore =~ /(\d+)d/) {
                             $addtimeval{$nouscore} = 24 * 3600 * $1;
+                        }
+                        if ($nouscore =~ /-(\d+)m/) {
+                            $addtimeval{$nouscore} = -60 * $1;
+                        }
+                        if ($nouscore =~ /-(\d+)h/) {
+                            $addtimeval{$nouscore} = -3600 * $1;
+                        }
+                        if ($nouscore =~ /-(\d+)d/) {
+                            $addtimeval{$nouscore} = -24 * 3600 * $1;
                         }
                         push(@blocktime, $nouscore);
                     }
