@@ -1315,7 +1315,8 @@ if ($dbgskipto) {
         print $sock "<hr>\n";
 
         if ($dirfilter ne '') {
-            print $sock "Dir. filter active: $dirfilter<p>\n";
+            print $sock "<a href=\"/ls.htm?path=$form->{'path'}&submit=Submit&dirfilter=\">Dir. filter active</a>: <font style=\"color:black;background-color:yellow\">$dirfilter<\/font><p>\n";
+
         }
 
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -1564,7 +1565,7 @@ if ($dbgskipto) {
 
             print $sock "    <tr>\n";
             print $sock "        <td>&nbsp;</td>\n";
-            print $sock "        <td>D&#818;ir. filter: <input type=\"text\" size=\"12\" name=\"dirfilter\" value=\"$dirfilter\" accesskey=\"d\"></td>\n";
+            print $sock "        <td>Dir. f&#818;ilter: <input type=\"text\" size=\"12\" name=\"dirfilter\" value=\"$dirfilter\" accesskey=\"f\"></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
@@ -1630,12 +1631,12 @@ if ($dbgskipto) {
                 print $sock "<tr><td>\n";
                 print $sock "<input type=\"submit\" name=\"find\" value=\"Find\">\n";
                 print $sock "</td><td>\n";
-                print $sock "F&#818;ind in this file\n";
+                print $sock "Find in this file\n";
                 print $sock "</td></tr>\n";
                 print $sock "<tr><td>\n";
                 print $sock "RegEx:\n";
                 print $sock "</td><td>\n";
-                print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\" accesskey=\"f\">\n";
+                print $sock "<input type=\"text\" size=\"12\" name=\"findtext\" value=\"$findtext\">\n";
                 print $sock "</td></tr>\n";
                 print $sock "<tr><td>\n";
                 print $sock "Block mark:\n";
