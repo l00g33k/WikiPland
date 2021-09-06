@@ -165,6 +165,9 @@ sub l00http_ls_conttype {
     } elsif ($fname =~ /\.pdf$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: application/pdf\r\n";
+    } elsif ($fname =~ /\.wav$/i) {
+        $urlraw = 1;
+        $conttype = "Content-Type: audio/wav\r\n";
     } elsif ($fname =~ /\.mp3$/i) {
         $urlraw = 1;
         $conttype = "Content-Type: audio/mpeg\r\n";
