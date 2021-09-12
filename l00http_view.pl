@@ -906,6 +906,15 @@ print "\n\nexcludeinfound >$excludeinfound<\n\n";
     print $sock "<a href=\"/launcher.htm?path=$pnameurl$fnameurl\">Launcher</a> - \n";
     print $sock "<a href=\"/ls.htm?find=Find&findtext=%3Ano%5E%3A&block=.&path=$pnameurl$fnameurl\">Find in this file</a>\n";
 
+    if (defined($ctrl->{'sshsync'}) &&
+        (($tmp, $tmpln) = $ctrl->{'sshsync'} =~ /^(.+?):(.+)$/)) {
+        print $sock "<p>sshsync.pl command line:\n<pre>".
+            "echo -e \"\\\n".
+            "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
+            "\" | perl $tmpln/sshsync.pl</pre>\n";
+    }
+
+
     print $sock "<p>Jump to line: ";
     print $sock "<a href=\"#top\">top</a> - \n";
     $tmp = 200;

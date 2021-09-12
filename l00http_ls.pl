@@ -1714,6 +1714,15 @@ if ($dbgskipto) {
                 print $sock "<p>Send $path2 to <a href=\"/launcher.htm?path=$path2\">launcher</a>.\n";
                 print $sock "<a href=\"/ls.htm?path=$path2&raw=on\">Raw</a>\n";
                 print $sock "<p><a href=\"/view.htm?path=$path2\">View</a> $path2\n";
+
+                if (defined($ctrl->{'sshsync'}) &&
+                    (($tmp, $tmp2) = $ctrl->{'sshsync'} =~ /^(.+?):(.+)$/)) {
+                    print $sock "<p>sshsync.pl command line:\n<pre>".
+                        "echo -e \"\\\n".
+                        "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
+                        "\" | perl $tmp2/sshsync.pl</pre>\n";
+                }
+
                 print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
                 print $sock "<td><input type=\"submit\" name=\"altsendto\" value=\"'Size' send to\"></td>\n";
