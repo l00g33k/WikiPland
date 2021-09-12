@@ -319,7 +319,7 @@ sub l00http_md5sizediff_proc {
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist, $phase);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
     my ($thisonly, $thatonly, $diffmd5sum, $uniquemd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
-    my (%thisext, %thatext);
+    my (%thisext, %thatext, %filtercnt);
 
     $uniquemd5sum = 0;
 
@@ -461,6 +461,7 @@ sub l00http_md5sizediff_proc {
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname side: $side\n";
             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.all.htm"} = '';
             # split combined input files for each side
+            $filtercnt{$sname} = 0;
             foreach $file (split('\|\|', $side)) {
                 print $sock "$sname side: <a href=\"/view.htm?path=$file\" target=\"_blank\">$file</a>\n";
                 $cnt = 0;
@@ -530,6 +531,7 @@ sub l00http_md5sizediff_proc {
                                     $thatext{'(no ext)'}++;
                                 }
                             }
+                            $filtercnt{$sname}++;
                             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.all.htm"} .= "$_\n";
                             ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
                             $fname = lc($fname);
@@ -1453,8 +1455,8 @@ sub l00http_md5sizediff_proc {
         # l00://md5sizediff.THIS.all.htm
         # -------------------------------------
         print $sock "<tr><td>\n";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.all.htm\">l00://md5sizediff.THIS.all.htm</a> </td><td align=\"right\">&nbsp;";
-        print $sock "</td><td align=\"right\">&nbsp;\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.all.htm\">l00://md5sizediff.THIS.all.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THIS.all.htm"});
+        print $sock "</td><td align=\"right\">$filtercnt{'THIS'}\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }
@@ -1463,8 +1465,8 @@ sub l00http_md5sizediff_proc {
         # l00://md5sizediff.THAT.all.htm
         # -------------------------------------
         print $sock "<tr><td>\n";
-        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.all.htm\">l00://md5sizediff.THAT.all.htm</a> </td><td align=\"right\">&nbsp;";
-        print $sock "</td><td align=\"right\">&nbsp;\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.all.htm\">l00://md5sizediff.THAT.all.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.THAT.all.htm"});
+        print $sock "</td><td align=\"right\">$filtercnt{'THAT'}\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }
