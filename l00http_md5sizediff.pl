@@ -483,6 +483,7 @@ sub l00http_md5sizediff_proc {
                         s/\r//;
                         s/\n//;
                         if (/^\|\|/) {
+                            $cnt++;
                             ($dummy, $size, $md5sum, $pfname) = split('\|\|', $_);
                             $size   =~ s/^ *//;
                             $md5sum =~ s/^ *//;
@@ -538,7 +539,6 @@ sub l00http_md5sizediff_proc {
                             $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
                             $byname{$sname}{$fname}{$md5sum} = $pfname;
                             $sizebymd5sum{$md5sum} = $size;
-                            $cnt++;
                         } elsif (/^\* (.+)/) {
                             if ($orgdir{$sname} ne '') {
                                 $orgdir{$sname} .= '||';
