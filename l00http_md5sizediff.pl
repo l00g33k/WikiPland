@@ -314,12 +314,14 @@ sub l00http_md5sizediff_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($jumper, %bymd5sum, %byname, %sizebymd5sum, $side, $sname, $files, $file, $cnt);
-    my ($dummy, $size, $md5sum, $pfname, $pname, $fname, %treesize, $tmp);
-    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting, $filterthis, $filterthat);
+    my ($dummy, $size, $md5sum, $pfname, $pname, $fname, %treesize, $tmp, %uniquefiles);
+    my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting, $filterthis, $filterthat, $filterthis0, $filterthat0, $filterthisexclu, $filterthatexclu);
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist, $phase);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
-    my ($thisonly, $thatonly, $diffmd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
+    my ($thisonly, $thatonly, $diffmd5sum, $uniquemd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
     my (%thisext, %thatext);
+
+    $uniquemd5sum = 0;
 
     if (defined ($form->{'mode'})) {
         if ($form->{'mode'} eq 'dos') {
@@ -355,14 +357,30 @@ sub l00http_md5sizediff_proc {
     if (defined ($form->{'filterthis'}) &&
         (length($form->{'filterthis'}) > 0)) {
         $filterthis = $form->{'filterthis'};
+        $filterthis0 = $filterthis;
+        $filterthisexclu = 0;
+        if ($filterthis =~ /^!!/) {
+            $filterthisexclu = 1;
+            $filterthis0 = substr($filterthis, 2, 9999);
+        }
     } else {
         $filterthis = '';
+        $filterthis0 = $filterthis;
+        $filterthisexclu = 0;
     }
     if (defined ($form->{'filterthat'}) &&
         (length($form->{'filterthat'}) > 0)) {
         $filterthat = $form->{'filterthat'};
+        $filterthat0 = $filterthat;
+        $filterthatexclu = 0;
+        if ($filterthat =~ /^!!/) {
+            $filterthatexclu = 1;
+            $filterthat0 = substr($filterthat, 2, 9999);
+        }
     } else {
         $filterthat = '';
+        $filterthat0 = $filterthat;
+        $filterthatexclu = 0;
     }
 
 
@@ -441,9 +459,10 @@ sub l00http_md5sizediff_proc {
             $files = 0;
             $orgdir{$sname} = '';
             $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "$sname side: $side\n";
-            print $sock "$sname side: $side\n";
+            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.all.htm"} = '';
             # split combined input files for each side
             foreach $file (split('\|\|', $side)) {
+                print $sock "$sname side: <a href=\"/view.htm?path=$file\" target=\"_blank\">$file</a>\n";
                 $cnt = 0;
                 if ((length($file) > 0) && 
                     &l00httpd::l00freadOpen($ctrl, $file)) {
@@ -471,10 +490,17 @@ sub l00http_md5sizediff_proc {
                             $md5sum =~ s/ *$//;
                             $pfname =~ s/ *$//;
                             if ($sname eq 'THIS') {
-                                if ($filterthis ne '') {
-                                    # we are filtering input. Skip if matched
-                                    if ($pfname =~ /$filterthis/i) {
-                                        next;
+                                if ($filterthis0 ne '') {
+                                    if ($filterthisexclu) {
+                                        # we are filtering input. Skip if matched
+                                        if ($pfname =~ /$filterthis0/i) {
+                                            next;
+                                        }
+                                    } else {
+                                        # we are filtering input. Skip if not matched
+                                        if ($pfname !~ /$filterthis0/i) {
+                                            next;
+                                        }
                                     }
                                 }
                                 # count extensions
@@ -484,10 +510,17 @@ sub l00http_md5sizediff_proc {
                                     $thisext{'(no ext)'}++;
                                 }
                             } else {
-                                if ($filterthat ne '') {
-                                    # we are filtering input. Skip if matched
-                                    if ($pfname =~ /$filterthat/i) {
-                                        next;
+                                if ($filterthat0 ne '') {
+                                    if ($filterthatexclu) {
+                                        # we are filtering input. Skip if matched
+                                        if ($pfname =~ /$filterthat0/i) {
+                                            next;
+                                        }
+                                    } else {
+                                        # we are filtering input. Skip if not matched
+                                        if ($pfname !~ /$filterthat0/i) {
+                                            next;
+                                        }
                                     }
                                 }
                                 # count extensions
@@ -497,6 +530,7 @@ sub l00http_md5sizediff_proc {
                                     $thatext{'(no ext)'}++;
                                 }
                             }
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.all.htm"} .= "$_\n";
                             ($pname, $fname) = $pfname =~ /^(.+[\\\/])([^\\\/]+)$/;
                             $fname = lc($fname);
                             $bymd5sum{$sname}{$md5sum}{$pfname} = $fname;
@@ -967,6 +1001,8 @@ sub l00http_md5sizediff_proc {
         } else {
             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
         }
+        $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"} = '';
+
         $common = 0;
         # diff dir count
         undef $dupdirs{"diff"};
@@ -1216,6 +1252,39 @@ sub l00http_md5sizediff_proc {
         }
 
 
+        # unique md5sum
+        undef %uniquefiles;
+        $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"} = '';
+        foreach $md5sum (sort keys %{$bymd5sum{'THIS'}}) {
+            if ($md5sum ne '00000000000000000000000000000000') {
+                if (!defined($bymd5sum{'THAT'}{$md5sum})) {
+                    $uniquemd5sum++;
+                    @_ = (sort keys %{$bymd5sum{'THIS'}{$md5sum}});
+                    $uniquefiles{join(", ", @_).'notinthat'} = "<<<       : $md5sum - ".join(", ", @_)."\n";
+                }
+            }
+        }
+        foreach $md5sum (sort keys %{$bymd5sum{'THAT'}}) {
+            if ($md5sum ne '00000000000000000000000000000000') {
+                if (!defined($bymd5sum{'THIS'}{$md5sum})) {
+                    $uniquemd5sum++;
+                    @_ = (sort keys %{$bymd5sum{'THAT'}{$md5sum}});
+                    $uniquefiles{join(", ", @_).'notinthis'} = "      >>> : $md5sum - ".join(", ", @_)."\n";
+                }
+            }
+        }
+        foreach $_ (sort keys %uniquefiles) {
+            $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"} .= $uniquefiles{$_};
+        }
+        $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"} = 
+            "<<<       : THIS ONLY\n".
+            "      >>> : THAT ONLY\n".
+            $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"};
+
+
+
+
+
         # ----------------------------------------------------------------
 
         $ctrl->{'l00file'}->{"l00://md5sizediff.all.htm"} .= "<a name=\"end\"></a>";
@@ -1343,6 +1412,16 @@ sub l00http_md5sizediff_proc {
         }
         print $sock "</td></tr>\n";
 
+        # l00://md5sizediff.uniquemd5sum.htm
+        # -------------------------------------
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.uniquemd5sum.htm\">l00://md5sizediff.uniquemd5sum.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"});
+        print $sock "</td><td align=\"right\">$uniquemd5sum\n";
+        if ($mode eq 'unix') {
+            print $sock "</td><td>&nbsp;\n";
+        }
+        print $sock "</td></tr>\n";
+
         # l00://md5sizediff.diff_dirs.htm
         # -------------------------------------
         print $sock "<tr><td>\n";
@@ -1369,6 +1448,26 @@ sub l00http_md5sizediff_proc {
         @_ = keys %{$dupdirs{'same'}};
         $_ = $#_ + 1;
         print $sock "</td><td align=\"right\">$_\n";
+        print $sock "</td></tr>\n";
+
+        # l00://md5sizediff.THIS.all.htm
+        # -------------------------------------
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THIS.all.htm\">l00://md5sizediff.THIS.all.htm</a> </td><td align=\"right\">&nbsp;";
+        print $sock "</td><td align=\"right\">&nbsp;\n";
+        if ($mode eq 'unix') {
+            print $sock "</td><td>&nbsp;\n";
+        }
+        print $sock "</td></tr>\n";
+
+        # l00://md5sizediff.THAT.all.htm
+        # -------------------------------------
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.THAT.all.htm\">l00://md5sizediff.THAT.all.htm</a> </td><td align=\"right\">&nbsp;";
+        print $sock "</td><td align=\"right\">&nbsp;\n";
+        if ($mode eq 'unix') {
+            print $sock "</td><td>&nbsp;\n";
+        }
         print $sock "</td></tr>\n";
 
         print $sock "</table>\n";
@@ -1410,15 +1509,15 @@ sub l00http_md5sizediff_proc {
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "Match: <input type=\"text\" size=\"16\" name=\"match\" value=\"$match\">\n";
+    print $sock "Match: <input type=\"text\" size=\"16\" name=\"match\" value=\"$match\"> Count #dup of any full matching regex\n";
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "This: (full name exclude regex: <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
+    print $sock "This: (full pathname filter regex (!! inverte): <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
     print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "That: (full name exclude regex: <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
+    print $sock "That: (full pathname filter regex (!! inverte): <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
     print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thatpath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
