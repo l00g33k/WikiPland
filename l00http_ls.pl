@@ -1717,11 +1717,15 @@ if ($dbgskipto) {
 
                 if (defined($ctrl->{'sshsync'}) &&
                     (($tmp, $tmp2) = $ctrl->{'sshsync'} =~ /^(.+?):(.+)$/)) {
-                    print $sock "<p>sshsync.pl command line:\n<pre>".
-                        "echo -e \"\\\n".
-                        "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
-                        "\" | perl $tmp2/sshsync.pl</pre>\n";
+                    $tmp2 .= '/';
+                } else {
+                    $tmp = 'ssh user@host';
+                    $tmp2 = '';
                 }
+                print $sock "<p>sshsync.pl command line:\n<pre>".
+                    "echo -e \"\\\n".
+                    "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
+                    "\" | perl ${tmp2}sshsync.pl</pre>\n";
 
                 print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";

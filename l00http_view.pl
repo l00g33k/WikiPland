@@ -908,11 +908,15 @@ print "\n\nexcludeinfound >$excludeinfound<\n\n";
 
     if (defined($ctrl->{'sshsync'}) &&
         (($tmp, $tmpln) = $ctrl->{'sshsync'} =~ /^(.+?):(.+)$/)) {
-        print $sock "<p>sshsync.pl command line:\n<pre>".
-            "echo -e \"\\\n".
-            "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
-            "\" | perl $tmpln/sshsync.pl</pre>\n";
+        $tmpln .= '/';
+    } else {
+        $tmp = 'ssh user@host';
+        $tmpln = '';
     }
+    print $sock "<p>sshsync.pl command line:\n<pre>".
+        "echo -e \"\\\n".
+        "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
+        "\" | perl ${tmpln}sshsync.pl</pre>\n";
 
 
     print $sock "<p>Jump to line: ";

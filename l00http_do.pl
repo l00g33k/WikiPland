@@ -30,7 +30,7 @@ sub l00http_do_proc {
     $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($rethash, $mypath, $refresh, $refreshtag, $fname);
-    my ($doplpathnow, $overwrite $flags);
+    my ($doplpathnow, $overwrite, $flags);
 
     print "MOD: $config{'desc'}: Entered do\n", if ($debug >= 5);
 

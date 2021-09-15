@@ -1583,11 +1583,15 @@ sub l00http_dash_proc {
 
         if (defined($ctrl->{'sshsync'}) &&
             (($tmp, $tmp2) = $ctrl->{'sshsync'} =~ /^(.+?):(.+)$/)) {
-            print $sock "<p>sshsync.pl command line:\n<pre>".
-                "echo -e \"\\\n".
-                "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
-                "\" | perl $tmp2/sshsync.pl</pre>\n";
+            $tmp2 .= '/';
+        } else {
+            $tmp = 'ssh user@host';
+            $tmp2 = '';
         }
+        print $sock "<p>sshsync.pl command line:\n<pre>".
+            "echo -e \"\\\n".
+            "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
+            "\" | perl ${tmp2}sshsync.pl</pre>\n";
 
 
         print $sock "<a href=\"#top\">top</a>\n";
