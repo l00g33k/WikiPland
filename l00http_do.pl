@@ -30,7 +30,7 @@ sub l00http_do_proc {
     $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($rethash, $mypath, $refresh, $refreshtag, $fname);
-    my ($doplpathnow, $overwrite);
+    my ($doplpathnow, $overwrite $flags);
 
     print "MOD: $config{'desc'}: Entered do\n", if ($debug >= 5);
 
@@ -154,8 +154,13 @@ sub l00http_do_proc {
     } else {
         # default to disabled to non local clients^M
         if ($rethash =~ /[a-zA-Z]+/ms) {
+            $flags = 0;
+            if (defined($ctrl->{'wikihtmlflags'}) && 
+                ($ctrl->{'wikihtmlflags'} =~ /(\d+)/)) {
+                $flags = $1;
+            }
             # wikitize output if return has alphabet instead numeric only
-            print $sock &l00wikihtml::wikihtml ($ctrl, "", $rethash, 0);
+            print $sock &l00wikihtml::wikihtml ($ctrl, "", $rethash, $flags);
         }
         if ($bare ne 'checked') {
             print $sock "<hr>Run completed<br>\n";
