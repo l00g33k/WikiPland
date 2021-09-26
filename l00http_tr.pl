@@ -27,8 +27,34 @@ my ($mn, $now, $prefix, $skip, $suffix);
 my (@db, @outs);
 my $itvmin = 5;     # length of each time slot
 my ($tr_clockhtml, $tr_clockjs);
+my ($filter, $lineproc);
 
 $blanks = 0;
+$filter = '';
+$lineproc = '';
+
+my (%colorlu, %colorfg, $colorlukeys);
+$colorlukeys = 'rylsafgodGDbSpLTBhu';
+$colorlu{'r'} = 'red';              $colorfg{'r'} = 'yellow';
+$colorlu{'y'} = 'yellow';           $colorfg{'y'} = 'black';
+$colorlu{'l'} = 'lime';             $colorfg{'l'} = 'black';
+$colorlu{'s'} = 'silver';           $colorfg{'s'} = 'black';
+$colorlu{'a'} = 'aqua';             $colorfg{'a'} = 'black';
+$colorlu{'f'} = 'fuchsia';          $colorfg{'f'} = 'yellow';
+$colorlu{'g'} = 'gray';             $colorfg{'g'} = 'black';
+$colorlu{'o'} = 'olive';            $colorfg{'o'} = 'black';
+$colorlu{'d'} = 'gold';             $colorfg{'d'} = 'black';
+$colorlu{'G'} = 'green';            $colorfg{'G'} = 'LightGray';
+$colorlu{'D'} = 'DeepPink';         $colorfg{'D'} = 'black';
+$colorlu{'b'} = 'Brown';            $colorfg{'b'} = 'black';
+$colorlu{'S'} = 'DeepSkyBlue';      $colorfg{'S'} = 'black';
+$colorlu{'p'} = 'Purple';           $colorfg{'p'} = 'black';
+$colorlu{'L'} = 'LightGray';        $colorfg{'L'} = 'black';
+$colorlu{'T'} = 'Teal';             $colorfg{'T'} = 'LightGray';
+$colorlu{'B'} = 'SandyBrown';       $colorfg{'B'} = 'black';
+$colorlu{'h'} = 'HotPink';          $colorfg{'h'} = 'black';
+$colorlu{'u'} = 'blue';             $colorfg{'u'} = 'black';
+
 
 $tr_clockjs = <<EOB;
 <style type="text/css">
@@ -131,15 +157,24 @@ function updateClock () {
     } else {
         tmp = countAtime;
     }
-    currentSeconds = tmp % 60;
-    tmp = (tmp - currentSeconds) / 60;
-    currentMinutes = tmp;
-
-    // Pad the minutes and seconds with leading zeros, if required
-    currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
-    currentSeconds = ( currentSeconds < 10 ? "0" : "" ) + currentSeconds;
-    // Compose the string for display
-    var currentTimeString = currentMinutes + ":" + currentSeconds;
+    currentSeconds = tmp % 60;
+
+    tmp = (tmp - currentSeconds) / 60;
+
+    currentMinutes = tmp;
+
+
+
+    // Pad the minutes and seconds with leading zeros, if required
+
+    currentMinutes = ( currentMinutes < 10 ? "0" : "" ) + currentMinutes;
+
+    currentSeconds = ( currentSeconds < 10 ? "0" : "" ) + currentSeconds;
+
+    // Compose the string for display
+
+    var currentTimeString = currentMinutes + ":" + currentSeconds;
+
     // Update the stopwatch display
     document.getElementById("swatch").firstChild.nodeValue = currentTimeString;
 }
@@ -175,14 +210,25 @@ sub l00http_tr_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($blkln, $citydiff, $buffer, $bufinc, $incpath, $pathbase);
+    my ($filter_hide);
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
     if ((defined ($form->{'itvmin'})) && ($form->{'itvmin'} =~ /(\d+)/)) {
         $itvmin = $1;
     }
+    if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
+        $form->{'fname'} = $form->{'path'};
+    }
     if ((!defined ($form->{'fname'})) || (length ($form->{'fname'}) < 6)) {
         $form->{'fname'} = "$ctrl->{'workdir'}l00_tr.txt";
+    }
+
+    if ((defined ($form->{'filter'})) && (length ($form->{'filter'}) > 0)) {
+        $filter = $form->{'filter'};
+    }
+    if ((defined ($form->{'lineproc'})) && (length ($form->{'lineproc'}) > 0)) {
+        $lineproc = $form->{'lineproc'};
     }
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>tr</title>\n$tr_clockjs" . $ctrl->{'htmlhead2'};
@@ -248,9 +294,23 @@ sub l00http_tr_proc {
                 $bufinc .= "$_\n";
             }
         }
+        $filter_hide = 1;
         foreach $_ (split ("\n", $bufinc)) {
             s/\r//g;     # get rid of CR/LF
             s/\n//g;
+            # filter
+            if ($filter ne '') {
+                if (/$filter/) {
+                    $filter_hide = !$filter_hide;
+                    next;
+                }
+                if ($filter_hide) {
+                    next;
+                }
+            }
+            if ($lineproc ne '') {
+                eval $lineproc;
+            }
             if (/^\./) {
                 #    . : start skipping
                 $skip = 1;
@@ -344,6 +404,12 @@ sub l00http_tr_proc {
     $blkln = 0;
     printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
     for ($ii = $iist; $ii <= $iien; $ii++) {
+        # *l*color bold**
+        $outs[$ii] =~       s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+        $outs[$ii] =~       s/^\*([$colorlukeys])\*([^*]+?)\*\* / <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+        $outs[$ii] =~       s/^\*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
+        $outs[$ii] =~ s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
+
         if ($ii == $now) {
             print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
             print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
@@ -425,7 +491,7 @@ sub l00http_tr_proc {
 
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Submit\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
     print $sock "        <td>&nbsp;</td>\n";
     print $sock "    </tr>\n";
 
@@ -433,6 +499,16 @@ sub l00http_tr_proc {
     print $sock "<td>Slot length (min.):</td>\n";
 #   print $sock "<td><input type=\"text\" size=\"5\" name=\"rcity\" value=\"$rcity\"></td>\n";
     print $sock "<td><input type=\"text\" size=\"3\" name=\"itvmin\" value=\"$itvmin\"></td>\n";
+    print $sock "</tr>\n";
+
+    print $sock "<tr>\n";
+    print $sock "<td>Active line marker:</td>\n";
+    print $sock "<td><input type=\"text\" size=\"12\" name=\"filter\" value=\"$filter\"></td>\n";
+    print $sock "</tr>\n";
+
+    print $sock "<tr>\n";
+    print $sock "<td>Line processor:</td>\n";
+    print $sock "<td><input type=\"text\" size=\"12\" name=\"lineproc\" value=\"$lineproc\"></td>\n";
     print $sock "</tr>\n";
 
 
