@@ -27,10 +27,9 @@ my ($mn, $now, $prefix, $skip, $suffix);
 my (@db, @outs);
 my $itvmin = 5;     # length of each time slot
 my ($tr_clockhtml, $tr_clockjs);
-my ($filter, $lineproc);
+my ($lineproc);
 
 $blanks = 0;
-$filter = '';
 $lineproc = '';
 
 my (%colorlu, %colorfg, $colorlukeys);
@@ -210,7 +209,9 @@ sub l00http_tr_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($blkln, $citydiff, $buffer, $bufinc, $incpath, $pathbase);
-    my ($filter_hide);
+    my ($filter, $filter_hide);
+
+    $filter = '';
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
 
@@ -395,8 +396,11 @@ sub l00http_tr_proc {
 
     # make an anchor to jump to current time    
     print $sock "<a href=\"#now\">now</a>\n";
-    print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a><br>\n";
-    print $sock "<pre>\n";
+    print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a>\n";
+    if ($filter ne '') {
+        print $sock " - filter '$filter' in effect\n";
+    }
+    print $sock "<br><pre>\n";
 
     # 3) Display the time slots
 

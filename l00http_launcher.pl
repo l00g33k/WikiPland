@@ -85,6 +85,7 @@ sub l00http_launcher_proc {
     print $sock "<form action=\"/view.htm\" method=\"get\">".
                 "<input type=\"submit\" name=\"submit\" value=\"V&#818;iew\" accesskey=\"v\">".
                 "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
+                " As <a href=\"$form->{'path'}\">server</a>\n".
                 "</form>".
                 "<p>\n";
 
