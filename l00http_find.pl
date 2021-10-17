@@ -424,13 +424,13 @@ sub l00http_find_proc {
                 print $sock "<font style=\"color:black;background-color:lime\">Step 3: Find text and choose by clicking line number on the right of filename</font>\n";
             }
 
-            $dirlist .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n"; $dirlist .=
-            $dirlist .= "<tr>\n";
-            $dirlist .= "<td>names</td>\n";
-            $dirlist .= "<td>bytes</td>\n";
-            $dirlist .= "<td>date/time</td>\n";
-            $dirlist .= "</tr>\n";
 
+            $dirlist1000 .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+            $dirlist1000 .= "<tr>\n";
+            $dirlist1000 .= "<td>names</td>\n";
+            $dirlist1000 .= "<td>bytes</td>\n";
+            $dirlist1000 .= "<td>date/time</td>\n";
+            $dirlist1000 .= "</tr>\n";
                    
             # 3) If the path is a directory, make a table with links
 
@@ -448,21 +448,21 @@ sub l00http_find_proc {
                         }
                     }
 
+                    if ($listcnt++ <= 1000) {
+                        $dirlist1000 .= "<tr>\n";
+                        $dirlist1000 .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
+                        $dirlist1000 .= "<td><small>&lt;dir&gt;</small></td>\n";
+                        $dirlist1000 .= "<td>&nbsp;</td>\n";
+                        $dirlist1000 .= "</tr>\n";
+                    }
+
                     $dirlisttxt .= "$fullpath/\n";
                 
-                    $dirlist .= "<tr>\n";
-                    $dirlist .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
-                    $dirlist .= "<td><small>&lt;dir&gt;</small></td>\n";
-                    $dirlist .= "<td>&nbsp;</td>\n";
-                    $dirlist .= "</tr>\n";
-
-                    if ($listcnt++ <= 1000) {
-                        $dirlist1000 .= "$listcnt: <a href=\"/find.htm?path=$fullpath/\">$file/</a><br>\n";
-                    }
+                    $dirlist .= "$listcnt: <a href=\"/find.htm?path=$fullpath/\">$file/</a><br>\n";
                 }
             }
 
-            $dirlist .= "</table>\n";
+            $dirlist1000 .= "</table>\n";
             closedir (DIR);
         }
     }
