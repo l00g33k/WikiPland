@@ -431,12 +431,6 @@ sub l00http_find_proc {
             $dirlist .= "<td>date/time</td>\n";
             $dirlist .= "</tr>\n";
 
-            $dirlist1000 .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n"; $dirlist .=
-            $dirlist1000 .= "<tr>\n";
-            $dirlist1000 .= "<td>names</td>\n";
-            $dirlist1000 .= "<td>bytes</td>\n";
-            $dirlist1000 .= "<td>date/time</td>\n";
-            $dirlist1000 .= "</tr>\n";
                    
             # 3) If the path is a directory, make a table with links
 
@@ -463,17 +457,12 @@ sub l00http_find_proc {
                     $dirlist .= "</tr>\n";
 
                     if ($listcnt++ <= 1000) {
-                        $dirlist1000 .= "<tr>\n";
-                        $dirlist1000 .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
-                        $dirlist1000 .= "<td><small>&lt;dir&gt;</small></td>\n";
-                        $dirlist1000 .= "<td>&nbsp;</td>\n";
-                        $dirlist1000 .= "</tr>\n";
+                        $dirlist1000 .= "$listcnt: <a href=\"/find.htm?path=$fullpath/\">$file/</a><br>\n";
                     }
                 }
             }
 
             $dirlist .= "</table>\n";
-            $dirlist1000 .= "</table>\n";
             closedir (DIR);
         }
     }
