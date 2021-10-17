@@ -557,7 +557,7 @@ sub l00http_find_proc {
     &l00httpd::l00fwriteBuf($ctrl, $dirlist);
     &l00httpd::l00fwriteClose($ctrl);
     print $sock "There are $listcnt listings in: <a href=\"/view.htm?path=l00://find_dirlist.htm\" target=\"_blank\">l00://find_dirlist.htm</a>.\n";
-    if ($listcnt++ <= 1000) {
+    if ($listcnt > 1000) {
         print $sock "Only 1000 are listed below.\n";
     }
     &l00httpd::l00fwriteOpen($ctrl, 'l00://find_dirlist.txt');
