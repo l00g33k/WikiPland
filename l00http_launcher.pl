@@ -43,8 +43,13 @@ sub l00http_launcher_proc {
         if (($lpname, $lfname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/) {
             print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a> - \n";
-            print $sock "<a href=\"/$form->{'path'}\">html</a> -- \n";
-            print $sock "<a href=\"$form->{'path'}\">file:///</a><p>\n";
+            if ($form->{'path'} =~ /^\//) {
+                print $sock "<a href=\"$form->{'path'}\">html</a> -- \n";
+                print $sock "<a href=\"file://$form->{'path'}\">file:///</a><p>\n";
+            } else {
+                print $sock "<a href=\"/$form->{'path'}\">html</a> -- \n";
+                print $sock "<a href=\"file:///$form->{'path'}\">file:///</a><p>\n";
+            }
         }
     } else {
         $path = '';
@@ -85,7 +90,6 @@ sub l00http_launcher_proc {
     print $sock "<form action=\"/view.htm\" method=\"get\">".
                 "<input type=\"submit\" name=\"submit\" value=\"V&#818;iew\" accesskey=\"v\">".
                 "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
-                " As <a href=\"$form->{'path'}\">server</a>\n".
                 "</form>".
                 "<p>\n";
 

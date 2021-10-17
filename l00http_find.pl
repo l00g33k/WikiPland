@@ -313,7 +313,7 @@ sub l00http_find_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($thispath, $pathcnt, $dirlist);
+    my ($thispath, $pathcnt, $dirlist, $dirlist1000, $dirlisttxt, $listcnt);
 
 
     $findctrl = $ctrl;
@@ -384,6 +384,9 @@ sub l00http_find_proc {
     }
 
     $dirlist = '';
+    $dirlist1000 = '';
+    $dirlisttxt = '';
+    $listcnt = 0;
     $pathcnt = 0;
     foreach $thispath (split ('\|\|\|', $path)) {
         $pathcnt++;
@@ -415,6 +418,7 @@ sub l00http_find_proc {
             print $sock "<a name=\"__top__\"></a>\n";
             print $sock "$ctrl->{'home'} $ctrl->{'HOME'}<br>\n";
             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$thispath\">Path</a>: <a href=\"/ls.htm/ls.htm?path=$thispath\">$thispath</a> \n";
+            print $sock "<a href=\"#list\">Jump to list</a> - \n";
             print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
             if ($srcdoc ne '') {
                 print $sock "<font style=\"color:black;background-color:lime\">Step 3: Find text and choose by clicking line number on the right of filename</font>\n";
@@ -427,7 +431,13 @@ sub l00http_find_proc {
             $dirlist .= "<td>date/time</td>\n";
             $dirlist .= "</tr>\n";
 
-       
+            $dirlist1000 .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n"; $dirlist .=
+            $dirlist1000 .= "<tr>\n";
+            $dirlist1000 .= "<td>names</td>\n";
+            $dirlist1000 .= "<td>bytes</td>\n";
+            $dirlist1000 .= "<td>date/time</td>\n";
+            $dirlist1000 .= "</tr>\n";
+                   
             # 3) If the path is a directory, make a table with links
 
             foreach $file (sort {lc($a) cmp lc($b)} readdir (DIR)) {
@@ -443,16 +453,27 @@ sub l00http_find_proc {
                             $fullpath = "";
                         }
                     }
+
+                    $dirlisttxt .= "$fullpath/\n";
                 
                     $dirlist .= "<tr>\n";
                     $dirlist .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
                     $dirlist .= "<td><small>&lt;dir&gt;</small></td>\n";
                     $dirlist .= "<td>&nbsp;</td>\n";
                     $dirlist .= "</tr>\n";
+
+                    if ($listcnt++ <= 1000) {
+                        $dirlist1000 .= "<tr>\n";
+                        $dirlist1000 .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
+                        $dirlist1000 .= "<td><small>&lt;dir&gt;</small></td>\n";
+                        $dirlist1000 .= "<td>&nbsp;</td>\n";
+                        $dirlist1000 .= "</tr>\n";
+                    }
                 }
             }
 
             $dirlist .= "</table>\n";
+            $dirlist1000 .= "</table>\n";
             closedir (DIR);
         }
     }
@@ -528,11 +549,29 @@ sub l00http_find_proc {
     }
 
 
-    print $sock "<a name=\"end\"></a>\n";
+    print $sock "<a name=\"list\"></a>\n";
     print $sock "<p><a href=\"#__top__\">Jump to top</a><p>\n";
 
+
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://find_dirlist.htm');
+    &l00httpd::l00fwriteBuf($ctrl, $dirlist);
+    &l00httpd::l00fwriteClose($ctrl);
+    print $sock "There are $listcnt listings in: <a href=\"/view.htm?path=l00://find_dirlist.htm\" target=\"_blank\">l00://find_dirlist.htm</a>.\n";
+    if ($listcnt++ <= 1000) {
+        print $sock "Only 1000 are listed below.\n";
+    }
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://find_dirlist.txt');
+    &l00httpd::l00fwriteBuf($ctrl, $dirlisttxt);
+    &l00httpd::l00fwriteClose($ctrl);
+    print $sock " - <a href=\"/view.htm?path=l00://find_dirlist.txt\" target=\"_blank\">l00://find_dirlist.txt</a>.\n";
+    print $sock "<p>\n";
+
     print $sock "<hr>\n";
-    print $sock $dirlist;
+
+    print $sock $dirlist1000;
+
+    print $sock "<a name=\"end\"></a>\n";
+    print $sock "<p><a href=\"#__top__\">Jump to top</a><p>\n";
 
     print $sock $ctrl->{'htmlfoot'};
 
