@@ -22,7 +22,7 @@ sub l00http_svguser_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $svgdata, $tmp, $buf);
+    my (@alllines, $line, $svgdata, $tmp, $buf, $buf2);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>l00httpd</title>" . $ctrl->{'htmlhead2'};
@@ -46,7 +46,9 @@ sub l00http_svguser_proc {
     }
 
     $svgdata = '';
-    foreach $_ (split("\n", $buf)) {
+    $buf2 = $buf;
+    $buf2 =~ s/\r/\n/gms;
+    foreach $_ (split("\n", $buf2)) {
         # split into one line at a time
         @_ = split(",", $_);
         if ($svgdata ne '') {
@@ -74,10 +76,17 @@ sub l00http_svguser_proc {
     print $sock "<br><textarea name=\"svgdata\" cols=\"32\" rows=\"5\" accesskey=\"e\">$buf</textarea>\n";
     print $sock "</form>\n";
 
+
     &l00svg::plotsvg2 ('svguser', $svgdata, $gwd, $ght);
     print $sock "<p><a href=\"/svg2.htm?graph=svguser&view=\"><img src=\"/svg2.htm?graph=svguser\" alt=\"user svg data\"></a>\n";
 
     print $sock "<p>\n";
+
+    &l00httpd::l00fwriteOpen($ctrl, "l00://svguser_data.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $svgdata);
+    &l00httpd::l00fwriteClose($ctrl);
+    print $sock "View parsed data <a href=\"/view.htm?path=l00://svguser_data.txt\">l00://svguser_data.txt</a><br>\n";
+    print $sock "View RAM input <a href=\"/view.htm?path=l00://svguser.txt\">l00://svguser.txt</a>\n";
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
