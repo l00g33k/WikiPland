@@ -198,7 +198,6 @@ sub getsvrip {
             if (defined ($ip)) {
                 if (@_ = $ip =~ /inet (\d+\.\d+\.\d+\.\d+)/g) {
                     $ip = '';
-                    $ip = join(' ', @_);
                     foreach $_ (@_) {
                         if (!/^172\./ && !/^127\.0\./) {
                             if ($ip eq '') {
