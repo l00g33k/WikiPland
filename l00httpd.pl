@@ -196,7 +196,19 @@ sub getsvrip {
             }
         } else {
             if (defined ($ip)) {
-                if ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
+                if (@_ = $ip =~ /inet (\d+\.\d+\.\d+\.\d+)/g) {
+                    $ip = '';
+                    $ip = join(' ', @_);
+                    foreach $_ (@_) {
+                        if (!/^172\./ && !/^127\.0\./) {
+                            if ($ip eq '') {
+                                $ip .= "$_";
+                            } else {
+                                $ip .= " $_";
+                            }
+                        }
+                    }
+                } elsif ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
                     $ip = $1;
                 } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
                     $ip = $1;
