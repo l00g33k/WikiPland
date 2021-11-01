@@ -23,7 +23,7 @@ my %config = (proc => "l00http_find_proc",
               desc => "l00http_find_desc");
 my ($atime, $blksize, $blocks, $buf, $bulvl, $ctime, $dev);
 my ($el, $file, $fullpath, $gid, $hits, $hour, $ii);
-my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn);
+my ($ino, $intbl, $isdst, $len, $ln, $lv, $lvn, $lsmaxitems);
 my ($mday, $min, $mode, $mon, $mtime, $nlink, $raw_st, $rdev);
 my ($readst, $sec, $size, $ttlbytes, $tx, $uid, $url, $recursive, $context, $lnctx, $findctrl);
 my ($fmatch, $fmatches, $content, $pathregex, $fullname, $lineno, $lineno0, $maxlines, $sock);
@@ -42,6 +42,7 @@ $srcdoc = '';
 $context = 0;
 $sortoffset = 0;
 $pathregex = '';
+$lsmaxitems = 1000;
 
 sub findsort {
     $a =~ s/<.+?>//g;
@@ -316,6 +317,11 @@ sub l00http_find_proc {
     my ($thispath, $pathcnt, $dirlist, $dirlist1000, $dirlisttxt, $listcnt);
 
 
+    if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
+        $lsmaxitems = $1;
+    }
+
+
     $findctrl = $ctrl;
 
     # special srcdoc.pl integration
@@ -448,7 +454,7 @@ sub l00http_find_proc {
                         }
                     }
 
-                    if ($listcnt++ <= 1000) {
+                    if ($listcnt++ <= $lsmaxitems) {
                         $dirlist1000 .= "<tr>\n";
                         $dirlist1000 .= "<td><small><a href=\"/find.htm?path=$fullpath/\">$file/</a></small></td>\n";
                         $dirlist1000 .= "<td><small>&lt;dir&gt;</small></td>\n";
@@ -546,7 +552,7 @@ sub l00http_find_proc {
     &l00httpd::l00fwriteBuf($ctrl, $dirlist);
     &l00httpd::l00fwriteClose($ctrl);
     print $sock "There are $listcnt listings in: <a href=\"/view.htm?path=l00://find_dirlist.htm\" target=\"_blank\">l00://find_dirlist.htm</a>.\n";
-    if ($listcnt > 1000) {
+    if ($listcnt > $lsmaxitems) {
         print $sock "Only 1000 are listed below.\n";
     }
     &l00httpd::l00fwriteOpen($ctrl, 'l00://find_dirlist.txt');

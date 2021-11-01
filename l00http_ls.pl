@@ -32,7 +32,7 @@ my ($readst, $pre_st, $sec, $size, $ttlbytes, $tx, $uid, $url);
 my ($wday, $yday, $year, @cols, @el, @els, $sortkey1name2date, $lastpname);
 my ($fileout, $dirout, $bakout, $http, $desci, $httphdr, $sendto);
 my ($pname, $fname, $target, $findtext, $block, $found, $prefmt, $sortfind, $showpage);
-my ($lfisbr, $embedpic, $chno, $bare, $hilite, $dirfilter);
+my ($lfisbr, $embedpic, $chno, $bare, $hilite, $dirfilter, $lsmaxitems);
 
 
 # $skipto debugging
@@ -58,6 +58,7 @@ $chno = '';
 $bare = '';
 $hilite = '';
 $dirfilter = '';
+$lsmaxitems = 1000;
 
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
@@ -244,8 +245,13 @@ sub l00http_ls_proc {
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
-    my (@regexs, $regex, $skip, $pattern);
+    my (@regexs, $regex, $skip, $pattern, $filecnt);
+    my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml);
 
+
+    if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
+        $lsmaxitems = $1;
+    }
 
     $wikihtmlflags = 0;
     $skiptohdr = '';
@@ -1349,6 +1355,17 @@ if ($dbgskipto) {
         } else {
             @dirs = sort llstricmp readdir (DIR);
         }
+
+        $ramdirtxt = '';
+        $ramdirhtml =   "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n".
+                        "<tr>\n".
+                        "<td>names</td>\n".
+                        "<td>bytes</td>\n".
+                        "<td>date/time</td>\n".
+                        "</tr>\n";
+        $ramfiletxt = $ramdirtxt;
+        $ramfilehtml = $ramdirhtml;
+
         foreach $file (@dirs) {
             # dirfilter
             if ($dirfilter ne '') {
@@ -1394,20 +1411,28 @@ if ($dbgskipto) {
                     $tmp =~ s/\//\\/g;
                 }
                 $clipdir .= "&lt;<a href=\"/clip.htm?update=on&clip=$tmp\">$file</a>&gt; - ";
-                                
-                $dirout .= "<tr>\n";
-                $dirout .= "<td><small><a href=\"/ls.htm?path=$fullpath/\">$file/</a></small></td>\n";
+                           
+                $tmp = '';     
+                $tmp .= "<tr>\n";
+                $tmp .= "<td><small><a href=\"/ls.htm?path=$fullpath/\">$file/</a></small></td>\n";
                 if ($file eq '..') {
-                    $dirout .= "<td><small><a href=\"/tree.htm?path=$path2\">&lt;dir&gt;</a></small></td>\n";
+                    $tmp .= "<td><small><a href=\"/tree.htm?path=$path2\">&lt;dir&gt;</a></small></td>\n";
                 } else {
-                    $dirout .= "<td><small><a href=\"/tree.htm?path=$fullpath/\">&lt;dir&gt;</a></small></td>\n";
+                    $tmp .= "<td><small><a href=\"/tree.htm?path=$fullpath/\">&lt;dir&gt;</a></small></td>\n";
                 }
-                $dirout .= "<td>&nbsp;</td>\n", if ($docrc32);
-                $dirout .= "<td><small>". 
+                $tmp .= "<td>&nbsp;</td>\n", if ($docrc32);
+                $tmp .= "<td><small>". 
                     sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec) 
                     ."</small></td>\n";
-                $dirout .= "</tr>\n";
-                $nodirs++;
+                $tmp .= "</tr>\n";
+
+                if ($nodirs++ < $lsmaxitems) {
+                    $dirout .= $tmp;
+                }
+                $ramdirhtml .= $tmp;
+
+                $ramdirtxt .= sprintf ("%4d/%02d/%02d %02d:%02d:%02d  %s/\n", 
+                    1900+$year, 1+$mon, $mday, $hour, $min, $sec, $fullpath);
             } else {
                 # it's not a directory, print a link to a file
                 ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
@@ -1466,18 +1491,25 @@ if ($dbgskipto) {
                     $tmp2 =~ s/l00http_(.+)\.pl/$1/;
 				}
                 if ($file =~ /\.bak$/) {
-                    $bakout .= $buf;
                     if ($showbak) {
+                        $bakout .= $buf;
+                        if ($nofiles++ < $lsmaxitems) {
+                            # clip path listing
+                            $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$tmp2</a> - ";
+                        }
+                    }
+                } else {
+                    if ($nofiles++ < $lsmaxitems) {
+                        $fileout .= $buf;
                         # clip path listing
                         $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$tmp2</a> - ";
                     }
-                } else {
-                    $fileout .= $buf;
-                    # clip path listing
-                    $clipfile .= "<a href=\"/clip.htm?update=on&clip=$tmp\">$tmp2</a> - ";
                 }
 
-                $nofiles++;
+                $ramfilehtml .= $buf;
+
+                $ramfiletxt .= sprintf ("%4d/%02d/%02d %02d:%02d:%02d  % 9d  %s\n", 
+                    1900+$year, 1+$mon, $mday, $hour, $min, $sec, $size, $fullpath);
             }
         }
         closedir (DIR);
@@ -1493,7 +1525,38 @@ if ($dbgskipto) {
             }
             print $sock "</table>\n";
         }
+
+        $ramdirhtml .= "</table>\n";
+        $ramdirtxt =~ s/%3a/:/gms;
+        $ramdirtxt =~ s/%2f/\//gms;
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_dirs.html");
+        &l00httpd::l00fwriteBuf($ctrl, $ramdirhtml);
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_dirs.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $ramdirtxt);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        $ramfilehtml .= "</table>\n";
+        $ramfiletxt =~ s/%3a/:/gms;
+        $ramfiletxt =~ s/%2f/\//gms;
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_files.html");
+        &l00httpd::l00fwriteBuf($ctrl, $ramfilehtml);
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_files.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $ramfiletxt);
+        &l00httpd::l00fwriteClose($ctrl);
+
         print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
+        if ($nodirs >= $lsmaxitems) {
+            print $sock "Directory listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_dirs.html\" target=\"_blank\">l00://ls_all_dirs.html</a>\n";
+            print $sock " -- <a href=\"/view.htm?path=l00://ls_all_dirs.txt\" target=\"_blank\">.txt</a><br>\n";
+        }
+        if ($nofiles >= $lsmaxitems) {
+            print $sock "File listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_files.html\" target=\"_blank\">l00://ls_all_files.html</a>\n";
+            print $sock " -- <a href=\"/view.htm?path=l00://ls_all_files.txt\" target=\"_blank\">.txt</a><br>\n";
+        }
     }
     print "ls: processed >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
