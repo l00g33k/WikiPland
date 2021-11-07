@@ -30,6 +30,7 @@ my ($fmatch, $fmatches, $content, $pathregex, $fullname, $lineno, $lineno0, $max
 my ($wday, $yday, $year, @cols, @el, @els, $sendto, $wraptext, $filenameonly, $srcdoc, $sortoffset);
 
 my ($path);
+my ($ramtxt, $ramhtml);
 
 $recursive = 'checked';
 $fmatches = '';
@@ -68,7 +69,7 @@ sub l00http_find_search {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $output, $output2,
 	 $size, $atime, $mtime, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
-    my ($contents, $pathregex2);
+    my ($contents, $pathregex2, $sockout, $foundcnt);
 
     if ($content =~ /\(/) {
         $paren = 1;
@@ -284,14 +285,36 @@ sub l00http_find_search {
         ($content eq '') &&
         ($wraptext eq '')) {
         $output2 = join("\n", sort findsort split("\n", $output));
-        print $sock $output2;
+
+        $foundcnt = 0;
+        $sockout = '';
+        foreach $_ (split("\n", $output2)) {
+            if ($foundcnt++ < $lsmaxitems) {
+                $sockout .= "$_\n";
+            } else {
+                last;
+            }
+        }
+        $ramhtml .= "$output2\n";
+
         $output2 =~ s/<.+?>//g;
         &l00httpd::l00fwriteBuf($ctrl, $output2);
     } else {
-        print $sock $output;
+        $foundcnt = 0;
+        $sockout = '';
+        foreach $_ (split("\n", $output)) {
+            if ($foundcnt++ < $lsmaxitems) {
+                $sockout .= "$_\n";
+            } else {
+                last;
+            }
+        }
+        $ramhtml .= "$output\n";
+
         $output =~ s/<.+?>//g;
         &l00httpd::l00fwriteBuf($ctrl, $output);
     }
+    print $sock $sockout;
 
     if ($wraptext eq '') {
         print $sock "</pre>\n";
@@ -304,8 +327,11 @@ sub l00http_find_search {
         print $sock "<p>Found $hitcnt occurance(s) in $filecnt file(s) in '$mypath'<br>".
             "Click path to visit directory, click filename to view file\n";
     }
-    print $sock "<br>Total $totalbytes bytes in $totalfiles files\n";
-    print $sock "<p>Find results also in <a href=\"/view.htm?path=l00://findinfile.htm\" target=\"_blank\">l00://findinfile.htm</a>\n";
+    print $sock "<br>Total $totalbytes bytes in $totalfiles files -- \n";
+    print $sock "<a href=\"/view.htm?path=l00://find_in_files.html\" target=\"_blank\">l00://find_in_files.html</a> - \n";
+    print $sock "<a href=\"/view.htm?path=l00://find_in_files.txt\" target=\"_blank\">l00://find_in_files.txt</a><p>\n";
+
+    print $sock "Found results also in <a href=\"/view.htm?path=l00://findinfile.htm\" target=\"_blank\">l00://findinfile.htm</a>\n";
 
     1;
 }
@@ -534,12 +560,23 @@ sub l00http_find_proc {
     print $sock "<br>!!: Prefix '!!' to regex to list files without matching pattern<p>\n";
 
     if ($content ne '!!') {
+        $ramtxt = '';
+        $ramhtml = '';
         &l00httpd::l00fwriteOpen($ctrl, 'l00://findinfile.htm');
         if (defined ($form->{'submit'})) {
             foreach $thispath (split ('\|\|\|', $path)) {
                 &l00http_find_search ($thispath, $ctrl);
             }
         }
+        &l00httpd::l00fwriteClose($ctrl);
+
+        $ramtxt = $ramhtml;
+        $ramtxt =~ s/<.+?>//gms;
+        &l00httpd::l00fwriteOpen($ctrl, "l00://find_in_files.html");
+        &l00httpd::l00fwriteBuf($ctrl, "<pre>\n$ramhtml</pre>\n");
+        &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "l00://find_in_files.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $ramtxt);
         &l00httpd::l00fwriteClose($ctrl);
     }
 
