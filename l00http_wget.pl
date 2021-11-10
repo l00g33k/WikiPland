@@ -78,7 +78,7 @@ sub l00http_wget_proc (\%) {
     print $sock "<form action=\"/wget.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "        <tr>\n";
-    print $sock "            <td>URL:<input type=\"submit\" name=\"paste\" value=\"CB\"></td>\n";
+    print $sock "            <td>URL:<input type=\"submit\" name=\"paste\" value=\"C&#818;B\" accesskey=\"c\"></td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"url\" value=\"$url\"></td>\n";
     print $sock "        </tr>\n";
                                                 
@@ -99,7 +99,7 @@ sub l00http_wget_proc (\%) {
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Fetch URL\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"F&#818;etch URL\" accesskey\"f\"></td>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"nofetch\">Don't fetch; generate URL</td>\n";
     print $sock "    </tr>\n";
     print $sock "</table>\n";
