@@ -63,7 +63,8 @@ my (%ctrl, %FORM, %httpmods, %httpmodssig, %httpmodssort, %modsinfo, %moddesc, %
 my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
 my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
-my ($cmdlnmod, $cmdlnparam);
+my ($cmdlnmod, $cmdlnparam, $rammaxitems, $ramfilehtml, $ramfiledisp, $ramfiletxt);
+
 
 # set listening port
 $ctrl_port = 20337;
@@ -81,6 +82,9 @@ $waketil = 0;
 $ipage = 0;
 $battpct = '';
 $batttime = 0;
+$rammaxitems = 1000;
+$rammaxitems = 3;
+
 # These two implement a special Openshift demo auto quit and restart
 # $quitattimer is set from command line
 # When a module other than 'hello' is invoked, do:
@@ -1980,29 +1984,30 @@ while(1) {
 
                 if ($ishost) {
                     # list ram files
-                    print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-                    print $sock "<tr>\n";
-                    print $sock "<th>names</th>\n";
-                    print $sock "<th>bytes</th>\n";
-                    print $sock "<th>time</th>\n";
-                    print $sock "</tr>\n";
+                    $ramfilehtml = '';
+                    $ramfiletxt = '';
+                    $cnt = 0;
+
+                    $ramfilehtml .= "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
+                    $ramfilehtml .= "<tr>\n";
+                    $ramfilehtml .= "<th>names</th>\n";
+                    $ramfilehtml .= "<th>bytes</th>\n";
+                    $ramfilehtml .= "<th>time</th>\n";
+                    $ramfilehtml .= "</tr>\n";
                     # list ram files
                     $tmp = $ctrl{'l00file'};
 
+                    $ramfiledisp = $ramfilehtml;
                     foreach $_ (sort keys %$tmp) {
                         if (($_ eq 'l00://_notes.txt') ||
                            (defined($ctrl{'l00file'}->{$_}) &&
                             (length($ctrl{'l00file'}->{$_}) > 0))) {
                             my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst);
 
-                            print $sock "<tr>\n";
-
-                            print $sock "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
-
-#                           print $sock "<td><small>" . length($ctrl{'l00file'}->{$_}) . "</small></td>\n";
-#                           print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">launcher</a></small></td>\n";
-
-                            print $sock "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">" . 
+                            $buf = '';
+                            $buf .= "<tr>\n";
+                            $buf .= "<td><small><a href=\"/ls.htm?path=$_\">$_</a></small></td>\n";
+                            $buf .= "<td><small><a href=\"/$ctrl{'lssize'}.htm?path=$_\">" . 
                                 length($ctrl{'l00file'}->{$_}) . "</a></small></td>\n";
 
                             # display time
@@ -2011,14 +2016,34 @@ while(1) {
                             }
                             ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                                 = localtime($ctrl{'l00filetime'}->{$_});
-                            print $sock sprintf ("<td><small>%4d/%02d/%02d %02d:%02d:%02d</small></td>\n", 
+                            $buf .= sprintf ("<td><small>%4d/%02d/%02d %02d:%02d:%02d</small></td>\n", 
                                 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
 
-                            print $sock "</tr>\n";
+                            $buf .= "</tr>\n";
+
+                            $ramfiletxt .= sprintf ("%4d/%02d/%02d %02d:%02d:%02d %8d %s\n", 
+                                1900+$year, 1+$mon, $mday, $hour, $min, $sec, 
+                                length($ctrl{'l00file'}->{$_}), $_);
+                            if ($cnt++ < $rammaxitems) {
+                                $ramfiledisp .= $buf;
+                            }
+                            $ramfilehtml .= $buf;
 	            	    }
                     }
-                    print $sock "</table>\n";
+                    $ramfiledisp .= "</table>\n";
+                    $ramfilehtml .= "</table>\n";
                 }
+                &l00httpd::l00fwriteOpen(\%ctrl, "l00://ls_all_ram.html");
+                &l00httpd::l00fwriteBuf(\%ctrl, $ramfilehtml);
+                &l00httpd::l00fwriteClose(\%ctrl);
+                &l00httpd::l00fwriteOpen(\%ctrl, "l00://ls_all_ram.txt");
+                &l00httpd::l00fwriteBuf(\%ctrl, $ramfiletxt);
+                &l00httpd::l00fwriteClose(\%ctrl);
+                if ($cnt >= $rammaxitems) {
+                    print $sock "RAM file listing limited to $rammaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_ram.html\" target=\"_blank\">l00://ls_all_ram.html</a>\n";
+                    print $sock " -- <a href=\"/view.htm?path=l00://ls_all_ram.txt\" target=\"_blank\">.txt</a><p>\n";
+                }
+                print $sock "$ramfiledisp";
                 print $sock "<p>End of page.<p>\n";
 
                 # send HTML footer and ends
@@ -2060,3 +2085,4 @@ while(1) {
 }
 
 print "WikiPland forever loop existed at now_string = $ctrl{'now_string'}\n";
+exit(3);
