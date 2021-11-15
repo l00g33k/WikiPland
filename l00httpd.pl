@@ -83,7 +83,6 @@ $ipage = 0;
 $battpct = '';
 $batttime = 0;
 $rammaxitems = 1000;
-$rammaxitems = 3;
 
 # These two implement a special Openshift demo auto quit and restart
 # $quitattimer is set from command line
