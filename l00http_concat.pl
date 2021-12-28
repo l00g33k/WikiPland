@@ -56,14 +56,15 @@ sub l00http_concat_proc (\%) {
         print $sock "<pre>\n";
         foreach $_ (split("\n", $files)) {
             if (/^ *\d+ \d+\/\d+\/\d+ \d+:\d+:\d+ (.+)/) {
+                $_ = $1;
+            }
+            if (&l00httpd::l00freadOpen($ctrl, $_)) {
                 $cnt++;
-                if (&l00httpd::l00freadOpen($ctrl, $1)) {
-                    print $sock "$cnt: $1\n";
-                    $buf = &l00httpd::l00freadAll($ctrl);
-                    $bytes += length($buf);
-                    &l00httpd::l00fwriteBuf($ctrl, $buf);
-                    &l00httpd::l00fwriteBuf($ctrl, "\n");
-                }
+                print $sock "$cnt: $_\n";
+                $buf = &l00httpd::l00freadAll($ctrl);
+                $bytes += length($buf);
+                &l00httpd::l00fwriteBuf($ctrl, $buf);
+                &l00httpd::l00fwriteBuf($ctrl, "\n");
             }
         }
         &l00httpd::l00fwriteClose($ctrl);
