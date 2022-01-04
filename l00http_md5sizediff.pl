@@ -318,10 +318,11 @@ sub l00http_md5sizediff_proc {
     my (%cnt, $oname, %out, $idx, $md5sum1st, $ii, @sorting, $filterthis, $filterthat, $filterthis0, $filterthat0, $filterthisexclu, $filterthatexclu);
     my ($match, $matchcnt, $matchnone, $matchone, $matchmulti, $matchlist, $phase);
     my (@lmd5sum, @rmd5sum, $common, $orgpath, %orgdir, $thisname, $thatname, $orgname);
-    my ($thisonly, $thatonly, $diffmd5sum, $uniquemd5sum, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
-    my (%thisext, %thatext, %filtercnt);
+    my ($thisonly, $thatonly, $diffmd5sum, $uniquemd5sum, $notsamenamecopies, $samemd5sum, %dupdirs, %listdirs, %alldirs, $alldirs);
+    my (%thisext, %thatext, %filtercnt, %samenamecopiesthissum, %samenamecopiesthatsum, $nomatch, $buf);
 
     $uniquemd5sum = 0;
+    $notsamenamecopies = 0;
 
     if (defined ($form->{'mode'})) {
         if ($form->{'mode'} eq 'dos') {
@@ -1003,7 +1004,9 @@ sub l00http_md5sizediff_proc {
         } else {
             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} = '';
         }
-        $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"} = '';
+
+        # not same name copies
+        $ctrl->{'l00file'}->{"l00://md5sizediff.notsamenamecopies.htm"} = '';
 
         $common = 0;
         # diff dir count
@@ -1051,6 +1054,9 @@ sub l00http_md5sizediff_proc {
                             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
                         }
                     } else {
+                        undef %samenamecopiesthissum;
+                        undef %samenamecopiesthatsum;
+
                         $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= sprintf ("   %03d: diff: %s --- ", $cnt, $fname);
                         for ($idx = 0; $idx <= $#lmd5sum; $idx++) {
                             ($pfname) = keys %{$bymd5sum{$sname}{$lmd5sum[$idx]}};
@@ -1058,11 +1064,39 @@ sub l00http_md5sizediff_proc {
                                 $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "$pfname\n";
                             }
                             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THIS $idx: $sizebymd5sum{$lmd5sum[$idx]} $lmd5sum[$idx] $pfname\n";
+                            $samenamecopiesthissum{$lmd5sum[$idx]} = $pfname;
                         }
                         for ($idx = 0; $idx <= $#rmd5sum; $idx++) {
                             ($pfname) = keys %{$bymd5sum{$oname}{$rmd5sum[$idx]}};
                             $ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"} .= "        THAT $idx: $sizebymd5sum{$rmd5sum[$idx]} $rmd5sum[$idx] $pfname\n";
+                            $samenamecopiesthatsum{$rmd5sum[$idx]} = $pfname;
                         }
+
+                        # check same name copies
+                        ## this sum in that?
+                        $nomatch = 0;
+                        $buf = '';
+                        $buf .= sprintf ("   %03d: diff: %s\n", $notsamenamecopies, $fname);
+                        foreach $md5sum (sort keys %samenamecopiesthissum) {
+                            if (!defined($samenamecopiesthatsum{$md5sum})) {
+                                # this sum not in that
+                                $nomatch++;
+                            }
+                            $buf .= "        THIS: $md5sum $samenamecopiesthissum{$md5sum}\n";
+                        }
+                        ## that sum in this?
+                        foreach $md5sum (sort keys %samenamecopiesthatsum) {
+                            if (!defined($samenamecopiesthissum{$md5sum})) {
+                                # that sum not in this
+                                $nomatch++;
+                            }
+                            $buf .= "        THAT: $md5sum $samenamecopiesthatsum{$md5sum}\n";
+                        }
+                        if ($nomatch) {
+                            $ctrl->{'l00file'}->{"l00://md5sizediff.notsamenamecopies.htm"} .= $buf;
+                            $notsamenamecopies++;
+                        }
+
                     }
                     $cnt++;
                     # count listdirs
@@ -1254,6 +1288,7 @@ sub l00http_md5sizediff_proc {
         }
 
 
+
         # unique md5sum
         undef %uniquefiles;
         $ctrl->{'l00file'}->{"l00://md5sizediff.uniquemd5sum.htm"} = '';
@@ -1409,6 +1444,16 @@ sub l00http_md5sizediff_proc {
         print $sock "<tr><td>\n";
         print $sock "<a href=\"/view.htm?path=l00://md5sizediff.diff.htm\">l00://md5sizediff.diff.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.diff.htm"});
         print $sock "</td><td align=\"right\">$diffmd5sum\n";
+        if ($mode eq 'unix') {
+            print $sock "</td><td>&nbsp;\n";
+        }
+        print $sock "</td></tr>\n";
+
+        # l00://md5sizediff.notsamenamecopies.htm
+        # -------------------------------------
+        print $sock "<tr><td>\n";
+        print $sock "<a href=\"/view.htm?path=l00://md5sizediff.notsamenamecopies.htm\">l00://md5sizediff.notsamenamecopies.htm</a> </td><td align=\"right\"> ", length($ctrl->{'l00file'}->{"l00://md5sizediff.notsamenamecopies.htm"});
+        print $sock "</td><td align=\"right\">$notsamenamecopies\n";
         if ($mode eq 'unix') {
             print $sock "</td><td>&nbsp;\n";
         }

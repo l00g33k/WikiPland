@@ -715,6 +715,9 @@ SCRIPTSRC
 
                 $myMarkers .= $polybuf;
                 $mySetMap .= "polypath$polyidx.setMap(map);\n";
+            } elsif (($lon, $lat) = /\t([0-9.+-]{4,20}?),([0-9.+-]{4,20}?),\d/) {
+			    # kml: -118.038357333333,33.8260493333333,0
+                # store in $lon, $lat
 #           } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+(.+)/) {
             } elsif (($lat, $lon, $name) = /([0-9.+-]{4,20}?),([0-9.+-]{4,20}?)[, ]+(.+)/) {
                 # match, falls thru
