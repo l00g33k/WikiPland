@@ -189,6 +189,10 @@ sub l00http_sort_proc {
                 print $sock sprintf ("<a href=\"/sort.htm?path=$pname$fname&sorting=sorting&pick=$lineno\">%04d</a>: ", $lineno) . "$_\n";
             }
             $lineno++;
+            if ($lineno >= 3000) {
+                print $sock "\nThere are at least 3000 lines.  Additional lines are not printed.\n";
+                last;
+            }
         }
         print $sock "</pre>\n";
     }
