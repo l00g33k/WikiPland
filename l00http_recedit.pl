@@ -29,12 +29,15 @@ sub l00http_recedit_output_row {
     }
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
-        $html .= "        <td><a name=\"__end${id}__\"></a><font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a>";
         if ($path =~ /^l00:\/\//) {
-            # RAM file, 4 hours
-            $html .= "            +4h<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
+            # RAM file, 1, 6 hours (or 4)
+            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add1h$id\">+1h</font><br>\n";
+           #$html .= "            +4h<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
+            $html .= "            +6h<input type=\"checkbox\" name=\"add6h$id\"><br>\n";
         } else {
-            # disk file, 2 days
+            # disk file, 1, 2 days
+            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
             $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\"><br>\n";
         }
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
@@ -221,6 +224,58 @@ sub l00http_recedit_proc (\%) {
                 }
                 if (/$record1/) {
                     $delete = '';
+                    if (defined($form->{"add1h$id"}) && ($form->{"add1h$id"} eq 'on')) {
+                        # add 1 hours
+                        if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
+                            #20130408 100000:10:0:60:copy hurom
+                            $yr -= 1900;
+                            $mo--;
+                            $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                            $tmp += 1 * 3600; # add1h
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                            $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                substr ($obuf, 15, 9999));
+                        } elsif (($yr, $mo, $da, $tmp2) = ($obuf =~ /^(\d+)\/(\d+)\/(\d+)(.*)$/)) {
+                            #2013/4/11,1,411test 
+                            $yr -= 1900;
+                            $mo--;
+                            $hr = 0;
+                            $mi = 0;
+                            $se = 0;
+                            $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                            $tmp += 1 * 3600; # add1h
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                            $obuf = sprintf ("%d/%d/%d%s", 
+                                $yr + 1900, $mo + 1, $da, $tmp2);
+                        }
+                    }
+                    if (defined($form->{"add6h$id"}) && ($form->{"add6h$id"} eq 'on')) {
+                        # add 6 hours
+                        if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
+                            #20130408 100000:10:0:60:copy hurom
+                            $yr -= 1900;
+                            $mo--;
+                            $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                            $tmp += 6 * 3600; # add6h
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                            $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                substr ($obuf, 15, 9999));
+                        } elsif (($yr, $mo, $da, $tmp2) = ($obuf =~ /^(\d+)\/(\d+)\/(\d+)(.*)$/)) {
+                            #2013/4/11,1,411test 
+                            $yr -= 1900;
+                            $mo--;
+                            $hr = 0;
+                            $mi = 0;
+                            $se = 0;
+                            $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                            $tmp += 6 * 3600; # add6h
+                            ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                            $obuf = sprintf ("%d/%d/%d%s", 
+                                $yr + 1900, $mo + 1, $da, $tmp2);
+                        }
+                    }
                     if (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
                         # add 4 hours
                         if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
@@ -321,7 +376,31 @@ sub l00http_recedit_proc (\%) {
             }
             if ($found) {
                 $delete = '';
-                if (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
+                if (defined($form->{"add1h$id"}) && ($form->{"add1h$id"} eq 'on')) {
+                    # add 1 hours
+                    if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
+                        $yr -= 1900;
+                        $mo--;
+                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                        $tmp += 1 * 3600; # add1h
+                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                        $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                            $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                            substr ($obuf, 15, 9999));
+                    }
+                } elsif (defined($form->{"add6h$id"}) && ($form->{"add6h$id"} eq 'on')) {
+                    # add 6 hours
+                    if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
+                        $yr -= 1900;
+                        $mo--;
+                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                        $tmp += 6 * 3600; # add6h
+                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                        $obuf = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                            $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                            substr ($obuf, 15, 9999));
+                    }
+                } elsif (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
                     # add 4 hours
                     if (($yr, $mo, $da, $hr, $mi, $se) = ($obuf =~ /(....)(..)(..) (..)(..)(..)/)) {
                         $yr -= 1900;
