@@ -1,3 +1,7 @@
 * To disable top of page banner displaying up coming events, add the following line in any of the l00httpd.cfg:
 calremBannerDisabled^justdefine
 * Leading ! prevents item from listed in periocalrem
+* Negative length specifies end date
+* To include another file (./for_current_dir):
+
+    %INCLUDE<path/to/file>%

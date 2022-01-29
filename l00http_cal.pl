@@ -54,7 +54,8 @@ sub l00http_cal_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
-    my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos);
+    my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos, 
+        @includes, $incpath, $pathbase, $includefn);
 
     # get current date/time
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -139,15 +140,29 @@ sub l00http_cal_proc {
     # 1) Read a description file
 
     undef %db;
+    undef @includes;
     if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
         $lnno = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             chomp;
             $lnno++;
             if (/^#/) {
-            # # in column 1 is remark
+                # # in column 1 is remark
                 next;
             }
+
+            # include file
+            if (/^%INCLUDE<(.+?)>%/) {
+                $incpath = $1;
+                $pathbase = '';
+                if ($incpath =~ /^\.\//) {
+                    # find base dir of input file
+                    $pathbase = $fullpathname;
+                    $pathbase =~ s/([\\\/])[^\\\/]+$/$1/;
+                }
+                push (@includes, "$pathbase$incpath");
+            }
+
             if (!/^\d/) {
             # must start with numeric
                 next;
@@ -156,6 +171,7 @@ sub l00http_cal_proc {
                 # not matching filter
                 next;
             }
+
             # 2021/9/17,4,todo
             # 2010/10/14+7,1,trash
             if (/^20\d\d\/\d\d*\/\d\d*,\d+,/ ||
@@ -176,7 +192,7 @@ sub l00http_cal_proc {
                         }
                     }
                     print "cal: >$todo<>$len<>$date<\n", if ($ctrl->{'debug'} >= 3);
-                    if ($len < -1) {
+                    if ($len <= -1) {
                         # negative length means given date is the last day.
                         # adjust $date backward so duration ends on the given date
                         $len = -$len;
@@ -195,6 +211,50 @@ sub l00http_cal_proc {
         }
         if (defined ($form->{'today'}))  {
             @db{sprintf("%d/%d/%d",$year+1900,$mon,$mday)."`1`<font style=\"color:black;background-color:lime\">NOW</font>"} = 'x';
+        }
+    }
+    foreach $includefn (@includes) {
+        if (&l00httpd::l00freadOpen($ctrl, $includefn)) {
+            $lnno = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                chomp;
+                $lnno++;
+                if (/^#/) {
+                # # in column 1 is remark
+                    next;
+                }
+                if (!/^\d/) {
+                # must start with numeric
+                    next;
+                }
+                if (!/$filter/i) {
+                    # not matching filter
+                    next;
+                }
+
+                if (/^20\d\d\/\d\d*\/\d\d*,\d+,/ ||
+                    /^20\d\d\/\d\d*\/\d\d*\+\d+,\d+,/) {
+                    ($date, $len, @todos) = split (',', $_);
+                    $todo = join(',', @todos);
+                    if (defined ($date) && defined ($len) && defined ($todo)) {
+                        print "cal: >$todo<>$len<>$date<\n", if ($ctrl->{'debug'} >= 3);
+                        if ($len <= -1) {
+                            # negative length means given date is the last day.
+                            # adjust $date backward so duration ends on the given date
+                            $len = -$len;
+                            ($year,$mon, $mday,) = split ('/', $date);
+                            $year -= 1900;
+                            ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
+                            ($gssec,$gsmin,$gshour,$gsmday,$gsmon,$gsyear,$gswday,$gsyday,$gsisdst) =
+                                           gmtime (($julian - $len + 1) * 3600 * 24);
+                            $gsmon++;
+                            $gsyear += 1900;
+                            $date = "$gsyear/$gsmon/$gsmday";
+                        }
+                        @db{"$date`$len`$todo"} = 'x';
+                    }
+                }
+            }
         }
     }
 
