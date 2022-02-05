@@ -43,7 +43,7 @@ $colorlu{'g'} = 'gray';             $colorfg{'g'} = 'black';
 $colorlu{'o'} = 'olive';            $colorfg{'o'} = 'black';
 $colorlu{'d'} = 'gold';             $colorfg{'d'} = 'black';
 $colorlu{'G'} = 'green';            $colorfg{'G'} = 'LightGray';
-$colorlu{'D'} = 'DeepPink';         $colorfg{'D'} = 'black';
+$colorlu{'D'} = 'DeepPink';         $colorfg{'D'} = 'white';
 $colorlu{'b'} = 'Brown';            $colorfg{'b'} = 'black';
 $colorlu{'S'} = 'DeepSkyBlue';      $colorfg{'S'} = 'black';
 $colorlu{'p'} = 'Purple';           $colorfg{'p'} = 'black';
