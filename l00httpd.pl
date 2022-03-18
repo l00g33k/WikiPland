@@ -1121,7 +1121,7 @@ while(1) {
                     # Android 5.1: <!DOCTYPE html XHTML Mobile seems to make single column display
                     # This makes it more compact
                     $ctrl{'htmlhead'} = $htmlheadV2 . $htmlheadB0;
-                } elsif (m|^Content-Type: multipart/form-data; boundary=(-----+.+)$|i) {
+                } elsif (m|^Content-Type: multipart/form-data; boundary=(----+.+)$|i) {
                     $postboundary = $1;
                     l00httpd::dbp("l00httpd", "Content-Type: multipart/form-data; boundary=$postboundary\n");
                 }
