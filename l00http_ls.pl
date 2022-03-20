@@ -1295,6 +1295,9 @@ if ($dbgskipto) {
     } else {
         #.dir
         # yes, it is a directory, read files in the directory
+        if ($path2 !~ /[\\\/]$/) {
+            $path2 .= '/';
+        }
         print "ls: it is a directory >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
         if ((defined ($form->{'showbak'})) && ($form->{'showbak'} eq 'on')) {
