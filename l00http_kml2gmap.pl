@@ -9,7 +9,7 @@ use l00httpd;
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
 my ($width, $height, $apikey, $satellite, $initzoom);
-my ($new, $selregex, $drawgrid, $matched, $exclude, @polylinepts);
+my ($new, $selregex, $drawgrid, $longname, $matched, $exclude, @polylinepts);
 
 $new = 1;
 $myCenters = '';
@@ -17,6 +17,7 @@ $myMarkers = '';
 $mySetMap = '';
 $selregex = '';
 $drawgrid = '';
+$longname = '';
 $initzoom = '';
 @polylinepts = ();
 
@@ -321,6 +322,11 @@ sub l00http_kml2gmap_proc {
             $drawgrid = 'checked';
         } else {
             $drawgrid = '';
+        }
+        if (defined($form->{'longname'}) && ($form->{'longname'} eq 'on')) {
+            $longname = 'checked';
+        } else {
+            $longname = '';
         }
         if (defined($form->{'initzoom'}) && ($form->{'initzoom'} =~ /(\d+)/)) {
             $initzoom = $1;
@@ -868,6 +874,9 @@ SCRIPTSRC
             } else {
                 $jlabel = "P$nowypts";
             }
+            if ($longname eq 'checked') {
+                $jlabel .= ":$name";
+            }
             $labelsort{"$name -- $jlabel"}  = "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";
             $labelsort{"$name -- $jlabel"} .= "$name <a href=\"/clip.htm?update=&clip=";
@@ -1105,7 +1114,7 @@ SCRIPTSRC
         print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\" value=\"$gpslat\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";
+        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"U&#818;pdate\" accesskey=\"u\">\n";
