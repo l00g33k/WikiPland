@@ -45,6 +45,7 @@ sub l00http_shellls_proc {
     }
     $shcmd2 = $shcmd;
     $shcmd2 =~ s/ /\+/g;
+    $shcmd2 =~ s/#/%%23/g; # escape # in URL
     $shcmd2 =~ s/=/%%3D/g; # escape % in printf
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>shellls</title>" .$ctrl->{'htmlhead2'};
