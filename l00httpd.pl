@@ -310,7 +310,9 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     } else {
         $ctrl{'os'} = 'lin';
     }
-    $ctrl{'machine'} = $ENV{'HOSTNAME'};
+    # didn't work on ubuntu
+    #$ctrl{'machine'} = $ENV{'HOSTNAME'};
+    $ctrl{'machine'} = `echo \$HOSTNAME`;
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
