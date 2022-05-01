@@ -8,3 +8,25 @@
 * If you have msg.exe on Windows, you can launch a popup message:
 
     `msg /time:10 * An example message that goes away after 10 seconds`
+
+* These expression may be evaluated in a bash shell too:
+
+    "W batt: ".($range=177);
+    "W work: ".($range-=18);
+    "W home: ".($range-=18);
+    "T work: ".($range-=18);
+    "T +137: ".($range+=137);
+    "T home: ".($range-=18);
+
+    # bash
+
+    echo '
+    "W batt: ".($range=177);
+    "W work: ".($range-=18);
+    "W home: ".($range-=18);
+    "T work: ".($range-=18);
+    "T +137: ".($range+=137);
+    "T home: ".($range-=18);
+    ' | perl -ne 'eval "print $_";print "\n"'
+
+
