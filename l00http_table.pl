@@ -111,7 +111,7 @@ sub l00http_table_proc {
     } else {
         $form->{'path'} = "$ctrl->{'plpath'}l00_table.txt";
     }
-    print $sock " - <a href=\"#theform\">Jump form</a>\n";
+    print $sock " - <a href=\"#theform\">Jump to form</a>\n";
     print $sock " - <a href=\"#end\">Jump to end</a><hr>\n";
 
     if ((defined ($form->{'nolist'})) && ($form->{'nolist'} eq 'on')) {
@@ -451,6 +451,8 @@ sub l00http_table_proc {
         
     # generate HTML buttons, etc.
 
+    print $sock "<hr><a name=\"theform\"></a>\n";
+
     if ($nolist ne 'checked') {
         # convert
         print $sock "<form action=\"/table.htm\" method=\"post\">\n";
@@ -474,8 +476,6 @@ sub l00http_table_proc {
         print $sock "Execution log: $exelog<p>\n";
     }
     
-    print $sock "<hr><a name=\"theform\"></a>\n";
-
 
     # editing column
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
