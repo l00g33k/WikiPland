@@ -67,7 +67,7 @@ cat1='----' and cat2='DESCFIND'.
 
 =Other notations=
 * ===chapter=== (3rd level) to hide low priority tasks
-* !!! at the end of comment to make a sticky note at the bottom (& in BOOKMARKS)
+* >>> at the end of comment to make a sticky note at the bottom
 * !! at start to hide in the latest
 * ! at start to hide but add to !# count
 * +# hides for # days from timestamp
