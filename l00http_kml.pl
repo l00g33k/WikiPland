@@ -641,7 +641,8 @@ sub l00http_kml_proc {
                                 # * name from line above over writes name from URL
                                 $name = $starname;
                             }
-                        } elsif (($lat, $lon, $name) = /([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
+                        } elsif (($lat, $lon, $name) = /^ *([0-9.+-]+?),([0-9.+-]+?)[, ]+([^ ]+)/) {
+                            #36.54191596402692,-118.78672218554689 vista_point
                             # match, falls thru
                             if ($starname ne '') {
                                 # * name from line above over writes name from URL
