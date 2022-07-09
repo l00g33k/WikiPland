@@ -162,7 +162,7 @@ sub l00http_do_proc {
             # wikitize output if return has alphabet instead numeric only
             print $sock &l00wikihtml::wikihtml ($ctrl, "", $rethash, $flags);
         }
-        if ($bare ne 'checked') {
+        if (($bare ne 'checked') && ($hide ne 'checked')) {
             print $sock "<hr>Run completed<br>\n";
         }
     }
@@ -201,13 +201,13 @@ sub l00http_do_proc {
             print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
             print $sock "</form>\n";
         } else {
-            if ($hide eq 'checked') {
-                print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-                print $sock "<a href=\"#end\">Jump to end</a>\n";
-                print $sock "<a href=\"/edit.htm?path=$doplpathnow\">Ed</a>\n";
-                print $sock "<a href=\"/view.htm?path=$doplpathnow\">Vw</a>\n";
-                print $sock "<a href=\"/do.htm?path=$doplpathnow\">form</a>\n";
-            }
+#           if ($hide eq 'checked') {
+#               print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+#               print $sock "<a href=\"#end\">Jump to end</a>\n";
+#               print $sock "<a href=\"/edit.htm?path=$doplpathnow\">Ed</a>\n";
+#               print $sock "<a href=\"/view.htm?path=$doplpathnow\">Vw</a>\n";
+#               print $sock "<a href=\"/do.htm?path=$doplpathnow\">form</a>\n";
+#           }
             if ($doplpathset && ($overwrite == 0)) {
                 print $sock "Quick URL is active. Full URL is:<br>\n";
                 $tmp = "/do.htm?do=Do+more&path=$doplpath&arg1=$form->{'arg1'}";
