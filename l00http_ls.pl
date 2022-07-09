@@ -246,7 +246,7 @@ sub l00http_ls_proc {
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
     my (@regexs, $regex, $skip, $pattern, $filecnt);
-    my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml);
+    my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare);
 
 
     if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
@@ -255,6 +255,7 @@ sub l00http_ls_proc {
 
     $wikihtmlflags = 0;
     $skiptohdr = '';
+    $barebare = 0;
 
     # 1) Determine operating path and mode
 
@@ -325,6 +326,10 @@ sub l00http_ls_proc {
             $bare = 'checked';
         } else {
             $bare = '';
+        }
+        if (defined ($form->{'noform'}) && ($form->{'noform'} eq 'on')) {
+            $bare = 'checked';
+            $barebare = 1;
         }
         if (defined ($form->{'hilite'})) {
             $hilite = $form->{'hilite'};
@@ -1645,7 +1650,8 @@ if ($dbgskipto) {
 
             print $sock "    <tr>\n";
             print $sock "        <td><input type=\"checkbox\" name=\"clippath\">Clip path</td>\n";
-            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&submit=Submit&bare=on&chno=on\">Bare without forms</a></td>\n";
+            print $sock "        <td><a href=\"/ls.htm?path=$pname$fname&submit=Submit&bare=on&chno=on\">Bare without forms</a> - ";
+            print $sock "            <a href=\"/ls.htm?path=$pname$fname&submit=Submit&bare=on&chno=on&noform=on\">noform</a></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
@@ -1809,7 +1815,9 @@ if ($dbgskipto) {
                 print $sock "$ctrl->{'FOOT'}\n";
             }
         } else {
-            print $sock "<p><a href=\"/ls.htm?path=$path2&submit=Submit&bare=&chno=\">form</a>\n";
+            if ($barebare == 0) {
+                print $sock "<p><a href=\"/ls.htm?path=$path2&submit=Submit&bare=&chno=\">form</a>\n";
+            }
         }
         print $sock $ctrl->{'htmlfoot'};
     }
