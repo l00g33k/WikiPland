@@ -62,6 +62,8 @@ sub l00http_shellls_proc {
     if ($shpath =~ /\/$/) {
         @items = split("\n", `$shcmd '$lscmd \"$shpath\"'`);
         $cnt = 0;
+        # print current directory
+        printf $sock ("current directory: <a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$shpath\">$shpath</a><br>\n");
         $up1lvl = $shpath;
         if ($up1lvl =~ /\/$/) {
             $up1lvl =~ s/[^\/]+\/$//;
