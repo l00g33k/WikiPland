@@ -111,6 +111,8 @@ sub l00http_cal_proc {
     print $sock "<a href=\"/recedit.htm?record1=^\\d%2B\\%2F\\d%2B\\%2F\\d%2B\\%2B%2A\\d%2A,\\d%2B,&path=$fullpathname\">Recedit</a> - \n";
     print $sock "<a href=\"/ls.htm?path=$fullpathname\">$fullpathname</a>\n";
     print $sock "<a name=\"top\"></a>\n";
+    print $sock " - <a href=\"#__end__\">Jump to end</a>\n";
+    print $sock " - <a href=\"/cal.htm?path=$fullpathname&today=on#__now__\">NOW</a><p>\n";
 
     # remember parameters if new ones are provided
     if (defined ($form->{'cellwd'}) && ($form->{'cellwd'} =~ /(\d+)/)) {
@@ -210,7 +212,7 @@ sub l00http_cal_proc {
             }
         }
         if (defined ($form->{'today'}))  {
-            @db{sprintf("%d/%d/%d",$year+1900,$mon,$mday)."`1`<font style=\"color:black;background-color:lime\">NOW</font>"} = 'x';
+            @db{sprintf("%d/%d/%d",$year+1900,$mon,$mday)."`1`<font style=\"color:black;background-color:lime\">NOW</font><a name=\"__now__\"></a>"} = 'x';
         }
     }
     foreach $includefn (@includes) {
@@ -480,7 +482,8 @@ sub l00http_cal_proc {
 
 
     # 3) Display form controls
-    print $sock "<p><a href=\"#top\">Jump to top</a><be>\n";
+    print $sock "<a name=\"__end__\"></a>\n";
+    print $sock " - <a href=\"#top\">Jump to top</a><br>\n";
 
     print $sock "<form action=\"/cal.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
