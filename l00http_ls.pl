@@ -241,7 +241,7 @@ sub l00http_ls_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($nofiles, $nodirs, $showbak, $dir, @dirs);
+    my ($nofiles, $nodirs, $showbak, $dir, @dirs, $hasdots);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
@@ -1356,12 +1356,23 @@ if ($dbgskipto) {
         $clipfile = '';
         $clipdir = '';
         #if (defined ($form->{'sort'}) && ($form->{'sort'} eq 'on')) 
+        # some versions of perl on termux do not include .. in readdir
+        @dirs = readdir (DIR);
+        $hasdots = 0;
+        foreach $file (@dirs) {
+            if ($file eq '..') {
+                $hasdots = 1;
+            }
+        }
+        if ($hasdots == 0) {
+            push (@dirs, '..');
+        }
         if ($sortkey1name2date == 2) {
             # sort by reverse time
             $llspath = $path2;
-            @dirs = sort llsfn readdir (DIR);
+            @dirs = sort llsfn @dirs;
         } else {
-            @dirs = sort llstricmp readdir (DIR);
+            @dirs = sort llstricmp @dirs;
         }
 
         $ramdirtxt = '';
