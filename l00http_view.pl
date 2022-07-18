@@ -212,8 +212,6 @@ sub l00http_view_proc {
 
     if (defined ($form->{'clrhilite'})) {
         $hilitetext = '';
-    } elsif (defined ($form->{'hilitetext'}) && (length($form->{'hilitetext'}) > 0)) {
-        $hilitetext = $form->{'hilitetext'};
     }
 
     if (defined ($form->{'dohilite'})) {
@@ -221,6 +219,9 @@ sub l00http_view_proc {
             $ansi = 'checked';
         } else {
             $ansi = '';
+        }
+        if (defined ($form->{'hilitetext'})) {
+            $hilitetext = $form->{'hilitetext'};
         }
     }
 
