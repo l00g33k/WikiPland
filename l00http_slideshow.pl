@@ -230,9 +230,9 @@ sub l00http_slideshow_proc {
                             = stat($path . $file);
                         ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                             = localtime($ctime);
+                        $urlname = "$path$allpics[$ii]";
+                        $urlname =~ s/\+/%2B/g;
                         if ($nonewline ne 'checked') {
-                            $urlname = "$path$allpics[$ii]";
-                            $urlname =~ s/\+/%2B/g;
                             if ($showname ne 'checked') {
                                $outbuf .= sprintf ("<a name=\"pic%d\"</a><a href=\"/slideshow.htm?path=%s\">%d</a>: <a href=\"/launcher.htm?path=%s\" target=\"_blank\">%4d/%02d/%02d %02d:%02d:%02d</a>: <a href=\"#pic%d\">&lt;&lt;</a> - <a href=\"#pic%d\">&gt;&gt;</a>", 
                                     $ii + 1, 
@@ -271,6 +271,13 @@ sub l00http_slideshow_proc {
                                         }
                                     }
                                 }
+                            }
+                        } else {
+                            if ($showname eq 'checked') {
+                               $outbuf .= sprintf ("<a href=\"/launcher.htm?path=%s\" target=\"_blank\">%s</a>", 
+                                    $urlname,
+                                    $allpics[$ii]
+                                    );
                             }
                         }
                         $outbuf .= "$newline\n";
