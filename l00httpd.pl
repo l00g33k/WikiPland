@@ -1373,7 +1373,7 @@ while(1) {
                     #open(OU,">${plpath}.server.log.persist");
                     #print OU $ctrl{'l00file'}->{'l00://server.log'};
                     #close(OU);
-                    exit (1);
+                    exit (0);
                 } else {
                     $shutdown = 1;
                     print "You told me to shutdown\n";
