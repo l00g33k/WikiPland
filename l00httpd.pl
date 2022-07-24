@@ -1342,7 +1342,10 @@ while(1) {
                 &loadmods($ctrl{'extraplpath'});
                 &l00http_cron_when_next (\%ctrl);
             }
-            if ($modcalled eq "shutdown") {
+            if ($modcalled eq "exitrestart") {
+                print "Exit with code 1 so shell can restart\n";
+                exit (1);
+            } elsif ($modcalled eq "shutdown") {
                 $shutdown++;
                 if ($shutdown >= 2) {
                     print "You confirm me to shutdown\n";
@@ -1379,6 +1382,7 @@ while(1) {
                     print "You told me to shutdown\n";
                     print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
                     print $sock "Click <a href=\"/shutdown.htm\">here</a> to initiate shutdown<p>\n";
+                    print $sock "Click <a href=\"/exitrestart.htm\">here</a> to exit with code 1 so script can restart<p>\n";
                     print $sock "Click <a href=\"/restart.htm\">here</a> to restart<p>\n";
                     print $sock "Click <a href=\"/\">here</a> to cancel<p>\n";
                     print $sock $ctrl{'htmlfoot'};
