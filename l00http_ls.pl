@@ -1247,10 +1247,16 @@ if ($dbgskipto) {
 								            $tmp = '';
 							            }
                                         # include file
-                                        s/^\.\//$pname\//;
-                                        $pnameup = $pname;
-                                        $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
-                                        s/^\.\.\//$pnameup\//;
+                                        if (!/^l00:\/\//) {
+                                            # if not RAM file
+                                            # replace './' with path to this file
+                                            s/^\.\//$pname\//;
+                                            # create absolute path to ..
+                                            $pnameup = $pname;
+                                            $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                                            # replace '../' with absolute path
+                                            s/^\.\.\//$pnameup\//;
+                                        }
                                         if (&l00httpd::l00freadOpen($ctrl, $_)) {
                                             # %INCLUDE%: here
                                             while ($_ = &l00httpd::l00freadLine($ctrl)) {
