@@ -1234,7 +1234,37 @@ if ($dbgskipto) {
                                 }
                             }
                         } else {
-                            print $sock $buf;
+                            if ($buf =~ /%VERBATIM</) {
+                                foreach $_ (split ("\n", $buf)) {
+                                    if (/(.*)%VERBATIM<(.+?)>%(.*)/) {
+							            if (defined($1)) {
+                                            print $sock "$1";
+							            }
+                                        $_ = $2;
+							            if (defined($3)) {
+								            $tmp = $3;
+							            } else {
+								            $tmp = '';
+							            }
+                                        # include file
+                                        s/^\.\//$pname\//;
+                                        $pnameup = $pname;
+                                        $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                                        s/^\.\.\//$pnameup\//;
+                                        if (&l00httpd::l00freadOpen($ctrl, $_)) {
+                                            # %INCLUDE%: here
+                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                                print $sock "$_";
+                                            }
+                                        }
+                                        print $sock "$tmp\n";
+                                    } else {
+                                        print $sock "$_\n";
+                                    }
+                                }
+                            } else {
+                                print $sock $buf;
+                            }
                         }
                     }
                 } else {
