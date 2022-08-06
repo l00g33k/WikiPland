@@ -245,7 +245,7 @@ sub l00http_ls_proc {
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
-    my (@regexs, $regex, $skip, $pattern, $filecnt);
+    my (@regexs, $regex, $skip, $pattern, $filecnt, $verbatimheader, $wikicallonload);
     my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare);
 
 
@@ -508,7 +508,8 @@ sub l00http_ls_proc {
                             }
                             syswrite ($sock, $buf, $len);
                             select (undef, undef, undef, 0.001);    # 1 ms delay. Without it Android looses data
-                        } until ($len < 0x10000);
+                        } until ($len <= 0);
+                        # until ($len < 0x10000);
                         print "sent $ttlbytes\n", if ($ctrl->{'debug'} >= 3);
                         $sock->close;
                         return;
@@ -788,13 +789,74 @@ if ($dbgskipto) {
                 return;
             } else {
                 $editable = 1;
+                $verbatimheader = '';
+                $wikicallonload = '';
 
                 $httphdr = "Content-Type: text/html\r\n";
                 print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
 
+                # 2.2) If not, try reading 30 lines and look for Wikitext
+
+                $ln = 4000;
+                $hits = 0;
+                ($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/;
+                while (<FILE>) {
+                    # count wikitext keywords
+                    if (/=+[^=]+=+/) {
+                        #==title==
+                        $hits++;
+                    }
+                    if (/^\*+ /) {
+                        #* bullet
+                        $hits++;
+                    }
+                    if (/^\|\|/) {
+                        #|| table
+                        $hits++;
+                        if ($ctrl->{'debug'} >= 3) {
+                            $ctrl->{'msglog'} .= "ls:table >$_<\n";
+                        }
+                    }
+                    # count markdown links
+                    if (/\[(.+?)\]\((.+?)\)/) {
+                        $wikihtmlflags |= 64;
+                        $hits++;
+                    }
+                    # scan only first 4000 lines
+                    if (--$ln < 0) {
+                        last;
+                    }
+
+                    # read in VERBATIMHEADER
+                    if (($tmp) = /%VERBATIMHEADER<(.+?)>%/) {
+                        # include file
+                        if ($tmp !~ /^l00:\/\//) {
+                            # if not RAM file
+                            # replace './' with path to this file
+                            $tmp =~ s/^\.\//$pname\//;
+                            # create absolute path to ..
+                            $pnameup = $pname;
+                            $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                            # replace '../' with absolute path
+                            $tmp =~ s/^\.\.\//$pnameup\//;
+                        }
+                        if (&l00httpd::l00freadOpen($ctrl, $tmp)) {
+                            # %INCLUDE%: here
+                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                s/[\r\n]//g;
+                                if (/wikicallonload *\( *\)/) {
+                                    $wikicallonload = " onload=\"wikicallonload()\"";
+                                }
+                                $verbatimheader .= "$_\x0D\x0A";
+                            }
+                        }
+                    }
+                }
+                close (FILE);
+
                 if ($bare ne 'checked') {
                     if (($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/) {
-                        print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                        print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>\n$verbatimheader</head>\x0D\x0A<body$wikicallonload>\n";
                         # not ending in / or \, not a dir
                         # clip.pl with \ on Windows
                         $tmp = $path2;
@@ -803,7 +865,7 @@ if ($dbgskipto) {
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                     } else {
-                        print $sock $ctrl->{'htmlhead'} . "<title>$path2 ls</title>" .$ctrl->{'htmlhead2'};
+                        print $sock $ctrl->{'htmlhead'} . "<title>$path2 ls</title>\n$verbatimheader</head>\x0D\x0A<body$wikicallonload>\n";
                         # clip.pl with \ on Windows
                         $tmp = $path2;
                         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
@@ -836,41 +898,6 @@ if ($dbgskipto) {
                     ($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/;
                     print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
                 }
-
-                # 2.2) If not, try reading 30 lines and look for Wikitext
-
-                $ln = 4000;
-                $hits = 0;
-                while (<FILE>) {
-                    # count wikitext keywords
-                    if (/=+[^=]+=+/) {
-                        #==title==
-                        $hits++;
-                    }
-                    if (/^\*+ /) {
-                        #* bullet
-                        $hits++;
-                    }
-                    if (/^\|\|/) {
-                        #|| table
-                        $hits++;
-                        if ($ctrl->{'debug'} >= 3) {
-                            $ctrl->{'msglog'} .= "ls:table >$_<\n";
-                        }
-                    }
-                    # count markdown links
-                    if (/\[(.+?)\]\((.+?)\)/) {
-                        $wikihtmlflags |= 64;
-                        $hits++;
-                    }
-                    if ($hits >= 1) {
-                        last;
-                    }
-                    if (--$ln < 0) {
-                        last;
-                    }
-                }
-                close (FILE);
 
                 open (FILE, "<$path2");
                 $bulvl = 0;
@@ -1217,7 +1244,7 @@ if ($dbgskipto) {
                             $ctrl->{'l00file'}->{'l00://ls_findinfile.txt'} .= "$_\n";
                         }
                     }
-                    
+
                     if ((defined ($form->{'find'})) &&
                         ($showpage ne 'checked')) {
                         # find without displaying page
