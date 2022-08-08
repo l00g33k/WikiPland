@@ -896,7 +896,7 @@ if ($dbgskipto) {
                     }
                 } else {
                     ($pname, $fname) = $path2 =~ /^(.+\/)([^\/]+)$/;
-                    print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
+                    print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>\n$verbatimheader</head>\x0D\x0A<body$wikicallonload>\n";
                 }
 
                 open (FILE, "<$path2");
