@@ -833,7 +833,7 @@ if ($dbgskipto) {
                         if ($tmp !~ /^l00:\/\//) {
                             # if not RAM file
                             # replace './' with path to this file
-                            $tmp =~ s/^\.\//$pname\//;
+                            $tmp =~ s/^\.\//$pname/;
                             # create absolute path to ..
                             $pnameup = $pname;
                             $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
