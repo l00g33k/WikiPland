@@ -850,6 +850,7 @@ if ($dbgskipto) {
                                 $verbatimheader .= "$_\x0D\x0A";
                             }
                         }
+                        next;
                     }
                 }
                 close (FILE);
@@ -926,6 +927,9 @@ if ($dbgskipto) {
                     while (<FILE>) {
                         $lnno++;
                         if (($skipto ne '') && ($lnno < $skipto)) {
+                            next;
+                        }
+                        if (/%VERBATIMHEADER<(.+?)>%/) {
                             next;
                         }
                         if ($stopat ne '') {
@@ -1291,6 +1295,7 @@ if ($dbgskipto) {
                                             }
                                         }
                                         print $sock "$tmp\n";
+                                        next;
                                     } else {
                                         print $sock "$_\n";
                                     }
