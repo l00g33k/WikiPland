@@ -133,11 +133,12 @@ sub l00http_do_proc {
                 print $sock "Path:<input type=\"text\" name=\"path\" size=\"6\" value=\"$mypath\"> \n";
             }
             print $sock "<input type=\"text\" name=\"refresh\" size=\"2\" value=\"$refresh\"> sec. \n";
-            print $sock "<input type=\"checkbox\" name=\"overwrite\">Arg1 overwrites path<br>\n";
-            print $sock "</form>\n";
+        print $sock "<input type=\"checkbox\" name=\"overwrite\">Arg1 overwrites path<br>\n";
+        print $sock "</form>\n";
             if ($doplpathset && ($overwrite == 0)) {
-                print $sock "<font style=\"color:black;background-color:lime\">Using Quick URL</font>: $doplpath<p>\n";
+                print $sock "<font style=\"color:black;background-color:lime\">Using Quick URL</font>: $doplpath\n";
             }
+            print $sock "<p><a name=\"user\"></a>\n";
         }
     }
 
