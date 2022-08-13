@@ -838,12 +838,8 @@ if ($tickdelta <= 0) {
 
 &updateNow_string ();
 # start new log
-if ($ctrl_port_first == $ctrl_port) {
-    if (open (OUT, ">${plpath}l00httpd.log")) {
-        print OUT "$ctrl{'now_string'} WikiPland started ($cli_port)\n";
-        close OUT;
-    }
-}
+dlog (2, "$ctrl{'now_string'} WikiPland started ($cli_port)\n");
+
 
 $ctrl{'l00file'}->{'l00://server.log'} = '';
 # disable restoration...
