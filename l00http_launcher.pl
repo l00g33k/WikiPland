@@ -87,16 +87,26 @@ sub l00http_launcher_proc {
             }
         }
     }
+
+    print $sock "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n";
+    print $sock "<tr><td>\n";
     print $sock "<form action=\"/view.htm\" method=\"get\">".
                 "<input type=\"submit\" name=\"submit\" value=\"V&#818;iew\" accesskey=\"v\">".
                 "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
-                "</form>".
-                "<p>\n";
+                "</form> ";
+    print $sock "</td><td>\n";
+    print $sock "&nbsp;\n";
+    print $sock "</td><td>\n";
+    print $sock "<form action=\"/do.htm\" method=\"get\">".
+                "<input type=\"submit\" name=\"submit\" value=\"Do&#818;\" accesskey=\"o\">".
+                "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
+                "</form>";
+    print $sock "</td></tr>\n";
+    print $sock "</table>\n";
 
 
 
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
-
 
     $col = 0;
     $fname = $path;
