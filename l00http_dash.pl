@@ -1438,7 +1438,7 @@ sub l00http_dash_proc {
 
 
         # form elements
-        print $sock "Add ";
+        print $sock "<a href=\"#top\">top</a> - <a name=\"end\"></a>Add ";
         $tmp = 'style="height:1.7em; width:2.0em"';
         foreach $_ (@blocktime) {
             $access = '';
@@ -1476,6 +1476,7 @@ sub l00http_dash_proc {
        #}
 
         $help  = "<a name=\"end\"></a>";
+        $help  = "";
         if ($smallhead ne 'checked') {
             if ($#descfind >= 0) {
                 $help .= "* <font style=\"color:black;background-color:aqua\">Desc find</font>: ";
