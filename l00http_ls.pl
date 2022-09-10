@@ -1533,14 +1533,16 @@ if ($dbgskipto) {
 
                 $fullpath = $path2 . $file;
                 $fullpath =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
+                $tmp = $file;
+                $tmp =~ s/([^^A-Za-z0-9\-_.!~*'()])/ sprintf "%%%02x", ord $1 /eg;
 
                 $buf = "<tr>\n";
                 if ($file =~ /\.txt$/i) {
                     # tx=$file.htm so it ends in .htm for Palm TX
-                    $buf .= "<td><small><a href=\"/ls.htm/$file?path=$fullpath\">$file</a>"
+                    $buf .= "<td><small><a href=\"/ls.htm/$tmp?path=$fullpath\">$file</a>"
                         ."</small></td>\n";
                 } else {
-                    $buf .= "<td><small><a href=\"/ls.htm/$file?path=$fullpath\">$file</a>"
+                    $buf .= "<td><small><a href=\"/ls.htm/$tmp?path=$fullpath\">$file</a>"
                         ."</small></td>\n";
                 }
                 $buf .= "<td align=right><small>"
