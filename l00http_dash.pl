@@ -326,6 +326,8 @@ sub l00http_dash_proc {
             print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">Jump here</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:gold\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#bangbang\">Jump out</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:aqua\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#descfind\">Desc find</a></font> \n";
+#           print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#taskjump\">taskjump</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"#taskjump\">taskjump</a></font> \n";
         }
     }
     print $sock "<p>\n";
@@ -950,7 +952,7 @@ sub l00http_dash_proc {
                     if (($this =~ />>>$/) && ($hdronly == 0)) {
                                  $lnnostr = sprintf("%3d", $lnno);
                                  $tasksTime{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "!!$tim";
-                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = &l00http_dash_linewrap($dsc);
+                                 $tasksDesc{"||<a href=\"/ls.htm?path=$form->{'path'}#$jmp\">$cat1</a>||$lnnostr $cat2 "} = "<a name=\"taskjump\"></a>".&l00http_dash_linewrap($dsc);
                                 if ($dbg) {
                                     print $sock "    >>> $this\n";
                                 }
@@ -1390,7 +1392,8 @@ sub l00http_dash_proc {
         }
 
         # jump mark
-        $jumphrefs = "<a name=\"quickcut\"></a>";
+        $jumphrefs = "";
+        $jumphrefs .= "<a name=\"quickcut\"></a>";
         $jumphrefstop = '';
         if ($jumpcnt > 0) {
             $tmp = $jumpmarks;
