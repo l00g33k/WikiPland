@@ -679,6 +679,10 @@ sub l00http_edit_proc2 {
     print $sock "<hr><a name=\"end\"></a>";
     print $sock "<a href=\"#top\">top</a>\n";
 
+    if (defined ($ctrl->{'FOOT'})) {
+        print $sock "$ctrl->{'FOOT'}\n";
+    }
+
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
 }

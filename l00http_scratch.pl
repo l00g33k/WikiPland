@@ -291,10 +291,11 @@ sub l00http_scratch_proc {
             print $sock "<input type=\"submit\" name=\"null\" value=\"J&#818;ump to URL\" accesskey=\"j\"> \n";
             print $sock "</form><p>\n";
         }
-        print $sock "<form action=\"/ls.htm/index.txt.htm\" method=\"get\">\n";
-        print $sock "<input type=\"hidden\" name=\"path\" value=\"$ctrl->{'workdir'}index.txt\">\n";
-        print $sock "<input type=\"submit\" name=\"null\" value=\"H&#818;OME\" accesskey=\"h\"> \n";
-        print $sock "</form><p>\n";
+
+        # send HTML footer and ends
+        if (defined ($ctrl->{'FOOT'})) {
+            print $sock "$ctrl->{'FOOT'}\n";
+        }
 
         print $sock "<p><p><hr>\n";
         print $sock "<p><p><hr>\n";
@@ -305,7 +306,8 @@ sub l00http_scratch_proc {
         print $sock "<input type=\"submit\" name=\"tempsize\" value=\"Edit box&#818; size\" accesskey=\"x\">\n";
         print $sock "wd <input type=\"text\" size=\"4\" name=\"editwd\" value=\"$editwd\">\n";
         print $sock "ht <input type=\"text\" size=\"4\" name=\"editht\" value=\"$editht\">\n";
-        print $sock "<input type=\"submit\" name=\"defsize\" value=\"D&#818;efault edit size\" accesskey=\"d\">\n";
+#       print $sock "<input type=\"submit\" name=\"defsize\" value=\"D&#818;efault edit size\" accesskey=\"d\">\n";
+        print $sock "<input type=\"submit\" name=\"defsize\" value=\"Default edit size\">\n";
         print $sock "</form>\n";
 
     }
