@@ -545,7 +545,7 @@ sub l00http_reminder_proc {
 
 sub l00http_reminder_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
-    my ($retval, $life);
+    my ($retval, $life, $nowiki);
 
     # see notes in l00http_reminder_find() about time + $utcoffsec
     if (time - $utcoffsec >= $starttime) {
@@ -587,7 +587,11 @@ sub l00http_reminder_perio {
                 $life = sprintf ("%d:%02d:", 
                     int (((time - $utcoffsec) - $_) / 60),
                     ((time - $utcoffsec) - $_) % 60);
-                &l00httpd::l00PopMsg($ctrl, "$life $msgtoast");
+                # remove URL in [[URL|text]] and coloring *.*
+                $nowiki = $msgtoast;
+                $nowiki =~ s/\[\[.+?\|(.+?)\]\]/$1/msg;
+                $nowiki =~ s/\*.{0,1}\*//msg;
+                &l00httpd::l00PopMsg($ctrl, "$life $nowiki");
                 # if any message is a file ending in .pl, Perl do it
                 foreach $_ (split(' -- ', $msgtoast)) {
                     if (/\.pl$/) {
