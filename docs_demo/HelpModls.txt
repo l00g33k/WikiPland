@@ -47,8 +47,7 @@ The DOPL directive allows the specification of a Perl do file using absolute or 
     %DOPL</sdcard/x/ex.pl>%
     %DOPL<./ex.pl>%
 
-The directive must start in column 1 with any other leading characters.  The return value 
-of the script must be a string.  The string is included into the source file at the 
+The return value of the script must be a string.  The string is included into the source file at the 
 point of the directive.
 
 This example demonstrats the generation of a string and the return of string:

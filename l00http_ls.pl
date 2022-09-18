@@ -299,7 +299,7 @@ sub l00http_ls_proc {
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
     my (@regexs, $regex, $skip, $pattern, $filecnt, $verbatimheader, $wikicallonload);
-    my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare);
+    my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare, $pre, $dopl, $post);
 
 
     if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
@@ -618,43 +618,10 @@ sub l00http_ls_proc {
                         foreach $_ (split ("\n", $filedata)) {
                             $_ .= "\n";
                             $lnno++;
-if ($dbgskipto) {
-###                            if (($skipto ne '') && ($lnno < $skipto)) {
-###                                next;
-###                            }
-###                            if ($stopat ne '') {
-###                                $skiptohdr  = "Content limited to between line $skipto-$lnno. Show: ";
-###                                $length = $lnno - $skipto;
-###
-###                                $start = $skipto - $length;
-###                                if ($start < 1) {
-###                                    $start = 1;
-###                                }
-###                                $end = $start + $length;
-###                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
-###                                $start = $skipto - int($length/2);
-###                                if ($start < 1) {
-###                                    $start = 1;
-###                                }
-###                                $end = $start + $length;
-###                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
-###                                $start = $skipto + int($length/2);
-###                                $end = $start + $length;
-###                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
-###                                $start = $skipto + $length;
-###                                $end = $start + $length;
-###                                $skiptohdr .= "<a href=\"/ls.htm?path=$path2&setskipto=1&skipto=$start&stopat=$end\">$start-$end</a> - ";
-###                            }
-###                            if (($stopat ne '') && ($lnno > $stopat)) {
-###                                last;
-###                            }
-}
 
-#$buf .= "XXXXXXXXXXXX";
-                            if (/^%DOPL<(.+?)>%/) {
-l00httpd::dbp($config{'desc'}, "DOPL do non disk file\n");
-#print $sock "XXXXXXXXXXXX";
-#                               $buf .= &dopl($ctrl, $1, $pname);
+                            # do DOPL
+                            if (($pre, $dopl, $post) = /^(.*)%DOPL<(.+?)>%(.*)$/) {
+                                $buf .= $pre.&dopl($ctrl, $dopl, $pname).$post;
                                 next;
                             }
                             if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
@@ -1147,18 +1114,12 @@ if ($dbgskipto) {
                             }
                         }
 
-#$buf .= "XXXXXXXXXXXX";
-                        #
-                        #
-                        #
-                        #
-                        #
-                        if (/^%DOPL<(.+?)>%/) {
-#l00httpd::dbp($config{'desc'}, "DOPL do non disk file\n");
-#print $sock "XXXXXXXXXXXX";
-                            $buf .= &dopl($ctrl, $1, $pname);
+                        # do DOPL
+                        if (($pre, $dopl, $post) = /^(.*)%DOPL<(.+?)>%(.*)$/) {
+                            $buf .= $pre.&dopl($ctrl, $dopl, $pname).$post;
                             next;
                         }
+
                         if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
                             if (defined($1)) {
                                 $buf .= $1;
