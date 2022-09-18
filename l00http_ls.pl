@@ -60,6 +60,59 @@ $hilite = '';
 $dirfilter = '';
 $lsmaxitems = 1000;
 
+
+sub dopl {
+    my ($ctrl, $doplfname, $pname) = @_;
+    my ($generated, $pnameup, $rethash);
+
+    $pnameup = $pname;
+    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+
+    # is this superceded by path=./ substitution in ls.pl?
+    # subst %INCLUDE<./xxx> as 
+    #       %INCLUDE</absolute/path/xxx>
+    $doplfname =~ s/^\.\//$pname\//;
+    # drop last directory from $pname for:
+    # subst %INCLUDE<../xxx> as 
+    #       %INCLUDE</absolute/path/../xxx>
+    $pnameup = $pname;
+    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+    $doplfname =~ s/^\.\.\//$pnameup\//;
+    $generated = "";
+    if (! -f $doplfname) {
+        $generated .= "\nDOPL cannot do non disk file $doplfname\n\n";
+        l00httpd::dbp($config{'desc'}, "DOPL cannot do non disk file: $doplfname"), if ($ctrl->{'debug'} >= 3);
+    } else {
+        l00httpd::dbp($config{'desc'}, "DOPL: $doplfname\n"), if ($ctrl->{'debug'} >= 3);
+        if (open(DOPL, "<$doplfname")) {
+            # %DOPL%: here
+            while (<DOPL>) {
+                l00httpd::dbp($config{'desc'}, "$_"), if ($ctrl->{'debug'} >= 5);
+            }
+            close(DOPL);
+            $rethash  = do $doplfname;
+            if (!defined ($rethash)) {
+                if ($!) {
+                    $generated .= "\nDOPL cannot read module: $doplfname: $! .\n\n";
+                } elsif ($@) {
+                    $generated .= "\nDOPL cannot parse module: $doplfname: $@ .\n\n";
+                }
+            } else {
+                $generated .= $rethash;
+            }
+        } else {
+            $generated .= "\nDOPL cannot open: $doplfname\n\n";
+            l00httpd::dbp($config{'desc'}, "DOPL cannot open: $doplfname"), if ($ctrl->{'debug'} >= 3);
+        }
+    }
+
+    $generated;
+}
+
+
+
+
+
 sub l00http_ls_sortfind {
     my ($rst, $aa, $bb);
 
@@ -597,57 +650,64 @@ if ($dbgskipto) {
 ###                            }
 }
 
+#$buf .= "XXXXXXXXXXXX";
+                            if (/^%DOPL<(.+?)>%/) {
+l00httpd::dbp($config{'desc'}, "DOPL do non disk file\n");
+#print $sock "XXXXXXXXXXXX";
+#                               $buf .= &dopl($ctrl, $1, $pname);
+                                next;
+                            }
                             if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
-								    if (defined($1)) {
-                                        $buf .= $1;
-								    }
-                                    $_ = $2;
-								    if (defined($3)) {
-								        $tmp = $3;
-								    } else {
-								        $tmp = '';
-								    }
-                                    # include file
-                                    #s/^%INCLUDE%://;
-                                    #s/\r//;
-                                    #s/\n//;
+                                if (defined($1)) {
+                                    $buf .= $1;
+                                }
+                                $_ = $2;
+                                if (defined($3)) {
+                                    $tmp = $3;
+                                } else {
+                                    $tmp = '';
+                                }
+                                # include file
+                                #s/^%INCLUDE%://;
+                                #s/\r//;
+                                #s/\n//;
 
-                                    # is this superceded by path=./ substitution in ls.pl?
-                                    # subst %INCLUDE<./xxx> as 
-                                    #       %INCLUDE</absolute/path/xxx>
-                                    s/^\.\//$pname\//;
-                                    # drop last directory from $pname for:
-                                    # subst %INCLUDE<../xxx> as 
-                                    #       %INCLUDE</absolute/path/../xxx>
-                                    $pnameup = $pname;
-                                    $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
-                                    s/^\.\.\//$pnameup\//;
+                                # is this superceded by path=./ substitution in ls.pl?
+                                # subst %INCLUDE<./xxx> as 
+                                #       %INCLUDE</absolute/path/xxx>
+                                s/^\.\//$pname\//;
+                                # drop last directory from $pname for:
+                                # subst %INCLUDE<../xxx> as 
+                                #       %INCLUDE</absolute/path/../xxx>
+                                $pnameup = $pname;
+                                $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
+                                s/^\.\.\//$pnameup\//;
 
-                                    if (&l00httpd::l00freadOpen($ctrl, $_)) {
-                                        # %INCLUDE%: here
-                                        while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                            if (/^##/) {
-                                                # skip to next ^#
-                                                while ($_ = &l00httpd::l00freadLine($ctrl)) {
-                                                    if (/^#/) {
-                                                        last;
-                                                    }
+                                if (&l00httpd::l00freadOpen($ctrl, $_)) {
+                                    # %INCLUDE%: here
+                                    while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                        if (/^##/) {
+                                            # skip to next ^#
+                                            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                                                if (/^#/) {
+                                                    last;
                                                 }
                                             }
-                                            if (/^#/) {
-                                                # skip ^#
-                                                next;
-                                            }
+                                        }
+                                        if (/^#/) {
+                                            # skip ^#
+                                            next;
+                                        }
 #                                           # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
 #                                           if (/%L00HTTP<(.+?)>%/) {
 #                                               if (defined($ctrl->{$1})) {
 #                                                   s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
 #                                               }
 #                                           }
-                                            $buf .= $_;
-                                        }
+                                        $buf .= $_;
                                     }
-                                    $buf .= $tmp;
+                                }
+                                $buf .= $tmp;
                                 next;
                             }
 
@@ -1087,6 +1147,18 @@ if ($dbgskipto) {
                             }
                         }
 
+#$buf .= "XXXXXXXXXXXX";
+                        #
+                        #
+                        #
+                        #
+                        #
+                        if (/^%DOPL<(.+?)>%/) {
+#l00httpd::dbp($config{'desc'}, "DOPL do non disk file\n");
+#print $sock "XXXXXXXXXXXX";
+                            $buf .= &dopl($ctrl, $1, $pname);
+                            next;
+                        }
                         if (/(.*)%INCLUDE<(.+?)>%(.*)/) {
                             if (defined($1)) {
                                 $buf .= $1;
