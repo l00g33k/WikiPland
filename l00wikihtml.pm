@@ -32,15 +32,16 @@ $showalljava = "\n".
 
 
 my (%colorlu, %colorfg);
-$colorlukeys = 'rylsafgodGDbSpLTBhu';
+$colorlukeys = 'rylsafgoOdGDbSpLTBhu';
 $colorlu{'r'} = 'red';              $colorfg{'r'} = 'yellow';
 $colorlu{'y'} = 'yellow';           $colorfg{'y'} = 'black';
 $colorlu{'l'} = 'lime';             $colorfg{'l'} = 'black';
 $colorlu{'s'} = 'silver';           $colorfg{'s'} = 'black';
 $colorlu{'a'} = 'aqua';             $colorfg{'a'} = 'black';
 $colorlu{'f'} = 'fuchsia';          $colorfg{'f'} = 'yellow';
-$colorlu{'g'} = 'gray';             $colorfg{'g'} = 'white';
+$colorlu{'g'} = 'gray';             $colorfg{'g'} = 'yellow';
 $colorlu{'o'} = 'olive';            $colorfg{'o'} = 'white';
+$colorlu{'O'} = 'orange';           $colorfg{'O'} = 'black';
 $colorlu{'d'} = 'gold';             $colorfg{'d'} = 'black';
 $colorlu{'G'} = 'green';            $colorfg{'G'} = 'LightGray';
 $colorlu{'D'} = 'DeepPink';         $colorfg{'D'} = 'white';
