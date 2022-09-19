@@ -32,14 +32,15 @@ $showalljava = "\n".
 
 
 my (%colorlu, %colorfg);
-$colorlukeys = 'rylsafgoOdGDbSpLTBhu';
+$colorlukeys = '_rylsafgoOdGDbSpLTBhu';
+$colorlu{'_'} = 'white';            $colorfg{'r'} = 'black';
 $colorlu{'r'} = 'red';              $colorfg{'r'} = 'yellow';
 $colorlu{'y'} = 'yellow';           $colorfg{'y'} = 'black';
 $colorlu{'l'} = 'lime';             $colorfg{'l'} = 'black';
 $colorlu{'s'} = 'silver';           $colorfg{'s'} = 'black';
 $colorlu{'a'} = 'aqua';             $colorfg{'a'} = 'black';
 $colorlu{'f'} = 'fuchsia';          $colorfg{'f'} = 'yellow';
-$colorlu{'g'} = 'gray';             $colorfg{'g'} = 'yellow';
+$colorlu{'g'} = 'gray';             $colorfg{'g'} = 'white';
 $colorlu{'o'} = 'olive';            $colorfg{'o'} = 'white';
 $colorlu{'O'} = 'orange';           $colorfg{'O'} = 'black';
 $colorlu{'d'} = 'gold';             $colorfg{'d'} = 'black';
@@ -49,7 +50,7 @@ $colorlu{'b'} = 'Brown';            $colorfg{'b'} = 'yellow';
 $colorlu{'S'} = 'DeepSkyBlue';      $colorfg{'S'} = 'black';
 $colorlu{'p'} = 'Purple';           $colorfg{'p'} = 'black';
 $colorlu{'L'} = 'LightGray';        $colorfg{'L'} = 'black';
-$colorlu{'T'} = 'Teal';             $colorfg{'T'} = 'yellow';
+$colorlu{'T'} = 'Teal';             $colorfg{'T'} = 'white';
 $colorlu{'B'} = 'SandyBrown';       $colorfg{'B'} = 'black';
 $colorlu{'h'} = 'HotPink';          $colorfg{'h'} = 'black';
 $colorlu{'u'} = 'blue';             $colorfg{'u'} = 'black';
