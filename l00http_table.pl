@@ -102,7 +102,7 @@ sub l00http_table_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<hr><a name=\"top\"></a>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
+        print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         # create shell script for vi
         if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
             print OUT "vim $form->{'path'}\n";
@@ -451,7 +451,7 @@ sub l00http_table_proc {
         
     # generate HTML buttons, etc.
 
-    print $sock "<hr><a name=\"theform\"></a>\n";
+    print $sock "<hr>\n";
 
     if ($nolist ne 'checked') {
         # convert
@@ -476,6 +476,7 @@ sub l00http_table_proc {
         print $sock "Execution log: $exelog<p>\n";
     }
     
+    print $sock "<a name=\"theform\"></a><a href=\"#top\">Jump to top</a><p>\n";
 
     # editing column
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
