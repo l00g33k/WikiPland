@@ -408,8 +408,10 @@ sub l00freadOpen {
 
     $readName = $fname;
     $readIdx = -1;
-	
-    if ($fname =~ /^l00:\/\/./) {
+
+    if (!defined($fname) || (length($fname) == 0)) {
+    	$ret = 0;
+    } elsif ($fname =~ /^l00:\/\/./) {
         # ram file
         if (defined($ctrl->{'l00file'}->{$fname})) {
 		    # ram file exist
