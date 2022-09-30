@@ -9,9 +9,10 @@ use l00httpd;
 
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
-my ($record1, $displen);
+my ($record1, $displen, $filter);
 
 $record1 = '^\d{8,8} \d{6,6} ';
+$filter = '.';
 $displen = 50;
 
 sub l00http_recedit_output_row {
@@ -174,6 +175,12 @@ sub l00http_recedit_proc (\%) {
         $path = $form->{'path'};
     } else {
         $path = "$ctrl->{'workdir'}l00_notify.txt";
+    }
+
+    if (defined ($form->{'filter'}) && (length($form->{'filter'}) > 0)) {
+        $filter = $form->{'filter'};
+    } else {
+        $filter = '.';
     }
 
     if (defined ($form->{'record1'})) {
@@ -477,6 +484,11 @@ sub l00http_recedit_proc (\%) {
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$path\"></td>\n";
     print $sock "        </tr>\n";
                                                 
+    print $sock "        <tr>\n";
+    print $sock "            <td>Filter</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
@@ -515,7 +527,11 @@ sub l00http_recedit_proc (\%) {
                         }
                         $id++;
                     }
-                    $found = 1;
+                    if (/$filter/) {
+                        $found = 1;
+                    } else {
+                        $found = 0;
+                    }
                     $keeplook = 1;
                     $obuf = '';
                 }
