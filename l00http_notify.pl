@@ -27,6 +27,10 @@ sub l00http_notify_set {
                 if (/^MSG:(.+)/) {
                     $msg = $1;
                 }
+                if (/^TTL:(.+?) MSG:(.+)/) {
+                    $ttl = $1;
+                    $msg = $2;
+                }
                 if (($ttl ne '') && ($msg ne '')) {
                     if ($ctrl->{'os'} eq 'and') {
                         $ctrl->{'droid'}->notify ($msg, $ttl);
@@ -131,22 +135,12 @@ sub l00http_notify_proc (\%) {
         # get submitted name and print greeting
         print $sock "<p>Sent Notification:<br>Title= $title<br>Message= $msgsub<p>\n";
         if (open (OU, ">>$ctrl->{'workdir'}/l00_notify.txt")) {
-            print OU "TTL:$title\nMSG:$msgsub\n";
+           #print OU "TTL:$title\nMSG:$msgsub\n";
+            # changing to single line so recedit can stop supporting multiple lines
+            print OU "TTL:$title MSG:$msgsub\n";
             close (OU);
         }
     }
-
-#   if (open (IN, "<$ctrl->{'workdir'}/l00_notify.txt")) {
-#       while (<IN>) {
-#           if (/^TTL:/) {
-#               print $sock "<pre>\n$_</pre>\n";
-#           } else {
-#               print $sock "$_\n";
-#           }
-#       }
-#       close (IN);
-#   }
-    
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
