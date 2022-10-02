@@ -324,7 +324,11 @@ sub l00http_cal_proc {
                 $todo = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=".&l00httpd::urlencode ($tmp)."\" target=newwin>$todo</a>";
             }
             if (defined ($list {"$wkno`$dayofwk"})) {
-                $list {"$wkno`$dayofwk"} .= " ! $todo";
+                if (defined ($form->{'newline'}))  {
+                    $list {"$wkno`$dayofwk"} .= "<br>$todo";
+                } else {
+                    $list {"$wkno`$dayofwk"} .= " ! $todo";
+                }
             } else {
                 $list {"$wkno`$dayofwk"} = $todo;
             }
@@ -515,7 +519,7 @@ sub l00http_cal_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"printascii\">Print ASCII</td>\n";
-    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"newline\">Newline between items</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
