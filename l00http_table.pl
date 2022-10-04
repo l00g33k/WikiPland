@@ -452,6 +452,7 @@ sub l00http_table_proc {
     # generate HTML buttons, etc.
 
     print $sock "<hr>\n";
+    print $sock "<a name=\"theform\"></a><a href=\"#top\">Jump to top</a><p>\n";
 
     if ($nolist ne 'checked') {
         # convert
@@ -476,7 +477,6 @@ sub l00http_table_proc {
         print $sock "Execution log: $exelog<p>\n";
     }
     
-    print $sock "<a name=\"theform\"></a><a href=\"#top\">Jump to top</a><p>\n";
 
     # editing column
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
