@@ -716,7 +716,7 @@ sub l00http_dash_proc {
                 $cat2 = "<a href=\"#top\">^</a> <a href=\"/lineeval.htm?anchor=line$lnno&path=$form->{'path'}&rngst=${lineevalst}&rngen=${lineevalen}&rngln=${lineevalln}&run=run&useform=keep#line$lnno\" target=\"_blank\">$cat2</a>";
 
                 # jump mark
-                if (($this =~ /\?\?\?$/) || ($this =~ /@@@$/)) {
+                if (($this =~ /\?\?\?$/) || ($this =~ /\@\@\@$/)) {
                     $tmp = $cat2;
                     $tmp =~ s/<.+?>//g;
                     push (@jumpname, "$tmp???jump$jumpcnt");

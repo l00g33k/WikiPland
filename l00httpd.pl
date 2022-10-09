@@ -194,12 +194,14 @@ sub getsvrip {
         }
         print "raw ip = $ip\n", if ($debug >= 5);
         if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
-            if ($ip =~ /(192\.168\.\d+\.\d+)/) {
+#           if ($ip =~ /(192\.168\.\d+\.\d+)/)
+            if ($ip =~ /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/ms) {
                 $ip = $1;
             }
         } else {
             if (defined ($ip)) {
-                if (@_ = $ip =~ /inet (\d+\.\d+\.\d+\.\d+)/g) {
+#               if (@_ = $ip =~ /inet (\d+\.\d+\.\d+\.\d+)/g)
+                if (@_ = $ip =~ /inet (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g) {
                     $ip = '';
                     foreach $_ (@_) {
                         if (!/^172\./ && !/^127\.0\./) {
@@ -210,9 +212,11 @@ sub getsvrip {
                             }
                         }
                     }
-                } elsif ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
+#               } elsif ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
+                } elsif ($ip =~ /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) +Bcast/) {
                     $ip = $1;
-                } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
+#               } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
+                } elsif ($ip =~ /addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {
                     $ip = $1;
                 }
             } else {
@@ -220,6 +224,10 @@ sub getsvrip {
             }
         }
         $ip =~ s/ //g;
+    }
+
+    if ($ip !~ /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
+        $ip = '(unknown)';
     }
 
     $ctrl{'myip'} = $ip;

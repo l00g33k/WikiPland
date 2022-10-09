@@ -55,7 +55,9 @@ sub l00http_cal_proc {
     my $form = $ctrl->{'FORM'};
     my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
     my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos, 
-        @includes, $incpath, $pathbase, $includefn);
+        @includes, $incpath, $pathbase, $includefn, %calfilters);
+
+    undef %calfilters;
 
     # get current date/time
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -146,7 +148,7 @@ sub l00http_cal_proc {
     if (&l00httpd::l00freadOpen($ctrl, $fullpathname)) {
         $lnno = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
-            chomp;
+            s/[\r\n]//g;
             $lnno++;
             if (/^#/) {
                 # # in column 1 is remark
@@ -164,6 +166,13 @@ sub l00http_cal_proc {
                 }
                 push (@includes, "$pathbase$incpath");
             }
+
+            # filters
+            # %CALFILTER~name~regex%
+            if (/^%CALFILTER~(.+?)~(.+)%$/) {
+                $calfilters{$1} = $2;
+            }
+
 
             if (!/^\d/) {
             # must start with numeric
@@ -487,7 +496,19 @@ sub l00http_cal_proc {
 
     # 3) Display form controls
     print $sock "<a name=\"__end__\"></a>\n";
-    print $sock " - <a href=\"#top\">Jump to top</a><br>\n";
+    print $sock " - <a href=\"#top\">Jump to top</a>\n";
+
+    # make calfilter links
+    $tmp = 0;
+    foreach $_ (sort keys %calfilters) {
+        $tmp++;
+        print $sock " - <a href=\"/cal.htm?path=$fullpathname&filter=".&l00httpd::urlencode ($calfilters{$_})."\">$_</a>\n";
+    }
+    if ($tmp) {
+        print $sock " - <a href=\"/cal.htm?path=$fullpathname&filter=.\">All</a>\n";
+    }
+    print $sock "<br>\n";
+
 
     print $sock "<form action=\"/cal.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -508,8 +529,8 @@ sub l00http_cal_proc {
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
-    print $sock "            <td>Filter:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"12\" name=\"filter\" value=\"$filter\"></td>\n";
+    print $sock "            <td>Filte&#818;r:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"12\" name=\"filter\" value=\"$filter\" accesskey=\"e\"></td>\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
