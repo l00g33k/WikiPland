@@ -79,6 +79,10 @@ sub l00http_do_proc {
     }
  
     $mypath = $form->{'path'};
+    ($form->{'L00DOPATH'}, $form->{'L00DOFILE'}) =
+        $mypath =~ /^(.+[\\\/])([^\\\/]+)$/;
+
+
 
     if ((defined ($form->{'set'})) &&
         (defined ($form->{'path'}))) {

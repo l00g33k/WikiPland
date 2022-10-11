@@ -29,7 +29,7 @@ my ($gsyear, $hdr, $idx, $ii, $jj, $jj1, $jj2, $julian, $k, $ldate);
 my ($len, $ln, $outsz, $thisweek, $todo, $wk, $wkce);
 my ($wkln, $wkno, $wkos, $xx, $yy, %db);
 my ($results, $daywkno);
-my (%list, %tbl, @outs, $filter);
+my (%list, %tbl, @outs, $filter, $today);
 
 
 # defaults
@@ -41,7 +41,7 @@ my $border = 0;        # text border on both sides of cell
 
 $filter = '.';
 $daywkno = '';
-
+$today = 'on';
 
 sub l00http_cal_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -128,6 +128,11 @@ sub l00http_cal_proc {
     }
     if (defined ($form->{'prewk'}) && ($form->{'prewk'} =~ /(\d+)/)) {
         $prewk = $1;
+    }
+    if (defined ($form->{'today'}) && ($form->{'today'} eq 'on')) {
+        $today = 'on';
+    } else {
+        $today = 'off';
     }
     if (defined ($form->{'filter'})) {
         $filter = $form->{'filter'};
@@ -416,6 +421,17 @@ sub l00http_cal_proc {
         $tbl{"$idx"} .= "<br><small>$todo</small>";
     }
 
+    # make calfilter links
+    $buf = '';
+    foreach $_ (sort keys %calfilters) {
+        $buf .= " - <a href=\"/cal.htm?path=$fullpathname&lenwk=$lenwk&prewk=$prewk&today=$today&filter=".&l00httpd::urlencode ($calfilters{$_})."\">$_</a>\n";
+    }
+    if ($buf ne '') {
+        print $sock "CALFILTER: $buf - <a href=\"/cal.htm?path=$fullpathname&lenwk=$lenwk&prewk=$prewk&today=$today&filter=.\">All</a>\<p>\n";
+    }
+
+
+
     $table = "||Mon||Tues||Wed||Thu||Fri||Sat||Sun||\n";
     for ($wk = $firstweek; $wk <= $finalweek; $wk++) {
         for ($day = 0; $day < 7; $day++) {
@@ -458,6 +474,8 @@ sub l00http_cal_proc {
     }
     $outs [$outsz++] = $wkln;
 
+
+
     $hdr = 2;
     $celllen = ($cellht - $hdr) * ($cellwd - 1);
     if ($ctrl->{'debug'} >= 5) {
@@ -496,18 +514,7 @@ sub l00http_cal_proc {
 
     # 3) Display form controls
     print $sock "<a name=\"__end__\"></a>\n";
-    print $sock " - <a href=\"#top\">Jump to top</a>\n";
-
-    # make calfilter links
-    $tmp = 0;
-    foreach $_ (sort keys %calfilters) {
-        $tmp++;
-        print $sock " - <a href=\"/cal.htm?path=$fullpathname&filter=".&l00httpd::urlencode ($calfilters{$_})."\">$_</a>\n";
-    }
-    if ($tmp) {
-        print $sock " - <a href=\"/cal.htm?path=$fullpathname&filter=.\">All</a>\n";
-    }
-    print $sock "<br>\n";
+    print $sock " - <a href=\"#top\">Jump to top</a><br>\n";
 
 
     print $sock "<form action=\"/cal.htm\" method=\"get\">\n";
