@@ -1888,7 +1888,11 @@ if ($dbgskipto) {
                 print $sock "</form>\n";
 
                 print $sock "<td>&nbsp;</td>\n";
-                print $sock "<td>&nbsp;</td>\n";
+                print $sock "<form action=\"/launcher.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"launcher\" value=\"L&#818;auncher\" accesskey=\"l\"></td>\n";
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
+                print $sock "</form>\n";
+
                 print $sock "</tr></table>\n";
             }
 

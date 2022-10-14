@@ -23,7 +23,7 @@ sub l00http_blogtag_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $path, $buforg, $tag, $tagfound, $fname);
+    my (@alllines, $line, $lineno, $path, $buforg, $tag, $tagfound, $fname, $key, $keys);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -31,14 +31,6 @@ sub l00http_blogtag_proc {
     } else {
         $path = '(none)';
         $fname = '(none)';
-    }
-
-    # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blogtag</title>" .$ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
-    if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
-        print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\">+ #</a><br>";
     }
 
     if (defined ($form->{'tag'})) {
@@ -49,6 +41,37 @@ sub l00http_blogtag_proc {
         }
     } else {
         $tag = '%BLOGTAG%';
+    }
+
+
+    # Send HTTP and HTML headers
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>$fname blogtag</title>" .$ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
+    if (defined ($form->{'path'})) {
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
+        print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}\">+ #</a> - ";
+        print $sock "%BLOG:key%:<br>\n";
+        # scan for tags
+        if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+            $keys = 0;
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                if (($key) = /^%BLOG:([^%]+)%/) {
+                    if ($keys != 0) {
+                        print $sock " - ";
+                    }
+                    $key =~ s/ /+/g;
+                    #http://localhost:30347/blogtag.htm?buffer=2022%2F9%2F15%2C1%2Cxya&path=%2Fsdcard%2Fl00httpd%2FNtBillsDash.txt&timesave=TimeSave&blog=&tag=%25BLOGTAG%25
+                    #http://localhost:30347/blogtag.htm?
+                    #buffer=2022%2F9%2F15%2C1%2Cxya&
+                    #path=%2Fsdcard%2Fl00httpd%2FNtBillsDash.txt&
+                    #timesave=TimeSave&
+                    #blog=&
+                    #tag=%25BLOGTAG%25
+                    print $sock "<a href=\"/blogtag.htm?timesave=&buffer=2022%2F9%2F15%2C1%2C+$key&blog=&path=$form->{'path'}&tag=$tag\">$key</a>\n";
+                    $keys++;
+                }
+            }
+        }
     }
 
     $buffer = '';
@@ -216,7 +239,7 @@ sub l00http_blogtag_proc {
     print $sock "<input type=\"submit\" name=\"paste\" value=\"P&#818;aste\" accesskey=\"p\">\n";
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
-    print $sock "<input type=\"submit\" name=\"cancel\" value=\"NewTime\">\n";
+    print $sock "<input type=\"submit\" name=\"cancel\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
     if (defined ($form->{'blog'})) {
         print $sock "<input type=\"hidden\" name=\"blog\" value=\"$form->{'blog'}\">\n";
         print $sock "<input type=\"submit\" name=\"logstyle\" value=\"Log style add\">\n";
@@ -244,7 +267,6 @@ sub l00http_blogtag_proc {
         }
         if ($lineno >= $ctrl->{'blogmaxln'}) {
             print $sock sprintf ("(lines skipped)\n");
-            print $sock sprintf ("%04d: ", $lineno) . "$line\n";
         }
         print $sock "</pre>\n";
         print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">View full formatted text</a><br>\n";
