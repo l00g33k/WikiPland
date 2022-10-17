@@ -82,9 +82,18 @@ preceeded by a blank line. For example:
 =Inclusion=
 * A file can be included into another file when rendering wiki pgae:
 ** The following directive includes the content of the specified file into the current page being rendered:
-*** %INCLUDE<./TmpTodoInc.txt>%
-** The '<./' notation instructs l00httpd to find it in the same directory as the page being rendered
+
+    %INCLUDE&lt;./TmpTodoInc.txt&gt;%
+
+** The '&lt;./' notation instructs l00httpd to find it in the same directory as the page being rendered
 ** An absolute path may also be used, but it fails when the wiki directory is duplicated in another environment having different path.  Using the '<./' notation allows one to duplicate the content of the wiki directory on say PC as a backup and still have most features functional; certainly functions unique to the Android devices will not be available
+*** The portable way is to define machine dependent path in l00httpd.cfg and use the following form:
+
+    machine=~/ASUS21/
+    pathmyrepo^c:/g/myrepo/
+
+    %INCLUDE&lt;%L00HTTP&lt;pathmyrepo&gt;%myfile.txt&gt;%
+
 =Bookmarks=
 * All line ending in '!!!' becomes an anchor and gets an entry in the BOOKMARKS section in the TOC
 * An example of bookmark!!! !!!
