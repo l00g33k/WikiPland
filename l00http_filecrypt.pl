@@ -33,7 +33,7 @@ sub l00http_filecrypt_proc (\%) {
     my ($hout, $raw, $httphdr, $size, $fext, $targetfname);
     my ($line, $pre, $post, $phase, $lineno, $path, $fname, $binlen);
     my ($crypt, $plain, $plain2, $filemethod, $tmp, $action, $tnext);
-    my ($filecmt, $filemeta, $encr1decy2, $bytesent, $timst, $more);
+    my ($filecmt, $filemeta, $encr1decy2, $bytesent, $timst, $more, $skipdecrypt);
     $crypt = '';
     $plain = '';
     $tmp = '';
@@ -273,7 +273,14 @@ sub l00http_filecrypt_proc (\%) {
 
             #$off, $len, $lenttl
 
+            $skipdecrypt = 0;
             if (defined ($cache{$form->{'path'}})) {
+                $skipdecrypt = 1;
+            }
+            if (defined ($form->{'forcedecrypt'}) && ($form->{'forcedecrypt'} eq 'yes')) {
+                $skipdecrypt = 0;
+            }
+            if ($skipdecrypt) {
                 print $sock $cache{$form->{'path'}};
             } else {
                 $cache{$form->{'path'}} = $plain;
