@@ -138,7 +138,7 @@ sub l00http_lineeval_proc (\%) {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"text\" size=\"24\" name=\"path\" value=\"$pname$fname\">\n";
     print $sock "            <input type=\"submit\" name=\"run\" value=\"S&#818;et\" accesskey=\"s\">\n";
-    print $sock "            <input type=\"checkbox\" name=\"useform\" $useform>Use form</td>\n";
+    print $sock "            <input type=\"checkbox\" name=\"useform\" $useform accesskey=\"f\">Use f&#818;orm</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";

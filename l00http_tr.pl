@@ -187,7 +187,7 @@ $tr_clockhtml = <<EOB;
         <span id="clock">00:00:00</span>
     </td><td>
         <form name="clock" onSubmit="0">
-            <input type="button" name="start" value="&gt;"  onClick="startclock()">
+            <input type="button" name="start" value="&gt;&gt;"  onClick="startclock()" accesskey=\"r\">
             <input type="button" name="stop"  value="&nbsp;||&nbsp;" onClick="stopclock()">
         </form>
     </td><td>
