@@ -9,10 +9,11 @@ use l00httpd;
 
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
-my ($record1, $displen, $filter);
+my ($record1, $displen, $filter, $eval);
 
 $record1 = '^\d{8,8} \d{6,6} ';
 $filter = '.';
+$eval = '';
 $displen = 50;
 
 sub l00http_recedit_output_row {
@@ -20,6 +21,7 @@ sub l00http_recedit_output_row {
     my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel);
 
     $html = '';
+print __LINE__." obuf $obuf";
 
     # record before the current record was a hit, print
     $html .= "    <tr>\n";
@@ -183,6 +185,12 @@ sub l00http_recedit_proc (\%) {
         $filter = '.';
     }
 
+    if (defined ($form->{'eval'}) && (length($form->{'eval'}) > 0)) {
+        $eval = $form->{'eval'};
+    } else {
+        $eval = '';
+    }
+
     if (defined ($form->{'record1'})) {
         $record1 = $form->{'record1'};
     }
@@ -190,7 +198,8 @@ sub l00http_recedit_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>recedit</title>" . $ctrl->{'htmlhead2'};
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} ";
+    print $sock "$ctrl->{'HOME'} ";
+    print $sock "<a href=\"#banner\">jump to banner</a> - \n";
     print $sock "<a href=\"/recedit.htm\">recedit</a> - \n";
     print $sock "<a href=\"#end\">end</a><p>\n";
 
@@ -254,7 +263,6 @@ sub l00http_recedit_proc (\%) {
                                     $yr + 1900, $mo + 1, $da, $tmp2);
                             }
                         }
-print __LINE__.": $id: $_";
                         if (defined($form->{"add6h$id"}) && ($form->{"add6h$id"} eq 'on')) {
                             # add 6 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
@@ -399,6 +407,11 @@ print __LINE__.": $id: $_";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\" accesskey=\"f\"></td>\n";
     print $sock "        </tr>\n";
                                                 
+    print $sock "        <tr>\n";
+    print $sock "            <td>E&#818;val:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"eval\" value=\"$eval\" accesskey=\"e\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
@@ -458,6 +471,7 @@ print __LINE__.": $id: $_";
     print $sock "</table>\n";
     print $sock "</form>\n";
 
+    print $sock "<p><a name=\"banner\"></a>$ctrl->{'home'}<p>";
 
     if (&l00httpd::l00freadOpen($ctrl, $path)) {
         print $sock "<pre>";
