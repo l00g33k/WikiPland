@@ -18,7 +18,7 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
-    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel);
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $eval1);
 
     $html = '';
 print __LINE__." obuf $obuf";
@@ -44,7 +44,7 @@ print __LINE__." obuf $obuf";
             $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\"><br>\n";
         }
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
-        $obuf=~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
+        $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
         $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
     }
@@ -131,6 +131,12 @@ print __LINE__." obuf $obuf";
                             $color2 = '</font>';
                         }
                     }
+                }
+            }
+            # process eval
+            if (length($eval) > 0) {
+                foreach $eval1 (split(";;", $eval)) {
+                    eval "\$line =~ $eval1";
                 }
             }
             # match any specific

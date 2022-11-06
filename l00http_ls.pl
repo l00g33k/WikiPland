@@ -294,7 +294,7 @@ sub l00http_ls_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($nofiles, $nodirs, $showbak, $dir, @dirs, $hasdots);
+    my ($nofiles, $nodirs, $showbak, $dir, @dirs, $hasdots, $showbanner);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
@@ -309,6 +309,11 @@ sub l00http_ls_proc {
     $wikihtmlflags = 0;
     $skiptohdr = '';
     $barebare = 0;
+
+    $showbanner = 1;
+    if (defined ($form->{'nobanner'}) && (length ($form->{'nobanner'}) >= 1)) {
+        $showbanner = 0;
+    }
 
     # 1) Determine operating path and mode
 
@@ -523,7 +528,10 @@ sub l00http_ls_proc {
                     print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
                     ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
                     print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
-                    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+                    if ($showbanner) {
+                        print $sock "$ctrl->{'home'} ";
+                    }
+                    print $sock "$ctrl->{'HOME'} \n";
                     print $sock "File $form->{'path'} not found.<p>\n";
                 } else {
                     $filedata = $ctrl->{'l00file'}->{$form->{'path'}};
@@ -588,7 +596,10 @@ sub l00http_ls_proc {
                                 }
                                 print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path<br>\n";
                             }
-                            print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+                            if ($showbanner) {
+                                print $sock "$ctrl->{'home'} ";
+                            }
+                            print $sock "$ctrl->{'HOME'} \n";
                             print $sock "<a href=\"#end\">end</a>\n";
                             print $sock "<a href=\"#__toc__\">TOC</a>\n";
                             if (defined ($form->{'bkvish'})) {
@@ -901,7 +912,9 @@ if ($dbgskipto) {
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2<br>\n";
                     }
-                    print $sock "$ctrl->{'home'} \n";
+                    if ($showbanner) {
+                        print $sock "$ctrl->{'home'} ";
+                    }
                     if ($path2 =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
                         # we are displaying help text, also generate a link to source code
                         print $sock "<a href=\"/view.htm/$fname?path=$ctrl->{'plpath'}l00http_$1.pl\">code</a>\n";
@@ -1388,7 +1401,10 @@ if ($dbgskipto) {
         } else {
             print "ls: failed to open as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-            print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+            if ($showbanner) {
+                print $sock "$ctrl->{'home'} ";
+            }
+            print $sock "$ctrl->{'HOME'} \n";
             print $sock "<a href=\"#end\">end</a><br>\n";
             print $sock "Path: $path<hr>\n";
             print $sock "Unable to open file '$path'<br>\n";
@@ -1425,7 +1441,10 @@ if ($dbgskipto) {
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2\n";
-        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+        if ($showbanner) {
+            print $sock "$ctrl->{'home'} ";
+        }
+        print $sock "$ctrl->{'HOME'} \n";
         print $sock "<a href=\"#end\">Jump to end</a> \n";
         print $sock "<a href=\"/dirnotes.htm?path=$path2"."NtDirNotes.txt\">NtDirNotes</a> ";
         print $sock "-- <a href=\"/ls.htm?path=$form->{'path'}&submit=Submit&sort=off\">(sort by name</a> \n";
