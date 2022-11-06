@@ -204,6 +204,7 @@ sub l00http_recedit_proc (\%) {
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>recedit</title>" . $ctrl->{'htmlhead2'};
+    print $sock "$ctrl->{'homesml'} ";
     print $sock "$ctrl->{'HOME'} ";
     print $sock "<a href=\"#banner\">jump to banner</a> - \n";
     print $sock "<a href=\"/recedit.htm\">recedit</a> - \n";
@@ -389,7 +390,11 @@ sub l00http_recedit_proc (\%) {
         }
     }
 
-    print $sock "<a href=\"/ls.htm?path=$path\">$path</a> - ";
+    $_ = '';
+    if (defined($ctrl->{'receditextra'})) {
+        $_ = $ctrl->{'receditextra'};
+    }
+    print $sock "<a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>:<p>";
 
     print $sock "<form action=\"/recedit.htm\" method=\"post\">\n";

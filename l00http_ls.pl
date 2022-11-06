@@ -294,7 +294,7 @@ sub l00http_ls_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($nofiles, $nodirs, $showbak, $dir, @dirs, $hasdots, $showbanner);
+    my ($nofiles, $nodirs, $showbak, $dir, @dirs, $hasdots, $smallbanner);
     my ($skipped, $showtag, $showltgt, $showlnno, $lnno, $searchtag, %showdir);
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
@@ -310,9 +310,9 @@ sub l00http_ls_proc {
     $skiptohdr = '';
     $barebare = 0;
 
-    $showbanner = 1;
-    if (defined ($form->{'nobanner'}) && (length ($form->{'nobanner'}) >= 1)) {
-        $showbanner = 0;
+    $smallbanner = 0;
+    if (defined ($form->{'smallbanner'}) && (length ($form->{'smallbanner'}) >= 1)) {
+        $smallbanner = 1;
     }
 
     # 1) Determine operating path and mode
@@ -528,7 +528,9 @@ sub l00http_ls_proc {
                     print $sock "HTTP/1.1 200 OK\r\n$httphdr\r\n";
                     ($pname, $fname) = $path =~ /^(.+\/)([^\/]+)$/;
                     print $sock $ctrl->{'htmlhead'} . "<title>$fname ls</title>" .$ctrl->{'htmlhead2'};
-                    if ($showbanner) {
+                    if ($smallbanner) {
+                        print $sock "$ctrl->{'homesml'} ";
+                    } else {
                         print $sock "$ctrl->{'home'} ";
                     }
                     print $sock "$ctrl->{'HOME'} \n";
@@ -596,7 +598,9 @@ sub l00http_ls_proc {
                                 }
                                 print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path<br>\n";
                             }
-                            if ($showbanner) {
+                            if ($smallbanner) {
+                                print $sock "$ctrl->{'homesml'} ";
+                            } else {
                                 print $sock "$ctrl->{'home'} ";
                             }
                             print $sock "$ctrl->{'HOME'} \n";
@@ -912,7 +916,9 @@ if ($dbgskipto) {
                         }
                         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2<br>\n";
                     }
-                    if ($showbanner) {
+                    if ($smallbanner) {
+                        print $sock "$ctrl->{'homesml'} ";
+                    } else {
                         print $sock "$ctrl->{'home'} ";
                     }
                     if ($path2 =~ /^$ctrl->{'plpath'}docs_demo[\\\/]HelpMod(.+)\.txt$/) {
@@ -1401,7 +1407,9 @@ if ($dbgskipto) {
         } else {
             print "ls: failed to open as a file >$path<\n", if ($ctrl->{'debug'} >= 5);
             print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
-            if ($showbanner) {
+            if ($smallbanner) {
+                print $sock "$ctrl->{'homesml'} ";
+            } else {
                 print $sock "$ctrl->{'home'} ";
             }
             print $sock "$ctrl->{'HOME'} \n";
@@ -1441,7 +1449,9 @@ if ($dbgskipto) {
             $tmp =~ s/\//\\/g;
         }
         print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;$path2\n";
-        if ($showbanner) {
+        if ($smallbanner) {
+            print $sock "$ctrl->{'homesml'} ";
+        } else {
             print $sock "$ctrl->{'home'} ";
         }
         print $sock "$ctrl->{'HOME'} \n";

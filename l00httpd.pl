@@ -1451,11 +1451,21 @@ while(1) {
                                 $ctrl{'home'} = $_ . $ctrl{'home'};
                             }
                         }
+                        if (/^BANNERSML:(.+)/) {
+                            if (defined($ctrl{$_})) {
+                                # process banner content through wikihtml to make wiki links, etc.
+                                $_ = &l00wikihtml::wikihtml (\%ctrl, '', $ctrl{$_}, 4, '');
+                                # remove ending <br> added
+                                s/<br>$//;
+                                $ctrl{'homesml'} = $_ . $ctrl{'home'};
+                            }
+                        }
                     }
                 }
                 if ($quitattime < 0x7fffffff) {
                     $_ = $quitattime  - time;
                     $ctrl{'home'} .= "$quitmsg1$_$quitmsg2";
+                    $ctrl{'homesml'} .= "$quitmsg1$_$quitmsg2";
                 }
                 if (defined($ctrl{'demomsg'})) {
                     # Give Openshift demo notice
