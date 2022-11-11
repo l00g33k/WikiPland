@@ -18,7 +18,7 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
-    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $eval1);
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall6h, $eval1);
 
     $html = '';
 print __LINE__." obuf $obuf";
@@ -30,6 +30,10 @@ print __LINE__." obuf $obuf";
     if (defined ($form->{'chkall'})) {
         $chkalldel = 'checked';
     }
+    $chkall6h = '';
+    if (defined ($form->{'chkall6h'})) {
+        $chkall6h = 'checked';
+    }
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a>";
@@ -37,7 +41,7 @@ print __LINE__." obuf $obuf";
             # RAM file, 1, 6 hours (or 4)
             $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add1h$id\">+1h</font><br>\n";
            #$html .= "            +4h<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
-            $html .= "            +6h<input type=\"checkbox\" name=\"add6h$id\"><br>\n";
+            $html .= "            +6h<input type=\"checkbox\" name=\"add6h$id\" $chkall6h><br>\n";
         } else {
             # disk file, 1, 2 days
             $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
@@ -46,7 +50,7 @@ print __LINE__." obuf $obuf";
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
-        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\">del</td>\n";
     }
     $html .= "        <td><font face=\"Courier New\">";
     $lf = '';
@@ -431,7 +435,10 @@ sub l00http_recedit_proc (\%) {
     } else {
         $_ = '';
     }
-    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk A&#818;ll del\" accesskey=\"a\">\n";
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
+    if ($path =~ /^l00:\/\//) {
+        print $sock "        <input type=\"submit\" name=\"chkall6h\" value=\"6h&#818;\" accesskey=\"h\">\n";
+    }
     print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
