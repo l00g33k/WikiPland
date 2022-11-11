@@ -50,7 +50,8 @@ print __LINE__." obuf $obuf";
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
-        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\">del</td>\n";
+        $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
+
     }
     $html .= "        <td><font face=\"Courier New\">";
     $lf = '';
