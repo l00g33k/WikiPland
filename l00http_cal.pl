@@ -442,6 +442,8 @@ sub l00http_cal_proc {
             $tmp =~ s|([ ])([A-Z]+[a-z]+[A-Z]+[0-9a-zA-Z_\-]*)|$1<a href=\"/ls.htm?path=$pname$2.txt\">$2</a>|g;
             # For http(s) not preceeded by =" becomes whatever [[http...]]
             $tmp =~ s|([^="][^">])(https*://[^ ]+)|$1 <a href=\"$2\">$2<\/a> |g;
+            # convert \n to <br>
+            $tmp =~ s/\\n/<br>/g;
             # print $sock "<td align=\"left\" valign=\"top\">$tmp</td>\n";
             $table .= "||$tmp";
             l00httpd::dbp($config{'desc'}, "||$tmp"), if ($ctrl->{'debug'} >= 5);

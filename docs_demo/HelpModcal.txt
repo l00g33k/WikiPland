@@ -2,6 +2,8 @@
 calremBannerDisabled^justdefine
 * Leading ! prevents item from listed in periocalrem
 * Negative length specifies end date
-* To include another file (./for_current_dir):
+* To include another file (./for_current_dir) (remove space between % and I:
 
-    %INCLUDE<path/to/file>%
+    % INCLUDE<path/to/file>%
+
+* '\n' is converted to line break &lt;br&gt;
