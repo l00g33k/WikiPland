@@ -182,7 +182,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $cnt);
+    my ($filter_found_true, $filtered, $cnt);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -420,7 +420,12 @@ sub l00http_recedit_proc (\%) {
                                                 
     print $sock "        <tr>\n";
     print $sock "            <td>F&#818;ilter:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\" accesskey=\"f\"></td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\" accesskey=\"f\">";
+	if ($filter eq '.') {
+		print $sock "        </td>\n";
+ 	} else {
+		print $sock "        - <a href=\"/ls.htm?path=l00://recedit_filtered.txt\">filtered</a></td>\n";
+	}
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
@@ -449,19 +454,24 @@ sub l00http_recedit_proc (\%) {
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $id = 1;
             $lnno = 0;
+            $filtered = '';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $lnno++;
                 if (/^ *$/ || /^#/) {
+                    $filtered .= $_;
                     next;
                 }
                 if (/$record1/) {
                     # found start of new record
                     if (/$filter/) {
                         if ($lnno > $afterline) {
+                            $filtered .= $_;
                             push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno));
                             $id++;
                         }
                     }
+                } else {
+                    $filtered .= $_;
                 }
             }
         }
@@ -471,6 +481,10 @@ sub l00http_recedit_proc (\%) {
             s/__end${ii}__/end/;
             print $sock $_;
         }
+		&l00httpd::l00fwriteOpen($ctrl, "l00://recedit_filtered.txt");
+		&l00httpd::l00fwriteBuf($ctrl, "filtered\n");
+		&l00httpd::l00fwriteBuf($ctrl, $filtered);
+		&l00httpd::l00fwriteClose($ctrl);
     }
 
     print $sock "    <tr>\n";
