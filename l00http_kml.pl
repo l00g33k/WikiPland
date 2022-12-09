@@ -533,6 +533,91 @@ sub l00http_kml_proc {
 
                     $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
                     $rawkml = 1;
+                } elsif ($buffer =~ /^Grid.+Lat\/Lon/) {
+                    $toKmlCnt++;
+                    my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
+                    my ($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $dtstamp);
+                    $tracks = '';
+                    $phase = 'find_header';
+                    $debug = 1;
+                    $trackno = 1;
+                    # gps track, convert to .kml
+                    $kmlheadernow = "$kmlheader1$fname$kmlheader2";
+                    $trkmarks = '';
+
+                    $lnno = 0;
+                    $pointno = -1;
+                    foreach $_ (split ("\n", $buffer)) {
+                        $lnno++;
+                        $pointno++;
+                        #Header	Position	Time	Altitude	Depth	Leg Length	Leg Time	Leg Speed	Leg Course
+            	        if ((($phase eq 'find_header') ||
+                            ($phase eq 'find_more_point')) && 
+                            (/^Header	Position/)) {
+                            $phase = 'found_header';
+                            $pointno = 0;
+                        #T  N3110.27551 E12123.28069 10-Apr-11 05:57:36    7 ; gps 20110410 135759
+                        } elsif (($phase eq 'found_header') && 
+                            (/^Trackpoint/)) {
+                            $phase = 'find_more_point';
+                            # track or new track
+                            if ($tracks ne '') {
+                                # not first time
+                                $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                            }
+                            $trkname = "Track $trackno";
+                            if (/^Trackpoint.+(\d+\/\d+\/\d+ \d+:\d+:\d+)/) {
+                                $trkname = "Track $1";
+                            }
+                            $tracks = $tracks . 
+                                "\t\t<Placemark><name>$trkname</name>\n" .
+                                "\t\t\t<Style id=\"lc\"><LineStyle><color>$color</color><width>4</width></LineStyle></Style>\n" .
+                                "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
+                                "\t\t\t<coordinates>\n";
+                            $trackno++;
+                        }
+                        if (($phase eq 'find_more_point') && 
+                            (/^Trackpoint/)) {
+                            #Trackpoint	N33 49.557 W118 02.276	10/9/2012 9:34:58 AM 
+                            if (($ns, $lat_d, $lad_m, $ew, $lon_d, $lon_m, $dtstamp) 
+                                = /Trackpoint[ \t]+([NS])(\d\d)[ \t]+([\d.]+)[ \t]+([WE])(\d\d\d)[ \t]+([\d.]+)[ \t]+(.*)$/) {
+                                $lat_ = $lat_d + $lad_m / 60.0;
+                                if ($ns eq 'S') {
+                                    $lat_ = -$lat_;
+                                }
+                                $lon_ = $lon_d + $lon_m / 60.0;
+                                if ($ew eq 'W') {
+                                    $lon_ = -$lon_;
+                                }
+                                $lat_ += $curlatoffset;
+                                $lon_ += $curlonoffset;
+		                        $tracks = $tracks . "\t\t\t$lon_,$lat_,$trackheight\n";
+                                if (($trackmark > 0) && (($pointno % $trackmark) == 0)) {
+                                    $trkmarks .=
+                                    "\t\t\t<Placemark>\n".
+                                    "\t\t\t\t<name>$lnno</name>\n".
+                                    "\t\t\t\t<styleUrl>#msn_donut</styleUrl>\n".
+                                    "\t\t\t\t<Point>\n".
+                                    "\t\t\t\t\t<coordinates>$lon_,$lat_,0</coordinates>\n".
+                                    "\t\t\t\t</Point>\n".
+                                    "\t\t\t</Placemark>\n";
+                                }
+                            }
+                        }
+                    }
+                    $tracks = $tracks . "\t\t</coordinates></LineString></Placemark>\n";
+                    $kmlbuf .= $tracks;
+                    if ($trackmark > 0) {
+                        $kmlbuf .=  "		<Folder>\n".
+                                    "			<name>Timemark</name>\n".
+                                    "			<open>1</open>\n".
+                                    $trkmarks.
+                                    "		</Folder>\n";
+                    }
+
+                    $httphdr = "Content-Type: application/vnd.google-earth.kml+xml\r\n";
+                    $rawkml = 1;
                 } elsif ($buffer =~ /^H  SOFTWARE NAME & VERSION/) {
                     $toKmlCnt++;
                     my ($tracks, $phase, $lat_, $lon_, $desc, $debug, $trackno);
