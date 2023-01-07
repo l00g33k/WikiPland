@@ -1176,6 +1176,10 @@ while(1) {
                 # of form: http://localhost:20337/ls?path=/sdcard
                 $modcalled = $1;
                 $urlparams = $2;
+            } elsif ($urlparams =~ /^\/(l00:\/\/.+)$/) {
+                # of form: http://localhost:20337/l00://mydata.csv
+                $modcalled = "ls";
+                $urlparams = "path=$1&raw=on";
             } elsif ($urlparams =~ /^(\/.+)$/) {
                 # of form: http://localhost:20337/ls?path=/sdcard
                 $modcalled = "ls";
