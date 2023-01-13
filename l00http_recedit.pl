@@ -18,10 +18,9 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
-    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall6h, $eval1);
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall6h, $chkall1d, $eval1);
 
     $html = '';
-print __LINE__." obuf $obuf";
 
     # record before the current record was a hit, print
     $html .= "    <tr>\n";
@@ -34,6 +33,10 @@ print __LINE__." obuf $obuf";
     if (defined ($form->{'chkall6h'})) {
         $chkall6h = 'checked';
     }
+    $chkall1d = '';
+    if (defined ($form->{'chkall1d'})) {
+        $chkall1d = 'checked';
+    }
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a>";
@@ -44,7 +47,7 @@ print __LINE__." obuf $obuf";
             $html .= "            +6h<input type=\"checkbox\" name=\"add6h$id\" $chkall6h><br>\n";
         } else {
             # disk file, 1, 2 days
-            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\">+1d</font><br>\n";
+            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\" $chkall1d>+1d</font><br>\n";
             $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\"><br>\n";
         }
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
@@ -444,6 +447,8 @@ sub l00http_recedit_proc (\%) {
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
     if ($path =~ /^l00:\/\//) {
         print $sock "        <input type=\"submit\" name=\"chkall6h\" value=\"6h&#818;\" accesskey=\"h\">\n";
+    } else {
+        print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
     }
     print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "    </td>\n";
