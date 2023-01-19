@@ -1,0 +1,6 @@
+%TOC%
+=Help=
+The path and filename of the do script are available in $ctrl->{'FORM'}->{'L00DOPATH'} and $ctrl->{'FORM'}->{'L00DOFILE'}
+
+
+
