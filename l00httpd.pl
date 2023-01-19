@@ -787,48 +787,51 @@ $readable->add($cli_lstn_sock);    # Add the lstnsock to it
 sub periodictask {
     my ($who);
 
-    $tickdelta = 3600;	# tick once an hour
-    &updateNow_string ();
+    if ($ctrl_port_first == $ctrl_port) {
+        # execute periodic tasks only on first instance
+        $tickdelta = 3600;	# tick once an hour
+        &updateNow_string ();
 
-    $who = 'unknown';
+        $who = 'unknown';
 
-    foreach $mod (sort keys %httpmods) {
-        if (defined ($modsinfo{"$mod:fn:perio"})) {
-            $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
-            $subname = $modsinfo{"$mod:fn:perio"};
-            $retval = 60;
-            $retval = __PACKAGE__->$subname(\%ctrl);
-            if (defined ($retval) && ($retval > 0)) {
-                if ($retval < 1000000) {
-                    &dlog (6, "perio: $mod:fn:perio -> $retval\n");
-                }
-                if ($tickdelta > $retval) {
-                    $tickdelta = $retval;
-                    $who = $mod;
+        foreach $mod (sort keys %httpmods) {
+            if (defined ($modsinfo{"$mod:fn:perio"})) {
+                $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
+                $subname = $modsinfo{"$mod:fn:perio"};
+                $retval = 60;
+                $retval = __PACKAGE__->$subname(\%ctrl);
+                if (defined ($retval) && ($retval > 0)) {
+                    if ($retval < 1000000) {
+                        &dlog (6, "perio: $mod:fn:perio -> $retval\n");
+                    }
+                    if ($tickdelta > $retval) {
+                        $tickdelta = $retval;
+                        $who = $mod;
+                    }
                 }
             }
         }
-    }
 
-    # don't sleep beyond time to quit
-    if ($tickdelta > ($quitattime - time)) {
-        $tickdelta = ($quitattime - time);
-    }
-    # sleep at least 1 second
-    if ($tickdelta <= 0) {
-        $tickdelta = 1;
-    }
+        # don't sleep beyond time to quit
+        if ($tickdelta > ($quitattime - time)) {
+            $tickdelta = ($quitattime - time);
+        }
+        # sleep at least 1 second
+        if ($tickdelta <= 0) {
+            $tickdelta = 1;
+        }
 
-    &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
+        &dlog (2, "$ctrl{'now_string'} tick $tickdelta (next: $who)\n");
 
-    if (($waketil != 0) &&
-        ($waketil < time) &&
-        ($ctrl{'os'} eq 'and')) {
-        # $waketil is active, turn it off
-        $waketil = 0;
-        # release wake lock
-        $ctrl{'droid'}->wakeLockRelease();
-        $ctrl{'BANNER:wakelock'} = undef;
+        if (($waketil != 0) &&
+            ($waketil < time) &&
+            ($ctrl{'os'} eq 'and')) {
+            # $waketil is active, turn it off
+            $waketil = 0;
+            # release wake lock
+            $ctrl{'droid'}->wakeLockRelease();
+            $ctrl{'BANNER:wakelock'} = undef;
+        }
     }
 }
 
@@ -879,10 +882,7 @@ $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} WikiPland started
 
 $l00time = time;
 
-if ($ctrl_port_first == $ctrl_port) {
-    # execute periodic tasks only on first instance
-    &periodictask ();
-}
+&periodictask ();
 
 if ($ctrl{'os'} eq 'and') {
     $ctrl{'droid'}->makeToast("Welcome to l00httpd\nPlease browse to http://127.0.0.1:$ctrl_port\nSee Notification");
@@ -1978,12 +1978,18 @@ while(1) {
                     print $sock "<tr><th>Mod names</th><th>Secs to fire</th></tr>\n";
                     foreach $mod (sort keys %httpmods) {
                         if (defined ($modsinfo{"$mod:fn:perio"})) {
-                            $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
-                            $subname = $modsinfo{"$mod:fn:perio"};
-                            $retval = 60;
-                            $retval = __PACKAGE__->$subname(\%ctrl);
-                            print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 6);
-                            print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>$retval secs</td></tr>\n";
+                            if ($ctrl_port_first == $ctrl_port) {
+                                # on first instance, call module to get time to wake
+                                $ctrl{'httphead'}  = "HTTP/1.0 200 OK\x0D\x0A\x0D\x0A";
+                                $subname = $modsinfo{"$mod:fn:perio"};
+                                $retval = 60;
+                                $retval = __PACKAGE__->$subname(\%ctrl);
+                                print "perio: $mod:fn:perio -> $retval\n", if ($debug >= 5);
+                                print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>$retval secs</td></tr>\n";
+                            } else {
+                                # not on first instance, just list module
+                                print $sock "<tr><td><a href=\"/$mod.htm\">$mod</a></td><td>inactive</td></tr>\n";
+                            }
                         }
                     }
                     print $sock "</table>\n";
@@ -2087,10 +2093,7 @@ while(1) {
         }
     }
     print "no more socket ready\n", if ($debug >= 5);
-    if ($ctrl_port_first == $ctrl_port) {
-        # execute periodic tasks only on first instance
-        &periodictask ();
-    }
+    &periodictask ();
 
     if (time > $quitattime + 3) {
         # give extra 3 seconds to allow last page to go out
