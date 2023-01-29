@@ -54,7 +54,7 @@ sub l00http_cal_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
-    my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos, 
+    my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos, $lastdate, $rel,
         @includes, $incpath, $pathbase, $includefn, %calfilters);
 
     undef %calfilters;
@@ -74,6 +74,7 @@ sub l00http_cal_proc {
         $fullpathname = $ctrl->{'workdir'} . "l00_cal.txt";
     }
     print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
+    l00httpd::dbp($config{'desc'}, "input file is >$fullpathname<\n"), if ($ctrl->{'debug'} >= 3);
     ($pname, $fname) = $fullpathname =~ /^(.+\/)([^\/]+)$/;
 
     # handling moving lnno to moveto
@@ -179,8 +180,8 @@ sub l00http_cal_proc {
             }
 
 
-            if (!/^\d/) {
-            # must start with numeric
+            if (!/^[0-9\$]/) {
+                # must start with numeric
                 next;
             }
             if (!/$filter/i) {
@@ -190,9 +191,18 @@ sub l00http_cal_proc {
 
             # 2021/9/17,4,todo
             # 2010/10/14+7,1,trash
+            l00httpd::dbp($config{'desc'}, "line >$_<\n"), if ($ctrl->{'debug'} >= 4);
             if (/^20\d\d\/\d\d*\/\d\d*,\d+,/ ||
                 /^20\d\d\/\d\d*\/\d\d*\+\d+,\d+,/) {
                 ($date, $len, @todos) = split (',', $_);
+                if ($date !~ /\+/) {
+                    # save last date
+                    @_ = split('/', $date);
+                    $tmp = l00httpd::time2now_string(l00httpd::now_string2time(sprintf("%04d%02d%02d 000000", $_[0], $_[1], $_[2])) + (3600 * 24 * ($len - 1)));
+                    @_ = $tmp =~ /^(\d\d\d\d)(\d\d)(\d\d)/;
+                    $lastdate = sprintf("%d/%d/%d", $_[0], $_[1], $_[2]);
+                    l00httpd::dbp($config{'desc'}, "absolute lastdate >$lastdate<\n"), if ($ctrl->{'debug'} >= 4);
+                }
                 $todo = join(',', @todos);
                 if (defined ($date) && defined ($len) && defined ($todo)) {
                     if (defined ($form->{'movefrom'})) {
@@ -222,6 +232,23 @@ sub l00http_cal_proc {
                         $date = "$gsyear/$gsmon/$gsmday";
                     }
                     @db{"$date`$len`$todo"} = 'x';
+                }
+            }
+            if (/^\$([+-]\d+),\d+,/) {
+                $rel = $1;
+                ($date, $len, @todos) = split (',', $_);
+                $todo = join(',', @todos);
+                if (defined ($date) && defined ($len) && defined ($todo)) {
+                    @_ = split('/', $lastdate);
+                    $tmp = l00httpd::time2now_string(l00httpd::now_string2time(sprintf("%04d%02d%02d 000000", $_[0], $_[1], $_[2])) + (3600 * 24 * ($rel)));
+                    @_ = $tmp =~ /^(\d\d\d\d)(\d\d)(\d\d)/;
+                    $date = sprintf("%d/%d/%d", $_[0], $_[1], $_[2]);
+                    l00httpd::dbp($config{'desc'}, "relative start $tmp; $date`$len`$todo\n"), if ($ctrl->{'debug'} >= 4);
+                    @db{"$date`$len`$todo"} = 'x';
+                    $tmp = l00httpd::time2now_string(l00httpd::now_string2time(sprintf("%04d%02d%02d 000000", $_[0], $_[1], $_[2])) + (3600 * 24 * ($len - 1)));
+                    @_ = $tmp =~ /^(\d\d\d\d)(\d\d)(\d\d)/;
+                    $lastdate = sprintf("%d/%d/%d", $_[0], $_[1], $_[2]);
+                    l00httpd::dbp($config{'desc'}, "relative lastdate: $tmp; $lastdate $len\n"), if ($ctrl->{'debug'} >= 4);
                 }
             }
         }
