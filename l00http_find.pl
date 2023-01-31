@@ -340,7 +340,7 @@ sub l00http_find_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($thispath, $pathcnt, $dirlist, $dirlist1000, $dirlisttxt, $listcnt);
+    my ($thispath, $pathcnt, $filecnt, $filelist, $dirlist, $dirlist1000, $dirlisttxt, $listcnt);
 
 
     if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
@@ -418,6 +418,8 @@ sub l00http_find_proc {
     $dirlist = '';
     $dirlist1000 = '';
     $dirlisttxt = '';
+    $filelist = '';
+    $filecnt = 0;
     $listcnt = 0;
     $pathcnt = 0;
     foreach $thispath (split ('\|\|\|', $path)) {
@@ -491,6 +493,10 @@ sub l00http_find_proc {
                     $dirlisttxt .= "$fullpath/\n";
                 
                     $dirlist .= "$listcnt: <a href=\"/find.htm?path=$fullpath/\">$file/</a><br>\n";
+                } else {
+                    $filecnt++;
+                    $filelist .= "$thispath$file\n";
+
                 }
             }
 
@@ -588,7 +594,7 @@ sub l00http_find_proc {
     &l00httpd::l00fwriteOpen($ctrl, 'l00://find_dirlist.htm');
     &l00httpd::l00fwriteBuf($ctrl, $dirlist);
     &l00httpd::l00fwriteClose($ctrl);
-    print $sock "There are $listcnt listings in: <a href=\"/view.htm?path=l00://find_dirlist.htm\" target=\"_blank\">l00://find_dirlist.htm</a>.\n";
+    print $sock "There are $listcnt directory listings in: <a href=\"/view.htm?path=l00://find_dirlist.htm\" target=\"_blank\">l00://find_dirlist.htm</a>.\n";
     if ($listcnt > $lsmaxitems) {
         print $sock "Only 1000 are listed below.\n";
     }
@@ -596,6 +602,13 @@ sub l00http_find_proc {
     &l00httpd::l00fwriteBuf($ctrl, $dirlisttxt);
     &l00httpd::l00fwriteClose($ctrl);
     print $sock " - <a href=\"/view.htm?path=l00://find_dirlist.txt\" target=\"_blank\">l00://find_dirlist.txt</a>.\n";
+
+    &l00httpd::l00fwriteOpen($ctrl, 'l00://find_filelist.txt');
+    &l00httpd::l00fwriteBuf($ctrl, $filelist);
+    &l00httpd::l00fwriteClose($ctrl);
+    print $sock "<br>\n";
+    print $sock "There are $filecnt file listings in: <a href=\"/view.htm?path=l00://find_filelist.txt\" target=\"_blank\">l00://find_filelist.txt</a>.\n";
+
     print $sock "<p>\n";
 
     print $sock "<hr>\n";
