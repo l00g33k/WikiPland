@@ -702,6 +702,10 @@ SCRIPTSRC
                 }
 
                 s/^poly: *//;
+                # remove names [a-zA-Z_]
+                s/[a-zA-Z_]+//g;
+                # reduce to 1 space
+                s/  +/ /g;
                 $polyidx++;
                 @polyline = split(" ", $_);
                 $polybuf = "var polycoor$polyidx = [\n";

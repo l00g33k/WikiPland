@@ -739,23 +739,25 @@ sub l00http_kml_proc {
                             if ($symbolcolor eq '__') {
                                 $symbolcolor = '_r';
                             }
-                            if (/^poly:/) {
-                                $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .
-                                           "\t\t\t<Style id=\"lc\"><LineStyle><color>$colorlookup{$symbolcolor}</color><width>4</width></LineStyle></Style>\n" .
-                                           "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
-                                           "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
-                                           "\t\t\t<coordinates>\n";
-
-                                s/^poly: *//;
-                                @polyline = split(" ", $_);
-                                foreach $_ (@polyline) {
-                                    ($lat, $lon) = split(',', $_);
-                                    $kmlbuf .= "\t\t\t$lon,$lat,$trackheight\n";
-                                }
-
-                                $kmlbuf .= "\t\t</coordinates></LineString></Placemark>\n";
-                                next;
+                        } elsif (($lat, $lon, $name) = /^poly: *([0-9.+-]+?),([0-9.+-]+?)[, ]*.*?([a-zA-Z_]+)/) {
+                            s/^poly: *//;
+                            # remove names [a-zA-Z_]
+                            s/[a-zA-Z_]+//g;
+                            # reduce to 1 space
+                            s/  +/ /g;
+                            $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .
+                                       "\t\t\t<Style id=\"lc\"><LineStyle><color>$colorlookup{$symbolcolor}</color><width>4</width></LineStyle></Style>\n" .
+                                       "\t\t\t<LineString><styleUrl>#lc</styleUrl>\n" .
+                                       "\t\t\t<altitudeMode>clampToGround</altitudeMode>\n" .
+                                       "\t\t\t<coordinates>\n";
+                            @polyline = split(" ", $_);
+                            foreach $_ (@polyline) {
+                                ($lat, $lon) = split(',', $_);
+                                $kmlbuf .= "\t\t\t$lon,$lat,$trackheight\n";
                             }
+
+                            $kmlbuf .= "\t\t</coordinates></LineString></Placemark>\n";
+                            next;
                         } elsif (/^\* +([^ ]+)/) {
                             # of the form:
                             # * name
