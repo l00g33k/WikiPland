@@ -743,6 +743,8 @@ sub l00http_kml_proc {
                             s/^poly: *//;
                             # remove names [a-zA-Z_]
                             s/[a-zA-Z_]+//g;
+                            # remove 1 or 2 non space
+                            s/ [^ ]{1,2} / /g'
                             # reduce to 1 space
                             s/  +/ /g;
                             $kmlbuf .= "\t\t<Placemark><name>$name</name>\n" .
