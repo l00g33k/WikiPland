@@ -705,7 +705,7 @@ SCRIPTSRC
                 # remove names [a-zA-Z_]
                 s/[a-zA-Z_]+//g;
                 # remove 1 or 2 non space
-                s/ [^ ]{1,2} / /g'
+                s/ [^ ]{1,2} / /g;
                 # reduce to 1 space
                 s/  +/ /g;
                 $polyidx++;

@@ -410,7 +410,7 @@ $htmlout .= "DBGDBG1: \n", if ($ctrl->{'debug'} >= 3);
                     # print both
                     $ii = 0;
                     if (defined($rightblksz{$leftmarkers[$blkidx]})) {
-                        {$leftmarkers[$blkidx]}
+                       #{$leftmarkers[$blkidx]}
                         for (; $ii < $rightblksz{$leftmarkers[$blkidx]} &&
                             $ii < $maxsecline; $ii++) {
                             ($oout, $nout, $ospc) = &l00http_syncview_make_outline(

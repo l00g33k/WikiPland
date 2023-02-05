@@ -320,7 +320,7 @@ sub plotsvg {
 sub getsvg2 {
     my ($name) = @_;
     my ($data, $wd, $ht);
-    my ($ii, $data, $rnghi, $rnglo, $offset);
+    my ($ii, $rnghi, $rnglo, $offset);
 
 
 
