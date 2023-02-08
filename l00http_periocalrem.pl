@@ -88,7 +88,7 @@ sub l00http_periocalrem_perio {
                     $year -= 1900;
                     ($thisweek, $julian) = &l00mktime::weekno ($year, $mon, $mday);
                     if ($julian - $juliannow <= $days)  {
-                        if ($julian - $juliannow >= -15) {
+                       #if ($julian - $juliannow >= -15) {
                             l00httpd::dbp($config{'desc'}, "found >$todo<\n"), if ($ctrl->{'debug'} >= 5);
                             $eventnear .= "$todo\n";
                             if ($julian - $juliannow <= 0) {
@@ -105,9 +105,9 @@ sub l00http_periocalrem_perio {
                                 $calremfont{$todo} = 'black';
                             }
                             #print "  $date $todo $juliannow ($thisweek, $julian) ($year, $mon, $mday)\n";
-                        } else {
-                            $hidden++;
-                        }
+                       #} else {
+                       #    $hidden++;
+                       #}
                     }
 		    	}
 			}
