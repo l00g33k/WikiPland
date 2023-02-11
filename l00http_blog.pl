@@ -497,9 +497,6 @@ sub l00http_blog_proc {
     if (defined($form->{'afterline'})) {
         print $sock "on line <input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
-    if (defined ($form->{'pastesave'})) {
-        print $sock "<hr>$pastesavebuf<hr>\n";
-    }
 
 
     print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
@@ -525,8 +522,11 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
+    if (defined ($form->{'pastesave'})) {
+        print $sock "<hr>$pastesavebuf<hr>\n";
+    }
 
-    print $sock "<br><textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
+    print $sock "<p><textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p>\n";
     print $sock "<input type=\"submit\" name=\"save\" value=\"Save\">\n";
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
