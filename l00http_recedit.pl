@@ -424,11 +424,11 @@ sub l00http_recedit_proc (\%) {
     print $sock "        <tr>\n";
     print $sock "            <td>F&#818;ilter:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\" accesskey=\"f\">";
-	if ($filter eq '.') {
-		print $sock "        </td>\n";
- 	} else {
-		print $sock "        - <a href=\"/ls.htm?path=l00://recedit_filtered.txt\">filtered</a></td>\n";
-	}
+    if ($filter eq '.') {
+        print $sock "        </td>\n";
+    } else {
+        print $sock "        - <a href=\"/ls.htm?path=l00://recedit_filtered.txt\">filtered</a></td>\n";
+    }
     print $sock "        </tr>\n";
                                                 
     print $sock "        <tr>\n";
@@ -438,17 +438,18 @@ sub l00http_recedit_proc (\%) {
                                                 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
-    if (defined ($form->{'reminder'})) {
-        $_ = 'checked';
-    } else {
-        $_ = '';
-    }
+    print $sock "        <td>\n";
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
     if ($path =~ /^l00:\/\//) {
         print $sock "        <input type=\"submit\" name=\"chkall6h\" value=\"6h&#818;\" accesskey=\"h\">\n";
     } else {
         print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
+    }
+    print $sock "        <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
+    if (defined ($form->{'reminder'})) {
+        $_ = 'checked';
+    } else {
+        $_ = '';
     }
     print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "    </td>\n";
