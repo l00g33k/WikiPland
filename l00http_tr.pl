@@ -209,7 +209,7 @@ sub l00http_tr_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($blkln, $citydiff, $buffer, $bufinc, $incpath, $pathbase);
-    my ($filter, $filter_hide);
+    my ($filter, $filter_hide, $clocknotshown);
 
     $filter = '';
 
@@ -406,6 +406,7 @@ sub l00http_tr_proc {
 
     # display the time slot
     $blkln = 0;
+    $clocknotshown = 1;
     printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
     for ($ii = $iist; $ii <= $iien; $ii++) {
         # *l*color bold**
@@ -415,6 +416,7 @@ sub l00http_tr_proc {
         $outs[$ii] =~ s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
 
         if ($ii == $now) {
+            $clocknotshown = 1;
             print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
             print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
             $blkln = 0; # force time display for time 'now'
@@ -430,6 +432,10 @@ sub l00http_tr_proc {
             print $sock "$outs[$ii]\n\n\n";
         }
         printf $sock ("<script Language=\"JavaScript\">nows.push('ln%04d');</script>", $ii);
+    }
+    if ($clocknotshown) {
+        print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+        print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
     }
     print $sock "</pre>\n";
 
