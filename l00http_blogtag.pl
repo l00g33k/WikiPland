@@ -83,6 +83,14 @@ sub l00http_blogtag_proc {
                     $buffer = substr ($form->{'buffer'}, 25, 9999);
                 } else {
                     $buffer = $form->{'buffer'};
+                    # 2022/9/15,1, text
+                    if ($buffer =~ /^(20\d\d\/\d{1,2}\/\d{1,2}),(\d+),(.+)$/) {
+                        # calendar. Substitude current date
+                        $buffer = "$ctrl->{'now_string'},$2,$3";
+                        if ($buffer =~ /^(20\d\d)(\d\d)(\d\d) \d\d\d\d\d\d,(.+)$/) {
+                            $buffer = "$1/$2/$3,$4";
+                        }
+                    }
                 }
             } else {
                 $buffer = substr ($form->{'buffer'}, 16, 9999);
