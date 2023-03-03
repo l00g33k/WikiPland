@@ -743,9 +743,9 @@ SCRIPTSRC
                 # * name
                 # https://www.google.com/maps/@31.1956864,121.3522793,15z
                 $starname = $1;
-                if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
-                    $wayptcolor = "_$1";
-                    $starname =~ s/!!!([rylsafgodGDbSpLTBhu])$//;
+                if ($starname =~ /(!!!|\@\@\@)([rylsafgodGDbSpLTBhu])$/) {
+                    $wayptcolor = "_$2";
+                    $starname =~ s/(!!!|\@\@\@)([rylsafgodGDbSpLTBhu])$//;
                 } else {
                     $wayptcolor = '__';
                 }

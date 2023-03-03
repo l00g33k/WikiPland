@@ -739,7 +739,17 @@ sub l00http_kml_proc {
                             if ($symbolcolor eq '__') {
                                 $symbolcolor = '_r';
                             }
-                        } elsif (($lat, $lon, $name) = /^poly: *([0-9.+-]+?),([0-9.+-]+?)[, ]*.*?([a-zA-Z_]+)/) {
+                        } elsif (($lat, $lon, $name) = /^poly: *([0-9.+-]+?),([0-9.+-]+?)[, ]*.*?([a-zA-Z_]*)/) {
+                            if ($starname ne '') {
+                                # * name from line above over writes name from URL
+                                $name = $starname;
+                                $starname = '';
+                            } else {
+                                $symbolcolor = '_r';
+                            }
+                            if ($symbolcolor eq '__') {
+                                $symbolcolor = '_r';
+                            }
                             s/^poly: *//;
                             # remove names [a-zA-Z_]
                             s/[a-zA-Z_]+//g;
@@ -765,8 +775,8 @@ sub l00http_kml_proc {
                             # * name
                             # https://www.google.com/maps/@31.1956864,121.3522793,15z
                             $starname = $1;
-                            if ($starname =~ /!!!([rylsafgodGDbSpLTBhu])$/) {
-                                $symbolcolor = "_$1";
+                            if ($starname =~ /(!!!|\@\@\@)([rylsafgodGDbSpLTBhu])$/) {
+                                $symbolcolor = "_$2";
                             } else {
                                 $symbolcolor = '__';
                             }
@@ -794,6 +804,9 @@ sub l00http_kml_proc {
                         }
 
                         if ($addthis) {
+                            if (!defined($symlookup{$symbolcolor})) {
+                                $symbolcolor = '_r';
+                            }
                             $kmlbuf .= 
                                 "\t\t<Placemark>\n".
                                 "\t\t\t<name>$name</name>\n".
