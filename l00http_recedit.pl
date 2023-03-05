@@ -18,7 +18,7 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
-    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall6h, $chkall1d, $eval1);
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall16h, $chkall1d, $eval1);
 
     $html = '';
 
@@ -29,9 +29,9 @@ sub l00http_recedit_output_row {
     if (defined ($form->{'chkall'})) {
         $chkalldel = 'checked';
     }
-    $chkall6h = '';
-    if (defined ($form->{'chkall6h'})) {
-        $chkall6h = 'checked';
+    $chkall16h = '';
+    if (defined ($form->{'chkall16h'})) {
+        $chkall16h = 'checked';
     }
     $chkall1d = '';
     if (defined ($form->{'chkall1d'})) {
@@ -41,10 +41,9 @@ sub l00http_recedit_output_row {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a>";
         if ($path =~ /^l00:\/\//) {
-            # RAM file, 1, 6 hours (or 4)
+            # RAM file, 1, 16 hours (or 4)
             $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add1h$id\">+1h</font><br>\n";
-           #$html .= "            +4h<input type=\"checkbox\" name=\"add4h$id\"><br>\n";
-            $html .= "            +6h<input type=\"checkbox\" name=\"add6h$id\" $chkall6h><br>\n";
+            $html .= "            +16h<input type=\"checkbox\" name=\"add16h$id\" $chkall16h><br>\n";
         } else {
             # disk file, 1, 2 days
             $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\" $chkall1d>+1d</font><br>\n";
@@ -278,14 +277,14 @@ sub l00http_recedit_proc (\%) {
                                     $yr + 1900, $mo + 1, $da, $tmp2);
                             }
                         }
-                        if (defined($form->{"add6h$id"}) && ($form->{"add6h$id"} eq 'on')) {
-                            # add 6 hours
+                        if (defined($form->{"add16h$id"}) && ($form->{"add16h$id"} eq 'on')) {
+                            # add 16 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
                                 $yr -= 1900;
                                 $mo--;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 6 * 3600; # add6h
+                                $tmp += 16 * 3600; # add16h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -298,7 +297,7 @@ sub l00http_recedit_proc (\%) {
                                 $mi = 0;
                                 $se = 0;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 6 * 3600; # add6h
+                                $tmp += 16 * 3600; # add16h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%d/%d/%d%s", 
                                     $yr + 1900, $mo + 1, $da, $tmp2);
@@ -439,12 +438,12 @@ sub l00http_recedit_proc (\%) {
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
     print $sock "        <td>\n";
-    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
     if ($path =~ /^l00:\/\//) {
-        print $sock "        <input type=\"submit\" name=\"chkall6h\" value=\"6h&#818;\" accesskey=\"h\">\n";
+        print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"16h&#818;\" accesskey=\"h\">\n";
     } else {
         print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
     }
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
     print $sock "        <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
         $_ = 'checked';
