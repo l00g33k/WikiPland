@@ -332,22 +332,25 @@ sub l00http_tr_proc {
             }
             if (/^@ *$/) {
                 $minoff = $hour * 60 + int ($min / $itvmin) * $itvmin;
-            } elsif (($hr,$mn) = /^@(\d\d)(\d\d)/) {
+            } elsif (($hr,$mn, $desc) = /^@(\d\d)(\d\d) *(.*)$/) {
                 #    @1430 : start time in 24 hour format
                 if ($hr < 4) {
                     # assume 4 am is the 4 am of the following day
                     $hr += 24;
                 }
                 $minoff = $hr * 60 + $mn;
+                if (defined($desc) && (length($desc) > 0) && ($desc !~ /^#/)) {
+                    $outs [int ($minoff / $itvmin)] .= " $desc ";
+                }
             } elsif (($len,$desc) = /^=(\d+) +(.+)/) {
                 # append task descriptions to time slot spanning the length
                 for ($ii = $minoff; $ii < $minoff + $len; $ii += $itvmin) {
-                    $outs [int ($ii / $itvmin)] .= " $desc ($len)";
+                    $outs [int ($ii / $itvmin)] .= " $desc ($len) ";
                 }
                 $minoff = $ii;
             } elsif (($desc) = / *(.+) */) {
                 # default to $itvmin min
-                $outs [int ($minoff / $itvmin)] .= " $desc ($itvmin)";
+                $outs [int ($minoff / $itvmin)] .= " $desc ($itvmin) ";
                 $minoff += $itvmin;
             }
         }
