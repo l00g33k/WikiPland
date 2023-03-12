@@ -209,7 +209,7 @@ sub l00http_tr_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($blkln, $citydiff, $buffer, $bufinc, $incpath, $pathbase);
-    my ($filter, $filter_hide, $clocknotshown);
+    my ($filter, $filter_hide, $clocknotshown, $notbare);
 
     $filter = '';
 
@@ -231,12 +231,19 @@ sub l00http_tr_proc {
     if ((defined ($form->{'lineproc'})) && (length ($form->{'lineproc'}) > 0)) {
         $lineproc = $form->{'lineproc'};
     }
+    if ((defined ($form->{'bare'})) && ($form->{'bare'} eq 'on')) {
+        $notbare = 0;
+    } else {
+        $notbare = 1;
+    }
 
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>tr</title>\n$tr_clockjs" . $ctrl->{'htmlhead2'};
-    print $sock "<a name=\"__top__\"></a>";
-    print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
-    print $sock "<a href=\"#__end__\">end</a> - \n";
-    print $sock "Input: <a href=\"/ls.htm?path=$form->{'fname'}\">$form->{'fname'}</a><br>\n";
+    if ($notbare) {
+        print $sock "<a name=\"__top__\"></a>";
+        print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+        print $sock "<a href=\"#__end__\">end</a> - \n";
+        print $sock "Input: <a href=\"/ls.htm?path=$form->{'fname'}\">$form->{'fname'}</a><br>\n";
+    }
 
     # 1) Make 36 hours worth of time slots
 
@@ -398,19 +405,25 @@ sub l00http_tr_proc {
     }
 
     # make an anchor to jump to current time    
-    print $sock "<a href=\"#now\">now</a>\n";
-    print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a>\n";
-    if ($filter ne '') {
-        print $sock " - filter '$filter' in effect\n";
+    if ($notbare) {
+        print $sock "<a href=\"#now\">now</a>\n";
+        print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a>\n";
+        if ($filter ne '') {
+            print $sock " - filter '$filter' in effect\n";
+        }
+        print $sock "<br><pre>\n";
+    } else {
+        print $sock "<pre>\n";
     }
-    print $sock "<br><pre>\n";
 
     # 3) Display the time slots
 
     # display the time slot
     $blkln = 0;
     $clocknotshown = 1;
-    printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
+    if ($notbare) {
+        printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
+    }
     for ($ii = $iist; $ii <= $iien; $ii++) {
         # *l*color bold**
         $outs[$ii] =~       s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
@@ -420,8 +433,10 @@ sub l00http_tr_proc {
 
         if ($ii == $now) {
             $clocknotshown = 1;
-            print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
-            print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
+            if ($notbare) {
+                print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+                print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
+            }
             $blkln = 0; # force time display for time 'now'
             #print "$now $outs[$ii]\n";
         }
@@ -434,16 +449,22 @@ sub l00http_tr_proc {
         } elsif ($blkln < 2) {
             print $sock "$outs[$ii]\n\n\n";
         }
-        printf $sock ("<script Language=\"JavaScript\">nows.push('ln%04d');</script>", $ii);
+        if ($notbare) {
+            printf $sock ("<script Language=\"JavaScript\">nows.push('ln%04d');</script>", $ii);
+        }
     }
-    if ($clocknotshown) {
-        print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
-        print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
+    if ($notbare) {
+        if ($clocknotshown) {
+            print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+            print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
+        }
     }
     print $sock "</pre>\n";
 
-    if ($now >= $iien) {
-        print $sock "<a name=\"now\">now</a> ".substr($ctrl->{'now_string'}, 9, 4)."\n";
+    if ($notbare) {
+        if ($now >= $iien) {
+            print $sock "<a name=\"now\">now</a> ".substr($ctrl->{'now_string'}, 9, 4)."\n";
+        }
     }
 
 
@@ -470,63 +491,65 @@ sub l00http_tr_proc {
         $rcity = "";
     }
 
-    print $sock "<hr>\n";
-    print $sock "<a href=\"#now\">now</a> \n";
-    print $sock "<a name=\"__end__\"></a>";
-    print $sock "<a href=\"#__top__\">top</a>";
-    print $sock "<form action=\"/tr.htm\" method=\"get\">\n";
-    print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Full filename:</td>\n";
-    print $sock "<td><input type=\"text\" size=\"12\" name=\"fname\" value=\"$fname\"></td>\n";
-    print $sock "</tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Time difference:</td>\n";
-    print $sock "<td><input type=\"text\" size=\"3\" name=\"diff\" value=\"$diff\"></td>\n";
-    print $sock "</tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Left city:\n</td>";
-    print $sock "<td><input type=\"text\" size=\"5\" name=\"lcity\" value=\"$lcity\"></td>\n";
-    print $sock "</tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Right city:</td>\n";
-    print $sock "<td><input type=\"text\" size=\"5\" name=\"rcity\" value=\"$rcity\"></td>\n";
-    print $sock "</tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Hours without events:</td>\n";
-    print $sock "<td><input type=\"checkbox\" name=\"allhours\">List all hours</td></td>\n";
-    print $sock "</tr>\n";
-
-                                                
-    print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
-    print $sock "        <td>&nbsp;</td>\n";
-    print $sock "    </tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Slot length (min.):</td>\n";
-#   print $sock "<td><input type=\"text\" size=\"5\" name=\"rcity\" value=\"$rcity\"></td>\n";
-    print $sock "<td><input type=\"text\" size=\"3\" name=\"itvmin\" value=\"$itvmin\"></td>\n";
-    print $sock "</tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Active line marker:</td>\n";
-    print $sock "<td><input type=\"text\" size=\"12\" name=\"filter\" value=\"$filter\"></td>\n";
-    print $sock "</tr>\n";
-
-    print $sock "<tr>\n";
-    print $sock "<td>Line processor:</td>\n";
-    print $sock "<td><input type=\"text\" size=\"12\" name=\"lineproc\" value=\"$lineproc\"></td>\n";
-    print $sock "</tr>\n";
-
-
-    print $sock "</table>\n";
-    print $sock "</form>\n";
+    if ($notbare) {
+        print $sock "<hr>\n";
+        print $sock "<a href=\"#now\">now</a> \n";
+        print $sock "<a name=\"__end__\"></a>";
+        print $sock "<a href=\"#__top__\">top</a>";
+        print $sock "<form action=\"/tr.htm\" method=\"get\">\n";
+        print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Full filename:</td>\n";
+        print $sock "<td><input type=\"text\" size=\"12\" name=\"fname\" value=\"$fname\"></td>\n";
+        print $sock "</tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Time difference:</td>\n";
+        print $sock "<td><input type=\"text\" size=\"3\" name=\"diff\" value=\"$diff\"></td>\n";
+        print $sock "</tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Left city:\n</td>";
+        print $sock "<td><input type=\"text\" size=\"5\" name=\"lcity\" value=\"$lcity\"></td>\n";
+        print $sock "</tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Right city:</td>\n";
+        print $sock "<td><input type=\"text\" size=\"5\" name=\"rcity\" value=\"$rcity\"></td>\n";
+        print $sock "</tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Hours without events:</td>\n";
+        print $sock "<td><input type=\"checkbox\" name=\"allhours\">List all hours</td>\n";
+        print $sock "</tr>\n";
+    
+                                                    
+        print $sock "    <tr>\n";
+        print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
+        print $sock "        <td><input type=\"checkbox\" name=\"bare\" accesskey=\"b\">b&#818;are without form</td>\n";
+        print $sock "    </tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Slot length (min.):</td>\n";
+    #   print $sock "<td><input type=\"text\" size=\"5\" name=\"rcity\" value=\"$rcity\"></td>\n";
+        print $sock "<td><input type=\"text\" size=\"3\" name=\"itvmin\" value=\"$itvmin\"></td>\n";
+        print $sock "</tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Active line marker:</td>\n";
+        print $sock "<td><input type=\"text\" size=\"12\" name=\"filter\" value=\"$filter\"></td>\n";
+        print $sock "</tr>\n";
+    
+        print $sock "<tr>\n";
+        print $sock "<td>Line processor:</td>\n";
+        print $sock "<td><input type=\"text\" size=\"12\" name=\"lineproc\" value=\"$lineproc\"></td>\n";
+        print $sock "</tr>\n";
+    
+    
+        print $sock "</table>\n";
+        print $sock "</form>\n";
+    }
 
     print $sock $ctrl->{'htmlfoot'};
 }
