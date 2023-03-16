@@ -143,7 +143,7 @@ sub l00http_activity_proc {
         print $sock &l00wikihtml::wikihtml ($ctrl, '', "ls: [[/ls.htm?path=$path|$path]]", 0);
     } elsif (-f $path) {
         # local file
-        print $sock &l00wikihtml::wikihtml ($ctrl, '', "Launcher: [[/launcher.htm?path=$path|$path]]", 0);
+        print $sock &l00wikihtml::wikihtml ($ctrl, '', " [[/launcher.htm?path=$path|Launcher]] : [[/ls.htm?path=$path|$path]]", 0);
     } else {
         print $sock &l00wikihtml::wikihtml ($ctrl, '', $path, 0);
     }

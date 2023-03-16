@@ -570,29 +570,31 @@ sub l00http_reminder_perio {
             $ctrl->{'BANNER:reminder'} = "<center>".
                 "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
-                "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'_</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
+                "<a href=\"#_remend_\">VV</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=10#pause\">10'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=20#pause\">20'</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=60#pause\">1h</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=120#pause\">2h</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=180#pause\">3h</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
-                "<a href=\"/reminder.htm#manage\">:::</a> </center>";
+                "<a href=\"/reminder.htm#manage\">:::</a> </center><a name=\"_remend_\"></a>";
 
             $ctrl->{'BANNERSML:reminder'} = "<center>".
                 "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
-                "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'_</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
+                "<a href=\"#_remend_\">VV</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=10#pause\">10'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=20#pause\">20'</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=60#pause\">1h</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=120#pause\">2h</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=180#pause\">3h</a> - ".
-                "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
-                "<a href=\"/reminder.htm#manage\">:::</a> </center>";
+                "<a href=\"/reminder.htm#manage\">:::</a> </center><a name=\"_remend_\"></a>";
 
             if ((!($msgtoast =~ /^ *$/)) &&
                 ($ctrl->{'bannermute'} <= time)) {
