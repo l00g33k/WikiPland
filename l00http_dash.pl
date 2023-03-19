@@ -1189,6 +1189,7 @@ sub l00http_dash_proc {
                         }
                         # jump to cat1 if available
                         if (defined($cat1tolnno{"$jmp"})) {
+                            $tmp = '&inscat2form='.$cat1tolnno{"$jmp"};
                             $tmp2 = $cat1tolnno{"$jmp"};
                         }
                         $jmp = " <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#$jmp\">vw:$jmp</a>";
