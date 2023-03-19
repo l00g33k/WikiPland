@@ -161,7 +161,7 @@ sub l00http_dash_proc {
     my ($lnnostr, $lnno, $hot, $hide, $key, $desc, $clip, $cat1font1, $cat1font2, $cat1ln, %displaying);
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
-    my ($lineevalst, $lineevalen, %cat2tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
+    my ($lineevalst, $lineevalen, %cat2tolnno, %cat1tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
     my (@descfind, $moving, $color, $dashbanner);
 
 
@@ -173,6 +173,7 @@ sub l00http_dash_proc {
     $jumpcnt = 0;
     undef @jumpname;
     undef @jumpcat;
+    undef %cat1tolnno;
     undef %cat2tolnno;
     undef %cat1s;
     undef %desccats;
@@ -730,7 +731,12 @@ sub l00http_dash_proc {
                 }
                 # jump target when hdr only
                 $cat2 .= "<a name=\"cat2$jmp\"></a>";
+                if (!defined($cat1tolnno{"$cat1"}) ||
+                    ($cat1tolnno{"$cat1"} > $lnno)) {
+                    $cat1tolnno{"$cat1"} = $lnno;
+                }
                 $cat2tolnno{"cat2$jmp"} = $lnno;
+                $cat1tolnno{"cat2$jmp"} = $cat1tolnno{"$cat1"};
             } elsif (($tim, $dsc) = $this =~ /^\* (\d{8,8} \d{6,6}) *(.*)/) {
                 # cat1 = ---- cat2 = DESCFIND, desc is DESCFIND regex
                 if (($cat1 =~ /----/) && ($cat2 =~ /DESCFIND/) && ($dsc !~ /^ *$/)) {
@@ -1180,6 +1186,10 @@ sub l00http_dash_proc {
                         } else {
                             $tmp = '';
                             $tmp2 = '';
+                        }
+                        # jump to cat1 if available
+                        if (defined($cat1tolnno{"$jmp"})) {
+                            $tmp2 = $cat1tolnno{"$jmp"};
                         }
                         $jmp = " <a href=\"/dash.htm?process=Process&path=$form->{'path'}&outputsort=&dash_all=all&hdronly=#$jmp\">vw:$jmp</a>";
                         $jmp .= " -- <a href=\"/dash.htm?path=$form->{'path'}$tmp&process=Process&outputsort=on&dash_all=all&hdronly=hdr\">+cat2:$tmp2</a>";
