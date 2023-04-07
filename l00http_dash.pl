@@ -592,7 +592,11 @@ sub l00http_dash_proc {
             if (defined($form->{"newtcat"})) {
                 $_ = $form->{"newtcat"};
             }
-            $out .= "==*$color*$_**==\n";
+            if (defined($form->{"hilite"} && ($form->{"hilite"} eq 'on'))) {
+                $out .= "==*$color*$_**==\@\@\@\n";
+            } else {
+                $out .= "==*$color*$_**==\n";
+            }
             my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
                 localtime (time);
             $out .= sprintf ("* %4d%02d%02d %02d%02d%02d \n", 

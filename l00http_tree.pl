@@ -299,16 +299,16 @@ sub l00http_tree_proc {
                 }
             }
 
-            if (defined($ctrl->{'l00file'}->{'l00://tree.htm'})) {
-                $ctrl->{'l00file'}->{'l00://tree2.htm'} = $ctrl->{'l00file'}->{'l00://tree.htm'};
+            if (defined($ctrl->{'l00file'}->{'l00://tree.txt'})) {
+                $ctrl->{'l00file'}->{'l00://tree2.txt'} = $ctrl->{'l00file'}->{'l00://tree.txt'};
             }
-            &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
+            &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.txt');
             &l00httpd::l00fwriteBuf($ctrl, "* $dir\n\n$export\n\n");
             &l00httpd::l00fwriteClose($ctrl);
-            print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a>. \n";
-            print $sock "<a href=\"/treesize.htm?path=l00://tree.htm\">treesize l00://tree.htm</a>. \n";
-            print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm&path2=$form->{'path'}.txt\">filemgt tree.htm</a><p>\n";
-            print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
+            print $sock "<p><a href=\"/view.htm?path=l00://tree.txt\">View raw l00://tree.txt</a>. \n";
+            print $sock "<a href=\"/treesize.htm?path=l00://tree.txt\">treesize l00://tree.txt</a>. \n";
+            print $sock "<a href=\"/filemgt.htm?path=l00://tree.txt&path2=$form->{'path'}.txt\">filemgt tree.txt</a><p>\n";
+            print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.txt&path2=l00://tree2.txt\">md5sizediff l00://tree.txt and l00://tree2.txt</a><p>\n";
 
             # report extension count
             print $sock "<p><table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
@@ -507,7 +507,7 @@ sub l00http_tree_proc {
                         }
                     }
                 } elsif ($cnt == $maxlines + 1) {
-                    print $sock "\nTrucating output to $maxlines lines. View full <a href=\"/view.htm?path=l00://tree.htm\">outputs</a>\n";
+                    print $sock "\nTrucating output to $maxlines lines. View full <a href=\"/view.htm?path=l00://tree.txt\">outputs</a>\n";
                 }
             } else {
                 $cntbak++;
@@ -543,20 +543,20 @@ sub l00http_tree_proc {
         print $sock "</table>\n";
 
 
-        if (defined($ctrl->{'l00file'}->{'l00://tree.htm'})) {
-            $ctrl->{'l00file'}->{'l00://tree2.htm'} = $ctrl->{'l00file'}->{'l00://tree.htm'};
+        if (defined($ctrl->{'l00file'}->{'l00://tree.txt'})) {
+            $ctrl->{'l00file'}->{'l00://tree2.txt'} = $ctrl->{'l00file'}->{'l00://tree.txt'};
         }
-        &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.htm');
+        &l00httpd::l00fwriteOpen($ctrl, 'l00://tree.txt');
         &l00httpd::l00fwriteBuf($ctrl, "* $base\n\n$export\n\n");
         &l00httpd::l00fwriteClose($ctrl);
-        print $sock "<p><a href=\"/view.htm?path=l00://tree.htm\">View raw l00://tree.htm</a>. \n";
-        print $sock "<a href=\"/treesize.htm?path=l00://tree.htm\">treesize l00://tree.htm</a>. \n";
-        print $sock "<a href=\"/filemgt.htm?path=l00://tree.htm&path2=$form->{'path'}m5_$ctrl->{'now_string'}_.m5sz.txt\">filemgt tree.htm</a><p>\n";
-        print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.htm&path2=l00://tree2.htm\">md5sizediff l00://tree.htm and l00://tree2.htm</a><p>\n";
+        print $sock "<p><a href=\"/view.htm?path=l00://tree.txt\">View raw l00://tree.txt</a>. \n";
+        print $sock "<a href=\"/treesize.htm?path=l00://tree.txt\">treesize l00://tree.txt</a>. \n";
+        print $sock "<a href=\"/filemgt.htm?path=l00://tree.txt&path2=$form->{'path'}m5_$ctrl->{'now_string'}_.m5sz.txt\">filemgt tree.txt</a><p>\n";
+        print $sock "<p><a href=\"/md5sizediff.htm?path=l00://tree.txt&path2=l00://tree2.txt\">md5sizediff l00://tree.txt and l00://tree2.txt</a><p>\n";
     }
 
 
-    print $sock "<form action=\"/tree.htm\" method=\"get\"><hr>\n";
+    print $sock "<form action=\"/tree.txt\" method=\"get\"><hr>\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Scan\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
@@ -609,7 +609,7 @@ sub l00http_tree_proc {
     $scriptout .= "pwd > \${OUTDIR}$logname\n";
     $scriptout .= "time find -name \"*\" -type f -print0 | xargs -0 stat -c \"%s %n\" >> \${OUTDIR}$logname\n";
     $scriptout .= "time find -name \"*\" -type f -print0 | xargs -0 md5sum >> \${OUTDIR}$logname\n";
-    $scriptout .= "# and send $logname to <a href=\"/ls.htm?path=$form->{'path'}\">tree.htm</a> for processing\n";
+    $scriptout .= "# and send $logname to <a href=\"/ls.htm?path=$form->{'path'}\">tree.txt</a> for processing\n";
     $scriptout .= "# speed is approximately 12-26 secs/GB<p>\n";
 
     if (open(OUT, ">${outdir}m5sz.sh")) {
