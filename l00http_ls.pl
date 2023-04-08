@@ -1700,14 +1700,14 @@ if ($dbgskipto) {
         &l00httpd::l00fwriteClose($ctrl);
 
         print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
-        if ($nodirs >= $lsmaxitems) {
+       #if ($nodirs >= $lsmaxitems) {
             print $sock "Directory listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_dirs.html\" target=\"_blank\">l00://ls_all_dirs.html</a>\n";
             print $sock " -- <a href=\"/view.htm?path=l00://ls_all_dirs.txt\" target=\"_blank\">.txt</a><br>\n";
-        }
-        if ($nofiles >= $lsmaxitems) {
+       #}
+       #if ($nofiles >= $lsmaxitems) {
             print $sock "File listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_files.html\" target=\"_blank\">l00://ls_all_files.html</a>\n";
             print $sock " -- <a href=\"/view.htm?path=l00://ls_all_files.txt\" target=\"_blank\">.txt</a><br>\n";
-        }
+       #}
     }
     print "ls: processed >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
