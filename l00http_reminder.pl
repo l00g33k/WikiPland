@@ -479,7 +479,9 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=150\">2h5</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=180\">3h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=300\">5h</a></li>\n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=540\">9h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=840\">14h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=1440\">24h</a></li>\n";
     print $sock "<p>";
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a><p>\n";
