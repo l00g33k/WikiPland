@@ -51,12 +51,21 @@ sub evaldydx {
     ($y0, $m);
 }
 
+sub dispExtraVal {
+    my ($extraname, $extraformu) = @_;
+    my ($buf);
 
+$buf = 'val';
+    $buf = eval $extranformu;
+    $htmlout .= "FOR3 $extraname, $extraformu\n\n";
+    $htmlout .= "Extra value formula: $extraformu\n";
+    $htmlout .= "$extraname == dispExtraVal $buf\n\n";
+}
 
 sub l00http_solver_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $name, $desc);
+    my (@alllines, $line, $lineno, $name, $desc, $extraname, $extraformu, $buf);
 
     $sock = $ctrl->{'sock'};     # dereference network socket
 
@@ -102,19 +111,40 @@ sub l00http_solver_proc {
     undef %formulae;
     undef @formulaename;
     undef %formuladesc;
+    undef %extraValueName;
+    undef %extraValueFormu;
     @alllines = split ("}", $buffer);
     foreach $line (@alllines) {
         $line =~ s/\r/ /g;
         $line =~ s/\n/ /g;
-        if (($name, $desc, $formula) = $line =~ /{(.+)"(.+)\|(.+)/) {
+        # {name"desc|formula|disp_value=formula}
+        if (($name, $desc, $formula, $extraname, $extraformu) = $line =~ /{(.+)"(.+)\|(.+)\|(.+)=(.+)/) {
+            $formulae {$name} = $formula;
+            $formuladesc {$name} = $desc;
+            $extraValueName {$name} = $extraname;
+            $extraValueFormu {$name} = $extraformu;
+    $htmlout .= "FOR2 $extraname, $extraformu\n\n";
+            push (@formulaename, $name);
+        # {name|formula|disp_value=formula}
+        } elsif (($name, $formula, $extraname, $extraformu) = $line =~ /{(.+)\|(.+)\|(.+)=(.+)/) {
+            $formulae {$name} = $formula;
+            $formuladesc {$name} = '';
+            $extraValueName {$name} = $extraname;
+            $extraValueFormu {$name} = $extraformu;
+    $htmlout .= "FOR1 $extraname, $extraformu\n\n";
+            push (@formulaename, $name);
+        # {name"desc|formula}
+        } elsif (($name, $desc, $formula) = $line =~ /{(.+)"(.+)\|(.+)/) {
             $formulae {$name} = $formula;
             $formuladesc {$name} = $desc;
             push (@formulaename, $name);
+        # {name|formula}
         } elsif (($name, $formula) = $line =~ /{(.+)\|(.+)/) {
             $formulae {$name} = $formula;
             $formuladesc {$name} = '';
             push (@formulaename, $name);
         }
+        #
     }
 
 #print $sock "<pre>Dumping FORM data:\n";
@@ -187,6 +217,12 @@ sub l00http_solver_proc {
                 $l00g_xx = $varsuni {$l00g_name};
                 $l00g_m = 0;
                 $htmlout .= "<pre>\n";
+                # display extra value
+                if (defined($extraValueName{$form->{'formulaname'}})) {
+                    $htmlout .= "Extra value formula: $extraValueFormu{$form->{'formulaname'}}\n";
+                    $buf = eval $extraValueFormu{$form->{'formulaname'}};
+                    $htmlout .= $extraValueName {$form->{'formulaname'}}."= $buf\n\n";
+                }
                 # load variables
                 foreach $var (keys %vars) {
                     $buf = "$var = $varsuni{$var}";
