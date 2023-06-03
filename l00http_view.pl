@@ -89,7 +89,7 @@ sub l00http_view_proc {
     my ($lineno, $buffer, $pname, $pnameurl, $fname, $fnameurl, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
     my ($foundfullrst, $foundfullrstnew, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
-    my ($displayed, $onefindtext, $tmplnallhits, $pnameurl2, $fnameurl2);
+    my ($displayed, $onefindtext, $tmplnallhits, $pnameurl2, $fnameurl2, $jumptable);
 
     $skip0  = 0;
     $pnameurl = '';
@@ -780,31 +780,38 @@ print "\n\nexcludeinfound >$excludeinfound<\n\n";
             $size, $atime, $mtimea, $ctime, $blksize, $blocks)
                 = stat($form->{'path'});
     }
-    print $sock "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
+
+
+    $jumptable = '';
+    if (!defined($size)) {
+        $size = 0;
+    }
+    $jumptable .= "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
 
     # skip backward $maxln
-    print $sock "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$pnameurl$fnameurl#end\">10</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$pnameurl$fnameurl#end\">200</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$pnameurl$fnameurl#end\">500</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$pnameurl$fnameurl#end\">1000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=2000&path=$pnameurl$fnameurl#end\">2000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=5000&path=$pnameurl$fnameurl#end\">5000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$pnameurl$fnameurl#end\">10000</a> lines.<p>\n";
+    $jumptable .= "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$pnameurl$fnameurl#end\">10</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$pnameurl$fnameurl#end\">200</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$pnameurl$fnameurl#end\">500</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$pnameurl$fnameurl#end\">1000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=2000&path=$pnameurl$fnameurl#end\">2000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=5000&path=$pnameurl$fnameurl#end\">5000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$pnameurl$fnameurl#end\">10000</a> lines.<p>\n";
 
     # view first X lines
-    print $sock "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$pnameurl$fnameurl#top\">10</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$pnameurl$fnameurl#top\">200</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$pnameurl$fnameurl#top\">500</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$pnameurl$fnameurl#top\">1000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=2000&path=$pnameurl$fnameurl#top\">2000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$pnameurl$fnameurl#top\">5000</a>,\n";
-    print $sock "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$pnameurl$fnameurl#top\">10000</a> lines.<p>\n";
+    $jumptable .= "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$pnameurl$fnameurl#top\">10</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$pnameurl$fnameurl#top\">200</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$pnameurl$fnameurl#top\">500</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$pnameurl$fnameurl#top\">1000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=2000&path=$pnameurl$fnameurl#top\">2000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$pnameurl$fnameurl#top\">5000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$pnameurl$fnameurl#top\">10000</a> lines.<p>\n";
 
-    print $sock "Click <a href=\"/view.htm?path=$pnameurl$fnameurl&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
-    print $sock "ls between <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
-    print $sock "with <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
-    print $sock "View <a href=\"/view.htm?path=l00://displayed.txt\" target=\"_blank\">l00://displayed.txt</a> - \n";
-    print $sock "<a href=\"/filemgt.htm?copy=copy&path=l00://displayed.txt&path2=l00://$fname.$skip-$maxln.txt\" target=\"_blank\">filemgt</a><p>\n";
+    $jumptable .= "Click <a href=\"/view.htm?path=$pnameurl$fnameurl&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
+    $jumptable .= "ls between <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
+    $jumptable .= "with <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit&lfisbr=on&embedpic=on\">paragraphs and images</a><p>\n";
+    $jumptable .= "View <a href=\"/view.htm?path=l00://displayed.txt\" target=\"_blank\">l00://displayed.txt</a> - \n";
+    $jumptable .= "<a href=\"/filemgt.htm?copy=copy&path=l00://displayed.txt&path2=l00://$fname.$skip-$maxln.txt\" target=\"_blank\">filemgt</a><p>\n";
+    print $sock $jumptable;
 
     # highlite
     print $sock "<hr><a name=\"find\"></a>\n";
@@ -920,6 +927,8 @@ print "\n\nexcludeinfound >$excludeinfound<\n\n";
         "\" | perl ${tmpln}sshsync.pl</pre>\n";
 
 
+    print $sock $jumptable;
+
     print $sock "<p>Jump to line: ";
     print $sock "<a href=\"#top\">top</a> - \n";
     $tmp = 200;
@@ -934,6 +943,7 @@ print "\n\nexcludeinfound >$excludeinfound<\n\n";
         print $sock "<a href=\"#line$tmpln\">$tmpln</a> - \n";
         $tmpln += $tmp;
     }
+
 
     if (defined ($ctrl->{'FOOT'})) {
         print $sock "$ctrl->{'FOOT'}\n";
