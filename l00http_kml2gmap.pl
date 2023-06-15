@@ -8,7 +8,7 @@ use l00httpd;
 
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
-my ($width, $height, $apikey, $satellite, $initzoom);
+my ($width, $height, $apikey, $satellite, $initzoom, $trk10min);
 my ($new, $selregex, $drawgrid, $longname, $matched, $exclude, @polylinepts);
 
 $new = 1;
@@ -20,6 +20,7 @@ $drawgrid = '';
 $longname = '';
 $initzoom = '';
 @polylinepts = ();
+$trk10min = '';
 
 $width = 500;
 $height = 380;
@@ -332,6 +333,11 @@ sub l00http_kml2gmap_proc {
             $initzoom = $1;
         } else {
             $initzoom = '';
+        }
+        if (defined($form->{'trk10min'}) && ($form->{'trk10min'} eq 'on')) {
+            $trk10min = 'checked';
+        } else {
+            $trk10min = '';
         }
     }
 
@@ -772,8 +778,14 @@ SCRIPTSRC
                 }
                 $polybuf .= "    {lat: $lat, lng: $lon},\n";
                 # ; gps 20171104 005423
-                if (/; gps (\d{8,8} \d\d)/) {
-                    $gpstracktimenow = $1;
+                if ($trk10min eq '') {
+                    if (/; gps (\d{8,8} \d\d)/) {
+                        $gpstracktimenow = $1;
+                    }
+                } else {
+                    if (/; gps (\d{8,8} \d\d\d)/) {
+                        $gpstracktimenow = $1;
+                    }
                 }
             } else {
                 #$starname = '';
@@ -1123,9 +1135,14 @@ SCRIPTSRC
         print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td><input type=\"submit\" name=\"update\" value=\"U&#818;pdate\" accesskey=\"u\">\n";
+        print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>\n";
         print $sock "zoom <input type=\"text\" name=\"initzoom\" size=\"5\" value=\"$initzoom\"> (was $zoom)\n";
         print $sock "</td></tr>\n";
+
+        print $sock "<tr><td>\n";
+        print $sock "<input type=\"submit\" name=\"update\" value=\"U&#818;pdate\" accesskey=\"u\"></td><td><input type=\"checkbox\" name=\"trk10min\" $trk10min> Track shows 10 min\n";
+        print $sock "</td></tr>\n";
+
         print $sock "<tr><td>\n";
         print $sock "<input type=\"submit\" name=\"resetpoly\" value=\"Reset Poly\">\n";
         print $sock "</td><td>\n";
