@@ -44,8 +44,25 @@ if [ \$# != 0 ]; then
         # or same in both
         echo ONLY/SAME "\$ONLYFILE"
         if [ -f "\$BASEDIR\$ONLYFILE" ]; then
-            echo will cp "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
-            echo will rm "\$BASEDIR\$ONLYFILE"
+            TOPATH=\$(dirname "\$COPYDIR\$ONLYFILE")
+            if [[ ! -d "\$TOPATH/" ]]; then
+                echo mkdir -p "\$TOPATH"
+            fi
+            if ! [ -f "\$COPYDIR\$ONLYFILE" ] ; then
+                # "THAT MISSING -- \$COPYDIR\$ONLYFILE"
+                echo WILL cp "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
+                # echo will rm "\$BASEDIR\$ONLYFILE"
+            else
+                if ! [ -f "\$BASEDIR\$ONLYFILE" ] ; then
+                    echo "THIS MISSING -- \$BASEDIR\$ONLYFILE"
+                else
+                    if ! diff "\$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE" ; then
+                        echo "DIFF -- \$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
+                    else
+                        echo "SAME -- \$BASEDIR\$ONLYFILE" "\$COPYDIR\$ONLYFILE"
+                    fi
+                fi
+            fi
         fi
     else
         FILE2KEEP=\$1
