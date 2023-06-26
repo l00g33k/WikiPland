@@ -1,5 +1,11 @@
 %TOC%
 
+=Item Description Color Convention=
+* ^ *f*hot item**
+* ~ *y*doing item**
+* . *a*KIV/TBD item**
+* ` *f*info/URL item**
+
 =Color Scheme=
 * Hot color for priority actions:
 ** 'Now' queues: highest priority
@@ -69,6 +75,7 @@ cat1='----' and cat2='DESCFIND'.
 * ===chapter=== (3rd level) to hide low priority tasks
 * >>> at the end of comment to make a sticky note at the bottom
 * !! at start to hide in the latest
+* @@WikiWord! makes a link to /dash.htm?path=./WikiWord.txt
 * ! at start to hide but add to !# count
 * +# hides for # days from timestamp
 * Make comment date in the future to hide it
@@ -79,6 +86,7 @@ cat1='----' and cat2='DESCFIND'.
 * ~text, to mark a do next item, in black on yellow
 * .text, to mark a watch item, in black on aqua
 * `text, to mark an out of sight item, in black on silver
+
 
 ==See Here==
 * The following shortcut will create a link to visit the rendered 

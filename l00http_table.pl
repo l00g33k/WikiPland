@@ -102,7 +102,8 @@ sub l00http_table_proc {
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     print $sock "<hr><a name=\"top\"></a>\n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
+        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> -- \n";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}\">view</a> \n";
         # create shell script for vi
         if (open (OUT, ">$ctrl->{'plpath'}l00http_cmdedit.sh")) {
             print OUT "vim $form->{'path'}\n";
