@@ -243,8 +243,12 @@ var Graticule = (function() {
 
         // grid interval in degrees
         var mins = mins_list(this);
-        var dLat = gridInterval(t - b, mins);
-        var dLng = gridInterval(r > l ? r - l : ((180 - l) + (r + 180)), mins);
+        // hard code grid to be 1 km
+        //var dLat = gridInterval(t - b, mins);
+        var dLat = 360 / 40000.;
+        //var dLng = gridInterval(r > l ? r - l : ((180 - l) + (r + 180)), mins);
+        var dLng = dLat * Math.cos (((t + b) / 2) / 180 * 3.141592653549793);
+        //console.log('dLat', dLat, 'dLng', dLng);
 
         // round iteration limits to the computed grid interval
         l = Math.floor(l / dLng) * dLng;
