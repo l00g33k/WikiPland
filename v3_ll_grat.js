@@ -27,19 +27,21 @@ var Graticule = (function() {
     _.prototype.addDiv = function(div) {
         this.get('container').appendChild(div);
     },
-  _.prototype.decToLonSex = function(d) {
-      var degs = Math.floor(Math.abs(d));
-      var mins = ((Math.abs(d) - degs) * 60.0).toFixed(2);
-      if (mins == "60.00") { degs += 1.0; mins = "0.00"; }
-      return [degs, (d>0)?"E":"W", mins].join('');
-  };
+    _.prototype.decToLonSex = function(d) {
+        var degs = Math.floor(Math.abs(d));
+        var mins = ((Math.abs(d) - degs) * 60.0).toFixed(2);
+        if (mins == "60.00") { degs += 1.0; mins = "0.00"; }
+        return [degs, (d>0)?"E":"W", mins].join('');
+    };
   
     _.prototype.decToLatSex = function(d) {
-      var degs = Math.floor(Math.abs(d));
-      var mins = ((Math.abs(d) - degs) * 60.0).toFixed(2);
-      if (mins == "60.00") { degs += 1.0; mins = "0.00"; }
-      return [degs, (d>0)?"N":"S", mins].join('');
-  };
+        var degs = Math.floor(Math.abs(d));
+        var mins = ((Math.abs(d) - degs) * 60.0).toFixed(2);
+        if (mins == "60.00") {
+            degs += 1.0; mins = "0.00";
+        }
+        return [degs, (d>0)?"N":"S", mins].join('');
+    };
     _.prototype.onAdd = function() {
         var self = this;
         this.getPanes().mapPane.appendChild(this.get('container'));
@@ -103,41 +105,41 @@ var Graticule = (function() {
 
     var numLines = 10;
     var decmins = [
-    0.06, // 0.001 degrees
-    0.12, // 0.002 degrees
-    0.3, // 0.005 degrees
-    0.6, // 0.01 degrees
-    1.2, // 0.02 degrees
-    3, // 0.05 degrees
-    6, // 0.1 degrees
-    12, // 0.2 degrees
-    30, // 0.5
-    60, // 1
-    60 * 2,
-    60 * 5,
-    60 * 10,
-    60 * 20,
-    60 * 30,
-  ];
+        0.06, // 0.001 degrees
+        0.12, // 0.002 degrees
+        0.3, // 0.005 degrees
+        0.6, // 0.01 degrees
+        1.2, // 0.02 degrees
+        3, // 0.05 degrees
+        6, // 0.1 degrees
+        12, // 0.2 degrees
+        30, // 0.5
+        60, // 1
+        60 * 2,
+        60 * 5,
+        60 * 10,
+        60 * 20,
+        60 * 30,
+    ];
     var sexmins = [
-    0.01, // minutes
-    0.02,
-    0.05,
-    0.1,
-    0.2,
-    0.5,
-    1.0,
-    3, // 0.05 degrees
-    6, // 0.1 degrees
-    12, // 0.2 degrees
-    30, // 0.5
-    60, // 1
-    60 * 2,
-    60 * 5,
-    60 * 10,
-    60 * 20,
-    60 * 30,
-  ];
+        0.01, // minutes
+        0.02,
+        0.05,
+        0.1,
+        0.2,
+        0.5,
+        1.0,
+        3, // 0.05 degrees
+        6, // 0.1 degrees
+        12, // 0.2 degrees
+        30, // 0.5
+        60, // 1
+        60 * 2,
+        60 * 5,
+        60 * 10,
+        60 * 20,
+        60 * 30,
+    ];
 
     function mins_list(overlay) {
         if (overlay.sex_) return sexmins;
@@ -146,14 +148,18 @@ var Graticule = (function() {
 
     function latLngToPixel(overlay, lat, lng) {
         return overlay.getProjection().fromLatLngToDivPixel(
-      new google.maps.LatLng(lat, lng));
+            new google.maps.LatLng(lat, lng)
+        );
     };
 
     // calculate rounded graticule interval in decimals of degrees for supplied
     // lat/lon span return is in minutes
     function gridInterval(dDeg, mins) {
-        return leThenReturn(Math.ceil(dDeg / numLines * 6000) / 100, mins,
-                        60 * 45) / 60;
+        return leThenReturn(
+            Math.ceil(dDeg / numLines * 6000) / 100, 
+            mins,
+            60 * 45
+        ) / 60;
     }
 
     function npx(n) {
@@ -233,6 +239,7 @@ var Graticule = (function() {
         t = ne.lat();
         if (l == r) { l = -180.0; r = 180.0; }
         if (t == b) { b = -90.0; t = 90.0; }
+        // left, right, top, bottom of bounding box
 
         // grid interval in degrees
         var mins = mins_list(this);
@@ -262,9 +269,15 @@ var Graticule = (function() {
             this.addDiv(meridian(px, color));
 
             var atcross = eqE(lo, crosslng);
-            this.addDiv(makeLabel(color,
-        px + (atcross ? 17 : 3), y - (atcross ? 3 : 0),
-        (this.sex_ ? this.decToLonSex(lo) : lo.toFixed(gridPrecision(dLng)))));
+            this.addDiv(makeLabel(
+                color,
+                px + (atcross ? 17 : 3), 
+                y - (atcross ? 3 : 0),
+                (this.sex_ ? 
+                    this.decToLonSex(lo) : 
+                    lo.toFixed(gridPrecision(dLng))
+                )
+            ));
         }
 
         // lats
@@ -276,9 +289,15 @@ var Graticule = (function() {
             var py = latLngToPixel(this, b, l).y;
             this.addDiv(parallel(py, color));
 
-            this.addDiv(makeLabel(color,
-        x, py + (eqE(b, crosslat) ? 7 : 2),
-        (this.sex_ ? this.decToLatSex(b) : b.toFixed(gridPrecision(dLat)))));
+            this.addDiv(makeLabel(
+                color,
+                x,
+                py + (eqE(b, crosslat) ? 7 : 2),
+                (this.sex_ ? 
+                    this.decToLatSex(b) : 
+                    b.toFixed(gridPrecision(dLat))
+                )
+            ));
         }
     };
 
