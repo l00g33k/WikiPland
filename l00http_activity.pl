@@ -33,6 +33,7 @@ sub l00http_activity_proc {
 
     if (defined ($form->{'paste'})) {
         $path = &l00httpd::l00getCB($ctrl);
+        $form->{'start'} = 1;
     }
 
     # extract URL

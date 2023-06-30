@@ -105,21 +105,26 @@ var Graticule = (function() {
 
     var numLines = 10;
     var decmins = [
-        0.06, // 0.001 degrees
-        0.12, // 0.002 degrees
-        0.3, // 0.005 degrees
-        0.6, // 0.01 degrees
-        1.2, // 0.02 degrees
-        3, // 0.05 degrees
-        6, // 0.1 degrees
-        12, // 0.2 degrees
-        30, // 0.5
-        60, // 1
-        60 * 2,
-        60 * 5,
-        60 * 10,
-        60 * 20,
-        60 * 30,
+        60 * 36 / 40000.,    // 0.1 km
+        60 * 360 / 40000.,   // 1 km
+        60 * 3600 / 40000.,  // 10 km
+        60 * 36000 / 40000., // 100 km
+        60 * 360000 / 40000., // 100 km
+      //0.06, // 0.001 degrees
+      //0.12, // 0.002 degrees
+      //0.3, // 0.005 degrees
+      //0.6, // 0.01 degrees
+      //1.2, // 0.02 degrees
+      //3, // 0.05 degrees
+      //6, // 0.1 degrees
+      //12, // 0.2 degrees
+      //30, // 0.5
+      //60, // 1
+      //60 * 2,
+      //60 * 5,
+      //60 * 10,
+      //60 * 20,
+      //60 * 30,
     ];
     var sexmins = [
         0.01, // minutes
@@ -244,8 +249,8 @@ var Graticule = (function() {
         // grid interval in degrees
         var mins = mins_list(this);
         // hard code grid to be 1 km
-        //var dLat = gridInterval(t - b, mins);
-        var dLat = 360 / 40000.;
+        var dLat = gridInterval(t - b, mins);
+        //var dLat = 360 / 40000.;
         //var dLng = gridInterval(r > l ? r - l : ((180 - l) + (r + 180)), mins);
         var dLng = dLat * Math.cos (((t + b) / 2) / 180 * 3.141592653549793);
         //console.log('dLat', dLat, 'dLng', dLng);
