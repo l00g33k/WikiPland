@@ -96,7 +96,7 @@ sub l00http_shellls_proc {
                 $isdir = '';
                 $nodirs++;
             }
-            if ($cnt < 2000) {
+            if ($cnt < 5000) {
                 printf $sock ("%4d: %s<a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$shpath$fname$isdir\">$fname$isdir</a>\n", 
                     $cnt, substr($item, 0, $datewidth));
             }
