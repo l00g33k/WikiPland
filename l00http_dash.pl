@@ -485,13 +485,13 @@ sub l00http_dash_proc {
             if ($alllines[$ii] =~ /^%BLOGTIME:(.+?)%/) {
                 $tmp = $1;
                 $addtimeval{$tmp} = 0;
-                if ($tmp =~ /(\d+)m/) {
+                if ($tmp =~ /(-*\d+)m/) {
                     $addtimeval{$tmp} = 60 * $1;
                 }
-                if ($tmp =~ /(\d+)h/) {
+                if ($tmp =~ /(-*\d+)h/) {
                     $addtimeval{$tmp} = 3600 * $1;
                 }
-                if ($tmp =~ /(\d+)d/) {
+                if ($tmp =~ /(-*\d+)d/) {
                     $addtimeval{$tmp} = 24 * 3600 * $1;
                 }
                 push(@blocktime, $tmp);
@@ -537,13 +537,13 @@ sub l00http_dash_proc {
                     # remove underline
                     $tmp2 = $tmp;
                     $tmp2 =~ s/&#818;//;
-                    if ($tmp2 =~ /(\d+)m/) {
+                    if ($tmp2 =~ /(-*\d+)m/) {
                         $addtimeval{$tmp} = 60 * $1;
                     }
-                    if ($tmp2 =~ /(\d+)h/) {
+                    if ($tmp2 =~ /(-*\d+)h/) {
                         $addtimeval{$tmp} = 3600 * $1;
                     }
-                    if ($tmp2 =~ /(\d+)d/) {
+                    if ($tmp2 =~ /(-*\d+)d/) {
                         $addtimeval{$tmp} = 24 * 3600 * $1;
                     }
                     push(@blocktime, $tmp);
