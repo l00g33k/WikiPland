@@ -599,7 +599,7 @@ sub l00http_view_proc {
                         "<a href=\"/ls.htm?path=l00://find.htm\" target=\"_blank\">Full page l00://find.htm</a>\n";
                 }
                 $found .= "<br><a name=\"__find__\"></a><font style=\"color:black;background-color:lime\">Find in this file results end</font>.\n";
-                $found = "Found $foundcnt matches. $found";
+                $found = "Found <a href=\"#findstat\">$foundcnt</a> matches. $found";
                 $found .= "<hr>\n";
 
                 # path=./ substitution
@@ -901,7 +901,7 @@ sub l00http_view_proc {
     }
     # print find regex:
     if ($findtext ne '') {
-        print $sock "<pre>Sorted find count and regex:\n";
+        print $sock "<a name=\"findstat\"></a><pre>Sorted find count and regex:\n";
         $findidx = 0;
         foreach $_ (sort (split('\|\|', $findtext))) {
             printf $sock ("% 5d: %s\n", $findCount[$findidx], $_);
