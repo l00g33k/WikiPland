@@ -189,8 +189,14 @@ sub findInBuf  {
     # $findlen  :
     # $excludeinfound : exclude in found
     my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort, $findstart, $findlen, $excludeinfound) = @_;
-    my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, @founds, 
+    my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, @founds, @findCount, $findidx, 
         $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln, $dsplnno);
+
+    $findidx = 0;
+    foreach $pattern (split ('\|\|', $findtext)) {
+        $findCount[$findidx] = 0;
+        $findidx++;
+    }
 
     if (!defined($literal)) {
         $literal = 0;
@@ -280,6 +286,7 @@ sub findInBuf  {
             $blocktext = '';
         }
         # $findtext could be multiple pattern separated by ||
+        $findidx = 0;
         foreach $pattern (split ('\|\|', $findtext)) {
             if ($line =~ /$pattern/i) {
                 # it's a hit
@@ -296,10 +303,13 @@ sub findInBuf  {
                             last;
                         }
                     }
+                    $findCount[$findidx]++;
                 } else {
+                    $findCount[$findidx]++;
                     last;
                 }
             }
+            $findidx++;
         }
         if ($invertfind) {
             $hit = 1 - $hit;
@@ -376,7 +386,7 @@ sub findInBuf  {
         @founds = sort ({my($aa, $bb) = ($a, $b); $aa =~ s/\d+: +//; $bb =~ s/\d+: +//; $aa cmp $bb} @founds);
         $found = join ('', @founds);
     }
-    $found;
+    ($found, @findCount);
 }
 
 #&l00httpd::l00fstat($ctrl, $fname);

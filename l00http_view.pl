@@ -87,7 +87,7 @@ sub l00http_view_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($lineno, $buffer, $pname, $pnameurl, $fname, $fnameurl, $hilite, $clip, $tmp, $hilitetextidx);
-    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit);
+    my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit, @findCount, $findidx);
     my ($foundfullrst, $foundfullrstnew, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
     my ($displayed, $onefindtext, $tmplnallhits, $pnameurl2, $fnameurl2, $jumptable);
 
@@ -462,8 +462,8 @@ sub l00http_view_proc {
                 } else {
                     $sortfind = '';
                 }
-print "\n\nexcludeinfound >$excludeinfound<\n\n";
-                $foundfullrst = &l00httpd::findInBuf ($findtext, $block, 
+                #print "\n\nexcludeinfound >$excludeinfound<\n\n";
+                ($foundfullrst, @findCount) = &l00httpd::findInBuf ($findtext, $block, 
                     $buffer, ($literal eq 'checked'), $lastfew, 
                     $nextfew, ($sortfind eq 'checked'), $findstart, 
                     $findlen, $excludeinfound);
@@ -901,9 +901,11 @@ print "\n\nexcludeinfound >$excludeinfound<\n\n";
     }
     # print find regex:
     if ($findtext ne '') {
-        print $sock "<pre>Sorted find regex:\n";
+        print $sock "<pre>Sorted find count and regex:\n";
+        $findidx = 0;
         foreach $_ (sort (split('\|\|', $findtext))) {
-            print $sock "$_\n";
+            printf $sock ("% 5d: %s\n", $findCount[$findidx], $_);
+            $findidx++;
         }
         print $sock "</pre>\n";
     }
