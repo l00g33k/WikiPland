@@ -237,7 +237,7 @@ sub l00http_tr_proc {
         $notbare = 1;
     }
 
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>tr</title>\n$tr_clockjs" . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>tr</title>\n$tr_clockjs" . "</head>\x0D\x0A<body onload=\"startclock();\">\n";
     if ($notbare) {
         print $sock "<a name=\"__top__\"></a>";
         print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
