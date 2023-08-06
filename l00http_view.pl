@@ -447,6 +447,9 @@ sub l00http_view_proc {
                         $block = '.';
                     }
                 }
+                if (defined ($form->{'regex2hilite'})) {
+                    $hilitetext = $form->{'findtext'};
+                }
                 if (defined ($form->{'wraptext'})) {
                     $wraptext = 'checked';
                 } else {
@@ -833,12 +836,13 @@ sub l00http_view_proc {
     print $sock "</form>\n";
 
     # find
+    print $sock "Find in this file:<br>\n";
     print $sock "<form action=\"/view.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"submit\" name=\"find\" value=\"F&#818;ind\" accesskey=\"f\">\n";
     print $sock "</td><td>\n";
-    print $sock "Find in this file\n";
+    print $sock "<input type=\"checkbox\" name=\"regex2hilite\">Copy regex to HiLite\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "RegE&#818;x (||): <input type=\"submit\" name=\"cbpaste\" value=\"C&#818;B\">\n";
