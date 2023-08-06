@@ -901,9 +901,9 @@ sub l00http_view_proc {
     }
     # print find regex:
     if ($findtext ne '') {
-        print $sock "<a name=\"findstat\"></a><pre>Sorted find count and regex:\n";
+        print $sock "<a name=\"findstat\"></a><pre>Find count and regex:\n";
         $findidx = 0;
-        foreach $_ (sort (split('\|\|', $findtext))) {
+        foreach $_ (split('\|\|', $findtext)) {
             printf $sock ("% 5d: %s\n", $findCount[$findidx], $_);
             $findidx++;
         }
