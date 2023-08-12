@@ -46,8 +46,12 @@ sub l00http_iframes_proc (\%) {
         (length($form->{'spec'}) > 4)) {
         $spec = $form->{'spec'};
     }
-    if (defined ($form->{'height'}) && $form->{'height'} =~ /(\d+)/) {
-        $height = $1;
+    if (defined ($form->{'add'}) && 
+        defined ($form->{'url'}) && 
+        ($form->{'url'} =~ /(https*:\/\/[^ \n\r\t]+)/)) {
+        if (defined ($form->{'height'}) && $form->{'height'} =~ /(\d+)/) {
+            $height = $1;
+        }
     }
     if (defined ($form->{'cb'})) {
         $url = &l00httpd::l00getCB($ctrl);
@@ -189,7 +193,7 @@ sub l00http_iframes_proc (\%) {
                 $formout .= "             <input type=\"text\" size=\"6\" name=\"url_$rowidx\" value=\"$u\"> ";
                 $formout .= "        wd: <input type=\"text\" size=\"2\" name=\"wd_$rowidx\" value=\"$wd\"> ";
                 $formout .= "        ht: <input type=\"text\" size=\"3\" name=\"ht_$rowidx\" value=\"$ht\"> ";
-                $formout .= "        </td>\n";
+                $formout .= "        t_${rowidx}_${colidx}</td>\n";
                 $formout .= "    </tr>\n";
                 $rowidx++;
 
@@ -200,11 +204,12 @@ sub l00http_iframes_proc (\%) {
                     $ht = $overwriteht;
                 }
                 l00httpd::dbp($config{'desc'}, "($u, $wd, $ht) colwd $colwd\n");
-                $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\">iframe not supported by your browser.</iframe>";
+                $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\" name=\"t_${rowidx}_${colidx}\">iframe not supported by your browser.</iframe>";
 
                 $colidx++;
             }
             $out .= "<br>\n";
+#            $rowidx++;
         }
         $tmp = $out;
         $tmp =~ s/</&lt;/g;
