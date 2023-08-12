@@ -49,7 +49,7 @@ sub l00http_iframes_proc (\%) {
     if (defined ($form->{'add'}) && 
         defined ($form->{'url'}) && 
         ($form->{'url'} =~ /(https*:\/\/[^ \n\r\t]+)/)) {
-        if (defined ($form->{'height'}) && $form->{'height'} =~ /(\d+)/) {
+        if (defined ($form->{'height'}) && $form->{'height'} =~ /(\d+%*)/) {
             $height = $1;
         }
     }
@@ -204,7 +204,7 @@ sub l00http_iframes_proc (\%) {
                     $ht = $overwriteht;
                 }
                 l00httpd::dbp($config{'desc'}, "($u, $wd, $ht) colwd $colwd\n");
-                $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\" name=\"t_${rowidx}_${colidx}\">iframe not supported by your browser.</iframe>";
+                $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\" name=\"t_${rowidx}_${colidx}\">iframe not supported by your browser.</iframe>\n";
 
                 $colidx++;
             }
