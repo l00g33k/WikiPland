@@ -195,7 +195,6 @@ sub l00http_iframes_proc (\%) {
                 $formout .= "        ht: <input type=\"text\" size=\"3\" name=\"ht_$rowidx\" value=\"$ht\"> ";
                 $formout .= "        t_${rowidx}_${colidx}</td>\n";
                 $formout .= "    </tr>\n";
-                $rowidx++;
 
                 if ($wd =~ /\*/) {
                     $wd = int ((98 - $colwd) / $nocolstar);
@@ -206,6 +205,7 @@ sub l00http_iframes_proc (\%) {
                 l00httpd::dbp($config{'desc'}, "($u, $wd, $ht) colwd $colwd\n");
                 $out .= "<iframe src=\"$u\" width=\"$wd%\" height=\"$ht\" name=\"t_${rowidx}_${colidx}\">iframe not supported by your browser.</iframe>\n";
 
+                $rowidx++;
                 $colidx++;
             }
             $out .= "<br>\n";
