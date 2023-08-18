@@ -73,10 +73,16 @@ sub l00http_shell_proc {
     print $sock " <input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
     print $sock "</form>\n";
 
-    print $sock "<p>Output of shell commands:<p>\n";
+    print $sock "<p><a href=\"/view.htm?path=l00://shell.txt\" target=\"_blank\">Output</a> of shell commands:<p>\n";
 
     # print output
     print $sock "<pre>$out</pre>\n";
+
+    $out =~ s/&gt;/>/gms;
+    $out =~ s/&lt;/</gms;
+    &l00httpd::l00fwriteOpen($ctrl, "l00://shell.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $out);
+    &l00httpd::l00fwriteClose($ctrl);
 
     # send HTML footer and ends
     print $sock $ctrl->{'htmlfoot'};
