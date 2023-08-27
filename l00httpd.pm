@@ -91,6 +91,7 @@ sub urlencode {
     #  ! * ' ( ) ; : @ & = + $ , / ? # [ ]
     if (defined($buf)) {
         $buf =~  s/!/%21/g;
+        $buf =~  s/#/%23/g;
         $buf =~ s/\*/%2A/g;
         $buf =~  s/'/%27/g;
         $buf =~ s/\(/%28/g;

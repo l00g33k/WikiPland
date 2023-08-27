@@ -5,7 +5,7 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile, $useform);
+my ($arg, $eval, $sort, $sortdec, $wholefile, $useform, $filter, $filterregex);
 my ($lineevalst, $lineevalen, $lineevalln, @actionBkgn, @textBkgn);
 $arg = '';
 $eval = '';
@@ -16,6 +16,8 @@ $useform = '';
 $lineevalst = 0;
 $lineevalen = 0;
 $lineevalln = 0;
+$filter = '';
+$filterregex = '';
 
 @textBkgn   = (
     '#F8F8F8', 
@@ -58,7 +60,7 @@ sub l00http_lineeval_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals, $ii, $bkgn);
+    my (@newfile, $lnno, $mvfrom, $tmp, $tabindex, @evals, $ii, $bkgn, $filterone, $filterhit);
     my ($pname, $fname, $anchor, $clipurl, $clipexp, $copy2clipboard, $includefile, $pnameup);
 
     # Send HTTP and HTML headers
@@ -107,6 +109,18 @@ sub l00http_lineeval_proc (\%) {
         if (($lineevalst == 0) || ($lineevalen == 0)) {
             $lineevalst = 0;
             $lineevalen = 0;
+        }
+
+        if (defined ($form->{'filter'}) && ($form->{'filter'} eq 'on')) {
+            $filter = 'checked';
+        } else {
+            $filter = '';
+        }
+
+        if (defined ($form->{'filterregex'})) {
+            $filterregex = $form->{'filterregex'};
+        } else {
+            $filterregex = '';
         }
     }
 
@@ -161,6 +175,11 @@ sub l00http_lineeval_proc (\%) {
         print $sock "            <a href=\"/lineeval.htm?rngst=&rngen=&run=run&path=$form->{'path'}&run=run&cmd=&useform=on\">clr</a>";
     }
     print $sock "        </td>\n";
+    print $sock "    </tr>\n";
+
+    print $sock "    <tr>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"filter\" $filter accesskey=\"\">Ex&#818;clude regex ||\n";
+    print $sock "            <input type=\"text\" size=\"24\" name=\"filterregex\" value=\"$filterregex\"></td>\n";
     print $sock "    </tr>\n";
 
     print $sock "</table>\n";
@@ -373,6 +392,19 @@ sub l00http_lineeval_proc (\%) {
                 if (($lineevalst > 0) && ($lineevalst <= $lineevalen)) {
                     # restricting display range
                     if (($lnno < $lineevalst) || ($lnno > $lineevalen)) {
+                        next;
+                    }
+                }
+                if (($filter eq 'checked') && ($filterregex ne '')) {
+                    # if exclude filter in effect, skip if hit
+                    $filterhit = 0;
+                    foreach $filterone (split('\|\|', $filterregex)) {
+                        if (/$filterone/) {
+                            $filterhit = 1;
+                            last;
+                        }
+                    }
+                    if ($filterhit) {
                         next;
                     }
                 }
