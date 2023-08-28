@@ -41,7 +41,11 @@ sub l00http_launcher_proc {
         print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$path\">Path</a>:";
 
         if (($lpname, $lfname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/) {
-            print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
+            if ($lpname eq 'l00://') {
+                print $sock " <a href=\"/#ram\">$lpname</a>";
+            } else {
+                print $sock " <a href=\"/ls.htm?path=$lpname\">$lpname</a>";
+            }
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$lfname</a> - \n";
             if ($form->{'path'} =~ /^\//) {
                 print $sock "<a href=\"$form->{'path'}\">html</a> -- \n";

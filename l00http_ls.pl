@@ -588,7 +588,11 @@ sub l00http_ls_proc {
                                 if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                                     $tmp =~ s/\//\\/g;
                                 }
-                                print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                                if ($pname eq 'l00://') {
+                                    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/#ram\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                                } else {
+                                    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                                }
                             } else {
                                 print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
                                 # clip.pl with \ on Windows
@@ -906,7 +910,11 @@ if ($dbgskipto) {
                         if (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                             $tmp =~ s/\//\\/g;
                         }
-                        print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        if ($path eq 'l00://') {
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/#ram\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        } else {
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                        }
                     } else {
                         print $sock $ctrl->{'htmlhead'} . "<title>$path2 ls</title>\n$verbatimheader</head>\x0D\x0A<body$wikicallonload>\n";
                         # clip.pl with \ on Windows
