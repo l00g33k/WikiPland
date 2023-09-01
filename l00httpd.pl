@@ -1424,7 +1424,7 @@ while(1) {
                 $ctrl{'debug'} = $debug;
                 if(defined($FORM{'path'}) && 
                     ($FORM{'path'} =~ /[\\\/]([^\\\/]+)$/) ) {
-                    $ctrl{'htmlttl'} = "<title>$modcalled ($1)</title>\n";
+                    $ctrl{'htmlttl'} = "<title>$1 ($modcalled)</title>\n";
                 } else {
                     $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 }
