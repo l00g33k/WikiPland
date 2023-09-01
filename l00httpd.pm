@@ -92,6 +92,7 @@ sub urlencode {
     if (defined($buf)) {
         $buf =~  s/!/%21/g;
         $buf =~  s/#/%23/g;
+        $buf =~  s/%/%25/g;
         $buf =~ s/\*/%2A/g;
         $buf =~  s/'/%27/g;
         $buf =~ s/\(/%28/g;
@@ -106,7 +107,6 @@ sub urlencode {
         $buf =~  s/,/%2C/g;
         $buf =~ s/\//%2F/g;
         $buf =~ s/\?/%3F/g;
-        $buf =~  s/#/%23/g;
         $buf =~ s/\[/%5B/g;
         $buf =~ s/\]/%5D/g;
         $buf =~ s/\^/%5E/g;
