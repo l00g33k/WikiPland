@@ -325,7 +325,8 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#vvv\">vvv</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#hot\">hot</a></font> \n";
-            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">Jump here</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">(Jump marks</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#cat1\">cat1)</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:gold\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#bangbang\">Jump out</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:aqua\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#descfind\">Desc find</a></font> \n";
 #           print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#taskjump\">taskjump</a></font> \n";
@@ -1529,7 +1530,7 @@ sub l00http_dash_proc {
             $help .= "<a href=\"/eval.htm?submit=Ev%CC%B2al&eval=%24ctrl-%3E%7B%27dashwidth%27%7D%3D120\" target=\"_blank\">120</a> - ";
             $help .= "Now $dashwidth\n";
 
-            $help .= "\n\nCat1 filter:\n";
+            $help .= "\n\n<a name=\"cat1\">Cat1 filter:</a>\n";
             foreach $cat1 (sort (keys %cat1s)) {
                 $help .= "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all&catflt=$cat1\"> $cat1s{$cat1} </a> - ";
             }
