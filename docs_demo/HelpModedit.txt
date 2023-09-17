@@ -32,6 +32,41 @@
 ** __underline__
 ** {{fix}}
 ** **//__all__//**
+* Color:
+** * X *text color **
+** where X is one of: _rylsafgoOdGDbSpLTBhu0123456789
+*** _ = *_*white**
+*** r = *r*red**
+*** y = *y*yellow**
+*** l = *l*lime**
+*** s = *s*silver**
+*** a = *a*aqua**
+*** f = *f*fuchsia**
+*** g = *g*gray**
+*** o = *o*olive**
+*** O = *O*orange**
+*** d = *d*gold**
+*** G = *G*green**
+*** D = *D*DeepPink**
+*** b = *b*Brown**
+*** S = *S*DeepSkyBlue**
+*** p = *p*Purple**
+*** L = *L*LightGray**
+*** T = *T*Teal**
+*** B = *B*SandyBrown**
+*** h = *h*HotPink**
+*** u = *u*blue**
+*** 0 = *0*Salmon**
+*** 1 = *1*Khaki**
+*** 2 = *2*YellowGreen**
+*** 3 = *3*Aquamarine**
+*** 4 = *4*Plum**
+*** 5 = *5*LightSalmon**
+*** 6 = *6*Moccasin**
+*** 7 = *7*DarkSeaGreen**
+*** 8 = *8*LightSteelBlue**
+*** 9 = *9*MediumPurple**
+
 ==Hidden block==
 * Often time one wishes to hide a block to reduce clutters but doesn't 
 wish to delete it or move it else where as it logically belong together.

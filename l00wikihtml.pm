@@ -32,7 +32,7 @@ $showalljava = "\n".
 
 
 my (%colorlu, %colorfg);
-$colorlukeys = '_rylsafgoOdGDbSpLTBhu';
+$colorlukeys = '_rylsafgoOdGDbSpLTBhu0123456789';
 $colorlu{'_'} = 'white';            $colorfg{'r'} = 'black';
 $colorlu{'r'} = 'red';              $colorfg{'r'} = 'yellow';
 $colorlu{'y'} = 'yellow';           $colorfg{'y'} = 'black';
@@ -54,6 +54,18 @@ $colorlu{'T'} = 'Teal';             $colorfg{'T'} = 'white';
 $colorlu{'B'} = 'SandyBrown';       $colorfg{'B'} = 'black';
 $colorlu{'h'} = 'HotPink';          $colorfg{'h'} = 'black';
 $colorlu{'u'} = 'blue';             $colorfg{'u'} = 'black';
+
+$colorlu{'0'} = 'Salmon';           $colorfg{'0'} = 'black';
+$colorlu{'1'} = 'Khaki';            $colorfg{'1'} = 'black';
+$colorlu{'2'} = 'YellowGreen';      $colorfg{'2'} = 'black';
+$colorlu{'3'} = 'Aquamarine';       $colorfg{'3'} = 'black';
+$colorlu{'4'} = 'Plum';             $colorfg{'4'} = 'black';
+
+$colorlu{'5'} = 'LightSalmon';      $colorfg{'5'} = 'black';
+$colorlu{'6'} = 'Moccasin';         $colorfg{'6'} = 'black';
+$colorlu{'7'} = 'DarkSeaGreen';     $colorfg{'7'} = 'black';
+$colorlu{'8'} = 'LightSteelBlue';   $colorfg{'8'} = 'black';
+$colorlu{'9'} = 'MediumPurple';     $colorfg{'9'} = 'black';
 
 
 sub l00wikihtml_fontsty {
