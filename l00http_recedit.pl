@@ -41,9 +41,9 @@ sub l00http_recedit_output_row {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a>";
         if ($path =~ /^l00:\/\//) {
-            # RAM file, 1, 7 hours (or 4)
-            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add2h$id\">+2h</font><br>\n";
-            $html .= "            +7h<input type=\"checkbox\" name=\"add16h$id\" $chkall16h><br>\n";
+            # RAM file, 2, 1, 7 hours (or 4)
+            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add2h$id\">+6h</font><br>\n";
+            $html .= "            +1h<input type=\"checkbox\" name=\"add16h$id\" $chkall16h><br>\n";
         } else {
             # disk file, 1, 2 days
             $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\" $chkall1d>+1d</font><br>\n";
@@ -252,13 +252,13 @@ sub l00http_recedit_proc (\%) {
                             $_ = "#$_";
                         }
                         if (defined($form->{"add2h$id"}) && ($form->{"add2h$id"} eq 'on')) {
-                            # add 1 hours
+                            # add 6 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
                                 $yr -= 1900;
                                 $mo--;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 2 * 3600; # add2h
+                                $tmp += 6 * 3600; # add2h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -271,20 +271,20 @@ sub l00http_recedit_proc (\%) {
                                 $mi = 0;
                                 $se = 0;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 2 * 3600; # add2h
+                                $tmp += 6 * 3600; # add2h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%d/%d/%d%s", 
                                     $yr + 1900, $mo + 1, $da, $tmp2);
                             }
                         }
                         if (defined($form->{"add16h$id"}) && ($form->{"add16h$id"} eq 'on')) {
-                            # add 7 hours
+                            # add 1 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
                                 $yr -= 1900;
                                 $mo--;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 7 * 3600; # add16h
+                                $tmp += 1 * 3600; # add16h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -297,7 +297,7 @@ sub l00http_recedit_proc (\%) {
                                 $mi = 0;
                                 $se = 0;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 7 * 3600; # add16h
+                                $tmp += 1 * 3600; # add16h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%d/%d/%d%s", 
                                     $yr + 1900, $mo + 1, $da, $tmp2);
@@ -330,7 +330,7 @@ sub l00http_recedit_proc (\%) {
                             }
                         }
                         if (defined($form->{"add2d$id"}) && ($form->{"add2d$id"} eq 'on')) {
-                            # add 4 hours
+                            # add 48 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
                                 $yr -= 1900;
@@ -439,7 +439,7 @@ sub l00http_recedit_proc (\%) {
     print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
     print $sock "        <td>\n";
     if ($path =~ /^l00:\/\//) {
-        print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"7h&#818;\" accesskey=\"h\">\n";
+        print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"1h&#818;\" accesskey=\"h\">\n";
     } else {
         print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
     }

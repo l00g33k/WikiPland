@@ -90,9 +90,11 @@ sub urlencode {
     # reserved char:
     #  ! * ' ( ) ; : @ & = + $ , / ? # [ ]
     if (defined($buf)) {
+        # convert % first so the % from the rest aren't converted
+        $buf =~  s/%/%25/g;
+
         $buf =~  s/!/%21/g;
         $buf =~  s/#/%23/g;
-        $buf =~  s/%/%25/g;
         $buf =~ s/\*/%2A/g;
         $buf =~  s/'/%27/g;
         $buf =~ s/\(/%28/g;

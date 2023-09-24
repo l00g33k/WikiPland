@@ -573,7 +573,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
-                "<a href=\"#_remend_\">VV</a> - ".
+                "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
@@ -588,7 +588,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
-                "<a href=\"#_remend_\">VV</a> - ".
+                "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
