@@ -152,6 +152,7 @@ sub l00http_recedit_output_row {
             $tmp =~ s/:/%3A/g;
             $tmp =~ s/&/%26/g;
             $tmp =~ s/=/%3D/g;
+
             $tmp =~ s/"/%22/g;
             $tmp =~ s/#/%23/g;
             $tmp =~ s/\//%2F/g;
@@ -184,7 +185,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $filtered, $cnt);
+    my ($filter_found_true, $filtered, $cnt, $line, $eval1);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -237,6 +238,7 @@ sub l00http_recedit_proc (\%) {
             $id = 1;
             $filter_found_true = 0;
             $cnt = 0;
+            l00httpd::dbp($config{'desc'}, "SMT: $filter\n"), if ($ctrl->{'debug'} >= 3);
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $cnt++;
                 # keeps blank or commented
@@ -244,14 +246,25 @@ sub l00http_recedit_proc (\%) {
                     $output .= "$_";
                     next;
                 }
+                $line = $_;
+                # process eval
+                if (length($eval) > 0) {
+                    foreach $eval1 (split(";;", $eval)) {
+                        l00httpd::dbp($config{'desc'}, "EVAL: $eval1\n"), if ($ctrl->{'debug'} >= 3);
+                        l00httpd::dbp($config{'desc'}, "eval: $line"), if ($ctrl->{'debug'} >= 3);
+                        eval "\$line =~ $eval1";
+                        l00httpd::dbp($config{'desc'}, "eval' $line"), if ($ctrl->{'debug'} >= 3);
+                    }
+                }
                 if (/$record1/) {
                     # found record starter
                     $delete = '';
-                    if (/$filter/) {
+                    if ($line =~ /$filter/) {
                         if (defined($form->{"id$id"}) && ($form->{"id$id"} eq 'on')) {
                             $_ = "#$_";
                         }
                         if (defined($form->{"add2h$id"}) && ($form->{"add2h$id"} eq 'on')) {
+                            l00httpd::dbp($config{'desc'}, "smt:add2h$id $_"), if ($ctrl->{'debug'} >= 3);
                             # add 6 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
@@ -278,6 +291,7 @@ sub l00http_recedit_proc (\%) {
                             }
                         }
                         if (defined($form->{"add16h$id"}) && ($form->{"add16h$id"} eq 'on')) {
+                            l00httpd::dbp($config{'desc'}, "smt:add16h$id $_"), if ($ctrl->{'debug'} >= 3);
                             # add 1 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
@@ -304,6 +318,7 @@ sub l00http_recedit_proc (\%) {
                             }
                         }
                         if (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
+                            l00httpd::dbp($config{'desc'}, "smt:add4h$id $_"), if ($ctrl->{'debug'} >= 3);
                             # add 4 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
@@ -330,6 +345,7 @@ sub l00http_recedit_proc (\%) {
                             }
                         }
                         if (defined($form->{"add2d$id"}) && ($form->{"add2d$id"} eq 'on')) {
+                            l00httpd::dbp($config{'desc'}, "smt:add2d$id $_"), if ($ctrl->{'debug'} >= 3);
                             # add 48 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
@@ -356,6 +372,7 @@ sub l00http_recedit_proc (\%) {
                             }
                         }
                         if (defined($form->{"add$id"}) && ($form->{"add$id"} eq 'on')) {
+                            l00httpd::dbp($config{'desc'}, "smt:add$id $_"), if ($ctrl->{'debug'} >= 3);
                             # add 1 day
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
@@ -466,14 +483,28 @@ sub l00http_recedit_proc (\%) {
                     $filtered .= $_;
                     next;
                 }
+                $line = $_;
+                # process eval
+                if (length($eval) > 0) {
+                    foreach $eval1 (split(";;", $eval)) {
+                        l00httpd::dbp($config{'desc'}, "EVAL: $eval1\n"), if ($ctrl->{'debug'} >= 3);
+                        l00httpd::dbp($config{'desc'}, "eval: $line"), if ($ctrl->{'debug'} >= 3);
+                        eval "\$line =~ $eval1";
+                        l00httpd::dbp($config{'desc'}, "eval' $line"), if ($ctrl->{'debug'} >= 3);
+                    }
+                }
                 if (/$record1/) {
                     # found start of new record
-                    if (/$filter/) {
+                    l00httpd::dbp($config{'desc'}, "FIL: $filter\n"), if ($ctrl->{'debug'} >= 3);
+                    if ($line =~ /$filter/) {
+                        l00httpd::dbp($config{'desc'}, "HIT: $line"), if ($ctrl->{'debug'} >= 3);
                         if ($lnno > $afterline) {
                             $filtered .= $_;
                             push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno));
                             $id++;
                         }
+                    } else {
+                        l00httpd::dbp($config{'desc'}, "mis: $_"), if ($ctrl->{'debug'} >= 3);
                     }
                 } else {
                     $filtered .= $_;

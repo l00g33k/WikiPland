@@ -8,7 +8,7 @@
 my %config = (proc => "l00http_solver_proc",
               desc => "l00http_solver_desc");
 my ($buffer, %formulae, %vars, %varsuni);
-my ($name, $formula, $formulaname, $sock, $evald, %formuladesc);
+my ($name, $formula, $formulaname, $sock, $evald, %formuladesc, @results);
 
 $evald = 1e-6;
 
@@ -65,7 +65,7 @@ $buf = 'val';
 sub l00http_solver_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $name, $desc, $extraname, $extraformu, $buf);
+    my (@alllines, $line, $lineno, $name, $desc, $extraname, $extraformu, $buf, $result);
 
     $sock = $ctrl->{'sock'};     # dereference network socket
 
@@ -241,11 +241,20 @@ sub l00http_solver_proc {
                         $htmlout .='m == 0; '; 
                     }
                     $buf = eval $formula;
-                    $htmlout .= sprintf ("% .3e ", $buf);;
+                    $result = sprintf ("% .3e ", $buf);
+                    $htmlout .= $result;
                     $buf = eval "\"$formula\";";
+                    $result .= " == $buf";
                     $htmlout .= "== $buf\n";
                 }
-                # retrive variables
+                if ($#results >= 20) {
+                    shift(@results);
+                }
+                $htmlout .= "\nLast 20 results:\n\n";
+                unshift(@results, $ctrl->{'now_string'} . ": $result");
+                foreach $result (@results) {
+                    $htmlout .= "$result\n";
+                }
                 foreach $var (keys %vars) {
                     $buf = "$varsuni{$var} = $var";
                     eval $buf;
