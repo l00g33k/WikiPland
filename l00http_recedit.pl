@@ -18,7 +18,8 @@ $displen = 50;
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
-    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall16h, $chkall1d, $eval1);
+    my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall16h, 
+        $chkall1d, $chkallRB, $chkallFB, $eval1);
 
     $html = '';
 
@@ -37,17 +38,27 @@ sub l00http_recedit_output_row {
     if (defined ($form->{'chkall1d'})) {
         $chkall1d = 'checked';
     }
+    $chkallRB = '';
+    if (defined ($form->{'chkallRB'})) {
+        $chkallRB = 'checked';
+    }
+    $chkallFB = '';
+    if (defined ($form->{'chkallFB'})) {
+        $chkallFB = 'checked';
+    }
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a>";
         if ($path =~ /^l00:\/\//) {
             # RAM file, 2, 1, 7 hours (or 4)
-            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add2h$id\">+6h</font><br>\n";
+            $html .= "<font style=\"color:black;background-color:silver\">";
+            $html .=                "<input type=\"checkbox\" name=\"add2h$id\"  $chkallRB>+5h</font><br>\n";
             $html .= "            +1h<input type=\"checkbox\" name=\"add16h$id\" $chkall16h><br>\n";
         } else {
             # disk file, 1, 2 days
-            $html .= "<font style=\"color:black;background-color:silver\"><input type=\"checkbox\" name=\"add$id\" $chkall1d>+1d</font><br>\n";
-            $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\"><br>\n";
+            $html .= "<font style=\"color:black;background-color:silver\">";
+            $html .=                "<input type=\"checkbox\" name=\"add$id\"  $chkall1d>+1d</font><br>\n";
+            $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\ $chkallFB><br>\n";
         }
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
@@ -185,7 +196,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $filtered, $cnt, $line, $eval1);
+    my ($filter_found_true, $filtered, $cnt, $eval1);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -265,13 +276,13 @@ sub l00http_recedit_proc (\%) {
                         }
                         if (defined($form->{"add2h$id"}) && ($form->{"add2h$id"} eq 'on')) {
                             l00httpd::dbp($config{'desc'}, "smt:add2h$id $_"), if ($ctrl->{'debug'} >= 3);
-                            # add 6 hours
+                            # add 5 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
                                 $yr -= 1900;
                                 $mo--;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 6 * 3600; # add2h
+                                $tmp += 5 * 3600; # add2h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -284,7 +295,7 @@ sub l00http_recedit_proc (\%) {
                                 $mi = 0;
                                 $se = 0;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 6 * 3600; # add2h
+                                $tmp += 5 * 3600; # add2h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%d/%d/%d%s", 
                                     $yr + 1900, $mo + 1, $da, $tmp2);
@@ -461,6 +472,11 @@ sub l00http_recedit_proc (\%) {
         print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
     }
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
+    if ($path =~ /^l00:\/\//) {
+        print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"5h&#818;\" accesskey=\"h\">\n";
+    } else {
+        print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\">\n";
+    }
     print $sock "        <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
         $_ = 'checked';
@@ -524,15 +540,15 @@ sub l00http_recedit_proc (\%) {
     }
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Update\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"update\" value=\"Refresh\">\n";
     if (defined ($form->{'reminder'})) {
         $_ = 'checked';
     } else {
         $_ = '';
     }
     print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
-    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk A&#818;ll del\" accesskey=\"a\">\n";
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"Chk All del\">\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
