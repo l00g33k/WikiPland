@@ -200,6 +200,10 @@ EOB
 sub l00http_tr_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     "tr: Displaying a timeline of the tasks to be done today";
+
+    if (defined ($ctrl->{'itvmin'})) {
+         $itvmin = $ctrl->{'itvmin'};
+    }
 }
 
 
