@@ -207,7 +207,7 @@ sub wikihtml {
     my ($lnno, $flaged, $postsit, @chlvls, $thischlvl, $lastchlvl);
     my ($lnnoinfo, @lnnoall, $leadcolor, @inputcache, $cacheidx, $seenEqualStar);
     my ($mode0unknown1twiki2markdown, $mdChanged2Tw, $markdownparanobr, $loop);
-    my ($hideBlkActive, $hideBlkId, $pnameurl, $fnameurl);
+    my ($hideBlkActive, $hideBlkId, $pnameurl, $fnameurl, $target);
 
     undef @chlvls;
     undef $lastchlvl;
@@ -1052,11 +1052,16 @@ sub wikihtml {
                     # link to local anchor
                     $_ .= $tx . "<a href=\"\#$http\">$desc</a>";
                 } else {
-                    if (!(($http, $desc) = ($url =~ /^([^|]+)\|(.*)$/))) {
-                        # URL of form [[wikilink]] and not [[http|name]]
-                        # description is the URL
-                        $http = $url;
-                        $desc = $url;
+                    $target = '';
+                    if (($http, $desc) = ($url =~ /^([^|]+)\|\|(.*)$/)) {
+                        $target = ' target="_blank"';
+                    } else {
+                        if (!(($http, $desc) = ($url =~ /^([^|]+)\|(.*)$/))) {
+                            # URL of form [[wikilink]] and not [[http|name]]
+                            # description is the URL
+                            $http = $url;
+                            $desc = $url;
+                        }
                     }
                     if ($http =~ m|^/|) {
                         # relative URL, use as is
@@ -1084,7 +1089,7 @@ sub wikihtml {
                             $_ .= $tx . "<a href=\"$http\">$desc</a>";
                         }
                     } else {
-                        $_ .= $tx . "<a href=\"$http\">$desc</a>";
+                        $_ .= $tx . "<a href=\"$http\"$target>$desc</a>";
                     }
                 }
             } else {

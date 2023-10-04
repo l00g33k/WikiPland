@@ -58,7 +58,7 @@ sub l00http_recedit_output_row {
             # disk file, 1, 2 days
             $html .= "<font style=\"color:black;background-color:silver\">";
             $html .=                "<input type=\"checkbox\" name=\"add$id\"  $chkall1d>+1d</font><br>\n";
-            $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\ $chkallFB><br>\n";
+            $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\" $chkallFB><br>\n";
         }
         $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
