@@ -251,7 +251,7 @@ sub l00http_solver_proc {
                     shift(@results);
                 }
                 $htmlout .= "\nLast 20 results:\n\n";
-                unshift(@results, $ctrl->{'now_string'} . ": $result");
+                unshift(@results, $ctrl->{'now_string'} . " -- $form->{'formulaname'} : $result");
                 foreach $result (@results) {
                     $htmlout .= "$result\n";
                 }
