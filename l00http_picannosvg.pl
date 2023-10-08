@@ -352,6 +352,12 @@ sub l00http_picannosvg_proc (\%) {
             print $sock "<input type=\"hidden\" name=\"oneannofile\" value=\"$oneannofile\">\n";
         }
         print $sock "<input type=\"hidden\" name=\"bare\" value=\"\">\n";
+        print $sock "<input type=\"hidden\" name=\"graphdatafile\" value=\"$graphdatafile\">";
+        print $sock "<input type=\"hidden\" name=\"finestep\" value=\"$finestep\">";
+        print $sock "<input type=\"hidden\" name=\"graphxoff\" value=\"$graphxoff\">";
+        print $sock "<input type=\"hidden\" name=\"graphyoff\" value=\"$graphyoff\">";
+        print $sock "<input type=\"hidden\" name=\"graphwidth\" value=\"$graphwidth\">";
+        print $sock "<input type=\"hidden\" name=\"graphheight\" value=\"$graphheight\">";
         print $sock "</form>\n";
 
         # show cursor if no all in 1 annotations
