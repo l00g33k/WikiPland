@@ -130,6 +130,7 @@ sub l00http_picannosvg_proc (\%) {
     my ($lond, $lonm, $lonc, $latd, $latm, $latc, $ext, $fname);
     my ($coor, $tmp, $svg, %annosxy2txt, $xy, $oneannofile, $overlaymap, $mapurl);
     my ($allin1annofile, $picname, $ii, $nextpic, $nexturl);
+    my ($graphdatafile, $graphxoff, $graphyoff, $graphwidth, $graphheight, $svggraph);
 
     undef %annosxy2txt;
     undef %allannos;
@@ -195,10 +196,13 @@ sub l00http_picannosvg_proc (\%) {
             if ($oneannofile ne '') {
                 # use supplied oneannofile
                 $currannofile = $oneannofile;
+            } elsif (-f "$path.txt") {
+                $currannofile = "$path.txt";
             } else {
                 # otherwise use RAM file
                 $picname = $path;
                 $picname =~ s/.+[\\\/]//;
+
                 $currannofile = "l00://$picname.anno";
             }
         }
@@ -211,6 +215,42 @@ sub l00http_picannosvg_proc (\%) {
         # save scale
         if (defined ($form->{'scale'})) {
             $scale = $form->{'scale'};
+        }
+    }
+
+
+    $graphxoff = 0;
+    if (defined ($form->{'graphxoff'}) && ($form->{'graphxoff'} =~ /^(\d+)$/)) {
+        $graphxoff = $1;
+    }
+    $graphyoff = 0;
+    if (defined ($form->{'graphyoff'}) && ($form->{'graphyoff'} =~ /^(\d+)$/)) {
+        $graphyoff = $1;
+    }
+    $graphwidth = 100;
+    if (defined ($form->{'graphwidth'}) && ($form->{'graphwidth'} =~ /^(\d+)$/)) {
+        $graphwidth = $1;
+    }
+    $graphheight = 100;
+    if (defined ($form->{'graphheight'}) && ($form->{'graphheight'} =~ /^(\d+)$/)) {
+        $graphheight = $1;
+    }
+    $graphdatafile = '';
+    $svggraph = '';
+    if (defined ($form->{'graphdatafile'}) && (length($form->{'graphdatafile'}) > 1)) {
+        $graphdatafile = $form->{'graphdatafile'};
+        # read and make svg graph
+        if (&l00httpd::l00freadOpen($ctrl, $graphdatafile)) {
+            $tmp = '';
+            while ($_ = &l00httpd::l00freadLine($ctrl)) {
+                s/[\r\n]//g;
+                $tmp .= "$_ ";
+            }
+            &l00svg::plotsvg2 ('picannograph', $tmp, $graphwidth, $graphheight);
+
+            ($pixx, $pixy) = &annoll2xysvg ($graphxoff, $graphyoff);
+            $svggraph = "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
+            $svggraph .= "<img src=\"/svg.pl?graph=picannograph\"></div>\n";
         }
     }
 
@@ -298,6 +338,9 @@ sub l00http_picannosvg_proc (\%) {
             print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
             print $sock "<font color=\"$color\">$annosxy2txt{$xy}</font></div>\n";
         }
+        if ($svggraph ne '') {
+            print $sock $svggraph;
+        }
     }
 
 
@@ -357,6 +400,23 @@ sub l00http_picannosvg_proc (\%) {
         print $sock "    <tr>\n";
         print $sock "        <td>All annos file:</td>\n";
         print $sock "        <td><input type=\"text\" size=\"16\" name=\"allin1annofile\" value=\"$allin1annofile\"></td>\n";
+        print $sock "    </tr>\n";
+
+        print $sock "    <tr>\n";
+        print $sock "        <td>Graph data file:</td>\n";
+        print $sock "        <td><input type=\"text\" size=\"16\" name=\"graphdatafile\" value=\"$graphdatafile\"></td>\n";
+        print $sock "    </tr>\n";
+
+        print $sock "    <tr>\n";
+        print $sock "        <td>Graph offset x, y:</td>\n";
+        print $sock "        <td><input type=\"text\" size=\"6\" name=\"graphxoff\" value=\"$graphxoff\">".
+                    "            <input type=\"text\" size=\"6\" name=\"graphyoff\" value=\"$graphyoff\"></td>\n";
+        print $sock "    </tr>\n";
+
+        print $sock "    <tr>\n";
+        print $sock "        <td>Graph width, height:</td>\n";
+        print $sock "        <td><input type=\"text\" size=\"6\" name=\"graphwidth\" value=\"$graphwidth\">".
+                    "            <input type=\"text\" size=\"6\" name=\"graphheight\" value=\"$graphheight\"></td>\n";
         print $sock "    </tr>\n";
 
         print $sock "</table>\n";
