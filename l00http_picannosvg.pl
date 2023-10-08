@@ -129,7 +129,7 @@ sub l00http_picannosvg_proc (\%) {
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $xx, $yy);
     my ($lond, $lonm, $lonc, $latd, $latm, $latc, $ext, $fname);
     my ($coor, $tmp, $svg, %annosxy2txt, $xy, $oneannofile, $overlaymap, $mapurl);
-    my ($allin1annofile, $picname, $ii, $nextpic, $nexturl);
+    my ($allin1annofile, $picname, $ii, $nextpic, $nexturl, $finestep, $stepsize);
     my ($graphdatafile, $graphxoff, $graphyoff, $graphwidth, $graphheight, $svggraph);
 
     undef %annosxy2txt;
@@ -153,6 +153,13 @@ sub l00http_picannosvg_proc (\%) {
     $bare = '';
     if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
         $bare = 'checked';
+    }
+
+    $finestep = '';
+    $stepsize = 10;
+    if (defined ($form->{'finestep'}) && ($form->{'finestep'} eq 'on')) {
+        $finestep = 'checked';
+        $stepsize = 1;
     }
 
     if ($allin1annofile ne '') {
@@ -222,18 +229,42 @@ sub l00http_picannosvg_proc (\%) {
     $graphxoff = 0;
     if (defined ($form->{'graphxoff'}) && ($form->{'graphxoff'} =~ /^(\d+)$/)) {
         $graphxoff = $1;
+        if (defined ($form->{'graphxdec'})) {
+            $graphxoff -= $stepsize;
+        }
+        if (defined ($form->{'graphxinc'})) {
+            $graphxoff += $stepsize;
+        }
     }
     $graphyoff = 0;
     if (defined ($form->{'graphyoff'}) && ($form->{'graphyoff'} =~ /^(\d+)$/)) {
         $graphyoff = $1;
+        if (defined ($form->{'graphydec'})) {
+            $graphyoff -= $stepsize;
+        }
+        if (defined ($form->{'graphyinc'})) {
+            $graphyoff += $stepsize;
+        }
     }
     $graphwidth = 100;
     if (defined ($form->{'graphwidth'}) && ($form->{'graphwidth'} =~ /^(\d+)$/)) {
         $graphwidth = $1;
+        if (defined ($form->{'graphwdec'})) {
+            $graphwidth -= $stepsize;
+        }
+        if (defined ($form->{'graphwinc'})) {
+            $graphwidth += $stepsize;
+        }
     }
     $graphheight = 100;
     if (defined ($form->{'graphheight'}) && ($form->{'graphheight'} =~ /^(\d+)$/)) {
         $graphheight = $1;
+        if (defined ($form->{'graphhdec'})) {
+            $graphheight -= $stepsize;
+        }
+        if (defined ($form->{'graphhinc'})) {
+            $graphheight += $stepsize;
+        }
     }
     $graphdatafile = '';
     $svggraph = '';
@@ -404,19 +435,38 @@ sub l00http_picannosvg_proc (\%) {
 
         print $sock "    <tr>\n";
         print $sock "        <td>Graph data file:</td>\n";
-        print $sock "        <td><input type=\"text\" size=\"16\" name=\"graphdatafile\" value=\"$graphdatafile\"></td>\n";
+        print $sock "        <td><input type=\"text\" size=\"16\" name=\"graphdatafile\" value=\"$graphdatafile\">".
+                    "            <input type=\"checkbox\" name=\"finestep\" $finestep>fine +-</td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
         print $sock "        <td>Graph offset x, y:</td>\n";
-        print $sock "        <td><input type=\"text\" size=\"6\" name=\"graphxoff\" value=\"$graphxoff\">".
-                    "            <input type=\"text\" size=\"6\" name=\"graphyoff\" value=\"$graphyoff\"></td>\n";
+        print $sock "        <td><input type=\"text\" size=\"6\" name=\"graphxoff\" value=\"$graphxoff\">";
+        if ($svggraph ne '') {
+            print $sock "        <input type=\"submit\" name=\"graphxdec\" value=\"-\">";
+            print $sock "        <input type=\"submit\" name=\"graphxinc\" value=\"+\">";
+        }
+        print $sock "            <input type=\"text\" size=\"6\" name=\"graphyoff\" value=\"$graphyoff\">";
+        if ($svggraph ne '') {
+            print $sock "        <input type=\"submit\" name=\"graphydec\" value=\"-\">";
+            print $sock "        <input type=\"submit\" name=\"graphyinc\" value=\"+\">";
+        }
+        print $sock "    </td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
         print $sock "        <td>Graph width, height:</td>\n";
-        print $sock "        <td><input type=\"text\" size=\"6\" name=\"graphwidth\" value=\"$graphwidth\">".
-                    "            <input type=\"text\" size=\"6\" name=\"graphheight\" value=\"$graphheight\"></td>\n";
+        print $sock "        <td><input type=\"text\" size=\"6\" name=\"graphwidth\" value=\"$graphwidth\">";
+        if ($svggraph ne '') {
+            print $sock "        <input type=\"submit\" name=\"graphwdec\" value=\"-\">";
+            print $sock "        <input type=\"submit\" name=\"graphwinc\" value=\"+\">";
+        }
+        print $sock "            <input type=\"text\" size=\"6\" name=\"graphheight\" value=\"$graphheight\">";
+        if ($svggraph ne '') {
+            print $sock "        <input type=\"submit\" name=\"graphhdec\" value=\"-\">";
+            print $sock "        <input type=\"submit\" name=\"graphhinc\" value=\"+\">";
+        }
+        print $sock "    </td>\n";
         print $sock "    </tr>\n";
 
         print $sock "</table>\n";

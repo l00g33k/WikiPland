@@ -1,0 +1,17 @@
+%TOC%
+
+=Graph data file=
+Overlays an SVG file over an image.
+
+* Graph data file: a file containing data, such as time series:
+
+    1672358400,4.14
+    1672272000,4.09
+    1672185600,4.13
+
+    # generator
+    $tthis = &l00mktime::mktime ($yr, $mo, $dy, 0, 0, 0);
+    $output .= "$tthis,$cmt\n";
+
+* Graph offset x, y, width, height, fine +-: manipulate graph 
+size and location
