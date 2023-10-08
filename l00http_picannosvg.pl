@@ -10,7 +10,7 @@ use l00base64;
 my $lon = 0;
 my $lat = 0;
 my $path = '';
-my $map = '';
+my $currannofile = '';
 my $marker = 'X';
 my $color = 'ff0000';
 my $scale = 100;
@@ -25,6 +25,8 @@ $base64fname = '';
 $base64data = '';
 
 my (%allannos, $allannos_base, @allannonames);
+
+$allannos_base = '';
 
 my %config = (proc => "l00http_picannosvg_proc",
               desc => "l00http_picannosvg_desc");
@@ -54,13 +56,13 @@ sub annoxy2llsvg {
 
 
 sub picanno_allanno {
-    my ($ctrl, $allanno) = @_;
+    my ($ctrl, $allin1annofile) = @_;
     my ($ret, $fname, $annos);
 
     $ret = 0;
     $fname = '';
 
-    if (&l00httpd::l00freadOpen($ctrl, $allanno)) {
+    if (&l00httpd::l00freadOpen($ctrl, $allin1annofile)) {
         #IMG_WORKDIR=c:\2\photo_europe2023\2n8\
         #IMG_WD_HT=800,600
         #
@@ -97,7 +99,7 @@ sub picanno_allanno {
                     $fname = '';
                 }
             }
-            # read annotations as hash
+            # read annotations as multi lines
             if (/^(\d+),(\d+): +(.+)$/) {
                 if ($annos ne '') {
                     $annos .= "\n";
@@ -126,45 +128,49 @@ sub l00http_picannosvg_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($pixx, $pixy, $pixx0, $pixy0, $buf, $lonhtm, $lathtm, $xx, $yy);
     my ($lond, $lonm, $lonc, $latd, $latm, $latc, $ext, $fname);
-    my ($coor, $tmp, $svg, %annos, $xy, $annofile, $overlaymap, $mapurl);
-    my ($allanno, $picname, $ii, $nextpic, $nexturl);
+    my ($coor, $tmp, $svg, %annosxy2txt, $xy, $oneannofile, $overlaymap, $mapurl);
+    my ($allin1annofile, $picname, $ii, $nextpic, $nexturl);
 
-    undef %annos;
+    undef %annosxy2txt;
     undef %allannos;
 
 
     # process all annotations
-    if (defined ($form->{'allanno'})) {
-        $allanno = $form->{'allanno'};
-        if (-f $allanno) {
-            if (&picanno_allanno ($ctrl, $allanno)) {
-                $allanno = '';
+    if (defined ($form->{'allin1annofile'})) {
+        $allin1annofile = $form->{'allin1annofile'};
+        if (-f $allin1annofile) {
+            if (&picanno_allanno ($ctrl, $allin1annofile)) {
+#never gets here
+                $allin1annofile = '';
             }
         }
     } else {
-        $allanno = '';
+        $allin1annofile = '';
     }
 
 
-    if ($allanno ne '') {
-        # save path to picture
+    $bare = '';
+    if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
+        $bare = 'checked';
+    }
+
+    if ($allin1annofile ne '') {
+        # if all in one annotations, collect annotations for current image
+        # and make next image URL
         if (defined ($form->{'path'})) {
             $path = $form->{'path'};
             $picname = $path;
             $picname =~ s/.+[\\\/]//;
 
-            $bare = '';
-            if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
-                $bare = 'checked';
-            }
-
-            undef %annos;
+            undef %annosxy2txt;
+            # read current annotation into hash by xy
             foreach $_ (split("\n", $allannos{$picname})) {
                 if (/^(\d+),(\d+): +(.+)$/) {
-                    $annos{"$1,$2"} = $3;
+                    $annosxy2txt{"$1,$2"} = $3;
                 }
             }
 
+            # make next image URL
             for ($ii = 0; $ii <= $#allannonames; $ii++) {
                 if ($picname eq $allannonames[$ii]) {
                     $ii++;
@@ -177,27 +183,23 @@ sub l00http_picannosvg_proc (\%) {
             $nextpic = $allannonames[$ii];
         }
     } else {
-        # save annotation file path
-        if (defined ($form->{'annofile'})) {
-            $annofile = $form->{'annofile'};
+        # get annotation file path
+        if (defined ($form->{'oneannofile'})) {
+            $oneannofile = $form->{'oneannofile'};
         } else {
-            $annofile = '';
+            $oneannofile = '';
         }
-        # save bare (no form) flag
-        $bare = '';
-        if (defined ($form->{'bare'}) && ($form->{'bare'} eq 'on')) {
-            $bare = 'checked';
-        }
-
-        # save path to picture
+        # supplied or RAM?
         if (defined ($form->{'path'})) {
             $path = $form->{'path'};
-            if ($annofile ne '') {
-                # use supplied annofile
-                $map = $annofile;
+            if ($oneannofile ne '') {
+                # use supplied oneannofile
+                $currannofile = $oneannofile;
             } else {
-                # default to .jpg.txt
-                $map = "$path.txt";
+                # otherwise use RAM file
+                $picname = $path;
+                $picname =~ s/.+[\\\/]//;
+                $currannofile = "l00://$picname.anno";
             }
         }
 
@@ -213,19 +215,21 @@ sub l00http_picannosvg_proc (\%) {
     }
 
 
-    if ($allanno ne '') {
-        # Send HTTP and HTML headers
-        $nexturl = "/picannosvg.htm?refresh=y&scale=$scale&allanno=$allanno&path=$allannos_base$nextpic";
-#        if ($bare eq 'checked') {
+
+    if ($allin1annofile ne '') {
+        # Set next refresh URL and send HTTP and HTML headers
+        $nexturl = "/picannosvg.htm?refresh=y&scale=$scale&allin1annofile=$allin1annofile&path=$allannos_base$nextpic";
+        #if ($bare eq 'checked') {
             $nexturl .= "&bare=on";
-#        }
+        #}
         #<meta http-equiv=\"refresh\" content=\"2; url=$nexturl\">
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>picannosvg</title>" . "<meta http-equiv=\"refresh\" content=\"3; url=$nexturl\">" . $ctrl->{'htmlhead2'};
     } else {
         # Send HTTP and HTML headers
         print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>picannosvg</title>" . $ctrl->{'htmlhead2'};
-        if (&l00httpd::l00freadOpen($ctrl, $map)) {
-            # parse annofile
+        # parse annotation file
+        if (&l00httpd::l00freadOpen($ctrl, $currannofile)) {
+            # parse oneannofile
             $buf = '';
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $buf .= $_;
@@ -236,9 +240,9 @@ sub l00http_picannosvg_proc (\%) {
                     $mapwd = int ($mapwd * $scale / 100);
                     $mapht = int ($mapht * $scale / 100);
 		        }
-                # read annotations as hash
+                # read annotation into hash by xy
                 if (/^(\d+),(\d+): +(.+)$/) {
-                    $annos{"$1,$2"} = $3;
+                    $annosxy2txt{"$1,$2"} = $3;
                 }
             }
             # update annotation if setting annotation
@@ -246,72 +250,82 @@ sub l00http_picannosvg_proc (\%) {
                 defined($form->{'anno'}) && 
                 (length($form->{'anno'}) > 0)) {
                 ($xx, $yy) = &annoxy2llsvg ($form->{'atx'}, $form->{'aty'});
-                $annos{"$xx,$yy"} = $form->{'anno'};
+                # set new annotation into hash by xy
+                $annosxy2txt{"$xx,$yy"} = $form->{'anno'};
                 $buf .= "$xx,$yy: $form->{'anno'}\n";
-                if (&l00httpd::l00fwriteOpen($ctrl, $map)) {
+                if (&l00httpd::l00fwriteOpen($ctrl, $currannofile)) {
                     &l00httpd::l00fwriteBuf($ctrl, $buf);
                     &l00httpd::l00fwriteClose($ctrl);
                 }
             }
-        } elsif (&l00httpd::l00fwriteOpen($ctrl, $map)) {
-            # failed to read annofile, write a blank one
+        } elsif (&l00httpd::l00fwriteOpen($ctrl, $currannofile)) {
+            # failed to read oneannofile, write a blank one
             &l00httpd::l00fwriteBuf($ctrl, "IMG_WD_HT=$mapwd,$mapht\n");
             &l00httpd::l00fwriteClose($ctrl);
-            print $sock "Sample <a href=\"/view.htm?path=$map\" target=\"_blank\">$map</a> created as it was missing.  ".
-                "<a href=\"/edit.htm?path=$map\" target=\"_blank\">Edit</a> it for correct image size.<p>\n";
+            print $sock "Sample <a href=\"/view.htm?path=$currannofile\" target=\"_blank\">$currannofile</a> created as it was missing.  ".
+                "<a href=\"/edit.htm?path=$currannofile\" target=\"_blank\">Edit</a> it for correct image size.<p>\n";
         }
     }
 
 
-    # if picture exist
-    if (open (IN, "<$path")) {
-        close (IN);
+    # if picture exist, display picture and annotations
+    if (-f "$path") {
+        # show image to click in form
+        # path to picture
+        $mapurl = "/ls.htm$path?path=$path&raw=on";
+
+        print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
+        print $sock "<input type=\"image\" width=\"$mapwd\" height=\"$mapht\" src=\"$mapurl\">\n";
+        print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
+        if (defined($oneannofile)) {
+            print $sock "<input type=\"hidden\" name=\"oneannofile\" value=\"$oneannofile\">\n";
+        }
+        print $sock "<input type=\"hidden\" name=\"bare\" value=\"\">\n";
+        print $sock "</form>\n";
+
+        # show cursor if no all in 1 annotations
         ($pixx, $pixy) = &annoll2xysvg ($lon, $lat);
-        if ($allanno eq '') {
+        if ($allin1annofile eq '') {
             if (defined($form->{'x'})) {
                 # mark X if clicked
                 print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
                 print $sock "<font color=\"$color\">$marker</font></div>\n";
             }
         }
-        # display annotations
-        foreach $xy (keys %annos) {
+        # display annotations by hash of xy
+        foreach $xy (keys %annosxy2txt) {
             ($pixx, $pixy) = &annoll2xysvg (split(',', $xy));
             print $sock "<div style=\"position: absolute; left:$pixx"."px; top:$pixy"."px;\">\n";
-            print $sock "<font color=\"$color\">$annos{$xy}</font></div>\n";
+            print $sock "<font color=\"$color\">$annosxy2txt{$xy}</font></div>\n";
         }
-
-        # path to picture
-        $mapurl = "/ls.htm$path?path=$path&raw=on";
-
-        print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
-        print $sock "<input type=image width=$mapwd height=$mapht src=\"$mapurl\">\n";
-        print $sock "<input type=\"hidden\" name=\"path\" value=\"$path\">\n";
-        if (defined($annofile)) {
-            print $sock "<input type=\"hidden\" name=\"annofile\" value=\"$annofile\">\n";
-        }
-        print $sock "<input type=\"hidden\" name=\"bare\" value=\"\">\n";
-        print $sock "</form>\n";
     }
 
 
+
+
+    # report cursor x/y info if clicked and not bare
     if (defined ($form->{'x'})) {
-        # report info if clicked and not bare
         if ($bare eq '') {
             print $sock "Clicked pixel (x,y): $form->{'x'},$form->{'y'}\n";
             print $sock "Pic (x,y): ", $form->{'x'} * 100 / $scale,',',$form->{'y'} * 100 / $scale,"<br>\n";
         }
     }
 
-    # if not bare
+    # display form if not bare
     if ($bare eq '') {
         print $sock "Max px (x,y): $mapwd,$mapht\n";
         print $sock "Max pic (x,y): ", $mapwd * 100 / $scale,',',$mapht * 100 / $scale,"<br>\n";
 
         print $sock "<p>$ctrl->{'home'} \n";
         print $sock "$ctrl->{'HOME'} \n";
-        print $sock "Launch <a href=\"/launcher.htm?path=$path\" target=\"_blank\">$path</a> - ".
-            "View <a href=\"/view.htm?path=$map\" target=\"_blank\">$map</a><p>\n";
+        print $sock "Launch <a href=\"/launcher.htm?path=$path\" target=\"_blank\">$path</a> - ";
+        if ($currannofile =~ /^l00:\/\//) {
+            # is RAM anno file, make link to copy to disk file
+            print $sock "View <a href=\"/view.htm?path=$currannofile\" target=\"_blank\">$currannofile</a> - ".
+            "<a href=\"/filemgt.htm?path=$currannofile&path2=$path.txt\" target=\"_blank\">filemgt</a><p>\n";
+        } else {
+            print $sock "View <a href=\"/view.htm?path=$currannofile\" target=\"_blank\">$currannofile</a><p>\n";
+        }
 
         print $sock "<form action=\"/picannosvg.htm\" method=\"get\">\n";
         print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -334,15 +348,15 @@ sub l00http_picannosvg_proc (\%) {
 
         print $sock "    <tr>\n";
         print $sock "        <td><input type=\"checkbox\" name=\"bare\" $bare>Bare page</td>\n";
-        if (!defined($annofile)) {
-            $annofile = '';
+        if (!defined($oneannofile)) {
+            $oneannofile = '';
         }
-        print $sock "        <td>Annofile: <input type=\"text\" size=\"16\" name=\"annofile\" value=\"$annofile\"></td>\n";
+        print $sock "        <td>Annofile: <input type=\"text\" size=\"16\" name=\"oneannofile\" value=\"$oneannofile\"></td>\n";
         print $sock "    </tr>\n";
 
         print $sock "    <tr>\n";
-        print $sock "        <td>All annos:</td>\n";
-        print $sock "        <td><input type=\"text\" size=\"16\" name=\"allanno\" value=\"$allanno\"></td>\n";
+        print $sock "        <td>All annos file:</td>\n";
+        print $sock "        <td><input type=\"text\" size=\"16\" name=\"allin1annofile\" value=\"$allin1annofile\"></td>\n";
         print $sock "    </tr>\n";
 
         print $sock "</table>\n";
