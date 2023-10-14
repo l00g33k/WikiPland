@@ -1,0 +1,3 @@
+IMG_WD_HT=1144,321
+173,207: sample text
+863,105: sample note
