@@ -48,18 +48,15 @@ sub l00http_iframes_proc (\%) {
     }
     if (defined ($form->{'add'}) && 
         defined ($form->{'url'}) && 
-        ($form->{'url'} =~ /(https*:\/\/[^ \n\r\t]+)/)) {
+        (length($form->{'url'}) > 1)) {
         if (defined ($form->{'height'}) && $form->{'height'} =~ /(\d+%*)/) {
             $height = $1;
         }
     }
     if (defined ($form->{'cb'})) {
         $url = &l00httpd::l00getCB($ctrl);
+        $form->{'add'} = 1;
         $form->{'url'} = $url;
-        if ($url =~ /(https*:\/\/[^ \n\r\t]+)/) {
-            $form->{'add'} = 1;
-            $form->{'url'} = $1;
-        }
     }
 #::now::
 # add paste CB for this button
@@ -97,7 +94,7 @@ sub l00http_iframes_proc (\%) {
     }
     if (defined ($form->{'add'}) && 
         defined ($form->{'url'}) && 
-        ($form->{'url'} =~ /(https*:\/\/[^ \n\r\t]+)/)) {
+        (length($form->{'url'}) > 1)) {
         $url = $1;
         $width = '*';
         if (defined ($form->{'width'}) && $form->{'width'} =~ /(\d+)/) {
