@@ -95,7 +95,7 @@ sub l00http_iframes_proc (\%) {
     if (defined ($form->{'add'}) && 
         defined ($form->{'url'}) && 
         (length($form->{'url'}) > 1)) {
-        $url = $1;
+        $url = $form->{'url'};
         $width = '*';
         if (defined ($form->{'width'}) && $form->{'width'} =~ /(\d+)/) {
             $width = $1;
