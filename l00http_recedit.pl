@@ -196,7 +196,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $filtered, $cnt, $eval1);
+    my ($filter_found_true, $filtered, $cnt, $eval1, $now);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -430,7 +430,8 @@ sub l00http_recedit_proc (\%) {
         $_ = $ctrl->{'receditextra'};
     }
     print $sock "<a href=\"/ls.htm?path=$path$_\">$path</a> - ";
-    print $sock "<a href=\"/view.htm?path=$path\">vw</a>:<p>";
+    print $sock "<a href=\"/view.htm?path=$path\">vw</a> - ";
+    print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\">now</a>:<p>";
 
     print $sock "<form action=\"/recedit.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
@@ -489,6 +490,7 @@ sub l00http_recedit_proc (\%) {
 
     if (length($record1) > 0) {
         undef @table;
+        $now = "<pre>\n";
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $id = 1;
             $lnno = 0;
@@ -516,6 +518,7 @@ sub l00http_recedit_proc (\%) {
                         l00httpd::dbp($config{'desc'}, "HIT: $line"), if ($ctrl->{'debug'} >= 3);
                         if ($lnno > $afterline) {
                             $filtered .= $_;
+                            $now .= "$_";
                             push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno));
                             $id++;
                         }
@@ -533,6 +536,12 @@ sub l00http_recedit_proc (\%) {
             s/__end${ii}__/end/;
             print $sock $_;
         }
+
+        $now .= "</pre>\n";
+		&l00httpd::l00fwriteOpen($ctrl, "l00://recedit_active.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $now);
+		&l00httpd::l00fwriteClose($ctrl);
+
 		&l00httpd::l00fwriteOpen($ctrl, "l00://recedit_filtered.txt");
 		&l00httpd::l00fwriteBuf($ctrl, "filtered\n");
 		&l00httpd::l00fwriteBuf($ctrl, $filtered);
