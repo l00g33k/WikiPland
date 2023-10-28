@@ -299,12 +299,12 @@ sub l00http_filemgt_proc {
     print $sock "<input type=\"submit\" name=\"append\" value=\"A&#818;ppend\" accesskey=\"a\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">fr:</a> "; #<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$form->{'path'}</textarea>\n";
+    print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">f&#818;r:</a> "; #<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
+    print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"f\">$form->{'path'}</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "<a href=\"/launcher.htm?path=$path2\">to:</a> "; #<input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
-    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$path2</textarea>\n";
+    print $sock "<a href=\"/launcher.htm?path=$path2\">t&#818;o:</a> "; #<input type=\"text\" size=\"16\" name=\"path2\" value=\"$path2\">\n";
+    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"t\">$path2</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ((!defined ($form->{'nobak'})) || ($form->{'nobak'} ne 'on')) {
