@@ -570,7 +570,7 @@ sub l00http_reminder_perio {
             }
 
             $ctrl->{'BANNER:reminder'} = "<center>".
-                "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
+                "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
                 "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
@@ -585,7 +585,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/reminder.htm#manage\">:::</a> </center><a name=\"_remend_\"></a>";
 
             $ctrl->{'BANNERSML:reminder'} = "<center>".
-                "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=/sdcard/l00httpd/l00_reminder.txt&reminder=on\">rem</a> - ".
+                "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
                 "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
