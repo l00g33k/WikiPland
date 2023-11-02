@@ -431,7 +431,7 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "<a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     print $sock "<a href=\"/view.htm?path=$path\">vw</a> - ";
-    print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\">now</a>:<p>";
+    print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">LIST</a>:<p>";
 
     print $sock "<form action=\"/recedit.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
