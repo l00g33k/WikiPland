@@ -735,7 +735,7 @@ sub l00http_dash_proc {
                     $jumpcnt++;
                 }
                 # jump target when hdr only
-                $cat2 .= "<a name=\"cat2$jmp\"></a>";
+                $cat2 .= "<a name=\"cat2_$jmp\"></a>";
                 if (!defined($cat1tolnno{"$cat1"}) ||
                     ($cat1tolnno{"$cat1"} > $lnno)) {
                     $cat1tolnno{"$cat1"} = $lnno;
