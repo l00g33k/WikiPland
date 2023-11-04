@@ -55,3 +55,24 @@ Use 2021/5/9 19:00 to specify a different year than the current.
 ** L7: simply describes an event at the calculated time
 ** L10: ^11:00 advanced the current time to tomorrow 11am
 
+=Syntax=
+
+* to
+
+    t - from - dest : remarks
+    t - from - dest
+
+* see
+
+    s - place : remarks
+    s - place
+
+* hotel
+
+    h - hotel : remarks
+    h - hotel
+
+* rest
+
+    h - rest : remarks
+    h - rest

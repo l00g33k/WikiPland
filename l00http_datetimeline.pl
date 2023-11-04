@@ -32,7 +32,7 @@ sub print_travel_plan {
     if ($firstdate eq '') {
         $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d is the starting time\n", 
             $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
-        $firstdate .= "color keys: t - *a*from** - *S*dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks\n";
+        $firstdate .= "color keys: t - *a*from** -&gt; *S*dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks / r - *h*rest** : remarks\n";
     }
 
     $thisdate = sprintf ("%02d/%02d %s", $mo, $da, $dayofweek[$wday], );
@@ -45,16 +45,24 @@ sub print_travel_plan {
 
     # t - from - dest : remarks
          if ($msg =~ /^t - +(.+) - +(.+) : +(.+)$/) {
-             $msg = "*a*$1** *S*-&gt; $2** : $3";
+             $msg = "*a*$1** -&gt; *S*$2** : $3";
     # t - from - dest
     } elsif ($msg =~ /^t - +(.+) - +(.+)$/) {
-             $msg = "*a*$1**  *S*-&gt; $2** ";
+             $msg = "*a*$1** -&gt; *S*$2** ";
+
     # s - place : remarks
     } elsif ($msg =~ /^s - +(.+?) : +(.+)$/) {
              $msg = "see: *l*$1** : $2";
     # s - place
     } elsif ($msg =~ /^s - +(.+)$/) {
              $msg = "see: *l*$1** ";
+
+    # r - place : remarks
+    } elsif ($msg =~ /^r - +(.+?) : +(.+)$/) {
+             $msg = "rest *h*$1** : $2";
+    # r - place
+    } elsif ($msg =~ /^r - +(.+)$/) {
+             $msg = "rest *h*$1** ";
 
     # h - hotel : remarks
     } elsif ($msg =~ /^h - +(.+?) : +(.+)$/) {
