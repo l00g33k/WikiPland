@@ -1,0 +1,25 @@
+* This is a trival spreadsheet implementation.  The spreadsheet formula is described in a table.
+
+* The first row names the column.  A name must be valid Perl variable name starting with an alphabet 
+follow by alphabet and number.
+
+* The second row are the initial value for the column consists of either numeric literal or 
+valid Perl expression.  The values for the colunmns to the left may be referenced by the 
+colunm name with '$' prefix.
+
+* All subsequent rows are Perl expressions.  Values for the column may be referenced by 
+column name prefix with '$'.  Values from the previous row may be referenced by the column 
+name with '$' prefix and '_' suffix.  For the following example $YEAR may be referenced 
+by all columns on the right.  Values from the previous row may be referenced as $YEAR_
+
+* A special notation of the form ':=*#' repeats the following rown # times.
+
+* The following is a simple example.  [[/view.htm?path=$|View]] this page for raw text;
+ [[/calc.htm?path=$|calc]] this page:
+
+
+|| YEAR%d      ||      P ||   RATE ||        INT ||       SUM ||
+|| 2023      ||   1000 ||   0.05 || $P * $RATE || $P + $INT ||
+|| :=*50     ||        ||        ||            ||           ||
+|| $YEAR_ + 1 ||  $SUM_ || $RATE_ || $P * $RATE || $P + $INT ||
+
