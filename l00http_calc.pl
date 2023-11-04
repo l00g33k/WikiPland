@@ -32,7 +32,7 @@ sub l00http_calc_proc (\%) {
         ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
         print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\" target=\"_blank\">$fname</a> - \n";
-        print $sock "<a href=\"/calc.htm?path=$form->{'path'}\">refresh</a><p>\n";
+        print $sock "<a href=\"/calc.htm?path=$form->{'path'}\">Calculate</a><p>\n";
     }
     print $sock "<p>\n";
 
@@ -44,7 +44,7 @@ sub l00http_calc_proc (\%) {
     $findinit = 1;
     $cnt = 0;
     $repeats = 1;
-    $rowcnt = -1;
+    $rowcnt = 0;
     $header = '';
     $output = '';
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
@@ -53,13 +53,10 @@ sub l00http_calc_proc (\%) {
             $cnt++;
             s/[\n\r]//g;
             l00httpd::dbp($config{'desc'}, "INPUT $cnt >$_<\n"), if ($ctrl->{'debug'} >= 3);
-            if (/^:=\*(\d+)$/) {
-#               $repeats = $1;
-#               next;
-            }
             if ($findhead) {
                 if (/^\|\|.*\|\|$/) {
                     $findhead = 0;
+                    $output .= "* [[/view.htm?path=l00://calc_$fname||Calculated table]]\n\n";
                     @_ = split('\|\|', $_);
                     l00httpd::dbp($config{'desc'}, "HEAD  #col $#_ : >$_<\n"), if ($ctrl->{'debug'} >= 3);
                     $output .= "|| $rowcnt ";
@@ -110,11 +107,11 @@ sub l00http_calc_proc (\%) {
                         $output .= "||\n";
                     } else {
                         for ($repeat = 0; $repeat < $repeats; $repeat++) {
-                            $rowcnt++;
                             if (($rowcnt % 20) == 0) {
-                                $output .= "|| $rowcnt $header";
+                                $output .= "|| $header";
                             }
                             $output .= "|| $rowcnt ";
+                            $rowcnt++;
                             for ($ii = 1; $ii <= $#_; $ii++) {
                                 if (($compute) = $_[$ii] =~ /^ *(.+?) *$/) {
                                     eval "\$$head[$ii]_ = \$$head[$ii]";
@@ -141,7 +138,11 @@ sub l00http_calc_proc (\%) {
 
         }
 
-       $html .= "$output\n";
+        $html .= "$output\n";
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://calc_$fname");
+        &l00httpd::l00fwriteBuf($ctrl, $output);
+        &l00httpd::l00fwriteClose($ctrl);
 
     } else {
         print $sock "Unable to open '$form->{'path'}'<p>\n";
