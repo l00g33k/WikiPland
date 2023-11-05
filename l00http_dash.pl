@@ -735,7 +735,7 @@ sub l00http_dash_proc {
                     $jumpcnt++;
                 }
                 # jump target when hdr only
-                $cat2 .= "<a name=\"cat2_$jmp\"></a>";
+                $cat2 .= "<a name=\"cat2$jmp\"></a>";
                 if (!defined($cat1tolnno{"$cat1"}) ||
                     ($cat1tolnno{"$cat1"} > $lnno)) {
                     $cat1tolnno{"$cat1"} = $lnno;
@@ -926,6 +926,9 @@ sub l00http_dash_proc {
                         $tmp =~ s/\*\*/_/g;  # remove ** highlight
                         $tmp =~ s/\*.\*/_/g;
                         $tmp =~ s/[^0-9A-Za-z]/_/g;
+                        # 3b05: not sure about the number of leading _
+                        # make it 1 to make R:dash jump work
+                        $tmp =~ s/^_+/_/g;
 
                         $nowbuf .= " $crlf&#9670; $dsc <a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all#cat2$tmp\">$lnno</a>";
                     }
