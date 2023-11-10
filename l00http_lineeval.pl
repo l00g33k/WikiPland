@@ -5,7 +5,7 @@ use l00backup;
 # Release under GPLv2 or later version by l00g33k@gmail.com, 2010/02/14
 
 # do %TXTDOPL% in .txt
-my ($arg, $eval, $sort, $sortdec, $wholefile, $useform, $filter, $filterregex);
+my ($arg, $eval, $sort, $sortdec, $wholefile, $useform, $filter, $only, $filterregex);
 my ($lineevalst, $lineevalen, $lineevalln, @actionBkgn, @textBkgn);
 $arg = '';
 $eval = '';
@@ -17,6 +17,7 @@ $lineevalst = 0;
 $lineevalen = 0;
 $lineevalln = 0;
 $filter = '';
+$only = '';
 $filterregex = '';
 
 @textBkgn   = (
@@ -111,11 +112,14 @@ sub l00http_lineeval_proc (\%) {
             $lineevalen = 0;
         }
 
-        if (defined ($form->{'filter'}) && ($form->{'filter'} eq 'on')) {
+        $only = '';
+        $filter = '';
+        if (defined ($form->{'only'}) && ($form->{'only'} eq 'on')) {
+            $only = 'checked';
+        } elsif (defined ($form->{'filter'}) && ($form->{'filter'} eq 'on')) {
             $filter = 'checked';
-        } else {
-            $filter = '';
         }
+
 
         if (defined ($form->{'filterregex'})) {
             $filterregex = $form->{'filterregex'};
@@ -178,7 +182,8 @@ sub l00http_lineeval_proc (\%) {
     print $sock "    </tr>\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"checkbox\" name=\"filter\" $filter accesskey=\"\">Ex&#818;clude regex ||\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"filter\" $filter accesskey=\"\">Ex&#818;clude/\n";
+    print $sock "            <input type=\"checkbox\" name=\"only\" $only accesskey=\"\">O&#818;nly regex ||\n";
     print $sock "            <input type=\"text\" size=\"24\" name=\"filterregex\" value=\"$filterregex\"></td>\n";
     print $sock "    </tr>\n";
 
@@ -401,6 +406,19 @@ sub l00http_lineeval_proc (\%) {
                     foreach $filterone (split('\|\|', $filterregex)) {
                         if (/$filterone/) {
                             $filterhit = 1;
+                            last;
+                        }
+                    }
+                    if ($filterhit) {
+                        next;
+                    }
+                }
+                if (($only eq 'checked') && ($filterregex ne '')) {
+                    # if only filter in effect, skip if no hit
+                    $filterhit = 1;
+                    foreach $filterone (split('\|\|', $filterregex)) {
+                        if (/$filterone/) {
+                            $filterhit = 0;
                             last;
                         }
                     }
