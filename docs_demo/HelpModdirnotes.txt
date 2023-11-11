@@ -1,0 +1,22 @@
+%TOC%
+
+=Directory Notes=
+
+This module generates or updates directory notes. If the named file does not 
+exist, create a new one in memory.  You must clock 'save to file' to save.
+The file initially has a table with 5 columns:
+* filename
+* Status: new
+* timestamp
+* size
+* notes
+
+If the named file already exist, scans the directory to update the table 
+by inserting three new columns of status, timestamp, and file size to the 
+right of the filename and shift existing column to the right
+
+=Interface=
+* The 'Refresh' button and the 'Run dirnotes' link do the same thing:
+rescan directory.
+* 'table edit dirnotes': launches table.htm to modify the table, e.g. 
+make column same size.

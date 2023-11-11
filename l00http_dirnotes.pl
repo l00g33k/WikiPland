@@ -31,8 +31,8 @@ sub l00http_dirnotes_proc {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $ii, $delnew);
-    my ($dir, $file, $url, @flds, $noflds, %flindir, $fname, $fstamps);
-    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
+    my ($dir, $file, $url, @flds, $noflds, %flindir, $fname, $pname, $fstamps);
+    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $tmp, 
         $size, $atime, $mtime, $ctime, $blksize, $blocks);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $find, $found);
 
@@ -43,7 +43,10 @@ sub l00http_dirnotes_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     if (defined ($form->{'path'})) {
-        print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
+#       print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
+        if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/\\]+)$/) {
+            print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a> \n";
+        }
         # create shell script for vi
     }
     print $sock "<a href=\"#end\">Jump to end</a><hr>\n";
@@ -74,6 +77,7 @@ sub l00http_dirnotes_proc {
 
     # scan directory
     $dir = '.';
+    undef %flindir;
     if ((defined ($form->{'path'})) && (length ($form->{'path'}) > 0)) {
         if ($form->{'path'} =~ m|^(.+)/[^/]+$|) {
             $dir = $1;
@@ -83,6 +87,7 @@ sub l00http_dirnotes_proc {
                         if (($file ne '.') && 
                             ($file ne '..') &&
                             !($file =~ /\.bak$/)) {
+                            # listing all currently existing files
                             $flindir {$file} = 1;
                         }
                     }
@@ -114,6 +119,7 @@ sub l00http_dirnotes_proc {
             $fname =~ s/^ +//;
             $fname =~ s/ +$//;
             if (defined ($flindir {$fname})) {
+                # Mark previously existing files
                 $flindir {$fname} = 0;
                 # makes $delnew double duty to also report $find results
                 if ($find ne '') {
@@ -134,15 +140,17 @@ sub l00http_dirnotes_proc {
                  = stat("$dir/$fname");
                 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                  = localtime($mtime);
-                $fstamps = sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+                $fstamps = sprintf ("%4d/%02d/%02d %02d:%02d:%02d || %9d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec, $size);
                 $fname = "<a href=\"/ls.htm/$fname.htm?path=$dir/$fname\">$fname</a>";
             } else {
+                # this file has been deleted
                 $delnew = 'deleted';
-                $fstamps = 'missing';
+                $fstamps = 'missing || ';
                 if ($find ne '') {
                     $delnew = " ||deleted";
                 }
             }
+            # || $fname || $delnew || $fstamps || (existing fields) ||
             $line = "||" . join('||', ($fname, $delnew, "\@$fstamps", @flds))."||";
             $tbl .= $line . "\n";
         } else {
@@ -155,13 +163,14 @@ sub l00http_dirnotes_proc {
     }
 
     foreach $fname (sort keys %flindir) {
+        # process new files
         if ($flindir {$fname} == 1) {
             ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, 
              $size, $atime, $mtime, $ctime, $blksize, $blocks)
              = stat("$dir/$fname");
             ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
              = localtime($mtime);
-            $fstamps = sprintf ("%4d/%02d/%02d %02d:%02d:%02d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec);
+            $fstamps = sprintf ("%4d/%02d/%02d %02d:%02d:%02d || %9d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec, $size);
             # makes $delnew double duty to also report $find results
             if ($find ne '') {
                 $found = '';
@@ -177,7 +186,8 @@ print "$dir/$fname $find\n";
             } else {
                 $delnew = 'new';
             }
-            $line = "||$fname||$delnew||\@$fstamps||" . ("_||" x ($noflds + 1));
+##          $line = "||$fname||$delnew||\@$fstamps||" . ("_||" x ($noflds + 1));
+            $line = "||$fname||$delnew||\@$fstamps||" . (" ||" x ($noflds + 1));
             $tbl .= $line . "\n";
         }
     }
@@ -198,6 +208,7 @@ print "$dir/$fname $find\n";
             print $sock "Unable to write '$form->{'path'}'<p>\n";
         }
     }
+
 
     # generate HTML buttons, etc.
 
