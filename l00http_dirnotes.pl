@@ -43,7 +43,6 @@ sub l00http_dirnotes_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} .$ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
     if (defined ($form->{'path'})) {
-#       print $sock "Path: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> \n";
         if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/\\]+)$/) {
             print $sock "Path: <a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a> \n";
         }
@@ -141,11 +140,10 @@ sub l00http_dirnotes_proc {
                 ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
                  = localtime($mtime);
                 $fstamps = sprintf ("%4d/%02d/%02d %02d:%02d:%02d || %9d", 1900+$year, 1+$mon, $mday, $hour, $min, $sec, $size);
-                $fname = "<a href=\"/ls.htm/$fname.htm?path=$dir/$fname\">$fname</a>";
             } else {
                 # this file has been deleted
                 $delnew = 'deleted';
-                $fstamps = 'missing || ';
+                $fstamps = "missing $ctrl->{'now_string'} || ";
                 if ($find ne '') {
                     $delnew = " ||deleted";
                 }
