@@ -453,7 +453,6 @@ sub l00http_table_proc {
     # generate HTML buttons, etc.
 
     print $sock "<hr>\n";
-    print $sock "<a name=\"theform\"></a><a href=\"#top\">Jump to top</a><p>\n";
 
     if ($nolist ne 'checked') {
         # convert
@@ -461,6 +460,7 @@ sub l00http_table_proc {
         print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
         print $sock "<table border=\"1\" cellpadding=\"3\" cellspacing=\"1\">\n";
         print $sock "<tr><td>\n";
+        print $sock "<br><a name=\"theform\"></a><a href=\"#top\">Jump to top</a>\n";
         print $sock "<input type=\"submit\" name=\"convert\" value=\"Convert / S&#818;ave\" accesskey=\"s\">\n";
         print $sock "<input type=\"checkbox\" name=\"nobak\" checked>Do not backup\n";
         print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
