@@ -325,6 +325,7 @@ sub l00http_dash_proc {
             print $sock "<a href=\"/ls.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#vvv\">vvv</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#hot\">hot</a></font> \n";
+            print $sock "- <font style=\"color:black;background-color:lime\"><a href=\"#see\">see</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#quickcut\">(Jump marks</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:LightGray\"><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#cat1\">cat1)</a></font> \n";
             print $sock "- <font style=\"color:black;background-color:gold\"     ><a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\#bangbang\">Jump out</a></font> \n";

@@ -17,7 +17,7 @@ $eval = '';
 $displen = 50;
 
 sub l00http_recedit_output_row {
-    my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno) = @_;
+    my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno, $dispcnt) = @_;
     my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall16h, 
         $chkall1d, $chkallRB, $chkallFB, $eval1);
 
@@ -175,7 +175,7 @@ sub l00http_recedit_output_row {
         $html .= "$lf$line";
         $lf = "<br>\n";
     }
-    $html .= " - <a href=\"/edit.htm?path=$path&blklineno=$lnno\" target=\"_blank\">$lnno</a>";
+    $html .= " - <a href=\"/edit.htm?path=$path&blklineno=$lnno\" target=\"_blank\">$lnno</a>.$dispcnt";
     $html .= "</font></td>\n";
     $html .= "    </tr>\n";
 
@@ -196,7 +196,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $filtered, $cnt, $eval1, $now, $due);
+    my ($filter_found_true, $filtered, $cnt, $eval1, $now, $due, $nowcnt, $duecnt, $dispcnt);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -430,8 +430,10 @@ sub l00http_recedit_proc (\%) {
         $_ = $ctrl->{'receditextra'};
     }
     print $sock "<a href=\"/ls.htm?path=$path$_\">$path</a> - ";
-    print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
-    print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">LIST</a> - ";
+    if (defined ($form->{'reminder'})) {
+        print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
+        print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">LIST</a> - ";
+    }
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>";
     print $sock "<p>";
 
@@ -487,12 +489,14 @@ sub l00http_recedit_proc (\%) {
         $_ = '';
     }
     print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
-    if (defined ($form->{'dueonly'})) {
-        $_ = 'checked';
-    } else {
-        $_ = '';
+    if (defined ($form->{'reminder'})) {
+        if (defined ($form->{'dueonly'})) {
+            $_ = 'checked';
+        } else {
+            $_ = '';
+        }
+        print $sock "                <input type=\"checkbox\" name=\"dueonly\" accesskey=\"d\" $_>d&#818;ue\n";
     }
-    print $sock "                <input type=\"checkbox\" name=\"dueonly\" $_>due\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
@@ -500,10 +504,13 @@ sub l00http_recedit_proc (\%) {
         undef @table;
         $now = "<pre>\n";
         $due = "<pre>\n";
+        $nowcnt = 0;
+        $duecnt = 0;
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $id = 1;
             $lnno = 0;
             $filtered = '';
+            $dispcnt = 1;
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 $lnno++;
                 if (/^ *$/ || /^#/) {
@@ -527,25 +534,27 @@ sub l00http_recedit_proc (\%) {
                         l00httpd::dbp($config{'desc'}, "HIT: $line"), if ($ctrl->{'debug'} >= 3);
                         if ($lnno > $afterline) {
                             $filtered .= $_;
-                            $now .= "$_";
+                            $nowcnt++;
+                            $now .= sprintf("%02d %s", $nowcnt, $_);
                             # make due list with past due items
                             if (defined ($form->{'reminder'})) {
                                 if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
                                     if ($1 lt $ctrl->{'now_string'}) {
-                                        $due .= "$_";
+                                        $duecnt++;
+                                        $due .= sprintf("%02d %s", $duecnt, $_);
                                     }
                                 }
                                 if (defined ($form->{'dueonly'})) {
                                     if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
                                         if ($1 lt $ctrl->{'now_string'}) {
-                                            push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno));
+                                            push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno, $dispcnt++));
                                         }
                                     }
                                 } else {
-                                    push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno));
+                                    push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno, $dispcnt++));
                                 }
                             } else {
-                                push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno));
+                                push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno, $dispcnt++));
                             }
                             $id++;
                         }

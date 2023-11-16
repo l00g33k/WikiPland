@@ -1,5 +1,8 @@
 %TOC%
 
+=:XDA: :PDA: Keywords=
+* :XDA: suppress listings.
+* :PDA: suppress listings that are in the future.
 =Item Description Color Convention=
 * ^ *f*hot item**
 * ~ *y*doing item**
