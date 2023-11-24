@@ -32,7 +32,7 @@ sub l00http_shellls_proc {
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs);
     my ($lnno, $fname, $catout, $up1lvl, $plpath, $datewidth, 
-        $item, $cnt, $isdir, $shcmd2, @items);
+        $item, $cnt, $isdir, $shcmd2, @items, $ramfname);
 
 
     if (defined ($form->{'submit'})) {
@@ -107,16 +107,21 @@ sub l00http_shellls_proc {
         $up1lvl = $shpath;
         $up1lvl =~ s/[^\/]+$//;
         $up1lvl =~ s/ /\+/g;
-        printf $sock ("Up: <a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$up1lvl\">$up1lvl</a>\n\n");
+
+        printf $sock ("Up: <a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$up1lvl\">$up1lvl</a>");
 
         $fname = $shpath;
         $fname =~ s/^.+\/([^\/]+)$/$1/;
-        print $sock "View: <a href=\"/view.htm?path=l00://shellls_$fname.ram.txt\" target=\"_blank\">l00://shellls_$fname.ram.txt</a> -- ";
-        print $sock "<a href=\"/launcher.htm?path=l00://shellls_$fname.ram.txt\" target=\"_blank\">launcher</a>\n\n";
+        printf $sock ("$fname\n\n");
+
+        $ramfname = "l00://shellls_$fname.". &l00crc32::crc32($shpath) . ".txt";
+
+        print $sock "View: <a href=\"/view.htm?path=$ramfname\" target=\"_blank\">$ramfname</a> -- ";
+        print $sock "<a href=\"/launcher.htm?path=$ramfname\" target=\"_blank\">launcher</a>\n\n";
 
         $catout = `$shcmd 'cat \"$shpath\"'`;
 
-        &l00httpd::l00fwriteOpen($ctrl, "l00://shellls_$fname.ram.txt");
+        &l00httpd::l00fwriteOpen($ctrl, "$ramfname");
         &l00httpd::l00fwriteBuf($ctrl, $catout);
         &l00httpd::l00fwriteClose($ctrl);
 
@@ -129,7 +134,7 @@ sub l00http_shellls_proc {
             s/>/&gt;/g;
             printf $sock ("%4d: %s\n", $lnno, $_);
         }
-        print $sock "\nView: <a href=\"/view.htm?path=l00://shellls_$fname.ram.txt\" target=\"_blank\">l00://shellls_$fname.ram.txt</a>\n\n";
+        print $sock "\nView: <a href=\"/view.htm?path=$ramfname\" target=\"_blank\">$ramfname</a>\n\n";
     }
 
 
