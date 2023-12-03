@@ -484,12 +484,6 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "        <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
-        $_ = 'checked';
-    } else {
-        $_ = '';
-    }
-    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
-    if (defined ($form->{'reminder'})) {
         if (defined ($form->{'dueonly'})) {
             $_ = 'checked';
         } else {
@@ -497,6 +491,12 @@ sub l00http_recedit_proc (\%) {
         }
         print $sock "                <input type=\"checkbox\" name=\"dueonly\" accesskey=\"d\" $_>d&#818;ue\n";
     }
+    if (defined ($form->{'reminder'})) {
+        $_ = 'checked';
+    } else {
+        $_ = '';
+    }
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
