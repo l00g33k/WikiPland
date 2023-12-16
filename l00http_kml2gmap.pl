@@ -438,6 +438,9 @@ sub l00http_kml2gmap_proc {
             &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
             &l00httpd::l00fwriteBuf($ctrl, $buffer);
             &l00httpd::l00fwriteClose($ctrl);
+
+            # zoom in to marker just added
+            $form->{'mkridx'} = 0;
         }
     } 
 
