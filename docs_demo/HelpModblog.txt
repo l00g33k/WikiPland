@@ -2,5 +2,18 @@
 * A special keyword directs blog.pl module to insert new entry in the middle of a page instead of the default top of the page.
 * [[/view.htm?path=$|View]] this page to see the example HERE tag:
 * This link invokes the feature: [[/blogtag.htm?path=$&tag=%25BLOGTAG%3AHERE%25|blogtag HERE here]]
+
+    %BLOGTAG:HERE%
+    20170613 100000 This is an example 
+
 %BLOGTAG:HERE%
 20170613 100000 This is an example 
+
+=Special Key To Jump To URL After Save=
+This key adds the 'SAVE&amp;URL' button to jump to the specicied 
+URL after save:
+
+    %BLOGURL:&lt;/dash.htm?path=$&outputsort=&dash_all=past&hdronly=&gt;%
+
+'$' is shortcut to the current file. You can specify a './filename' or 
+an absolute path.
