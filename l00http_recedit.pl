@@ -535,13 +535,13 @@ sub l00http_recedit_proc (\%) {
                         if ($lnno > $afterline) {
                             $filtered .= $_;
                             $nowcnt++;
-                            $now .= sprintf("%02d %s", $nowcnt, $_);
+                            $now .= sprintf("%03d %s", $nowcnt, $_);
                             # make due list with past due items
                             if (defined ($form->{'reminder'})) {
                                 if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
                                     if ($1 lt $ctrl->{'now_string'}) {
                                         $duecnt++;
-                                        $due .= sprintf("%02d %s", $duecnt, $_);
+                                        $due .= sprintf("%03d %s", $duecnt, $_);
                                     }
                                 }
                                 if (defined ($form->{'dueonly'})) {

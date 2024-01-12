@@ -114,7 +114,7 @@ sub l00http_shellls_proc {
         $fname =~ s/^.+\/([^\/]+)$/$1/;
         printf $sock ("$fname\n\n");
 
-        $ramfname = "l00://shellls_$fname.". &l00crc32::crc32($shpath) . ".txt";
+        $ramfname = "l00://shellls_$fname.". &l00crc32::crc32($shpath.$shcmd) . ".txt";
 
         print $sock "View: <a href=\"/view.htm?path=$ramfname\" target=\"_blank\">$ramfname</a> -- ";
         print $sock "<a href=\"/launcher.htm?path=$ramfname\" target=\"_blank\">launcher</a>\n\n";
