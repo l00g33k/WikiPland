@@ -93,6 +93,7 @@ sub l00http_crypt_proc (\%) {
     }
 
     if (defined ($form->{'clear'})) {
+        $cryptto = 0;
         $pass = "";
         # clear ram buffer
         &l00httpd::l00fwriteOpen($ctrl, 'l00://crypt.txt');

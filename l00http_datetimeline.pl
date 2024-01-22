@@ -25,7 +25,7 @@ sub print_travel_plan {
     my ($sock, $path, $lnno, $msg, $msg2) = @_;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
         gmtime (&l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0));
-    my ($topln, $thisdate, $printdate);
+    my ($topln, $thisdate, $printdate, $hr);
 
     $topln = $lnno - 10;
 
@@ -39,8 +39,10 @@ sub print_travel_plan {
     if ($thisdate ne $lastdate) {
         $lastdate = $thisdate;
         $printdate = "<font style=\"color:black;background-color:silver\"><strong>$thisdate </strong><\/font>";
+        $hr = "<hr>";
     } else {
-        $printdate = '          ';
+        $printdate = '<span>          </span>';
+        $hr = "";
     }
 
     # t - from - dest : remarks
@@ -72,11 +74,8 @@ sub print_travel_plan {
              $msg = "hotel: *B*$1** ";
     }
 
-                       #_ = "$_ <a href=\"/edit.htm?path=$path2&editline=on&blklineno=$lnno\">[edit line $lnno]</a>\n";
-    sprintf ("%s%2d:%02d  %s %s <a href=\"/edit.htm?path=%s&editline=on&blklineno=%d\" target=\"_blank\">%d</a>\n", 
-#       &hiliteln=%d&lineno=on#line%d\" target=\"_blank\">%d</a>\n", 
+    sprintf ("$hr%s%2d:%02d  %s %s <a href=\"/edit.htm?path=%s&editline=on&blklineno=%d\" target=\"_blank\">%d</a>\n", 
         $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $lnno);
-#       $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $topln, $lnno);
 }
 
 sub l00http_datetimeline_desc {
@@ -177,7 +176,7 @@ sub l00http_datetimeline_proc (\%) {
             # ^13:00 remarks
             } elsif (/^\^(\d+):(\d+) +(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
-                $html .= "<hr>\n";
+#               $html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $hr * 3600 + $mi * 60;
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
@@ -186,7 +185,7 @@ sub l00http_datetimeline_proc (\%) {
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
             # ^13:00
             } elsif (/^\^(\d+):(\d+) *$/) {
-                $html .= "<hr>\n";
+#               $html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $1 * 3600 + $2 * 60;
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
@@ -210,7 +209,7 @@ sub l00http_datetimeline_proc (\%) {
                 $mo++;
             # ---
             } elsif (/^---/) {
-                $html .= "<hr>\n";
+#               $html .= "<hr>\n";
             # !remarks
             } elsif (/^!(.*)$/) {
                 $html .= "$1\n";

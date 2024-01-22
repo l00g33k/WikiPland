@@ -41,8 +41,9 @@ All active notations must start from the left most column
     L13 # Destination City -> Hurricane                    
     L14 ^11:00
     L15 +2              check out & Destination City hotel, drive to *a*Destination City**
-    L16 +3              sightsee *l*Destination City**
-    L17                 *B*Destination City** check in
+    L16 @14:00
+    L17 +3              sightsee *l*Destination City**
+    L18                 *B*Destination City** check in
 
 ** L1 & L2: '!' causes the remainder of the line to be printed
 ** The *X*word** notation causes the word to be printed using 
