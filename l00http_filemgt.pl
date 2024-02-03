@@ -97,13 +97,17 @@ sub l00http_filemgt_proc {
         $form->{'path'} =~ s/\r//g;
         $form->{'path'} =~ s/\n//g;
         $_ = $form->{'path'};
-        # keep path only
-        s/\/[^\/]+$/\//;
-        print $sock " Path: <a href=\"/ls.htm?path=$_\">$_</a>";
-        $_ = $form->{'path'};
-        # keep name only
-        s/^.+\/([^\/]+)$/$1/;
-        print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$_</a>\n";
+        if ($form->{'path'} =~ /^l00:\/\//) {
+            print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">$_</a>\n";
+        } else {
+            # keep path only
+            s/\/[^\/]+$/\//;
+            print $sock " Path: <a href=\"/ls.htm?path=$_\">$_</a>";
+            $_ = $form->{'path'};
+            # keep name only
+            s/^.+\/([^\/]+)$/$1/;
+            print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">$_</a>\n";
+        }
     }
     print $sock "<a href=\"/filemgt.htm?path=$form->{'path'}\">Refresh</a>\n";
     print $sock "<p>\n";

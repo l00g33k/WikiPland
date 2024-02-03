@@ -1428,7 +1428,7 @@ while(1) {
                 } else {
                     $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 }
-                $ctrl{'home'} = "<a href=\"/httpd.htm\">#</a> ";
+                $ctrl{'home'} = "<a nam=\"hometop\"></a><a href=\"/httpd.htm\">#</a> ";
                 $ctrl{'home'} .= "<a href=\"/ls.htm/HelpMod$modcalled.htm?path=${plpath}docs_demo/HelpMod$modcalled.txt\">?</a> ";
                 if (!-f "${plpath}docs_demo/HelpMod$modcalled.txt") {
                     # also point to source code

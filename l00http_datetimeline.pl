@@ -7,7 +7,7 @@ use warnings;
 
 my %config = (proc => "l00http_datetimeline_proc",
               desc => "l00http_datetimeline_desc");
-my ($yr, $mo, $da, $hr, $mi, $lastdate, $firstdate);
+my ($yr, $mo, $da, $hr, $mi, $lastdate, $firstdate, $cal);
 
 my @dayofweek = (
 'Sun',
@@ -25,7 +25,7 @@ sub print_travel_plan {
     my ($sock, $path, $lnno, $msg, $msg2) = @_;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
         gmtime (&l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0));
-    my ($topln, $thisdate, $printdate, $hr);
+    my ($topln, $thisdate, $printdate, $hrline);
 
     $topln = $lnno - 10;
 
@@ -33,48 +33,57 @@ sub print_travel_plan {
         $firstdate = sprintf ("%04d/%02d/%02d %s %2d:%02d is the starting time\n", 
             $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
         $firstdate .= "color keys: t - *a*from** -&gt; *S*dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks / r - *h*rest** : remarks\n";
+        $firstdate .= "<a href=\"/cal.htm?prewk=0&lenwk=70&today=on&submit=S&path=l00://datetimeline.txt\" target=\"_blank\">calendar</a>\n";
     }
 
     $thisdate = sprintf ("%02d/%02d %s", $mo, $da, $dayofweek[$wday], );
     if ($thisdate ne $lastdate) {
         $lastdate = $thisdate;
         $printdate = "<font style=\"color:black;background-color:silver\"><strong>$thisdate </strong><\/font>";
-        $hr = "<hr>";
+        $hrline = "<hr>";
     } else {
         $printdate = '<span>          </span>';
-        $hr = "";
+        $hrline = "";
     }
 
     # t - from - dest : remarks
          if ($msg =~ /^t - +(.+) - +(.+) : +(.+)$/) {
              $msg = "*a*$1** -&gt; *S*$2** : $3";
+             $cal .= "$yr/$mo/$da,1,$2\n";
     # t - from - dest
     } elsif ($msg =~ /^t - +(.+) - +(.+)$/) {
              $msg = "*a*$1** -&gt; *S*$2** ";
+             $cal .= "$yr/$mo/$da,1,$2\n";
 
     # s - place : remarks
     } elsif ($msg =~ /^s - +(.+?) : +(.+)$/) {
              $msg = "see: *l*$1** : $2";
+             $cal .= "$yr/$mo/$da,1,$1\n";
     # s - place
     } elsif ($msg =~ /^s - +(.+)$/) {
              $msg = "see: *l*$1** ";
+             $cal .= "$yr/$mo/$da,1,$1\n";
 
     # r - place : remarks
     } elsif ($msg =~ /^r - +(.+?) : +(.+)$/) {
              $msg = "rest *h*$1** : $2";
+             $cal .= "$yr/$mo/$da,1,$2\n";
     # r - place
     } elsif ($msg =~ /^r - +(.+)$/) {
              $msg = "rest *h*$1** ";
+             $cal .= "$yr/$mo/$da,1,$1\n";
 
     # h - hotel : remarks
     } elsif ($msg =~ /^h - +(.+?) : +(.+)$/) {
              $msg = "hotel: *B*$1** : $2";
+             $cal .= "$yr/$mo/$da,1,$1\n";
     # h- hotel
     } elsif ($msg =~ /^h - +(.+)$/) {
              $msg = "hotel: *B*$1** ";
+             $cal .= "$yr/$mo/$da,1,$1\n";
     }
 
-    sprintf ("$hr%s%2d:%02d  %s %s <a href=\"/edit.htm?path=%s&editline=on&blklineno=%d\" target=\"_blank\">%d</a>\n", 
+    sprintf ("$hrline%s%2d:%02d  %s %s <a href=\"/edit.htm?path=%s&editline=on&blklineno=%d\" target=\"_blank\">%d</a>\n", 
         $printdate, $hr, $mi, $msg, $msg2, $path, $lnno, $lnno);
 }
 
@@ -110,6 +119,7 @@ sub l00http_datetimeline_proc (\%) {
         $phase = 0;
         $html = '';
         $info = '';
+        $cal = '';
         $lnno = 0;
         $firstdate = '';
 
@@ -225,6 +235,10 @@ sub l00http_datetimeline_proc (\%) {
         $html = "<pre>$firstdate\n\n$html</pre>\n$info";
 
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://datetimeline.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $cal);
+        &l00httpd::l00fwriteClose($ctrl);
     } else {
         print $sock "Unable to open '$form->{'path'}'<p>\n";
     }

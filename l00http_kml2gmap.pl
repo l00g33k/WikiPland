@@ -8,7 +8,7 @@ use l00httpd;
 
 my ($gmapscript0, $gmapscript1, $gmapscript2, $gmapscript2a, $gmapscript2b, 
     $gmapscript3, $myCenters, $myMarkers, $mySetMap);
-my ($width, $height, $apikey, $satellite, $initzoom, $trk10min);
+my ($width, $height, $apikey, $satellite, $initzoom, $trk10min, $nomarkers);
 my ($new, $selregex, $drawgrid, $longname, $matched, $exclude, @polylinepts);
 
 $new = 1;
@@ -21,6 +21,7 @@ $longname = '';
 $initzoom = '';
 @polylinepts = ();
 $trk10min = '';
+$nomarkers = 0;
 
 $width = 500;
 $height = 380;
@@ -266,7 +267,7 @@ sub l00http_kml2gmap_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($tmp, $lon, $lat, $gpslon, $gpslat, $buffer, $starname, $name, $nowypts, $labeltable, %labelsort);
     my ($lonmax, $lonmin, $latmax, $latmin, $zoom, $span, $ctrlon, $ctrlat, $desc);
-    my ($nomarkers, $lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
+    my ($lnno, $jlabel, $jname, $htmlout, $selonly, $newbuf, $pathbase);
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
     my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor, $icon, $fetchramjson);
     my ($gpstrackwastrack, $gpstrackhaspts, $gpstracktimenow, $gpstracktimelast);
@@ -429,7 +430,7 @@ sub l00http_kml2gmap_proc {
                     $form->{'desc'} =~ s/\n//g;
                 }
             }
-            $buffer = "* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n\n$buffer";
+            $buffer = "$buffer\n\n* $form->{'desc'}\n$form->{'lat'},$form->{'long'} $form->{'desc'}\n";
             push (@polylinepts, "$form->{'lat'},$form->{'long'}");
 
             # back up
@@ -460,9 +461,8 @@ sub l00http_kml2gmap_proc {
                     push (@polylinepts, "$lat,$lon");
                 }
             }
-            $buffer = "* $form->{'desc'}\n".
-                "poly: ".  join (" ", @polylinepts).  "\n\n".
-                "$buffer";
+            $buffer = "$buffer\n\n* $form->{'desc'}\n".
+                "poly: ".  join (" ", @polylinepts).  "\n";
             @polylinepts = ();
 
             # back up
@@ -852,7 +852,7 @@ SCRIPTSRC
                     $latmax = $lat;
                     $latmin = $lat;
                 }
-                if ($form->{'mkridx'} == $nomarkers) {
+                if (($form->{'mkridx'} == 0) || ($form->{'mkridx'} == $nomarkers)) {
                     # and we overwrite if selected
                     $lonmax = $lon;
                     $lonmin = $lon;
@@ -1086,12 +1086,24 @@ SCRIPTSRC
     print $sock "<span id=\"distance\">&nbsp;</span><p>\n";
 
     print $sock "Last markers: \n";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=0\">A</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=1\">B</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=2\">C</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=3\">D</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=4\">E</a> - ";
-    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=5\">F</a><br>\n";
+#   print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=0\">A</a> - ";
+#   print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=1\">B</a> - ";
+#   print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=2\">C</a> - ";
+#   print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=3\">D</a> - ";
+#   print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=4\">E</a> - ";
+#   print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=5\">F</a><br>\n";
+    $tmp = $nomarkers - 1;
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=$tmp\">0</a> - ";
+    $tmp--;
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=$tmp\">1</a> - ";
+    $tmp--;
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=$tmp\">2</a> - ";
+    $tmp--;
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=$tmp\">3</a> - ";
+    $tmp--;
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=$tmp\">4</a> - ";
+    $tmp--;
+    print $sock "<a href=\"/kml2gmap.htm?path=$form->{'path'}&mkridx=$tmp\">5</a><br>\n";
 
     print $sock "$labeltable\n";
 

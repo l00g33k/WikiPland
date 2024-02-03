@@ -574,6 +574,7 @@ sub l00http_reminder_perio {
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
                 "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
+                "<a href=\"#hometop\"><strong><font style=\"color:black;background-color:Plum\">vv<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=20#pause\">20'</a> - ".
@@ -589,6 +590,7 @@ sub l00http_reminder_perio {
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
                 "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
+                "<a href=\"#hometop\"><strong><font style=\"color:black;background-color:Plum\">vv<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
