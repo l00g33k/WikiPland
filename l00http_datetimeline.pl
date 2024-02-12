@@ -49,38 +49,42 @@ sub print_travel_plan {
     # t - from - dest : remarks
          if ($msg =~ /^t - +(.+) - +(.+) : +(.+)$/) {
              $msg = "*a*$1** -&gt; *S*$2** : $3";
-             $cal .= "$yr/$mo/$da,1,$2\n";
+             $cal .= "$yr/$mo/$da,1,*S*$2**\n";
     # t - from - dest
     } elsif ($msg =~ /^t - +(.+) - +(.+)$/) {
              $msg = "*a*$1** -&gt; *S*$2** ";
-             $cal .= "$yr/$mo/$da,1,$2\n";
+             $cal .= "$yr/$mo/$da,1,*S*$2**\n";
 
     # s - place : remarks
     } elsif ($msg =~ /^s - +(.+?) : +(.+)$/) {
              $msg = "see: *l*$1** : $2";
-             $cal .= "$yr/$mo/$da,1,$1\n";
+             $cal .= "$yr/$mo/$da,1,*l*$1**\n";
     # s - place
     } elsif ($msg =~ /^s - +(.+)$/) {
              $msg = "see: *l*$1** ";
-             $cal .= "$yr/$mo/$da,1,$1\n";
+             $cal .= "$yr/$mo/$da,1,*l*$1**\n";
 
     # r - place : remarks
     } elsif ($msg =~ /^r - +(.+?) : +(.+)$/) {
              $msg = "rest *h*$1** : $2";
-             $cal .= "$yr/$mo/$da,1,$2\n";
+             $cal .= "$yr/$mo/$da,1,*h*$2**\n";
     # r - place
     } elsif ($msg =~ /^r - +(.+)$/) {
              $msg = "rest *h*$1** ";
-             $cal .= "$yr/$mo/$da,1,$1\n";
+             $cal .= "$yr/$mo/$da,1,*h*$1**\n";
 
     # h - hotel : remarks
     } elsif ($msg =~ /^h - +(.+?) : +(.+)$/) {
              $msg = "hotel: *B*$1** : $2";
-             $cal .= "$yr/$mo/$da,1,$1\n";
-    # h- hotel
+             $cal .= "$yr/$mo/$da,1,*B*$1**\n";
+    # h - hotel
     } elsif ($msg =~ /^h - +(.+)$/) {
              $msg = "hotel: *B*$1** ";
-             $cal .= "$yr/$mo/$da,1,$1\n";
+             $cal .= "$yr/$mo/$da,1,*B*$1**\n";
+    # n - notes
+    } elsif ($msg =~ /^n - +(.+)$/) {
+             $msg = "notes *y*$1** ";
+             $cal .= "$yr/$mo/$da,1,*y*$1**\n";
     }
 
     sprintf ("$hrline%s%2d:%02d  %s %s <a href=\"/edit.htm?path=%s&editline=on&blklineno=%d\" target=\"_blank\">%d</a>\n", 
