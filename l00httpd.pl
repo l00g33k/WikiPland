@@ -1398,7 +1398,9 @@ while(1) {
                     next;
                 }
             } elsif ($modcalled =~ /^redirect/) {
-                if (defined ($ctrl{$modcalled})) {
+                if (defined ($FORM{'redirecturl'})) {
+                    $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=$FORM{'redirecturl'}\">\r\n";
+                } elsif (defined ($ctrl{$modcalled})) {
                     $tmp = "<META http-equiv=\"refresh\" content=\"0;URL=$ctrl{$modcalled}\">\r\n";
                 } else {
                     $tmp = '';
