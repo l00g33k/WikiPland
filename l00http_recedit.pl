@@ -241,7 +241,7 @@ sub l00http_recedit_proc (\%) {
         $afterline = $1;
     }
 
-    if (defined ($form->{'submit'}) && (length($record1) > 0)) {
+    if ((defined ($form->{'submit'}) || defined ($form->{'nowplus5'})) && (length($record1) > 0)) {
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $found = 0;
             $cmted = '';
@@ -273,6 +273,24 @@ sub l00http_recedit_proc (\%) {
                     if ($line =~ /$filter/) {
                         if (defined($form->{"id$id"}) && ($form->{"id$id"} eq 'on')) {
                             $_ = "#$_";
+                        }
+                        if (defined($form->{"nowplus5"})) {
+                            if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
+                                #20130408 100000:10:0:60:copy hurom
+                                $yr -= 1900;
+                                $mo--;
+                                # timestamp of the item
+                                $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
+                                # timestamp now
+                                $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
+                                if ($tmp < $tmp2) {
+                                    # move timestamp to now plus 5 minutes
+                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 300);
+                                    $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                         $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                         substr ($_, 15, 9999));
+                                }
+                            }
                         }
                         if (defined($form->{"add2h$id"}) && ($form->{"add2h$id"} eq 'on')) {
                             l00httpd::dbp($config{'desc'}, "smt:add2h$id $_"), if ($ctrl->{'debug'} >= 3);
@@ -479,6 +497,7 @@ sub l00http_recedit_proc (\%) {
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
     if ($path =~ /^l00:\/\//) {
         print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
+        print $sock "        <input type=\"submit\" name=\"nowplus5\" value=\"+5\">\n";
     } else {
         print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\">\n";
     }
