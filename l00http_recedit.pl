@@ -52,7 +52,7 @@ sub l00http_recedit_output_row {
         if ($path =~ /^l00:\/\//) {
             # RAM file, 2, 1, 7 hours (or 4)
             $html .= "<font style=\"color:black;background-color:silver\">";
-            $html .=                "<input type=\"checkbox\" name=\"add2h$id\"  $chkallRB>+5h</font><br>\n";
+            $html .=                "<input type=\"checkbox\" name=\"add2h$id\"  $chkallRB>+4h</font><br>\n";
             $html .= "            +1h<input type=\"checkbox\" name=\"add16h$id\" $chkall16h><br>\n";
         } else {
             # disk file, 1, 2 days
@@ -276,13 +276,13 @@ sub l00http_recedit_proc (\%) {
                         }
                         if (defined($form->{"add2h$id"}) && ($form->{"add2h$id"} eq 'on')) {
                             l00httpd::dbp($config{'desc'}, "smt:add2h$id $_"), if ($ctrl->{'debug'} >= 3);
-                            # add 5 hours
+                            # add 4 hours
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
                                 #20130408 100000:10:0:60:copy hurom
                                 $yr -= 1900;
                                 $mo--;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 5 * 3600; # add2h
+                                $tmp += 4 * 3600; # add2h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -295,7 +295,7 @@ sub l00http_recedit_proc (\%) {
                                 $mi = 0;
                                 $se = 0;
                                 $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                $tmp += 5 * 3600; # add2h
+                                $tmp += 4 * 3600; # add2h
                                 ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                 $_ = sprintf ("%d/%d/%d%s", 
                                     $yr + 1900, $mo + 1, $da, $tmp2);
@@ -478,7 +478,7 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
     if ($path =~ /^l00:\/\//) {
-        print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"5h&#818;\" accesskey=\"h\">\n";
+        print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
     } else {
         print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\">\n";
     }

@@ -481,7 +481,9 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=540\">9h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=840\">14h</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=1440\">24h</a></li>\n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=1440\">24h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=2880\">48h</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=4320\">72h</a></li>\n";
     print $sock "<p>";
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a><p>\n";
@@ -573,7 +575,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
-                "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
+                "<a href=\"/httpd.htm?bannermute=5$ctrl->{'remredirurlex'}\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
                 "<a href=\"#hometop\"><strong><font style=\"color:black;background-color:Plum\">vv<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
@@ -589,7 +591,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/recedit.htm?record1=%5E%5Cd%7B8%2C8%7D+%5Cd%7B6%2C6%7D%3A%5Cd%2B&path=$ctrl->{'workdir'}l00_reminder.txt&reminder=on\">rem</a> - ".
                 $_ .
                 "<a href=\"/reminder.htm?pause=Pause&min=2&bigbutton=on\">_2'</a> - ".
-                "<a href=\"/httpd.htm?bannermute=5\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
+                "<a href=\"/httpd.htm?bannermute=5$ctrl->{'remredirurlex'}\"><strong><font style=\"color:black;background-color:Plum\">MU<\/font><\/strong></a> - ".
                 "<a href=\"#hometop\"><strong><font style=\"color:black;background-color:Plum\">vv<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".

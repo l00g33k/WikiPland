@@ -64,6 +64,7 @@ my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
 my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
 my ($cmdlnmod, $cmdlnparam, $rammaxitems, $ramfilehtml, $ramfiledisp, $ramfiletxt);
+my ($httpdredirect);
 
 
 # set listening port
@@ -518,6 +519,11 @@ sub readl00httpdcfg {
     # tmp not defined in l00httpd.cfg
     if (!defined ($ctrl{'tmp'})) {
         $ctrl{'tmp'} = "$ctrl{'workdir'}/";      # make it available to modules
+    }
+
+    # if reminder redirection url not defined
+    if (!defined ($ctrl{'remredirurlex'})) {
+        $ctrl{'remredirurlex'} = '';
     }
 }
 
@@ -1430,7 +1436,7 @@ while(1) {
                 } else {
                     $ctrl{'htmlttl'} = "<title>$modcalled (l00httpd)</title>\n";
                 }
-                $ctrl{'home'} = "<a nam=\"hometop\"></a><a href=\"/httpd.htm\">#</a> ";
+                $ctrl{'home'} = "<a name=\"hometop\"></a><a href=\"/httpd.htm\">#</a> ";
                 $ctrl{'home'} .= "<a href=\"/ls.htm/HelpMod$modcalled.htm?path=${plpath}docs_demo/HelpMod$modcalled.txt\">?</a> ";
                 if (!-f "${plpath}docs_demo/HelpMod$modcalled.txt") {
                     # also point to source code
@@ -1519,6 +1525,7 @@ while(1) {
             } else {
                 print "Start handling host control\n", if ($debug >= 5);
                 $shutdown = 0;
+                $httpdredirect = '';
                 $ipage = 0;     # reset IP cache age so next httpd.htm loading will show new IP
                 # process Home control data
                 if ($modcalled eq 'httpd') {
@@ -1545,6 +1552,9 @@ while(1) {
                         (length ($FORM{'bannermute'}) > 0) &&
                         (int ($FORM{'bannermute'}) >= 0)) {
                         $ctrl{'bannermute'} = time + $FORM{'bannermute'} * 60;
+                    }
+                    if (defined ($FORM{'redirecturl'})) {
+                        $httpdredirect = "<META http-equiv=\"refresh\" content=\"0;URL=$FORM{'redirecturl'}\">\r\n";
                     }
                     # setting new timeout
                     if (defined ($FORM{'timeout'}) &&
@@ -1694,7 +1704,7 @@ while(1) {
                 # on client: provide a table of modules, and links if enabled
                 # Send HTTP and HTML headers
                 print "Send host control HTTP header\n", if ($debug >= 5);
-                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $ctrl{'htmlhead2'};
+                print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title>" . $httpdredirect . $ctrl{'htmlhead2'};
                 print $sock "$ctrl{'now_string'}: $client_ip connected to WikiPland on '$ctrl{'machine'}' aka '$ctrl{'whoami'}'. \n";
                 print $sock "Server IP: <a href=\"/clip.htm?update=Copy+to+CB&clip=http%3A%2F%2F$ctrl{'myip'}%3A20338%2Fclip.htm\">$ctrl{'myip'}</a>, up: ";
                 print $sock sprintf ("%.3f", (time - $uptime) / 3600.0);
