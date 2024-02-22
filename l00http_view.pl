@@ -706,8 +706,13 @@ sub l00http_view_proc {
                         print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$pnameurl2$fnameurl2&blklineno=%d\">:</a> ", $lineno, $lineno) . "$_</font>\n";
 
                         # publish path^M
+                        $tmptop = $lineno - 10;
+                        if ($tmptop < 1) {
+                            $tmptop = 1;
+                        }
+                        $tmp = $lineno + 40;
                         &l00httpd::l00fwriteOpen($ctrl, 'l00://~find_hilite.txt');
-                        &l00httpd::l00fwriteBuf($ctrl, "$form->{'path'}::$lineno\n$_");
+                        &l00httpd::l00fwriteBuf($ctrl, "$form->{'path'}::$tmptop::$lineno::$tmp\n$_");
                         &l00httpd::l00fwriteClose($ctrl);
 
                     } else {

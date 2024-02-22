@@ -21,6 +21,30 @@ $root = '';
 $filter = '\.c$|||\.cpp$|||\.h$';
 $level = 3;
 
+my (@reccuLvlColor);
+@reccuLvlColor = (
+"#FF0000",
+"red",
+"blue",
+"magenta",
+"limegreen",
+"teal",
+"orange",
+"purple",
+"maroon",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue",
+"blue"
+);
+
 sub l00http_srcdoc_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -34,8 +58,9 @@ sub l00http_srcdoc_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln);
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
-    my ($gethdr, $html, $title, $body, $level, $tgtfile, $tgttext);
-    my ($tlevel, $tfullpath, $tlnnohi);
+    my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext);
+    my ($tlevel, $tfullpath, $tfullname, $tlnnohi, $srcln, $copyname, $copyidx);
+    my ($loop, $st, $hi, $en);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -117,35 +142,172 @@ sub l00http_srcdoc_proc {
 
 
     if (defined ($form->{'generate'})) {
+        $html = '';
+        $html .= <<end_of_print1
+    <html>
+    <head>
+    <title>$pname${fname}</title>
+    </head>
+    <frameset cols="40%,*">
+end_of_print1
+;
+        $html .= "    <frame name=\"nav\" src=\"$pname${fname}_nav0.html\">";
+        $html .= <<end_of_print2
+
+    <frame name="content">
+    </frameset>
+    <body bgcolor="#FFFFFF">
+    </body>
+    </html>
+end_of_print2
+;
+
+        if (open(OU, ">$pname${fname}_index.html")) {
+            print OU $html;
+            close(OU);
+        }
+
+
         l00httpd::dbp($config{'desc'}, "generate outputs ${fname}_index.html in $pname\n"), if ($ctrl->{'debug'} >= 1);
         $html = '';
+
         $tfullpath = '';
-        for ($ii = 0; $ii <= $#buf; $ii++) {
-            if (($buf[$ii] =~ /^=+/) && ($tfullpath ne '')) {
+        $tfullname = '';
+        $loop = 1;
+        $ii = 0;
+        $copyidx = 1;
+        while ($loop) {
+            $srcln = $ii + 1;
+            if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line $tlnnohi in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-                $html .= "SRCDOC::${tlevel}::${tfullpath}::${tlnnohi}\n";
+                $html .= "SRCDOC::${tlevel}::${tfullpath}::0::${tlnnohi}::99999::\n";
+                ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
+                $copyname = "${fname}_${copyidx}_$tfullname.html";
+                $copyidx++;
+#               $html .= "<br><a href=\"$pname$copyname\" target=\"content\">[show code]</a> ($pname${fname}:$srcln$pname$copyname)\n";
+                $html .= "<br><a href=\"$pname$copyname\" target=\"content\">[show code]</a>\n";
                 $tfullpath = '';
             }
-            $html .= $buf[$ii];
-            if (($tmp) = $buf[$ii] =~ /^(=+)/) {
-                $tlevel = length($tmp);
-                l00httpd::dbp($config{'desc'}, "this line ^= x $tlevel\n"), if ($ctrl->{'debug'} >= 1);
-                if (($tfullpath, $tlnnohi) = $buf[$ii + 1] =~ /^(.+)::(\d+) */) {
-                    l00httpd::dbp($config{'desc'}, "next line target level $tlevel line $tlnnohi in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-                    if (!-f $tfullpath) {
-                        l00httpd::dbp($config{'desc'}, "target file not found\n"), if ($ctrl->{'debug'} >= 1);
+            if ($ii <= $#buf) {
+                $html .= $buf[$ii];
+                if (($tmp) = $buf[$ii] =~ /^(=+)/) {
+                    $tlevel = length($tmp);
+                    l00httpd::dbp($config{'desc'}, "this line ^= x $tlevel\n"), if ($ctrl->{'debug'} >= 1);
+                    if (($tfullpath, $tlnnohi) = $buf[$ii + 1] =~ /^(.+?)::\d+::(\d+)::/) {
+                        l00httpd::dbp($config{'desc'}, "next line target level $tlevel line $tlnnohi in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
+                        if (!-f $tfullpath) {
+                            l00httpd::dbp($config{'desc'}, "target file not found\n"), if ($ctrl->{'debug'} >= 1);
+                            $tfullpath = '';
+                        }
+                    } else {
                         $tfullpath = '';
                     }
                 }
+                $ii++;
+            } else {
+                $loop = 0;
             }
         }
-        if ($tfullpath ne '') {
-            l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line $tlnnohi in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-            $html .= "SRCDOC::${tlevel}::${tfullpath}::${tlnnohi}\n";
-            $tfullpath = '';
+#       # finish off the last block
+#       if ($tfullpath ne '') {
+#           l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line $tlnnohi in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
+#           $html .= "SRCDOC::${tlevel}::${tfullpath}::${tlnnohi}\n";
+#           $html .= "<br><a href=\"copyname\" target=\"content\">[show code]</a> ($pname${fname}:$srcln)";
+#           $tfullpath = '';
+#       }
+
+    $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 2);
+        $html = <<end_of_print3
+    <html>
+    <head>
+    <title>$pname${fname}</title>
+    </head>
+    <body bgcolor="#FFFFFF">
+    $html
+end_of_print3
+;
+#       $html .= "&nbsp;<p>\n" x 30;
+#       $html .= "<a href=\"$pname${fname}_nav0.htm\">with navigation</a><br>\n";
+#       $html .= "<a href=\"$pname${fname}_nav1.htm\">with no navigation</a><br>\n";
+#       $html .= "<a href=\"$pname${fname}_index.htm\">back to navigation</a><br>\n";
+        $html .= "</body>\n</html>\n";
+
+        # insert
+        $html2 = '';
+        $copyidx = 1;
+#::conti::
+        foreach $_ (split("\n", $html)) {
+            # SRCDOC::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999::
+            if (/^SRCDOC::/ && (($tmp, $level, $tfullpath, $st, $hi, $en) = split('::', $_))) {
+                ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
+                $tfullpath =~ s/[^\\\/]+$//;
+                $copyname = "${fname}_${copyidx}_$tfullname.html";
+                $copyidx++;
+                if (open(COPYDEST, ">$pname$copyname")) {
+                    print COPYDEST "<html>\n<head>\n";
+                    print COPYDEST "<title>$fname</title>\n";
+                    print COPYDEST "</head>\n<body bgcolor=\"#FFFFFF\">\n\n";
+                   #print COPYDEST "<h3><a href=\"$basename" . "_nav0.htm#$anchorthis\" target=\"nav\"><i>$secnum</i> "."[".$paracurlvl."]$fragcnt2</a> ";
+                   #print COPYDEST "<a href=\"$basename" . "_nav1.htm#$anchorthis\" target=\"nav\">short form</a>: $title</h3>\n\n";
+                   #print COPYDEST "<p>filename: <a href=\"$fnamepart.htm#_$lineno\">$fname</a>($lineno):<br>\n";
+                   #print COPYDEST "original line: <i>$orgln</i></p>\n\n";
+                    print COPYDEST "<pre>\n";
+
+                    print COPYDEST "Source file: $tfullpath$tfullname\n";
+#                   print COPYDEST "PATCH level $level\n";
+#                   print COPYDEST "PATCH tfullpath $tfullpath\n";
+#                   print COPYDEST "PATCH tfullname $tfullname\n";
+#                   print COPYDEST "PATCH st $st\n";
+#                   print COPYDEST "PATCH hi $hi\n";
+#                   print COPYDEST "PATCH en $en\n";
+#                   print COPYDEST "PATCH html\n";
+
+                    open (COPYSRC, "<$tfullpath$tfullname");
+                    $lnno = 1;
+                    while (<COPYSRC>) {
+                        if (($lnno >= $st) && ($lnno <= $en)) {
+                                if ($hi == $lnno) {
+                                print COPYDEST "<font color=\"". $reccuLvlColor [$level] ."\">";
+                                print COPYDEST "Call level $level\n";
+                            }
+                            print COPYDEST sprintf ("%4d: ", $lnno);
+                            s/</&lt;/g;
+                            s/>/&gt;/g;
+                            print COPYDEST;
+                            if ($hi == $lnno) {
+                                print COPYDEST "</font>";
+                            }
+                        }
+                        $lnno++;
+                    }
+                    close (COPYSRC);
+
+
+                    print COPYDEST "</pre></body></html>\n";
+                    close(COPYDEST);
+                }
+            }
+            # <a name="2_1_1__with_no_navigation"></a><h3>2.1.1. with no navigation <a href="#___top___">^</a> <a href="#__toc__">toc</a><a href="#toc_2_1_1__with_no_navigation">@</a> <a href="/blog.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&afterline=">lg</a> <a href="/edit.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&editline=on&blklineno=">ed</a> <a href="/view.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&update=Skip&skip=&maxln=200"></a></h3><a name="2_1_1__with_no_navigation_"></a>
+            # <a name="2_1_1__with_no_navigation"></a>
+            # <h3>2.1.1. with no navigation 
+            # <a href="#___top___">^</a> <a href="#__toc__">toc</a>
+            # <a href="#toc_2_1_1__with_no_navigation">@</a> 
+            # <a href="/blog.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&afterline=">lg</a> 
+            # <a href="/edit.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&editline=on&blklineno=">ed</a> 
+            # <a href="/view.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&update=Skip&skip=&maxln=200"></a>
+            # </h3><a name="2_1_1__with_no_navigation_"></a>
+            if (/<h\d+>.*blog.htm.*edit.htm.*view.htm.*<\/h\d+>/) {
+                s/<a href="#___top___.+?<\/a>//;
+                s/<a href="#__toc__.+?<\/a>//;
+                s/<a href="#toc_.+?<\/a>//;
+                s/<a href="\/blog.htm.+?<\/a>//;
+                s/<a href="\/edit.htm.+?<\/a>//;
+                s/<a href="\/view.htm.+?<\/a>//;
+            }
+            $html2 .= "$_\n";
         }
-        if (open(OU, ">$pname${fname}_index.html")) {
-            print OU $html;
+        if (open(OU, ">$pname${fname}_nav0.html")) {
+            print OU $html2;
             close(OU);
         }
     }
