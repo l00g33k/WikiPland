@@ -712,7 +712,7 @@ sub l00http_view_proc {
                         }
                         $tmp = $lineno + 40;
                         &l00httpd::l00fwriteOpen($ctrl, 'l00://~find_hilite.txt');
-                        &l00httpd::l00fwriteBuf($ctrl, "$form->{'path'}::$tmptop::$lineno::$tmp\n$_");
+                        &l00httpd::l00fwriteBuf($ctrl, "$form->{'path'}::${tmptop}::${lineno}::${tmp}\n$_");
                         &l00httpd::l00fwriteClose($ctrl);
 
                     } else {
