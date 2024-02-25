@@ -195,7 +195,7 @@ end_of_print2
             $srcln = $ii + 1;
             if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-                $html .= "SRCDOC::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::$tlnnoen\n";
+                $html .= "SRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::$tlnnoen\n";
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
                 $copyidx++;
@@ -226,7 +226,7 @@ end_of_print2
 
         $html .= "%TOC%\n";
 
-        $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 2);
+        $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 2, $fname);
             $html = <<end_of_print3
         <html>
         <head>
@@ -236,19 +236,15 @@ end_of_print2
         $html
 end_of_print3
 ;
-#       $html .= "&nbsp;<p>\n" x 30;
-#       $html .= "<a href=\"$pname${fname}_nav0.htm\">with navigation</a><br>\n";
-#       $html .= "<a href=\"$pname${fname}_nav1.htm\">with no navigation</a><br>\n";
-#       $html .= "<a href=\"$pname${fname}_index.htm\">back to navigation</a><br>\n";
         $html .= "</body>\n</html>\n";
 
         # insert
         $html2 = '';
         $copyidx = 1;
-#::conti::
+        $srcln = 0;
         foreach $_ (split("\n", $html)) {
             # SRCDOC::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999
-            if (/^SRCDOC::/ && (($tmp, $level, $tfullpath, $st, $hi, $en) = split('::', $_))) {
+            if (/^SRCDOC::/ && (($tmp, $srcln, $level, $tfullpath, $st, $hi, $en) = split('::', $_))) {
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
                 $tfullpath =~ s/[^\\\/]+$//;
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
@@ -272,13 +268,6 @@ end_of_print3
                     l00httpd::dbp($config{'desc'}, " - st = $st\n"), if ($ctrl->{'debug'} >= 1);
                     l00httpd::dbp($config{'desc'}, " - hi = $hi\n"), if ($ctrl->{'debug'} >= 1);
                     l00httpd::dbp($config{'desc'}, " - en = $en\n"), if ($ctrl->{'debug'} >= 1);
-#                   print COPYDEST "PATCH level $level\n";
-#                   print COPYDEST "PATCH tfullpath $tfullpath\n";
-#                   print COPYDEST "PATCH tfullname $tfullname\n";
-#                   print COPYDEST "PATCH st $st\n";
-#                   print COPYDEST "PATCH hi $hi\n";
-#                   print COPYDEST "PATCH en $en\n";
-#                   print COPYDEST "PATCH html\n";
 
                     open (COPYSRC, "<$tfullpath$tfullname");
                     $lnno = 1;
@@ -318,7 +307,12 @@ end_of_print3
                 s/<a href="#toc_.+?<\/a>//;
                 s/<a href="\/blog.htm.+?<\/a>//;
                 s/<a href="\/edit.htm.+?<\/a>//;
-                s/<a href="\/view.htm.+?<\/a>//;
+                if ($srcln > 0) {
+                    s/<a href="\/view.htm.+?<\/a>/ ($srcln)/;
+                    $srcln = 0;
+                } else {
+                    s/<a href="\/view.htm.+?<\/a>//;
+                }
             }
             s/<a href="#___top___.+?<\/a>//;
             s/<a href="#__toc__.+?<\/a>//;
@@ -331,7 +325,7 @@ end_of_print3
     }
 
 
-    $html = &l00wikihtml::wikihtml ($ctrl, $pname, $buffer, 2);
+    $html = &l00wikihtml::wikihtml ($ctrl, $pname, $buffer, 2, $fname);
     $buffer = "<br>\n";
     $buffer .= "<form action=\"/srcdoc.htm\" method=\"get\">\n";
     $buffer .= "<input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
