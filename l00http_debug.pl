@@ -35,7 +35,7 @@ sub l00http_debug_proc (\%) {
     print $sock "<a name=\"top\"></a>\n";
     print $sock "$ctrl->{'home'} <a href=\"$ctrl->{'quick'}\">HOME</a> <a href=\"/debug.htm\">Refresh</a><p> \n";
 
-    if (defined($form->{'jmpintv'})) {
+    if (defined($form->{'jump'}) && defined($form->{'jmpintv'})) {
         $jmpintv = $form->{'jmpintv'};
         if (($jmpintv < 0) || ($jmpintv > 100000)) {
             $jmpintv = 100;
@@ -46,11 +46,12 @@ sub l00http_debug_proc (\%) {
     print $sock "<table border=\"0\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"set\" value=\"Set\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"C&#818;lear\" accesskey=\"c\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"jump\" value=\"J&#818;ump\" accesskey=\"j\"></td>\n";
     print $sock "        <td>jump invertval: <input type=\"text\" size=\"6\" name=\"jmpintv\" value=\"$jmpintv\"></td>\n";
-    print $sock "        <td><input type=\"submit\" name=\"copy\" value=\"Copy to\">\n";
-    print $sock "            <a href=\"/view.htm?path=l00://debug.txt\">l00://debug.txt</a>\n";
+    print $sock "        <td><input type=\"submit\" name=\"copy\" value=\"Copy t&#818;o\" accesskey=\"t\">\n";
+    print $sock "            <a href=\"/view.htm?path=l00://~debug.txt\">l00://~debug.txt</a>\n";
     print $sock "    </tr>\n";
                                                 
     print $sock "</table>\n";
@@ -63,7 +64,7 @@ sub l00http_debug_proc (\%) {
     }
 
     if (defined($form->{'copy'})) {
-        $ctrl->{'l00file'}{'l00://debug.txt'} = l00httpd::dbpget();
+        $ctrl->{'l00file'}{'l00://~debug.txt'} = l00httpd::dbpget();
     }
 
     $output = '';
@@ -88,7 +89,7 @@ sub l00http_debug_proc (\%) {
         $lnno++;
     }
     if ($lnno > 2000) {
-        $output .= sprintf ("\nThere are %d lines. Some lines are skipped. Click 'Copy to' and view debug.txt \n", $lnno);
+        $output .= sprintf ("\nThere are %d lines. Some lines are skipped. Click 'Copy to' and view ~debug.txt \n", $lnno);
     }
 
     print $sock "System debug log (", $lnno-1, " lines): jump <a href=\"#end\">end</a>\n";

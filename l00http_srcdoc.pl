@@ -10,7 +10,8 @@ use l00backup;
 my %config = (proc => "l00http_srcdoc_proc",
               desc => "l00http_srcdoc_desc");
 my ($editwd, $editht, $editsz, $root, $filter);
-my ($hostpath, $contextln, $blklineno, $level);
+my ($hostpath, $contextln, $blklineno, $level, @secnos);
+my (%writeentirefile, %writeentirefilehighlight);
 $hostpath = "c:\\x\\";
 $editsz = 0;
 $editwd = 320;
@@ -52,15 +53,45 @@ sub l00http_srcdoc_desc {
     "srcdoc: source documentation helper";
 }
 
+
+sub l00http_srcdoc_secno {
+    my ($level) = @_;
+    my ($ii, $retval);
+
+    $retval = '0';
+
+    if ($level < -1) {
+        @secnos = ();
+        $secnos[0] = 0;
+    } elsif ($level < 0) {
+        $retval = join('.', @secnos);
+    } else {
+        for ($ii = 0; $ii < $level; $ii++) {
+            if (!defined($secnos[$ii])) {
+                $secnos[$ii] = 1;
+            }
+        }
+        if (!defined($secnos[$level])) {
+            $secnos[$level] = 1;
+        } else {
+            $secnos[$level]++;
+        }
+        $#secnos = $level;
+        $retval = join('.', @secnos);
+    }
+
+    $retval;
+}
+
 sub l00http_srcdoc_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln);
+    my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln, $cnt);
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
-    my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext);
+    my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext, $tgttextcln);
     my ($tlevel, $tfullpath, $tfullname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
-    my ($loop, $st, $hi, $en, $fileno);
+    my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -96,7 +127,7 @@ sub l00http_srcdoc_proc {
         $tgtfile = '(unknown)';
 		if (&l00httpd::l00freadOpen($ctrl, "l00://~find_hilite.txt")) {
 			if ($_ = &l00httpd::l00freadLine($ctrl)) {
-				$tgtfile = $_;
+				$tgtfile = "$_\n";
 			}
 			if ($_ = &l00httpd::l00freadLine($ctrl)) {
 				$tgtfile .= "    $_";
@@ -110,8 +141,8 @@ sub l00http_srcdoc_proc {
                 $buffer .= <IN>;
             }
             $buffer .= '=' x ($level + 1) . $title . '=' x ($level + 1) . "\n";
-            $buffer .= $tgtfile;
-            $buffer .= "$body\n\n";
+            $buffer .= "$tgtfile\n";
+            $buffer .= "$body\n";
             while (<IN>) {
                 $buffer .= $_;
             }
@@ -186,25 +217,45 @@ end_of_print2
         l00httpd::dbp($config{'desc'}, "generate outputs ${fname}_index.html in $pname\n"), if ($ctrl->{'debug'} >= 1);
         $html = '';
 
+        undef %writeentirefile;
+        undef %writeentirefilehighlight;
+        $cnt = 0;
+        &l00http_srcdoc_secno(-2);
+        undef %secnohash;
         $tfullpath = '';
         $tfullname = '';
         $loop = 1;
         $ii = 0;
         $copyidx = 1;
+        $orgln = '(unavailable)';
         while ($loop) {
             $srcln = $ii + 1;
             if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-                $html .= "SRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::$tlnnoen\n";
+                l00httpd::dbp($config{'desc'}, "ORGLN:$orgln\n"), if ($ctrl->{'debug'} >= 1);
+                $html .= "SRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln\n";
+                $secnohash{$srcln} = $secno;
+                $orgln = '(unavailable)';
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
+                if (!defined($writeentirefile{$tfullpath})) {
+                    $cnt++;
+                    $writeentirefile{$tfullpath} = $cnt;
+                }
                 $copyidx++;
 #               $html .= "<br><a href=\"$pname$copyname\" target=\"content\">[show code]</a> ($pname${fname}:$srcln$pname$copyname)\n";
-                $html .= "<br><a href=\"$pname$copyname\" target=\"content\">[show code]</a>\n";
+                $html .= "<br><a href=\"$copyname\" target=\"content\">[show code]</a>\n";
                 $tfullpath = '';
             }
             if ($ii <= $#buf) {
-                $html .= $buf[$ii];
+                if (($tmp, $tmp2) = $buf[$ii] =~ /^(=+)(.+)$/) {
+                    $tlevel = length($tmp) - 1;
+                    $secno = &l00http_srcdoc_secno($tlevel);
+                    $html .= "\n<a name=\"#sec_$secno\"></a>\n";
+                    $html .= "$tmp$secno $tmp2\n";
+                } else {
+                    $html .= $buf[$ii];
+                }
                 if (($tmp) = $buf[$ii] =~ /^(=+)/) {
                     $tlevel = length($tmp) - 1;
                     l00httpd::dbp($config{'desc'}, "this line ^= x $tlevel\n"), if ($ctrl->{'debug'} >= 1);
@@ -213,6 +264,12 @@ end_of_print2
                         if (!-f $tfullpath) {
                             l00httpd::dbp($config{'desc'}, "target file not found\n"), if ($ctrl->{'debug'} >= 1);
                             $tfullpath = '';
+                        } else {
+                            # if file exist, save original line too
+                            if (($ii + 3) <= $#buf) {
+                                # skip added 4 leading spaces
+                                $orgln = substr($buf[$ii + 3], 4, 9999);
+                            }
                         }
                     } else {
                         $tfullpath = '';
@@ -226,7 +283,7 @@ end_of_print2
 
         $html .= "%TOC%\n";
 
-        $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 2, $fname);
+        $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
             $html = <<end_of_print3
         <html>
         <head>
@@ -238,13 +295,21 @@ end_of_print3
 ;
         $html .= "</body>\n</html>\n";
 
+        &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_html.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $html);
+        &l00httpd::l00fwriteClose($ctrl);
+
         # insert
         $html2 = '';
         $copyidx = 1;
         $srcln = 0;
         foreach $_ (split("\n", $html)) {
-            # SRCDOC::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999
-            if (/^SRCDOC::/ && (($tmp, $srcln, $level, $tfullpath, $st, $hi, $en) = split('::', $_))) {
+            # SRCDOC::123::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999::orgln
+#           if (/^SRCDOC::/ && (($tmp, $srcln, $level, $tfullpath, $st, $hi, $en) = split('::', $_))) {
+            if (/^SRCDOC::/ && (($srcln, $level, $tfullpath, $st, $hi, $en, $orgln) = 
+                /^SRCDOC::(\d+)::(\d+)::(.+?)::(\d+)::(\d+)::(\d+)::(.+)$/)) {
+                $writeentirefilehighlight{$tfullpath} .= ":$hi,$reccuLvlColor[$level]:";
+l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$tfullpath} = $writeentirefilehighlight{$tfullpath}\n"), if ($ctrl->{'debug'} >= 1);
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
                 $tfullpath =~ s/[^\\\/]+$//;
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
@@ -260,7 +325,9 @@ end_of_print3
                    #print COPYDEST "original line: <i>$orgln</i></p>\n\n";
                     print COPYDEST "<pre>\n";
 
-                    print COPYDEST "Source file: $tfullpath$tfullname\n";
+                    print COPYDEST "index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a>\n";
+                    print COPYDEST "Source  : $tfullpath$tfullname ($hi)\n";
+                    print COPYDEST "Original: $orgln\n";
                     l00httpd::dbp($config{'desc'}, " - tfullname = $tfullname\n"), if ($ctrl->{'debug'} >= 1);
                     l00httpd::dbp($config{'desc'}, " - tfullpath = $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
                     l00httpd::dbp($config{'desc'}, " - copyname = $copyname\n"), if ($ctrl->{'debug'} >= 1);
@@ -322,6 +389,22 @@ end_of_print3
             print OU $html2;
             close(OU);
         }
+
+        
+        # print entire file with line number and color
+        # ::conti::
+        foreach $fname (keys %writeentirefile) {
+            $copyname = $fname;
+            $copyname =~ s/^.+[\\\/]([^\\\/]+)$/$1/;
+            $copyname = "${pname}${copyname}_$writeentirefile{$fname}.html";
+#::conti::
+l00httpd::dbp($config{'desc'}, "writeentirefile = $fname -- $writeentirefile{$fname} : $copyname\n"), if ($ctrl->{'debug'} >= 1);
+l00httpd::dbp($config{'desc'}, "writeentirefilehighlight = $writeentirefilehighlight{$fname}\n"), if ($ctrl->{'debug'} >= 1);
+#           if (open(OU, ">$copyname")) {
+#               print OU "$fname";
+#               close(OU);
+#           }
+        }
     }
 
 
@@ -332,6 +415,11 @@ end_of_print3
     $buffer .= "<input type=\"submit\" name=\"generate\" value=\"G&#818;enerate\" accesskey=\"g\">\n";
     $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     $buffer .= "</form>\n";
+    $buffer .= "Outout on port: \n";
+    $buffer .= "<a href=\"http://localhost:20337/$pname${fname}_index.html\" target=\"_blank\">20337</a>\n";
+    $buffer .= "<a href=\"http://localhost:20347/$pname${fname}_index.html\" target=\"_blank\">20347</a>\n";
+    $buffer .= "<a href=\"http://localhost:30337/$pname${fname}_index.html\" target=\"_blank\">30337</a>\n";
+    $buffer .= "<a href=\"http://localhost:30347/$pname${fname}_index.html\" target=\"_blank\">30347</a>\n";
     foreach $_ (split("\n", $html)) {
         if (($lineno) = /^__SRCDOC__(\d+)/) {
            #$buffer .= "SRCDOC FORM:$1\n";
@@ -353,7 +441,9 @@ end_of_print3
                 $buffer .= "<input type=\"radio\" name=\"level\" value=\"3\" accesskey=\"3\">3&#818;\n";
                 $buffer .= "<input type=\"radio\" name=\"level\" value=\"4\" accesskey=\"4\">4&#818;\n";
                 $buffer .= "<input type=\"radio\" name=\"level\" value=\"5\" accesskey=\"5\">5&#818;\n";
-                $buffer .= "<p>Title:<br><input type=\"text\" size=\"100\" name=\"title\" value=\"$tgttext\" accesskey=\"t\">\n";
+                $tgttextcln = $tgttext;
+                $tgttextcln =~ s/=/ /g;
+                $buffer .= "<p>Title:<br><input type=\"text\" size=\"100\" name=\"title\" value=\"$tgttextcln\" accesskey=\"t\">\n";
                 $buffer .= "<p>Target file: $tgtfile\n\n";
                 $buffer .= "    <pre>$tgttext</pre>\n";
                 $buffer .= "<p>Description:<br><textarea name=\"body\" cols=\"100\" rows=\"10\" accesskey=\"e\"></textarea>\n";
