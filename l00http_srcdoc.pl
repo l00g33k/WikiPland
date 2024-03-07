@@ -10,7 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_srcdoc_proc",
               desc => "l00http_srcdoc_desc");
 my ($editwd, $editht, $editsz, $root, $filter);
-my ($hostpath, $contextln, $blklineno, $level, @secnos);
+my ($hostpath, $contextln, $blklineno, $level, @secnos, $noheading);
 my (%writeentirefile, %writeentirefilehighlight, $width, $lastinsert);
 $hostpath = "c:\\x\\";
 $editsz = 0;
@@ -23,6 +23,7 @@ $filter = '\.c$|||\.cpp$|||\.h$';
 $level = 3;
 $width = 60;
 $lastinsert = 0;
+$noheading = '';
 
 my (@reccuLvlColor);
 @reccuLvlColor = (
@@ -93,7 +94,7 @@ sub l00http_srcdoc_proc {
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
     my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext, $tgttextcln);
     my ($tlevel, $tfullpath, $tfullname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
-    my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash);
+    my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash, $inpre);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -206,23 +207,27 @@ sub l00http_srcdoc_proc {
         if (defined ($form->{'width'}) && $form->{'width'} =~ /(\d+)/) {
             $width = $1;
         }
+        if (defined ($form->{'noheading'}) && ($form->{'noheading'} eq 'on')) {
+            $noheading = 'checked';
+        } else {
+            $noheading = '';
+        }
         $html = '';
         $html .= <<end_of_print1
-    <html>
-    <head>
-    <title>$pname${fname}</title>
-    </head>
-    <frameset cols="${width}%,*">
+<html>
+<head>
+<title>$pname${fname}</title>
+</head>
+<frameset cols="${width}%,*">
 end_of_print1
 ;
         $html .= "    <frame name=\"nav\" src=\"$pname${fname}_nav0.html\">";
         $html .= <<end_of_print2
-
-    <frame name="content">
-    </frameset>
-    <body bgcolor="#FFFFFF">
-    </body>
-    </html>
+<frame name="content">
+</frameset>
+<body bgcolor="#FFFFFF">
+</body>
+</html>
 end_of_print2
 ;
 
@@ -245,15 +250,15 @@ end_of_print2
         $loop = 1;
         $ii = 0;
         $copyidx = 0;
-        $orgln = '(unavailable)';
+        $orgln = '(not available)';
         l00httpd::dbp($config{'desc'}, "-- scan for srcdoc headers with target line numbers and insert SRCDOC tags\n"), if ($ctrl->{'debug'} >= 1);
         while ($loop) {
             $srcln = $ii + 1;
             if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
                 $copyidx++;
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-                $html .= "SRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln\n";
-                l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln\n"), if ($ctrl->{'debug'} >= 1);
+                $html .= "\nSRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln\n";
+                l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln"), if ($ctrl->{'debug'} >= 1);
                 $secnohash{$srcln} = $secno;
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
@@ -262,17 +267,18 @@ end_of_print2
                     $writeentirefile{$tfullpath} = $cnt;
                 }
                 l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${tfullpath}\n"), if ($ctrl->{'debug'} >= 1);
-                l00httpd::dbp($config{'desc'}, "ORGLN:$orgln"), if ($ctrl->{'debug'} >= 1);
-                $html .= "<br><a href=\"$copyname\" target=\"content\">[show code]</a> $copyname\n";
+                $html .= "<br><a href=\"$copyname\" target=\"content\">[show code]</a> - $tfullname\n";
                 $tfullpath = '';
                 $orgln = '(not available)';
             }
             if ($ii <= $#buf) {
                 if (($tmp, $tmp2) = $buf[$ii] =~ /^(=+)(.+)$/) {
-                    $tlevel = length($tmp) - 1;
-                    $secno = &l00http_srcdoc_secno($tlevel);
-                    $html .= "\n<a name=\"sec_$secno\"></a>\n";
-                    $html .= "$tmp$secno $tmp2\n";
+                    if ($noheading ne 'checked') {
+                        $tlevel = length($tmp) - 1;
+                        $secno = &l00http_srcdoc_secno($tlevel);
+                        $html .= "\n<a name=\"sec_$secno\"></a>\n";
+                        $html .= "$tmp$secno $tmp2\n";
+                    }
                 } else {
                     $html .= $buf[$ii];
                 }
@@ -285,19 +291,33 @@ end_of_print2
                             $tfullpath = '';
                         } else {
                             l00httpd::dbp($config{'desc'}, "NEWSEC! line $ii+1 target level $tlevel line $tlnnost-$tlnnohi-$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
+                            # skip full file path, name, and offset
+                            $ii++;
                             # if file exist, save original line too
                             $orgln = '';
-                            if (($ii + 2) <= $#buf) {
+                            if (($ii + 1) <= $#buf) {
                                 # skip added 4 leading spaces
-                                $orgln = substr($buf[$ii + 2], 4, 2000);
+                                if ($buf[$ii + 1] =~ /^    ./) {
+                                    $orgln = substr($buf[$ii + 1], 4, 2000);
+                                }
                             }
                             if (!defined($orgln) || ($orgln eq '')) {
-                                if (($ii + 3) <= $#buf) {
+                                if (($ii + 2) <= $#buf) {
                                     # skip added 4 leading spaces
-                                    $orgln = substr($buf[$ii + 3], 4, 2000);
+                                    if ($buf[$ii + 2] =~ /^    ./) {
+                                        $orgln = substr($buf[$ii + 2], 4, 2000);
+                                    }
                                 }
                                 if (!defined($orgln) || ($orgln eq '')) {
                                     $orgln = '(not available)';
+                                } else {
+                                    if ($noheading eq 'checked') {
+                                        $ii += 2;
+                                    }
+                                }
+                            } else {
+                                if ($noheading eq 'checked') {
+                                    $ii += 1;
                                 }
                             }
                         }
@@ -312,18 +332,19 @@ end_of_print2
         }
 
         $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
-            $html = <<end_of_print3
-        <html>
-        <head>
-        <title>$pname${fname}</title>
-        </head>
-        <body bgcolor="#FFFFFF">
-        <a  href="#__toc__">TOC</a>$html
+        $html = <<end_of_print3
+<html>
+<head>
+<title>$pname${fname}</title>
+</head>
+<body bgcolor="#FFFFFF">
+<a  href="#__toc__">TOC</a><br>
+$html
 end_of_print3
 ;
         $html .= "</body>\n</html>\n";
 
-        &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_html.txt");
+        &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_nav_html.txt");
         &l00httpd::l00fwriteBuf($ctrl, $html);
         &l00httpd::l00fwriteClose($ctrl);
 
@@ -331,16 +352,17 @@ end_of_print3
         $html2 = '';
         $copyidx = 0;
         $srcln = 0;
+        $inpre = 0;
         l00httpd::dbp($config{'desc'}, "-- scan for SRCDOC tags and generate target html\n"), if ($ctrl->{'debug'} >= 1);
         foreach $_ (split("\n", $html)) {
             # SRCDOC::123::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999::orgln
-#           if (/^SRCDOC::/ && (($tmp, $srcln, $level, $tfullpath, $st, $hi, $en) = split('::', $_))) {
-            if (/^SRCDOC::/ && (($srcln, $level, $tfullpath, $st, $hi, $en, $orgln) = 
+            if (/^SRCDOC::/ && 
+                (($srcln, $level, $tfullpath, $st, $hi, $en, $orgln) = 
                 /^SRCDOC::(\d+)::(\d+)::(.+?)::(\d+)::(\d+)::(\d+)::(.+)$/)) {
                 $copyidx++;
                 l00httpd::dbp($config{'desc'}, "SRCDOC:$copyidx($srcln, $level, $tfullpath, $st, $hi, $en, $orgln)\n"), if ($ctrl->{'debug'} >= 1);
                 $writeentirefilehighlight{$tfullpath} .= ":$hi,$reccuLvlColor[$level]:";
-                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$tfullpath} = $writeentirefilehighlight{$tfullpath}\n"), if ($ctrl->{'debug'} >= 1);
+                l00httpd::dbp($config{'desc'}, "SRCDOC:writeentirefilehighlight{$tfullpath} = $writeentirefilehighlight{$tfullpath}\n"), if ($ctrl->{'debug'} >= 1);
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
                 $tfullpath =~ s/[^\\\/]+$//;
 
@@ -367,7 +389,7 @@ end_of_print3
                     $tmp = "$tfullpath$tfullname";
                     $copyname = "${pname}${copyname}_$writeentirefile{$tmp}.html";
                     print COPYDEST "index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a> ($copyidx:$srcln)\n";
-                    print COPYDEST "Source  : <a href=\"$copyname\">$tfullpath$tfullname</a> ($hi)\n";
+                    print COPYDEST "<a href=\"/view.htm?path=$tfullpath$tfullname\">Source</a>  : <a href=\"$copyname\">$tfullname</a> in $tfullpath at $hi\n";
                     print COPYDEST "Original: $orgln\n";
 
                     open (COPYSRC, "<$tfullpath$tfullname");
@@ -421,6 +443,7 @@ end_of_print3
             # extra space to defeat the followings
             s/<a href="#___top___.+?<\/a>//;
             s/<a href="#__toc__.+?<\/a>//;
+
             $html2 .= "$_\n";
         }
         if (open(OU, ">$pname${fname}_nav0.html")) {
@@ -437,46 +460,63 @@ end_of_print3
             $copyname = "${pname}${copyname}_$writeentirefile{$fname}.html";
 #::conti::
             l00httpd::dbp($config{'desc'}, "writeentirefile = $fname -- $writeentirefile{$fname} : $copyname\n"), if ($ctrl->{'debug'} >= 1);
-            l00httpd::dbp($config{'desc'}, "writeentirefilehighlight = $writeentirefilehighlight{$fname}\n"), if ($ctrl->{'debug'} >= 1);
+            if (defined($writeentirefilehighlight{$fname})) {
+                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = $writeentirefilehighlight{$fname}\n"), if ($ctrl->{'debug'} >= 1);
+            } else {
+                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = undef\n"), if ($ctrl->{'debug'} >= 1);
+            }
             if (open(ENTIREFILE, ">$copyname")) {
                 print ENTIREFILE "<html>\n<head>\n";
                 print ENTIREFILE "<title>$fname</title>\n";
                 print ENTIREFILE "</head>\n<body bgcolor=\"#FFFFFF\">\n\n";
-	open (COPYSRC, "<$fname");
-	$lnno = 1;
-	print ENTIREFILE "<pre>";
-	while (<COPYSRC>) {
-		if ($writeentirefilehighlight{$fname} =~ /:$lnno,([^:]+):/) {
-            print ENTIREFILE "<font color=\"$1\">";
-		}
+                if (!open (COPYSRC, "<$fname")) {
+                    l00httpd::dbp($config{'desc'}, "FAILED to read $fname\n"), if ($ctrl->{'debug'} >= 1);
+                } else {
+                    $lnno = 1;
+                    print ENTIREFILE "<pre>";
+                    while (<COPYSRC>) {
+                        if (defined($writeentirefilehighlight{$fname}) &&
+                            $writeentirefilehighlight{$fname} =~ /:$lnno,([^:]+):/) {
+                            print ENTIREFILE "<font color=\"$1\">";
+                        }
 
-		print ENTIREFILE "<a name=\"#_$lnno\"></a>";
-		print ENTIREFILE sprintf ("%4d: ", $lnno);
-        # use predefined for < and > -- WAL - 2009/09/21 15:30:03 Mon
-        s/</&lt;/g;
-        s/>/&gt;/g;
-		print ENTIREFILE;
-		if ($writeentirefilehighlight {$fname} =~ /:$lnno,(.+):/) {
-            print ENTIREFILE "</font>";
-		}
-		$lnno++;
-	}
-	print ENTIREFILE "</pre>\n";
-	close (COPYSRC);
-
-	print ENTIREFILE "</body></html>\n";
+                        print ENTIREFILE "<a name=\"#_$lnno\"></a>";
+                        print ENTIREFILE sprintf ("%4d: ", $lnno);
+                        # use predefined for < and > -- WAL - 2009/09/21 15:30:03 Mon
+                        s/</&lt;/g;
+                        s/>/&gt;/g;
+                        print ENTIREFILE;
+                        if (defined($writeentirefilehighlight{$fname}) &&
+                            $writeentirefilehighlight{$fname} =~ /:$lnno,([^:]+):/) {
+                            print ENTIREFILE "</font>";
+                        }
+                        $lnno++;
+                    }
+                    print ENTIREFILE "</pre>\n";
+                    close (COPYSRC);
+                }
+                print ENTIREFILE "</body></html>\n";
                 close(ENTIREFILE);
             }
         }
     }
 
+    &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_buffer.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $buffer);
+    &l00httpd::l00fwriteClose($ctrl);
 
     $html = &l00wikihtml::wikihtml ($ctrl, $pname, $buffer, 2, $fname);
+
+    &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_html.txt");
+    &l00httpd::l00fwriteBuf($ctrl, $html);
+    &l00httpd::l00fwriteClose($ctrl);
+
     $buffer = "<br>\n";
     $buffer .= "<form action=\"/srcdoc.htm\" method=\"get\">\n";
     $buffer .= "<input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     $buffer .= "<input type=\"submit\" name=\"generate\" value=\"G&#818;enerate\" accesskey=\"g\">\n";
     $buffer .= "width% <input type=\"text\" size=\"3\" name=\"width\" value=\"$width\">\n";
+    $buffer .= "<input type=\"checkbox\" name=\"noheading\" $noheading accesskey=\"n\"> N&#818;o headings\n";
     $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     $buffer .= "</form><br>\n";
     $buffer .= "Output on port: \n";
@@ -531,9 +571,10 @@ end_of_print3
                 $buffer .= "</form>\n";
             }
         } else {
-            $buffer .= "$_";
+            $buffer .= "$_\n";
         }
     }
+
     print $sock "$buffer";
 
     print $sock "<a name=\"end\"></a>\n";
