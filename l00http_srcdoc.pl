@@ -257,7 +257,7 @@ end_of_print2
             if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
                 $copyidx++;
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
-                $html .= "\nSRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln\n";
+                $html .= "\nSRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln";
                 l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln"), if ($ctrl->{'debug'} >= 1);
                 $secnohash{$srcln} = $secno;
                 ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
@@ -267,29 +267,27 @@ end_of_print2
                     $writeentirefile{$tfullpath} = $cnt;
                 }
                 l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${tfullpath}\n"), if ($ctrl->{'debug'} >= 1);
-                $html .= "<br><a href=\"$copyname\" target=\"content\">[show code]</a> - $tfullname\n";
+                $tfullname =~ s/^([A-Z]+[a-z0-9])/!$1/;
+                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - $tfullname\n";
                 $tfullpath = '';
                 $orgln = '(not available)';
             }
             if ($ii <= $#buf) {
                 if (($tmp, $tmp2) = $buf[$ii] =~ /^(=+)(.+)$/) {
-                    if ($noheading ne 'checked') {
-                        $tlevel = length($tmp) - 1;
-                        $secno = &l00http_srcdoc_secno($tlevel);
-                        $html .= "\n<a name=\"sec_$secno\"></a>\n";
-                        $html .= "$tmp$secno $tmp2\n";
-                    }
-                } else {
-                    $html .= $buf[$ii];
-                }
-                if (($tmp) = $buf[$ii] =~ /^(=+)/) {
                     $tlevel = length($tmp) - 1;
                     l00httpd::dbp($config{'desc'}, "newsec? line $ii ^= x $tlevel\n"), if ($ctrl->{'debug'} >= 1);
                     if (($tfullpath, $tlnnost, $tlnnohi, $tlnnoen) = $buf[$ii + 1] =~ /^(.+?)::(\d+)::(\d+)::(\d+)/) {
                         if (!-f $tfullpath) {
                             l00httpd::dbp($config{'desc'}, "target file not found\n"), if ($ctrl->{'debug'} >= 1);
                             $tfullpath = '';
+                            $html .= $buf[$ii];
                         } else {
+                            if ($noheading ne 'checked') {
+                                $tlevel = length($tmp) - 1;
+                                $secno = &l00http_srcdoc_secno($tlevel);
+                                $html .= "\n<a name=\"sec_$secno\"></a>\n";
+                                $html .= "$tmp$secno $tmp2\n";
+                            }
                             l00httpd::dbp($config{'desc'}, "NEWSEC! line $ii+1 target level $tlevel line $tlnnost-$tlnnohi-$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 1);
                             # skip full file path, name, and offset
                             $ii++;
@@ -323,13 +321,20 @@ end_of_print2
                         }
                     } else {
                         $tfullpath = '';
+                        $html .= $buf[$ii];
                     }
+                } else {
+                    $html .= $buf[$ii];
                 }
                 $ii++;
             } else {
                 $loop = 0;
             }
         }
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_html.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $html);
+        &l00httpd::l00fwriteClose($ctrl);
 
         $html = &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
         $html = <<end_of_print3
@@ -428,12 +433,14 @@ end_of_print3
             # <a href="/edit.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&editline=on&blklineno=">ed</a> 
             # <a href="/view.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&update=Skip&skip=&maxln=200"></a>
             # </h3><a name="2_1_1__with_no_navigation_"></a>
-            if (/<h\d+>.*blog.htm.*edit.htm.*view.htm.*<\/h\d+>/) {
+            if (($tmp) = /<h(\d+)>.*blog.htm.*edit.htm.*view.htm.*<\/h\d+>/) {
                 s/<a href="#toc_.+?<\/a>//;
                 s/<a href="\/blog.htm.+?<\/a>//;
                 s/<a href="\/edit.htm.+?<\/a>//;
                 if ($srcln > 0) {
-                    s/<a href="\/view.htm.+?<\/a>/ ($srcln)/;
+                    # level head heading level - 1
+                    $tmp--;
+                    s/<a href="\/view.htm.+?<\/a>/ [$tmp] ($srcln)/;
                     $srcln = 0;
                 } else {
                     s/<a href="\/view.htm.+?<\/a>//;
@@ -507,7 +514,7 @@ end_of_print3
 
     $html = &l00wikihtml::wikihtml ($ctrl, $pname, $buffer, 2, $fname);
 
-    &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_html.txt");
+    &l00httpd::l00fwriteOpen($ctrl, "l00://~srcdoc_html2.txt");
     &l00httpd::l00fwriteBuf($ctrl, $html);
     &l00httpd::l00fwriteClose($ctrl);
 
