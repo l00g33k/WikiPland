@@ -499,9 +499,7 @@ sub l00http_blog_proc {
     }
 
 
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
-    print $sock "<p><input type=\"submit\" name=\"timesave\" value=\"TimeSave\">\n";
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
     # display button to switch style
 
     print $sock "<input type=\"hidden\" name=\"stylecurr\" value=\"$stylenew\">\n";
@@ -522,6 +520,9 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
+    print $sock "<input type=\"submit\" name=\"timesave\" value=\"Tim&#818;eSave\" accesskey=\"m\">\n";
+
     if (defined ($form->{'pastesave'})) {
         print $sock "<hr>$pastesavebuf<hr>\n";
     }

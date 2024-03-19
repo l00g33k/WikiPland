@@ -68,7 +68,7 @@ sub l00http_shellls_proc {
         if ($up1lvl =~ /\/$/) {
             $up1lvl =~ s/[^\/]+\/$//;
             $up1lvl =~ s/ /\+/g;
-            printf $sock ("  up: <a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$up1lvl\">$up1lvl</a>\n");
+            printf $sock ("<a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$up1lvl\">  up: $up1lvl</a>\n");
         }
         $datewidth = 0;
         foreach $item (@items) {
@@ -160,6 +160,8 @@ sub l00http_shellls_proc {
     print $sock "    </tr>\n";
     print $sock "</table>\n";
     print $sock "</form>\n";
+
+    print $sock "<p>shcmd: $shcmd<p>\n";
 
     print $sock "<hr><a name=\"end\"></a>\n";
 
