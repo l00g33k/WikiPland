@@ -116,8 +116,8 @@ sub l00http_shellls_proc {
 
         $ramfname = "l00://shellls_$fname.". &l00crc32::crc32($shpath.$shcmd) . ".txt";
 
-        print $sock "View: <a href=\"/view.htm?path=$ramfname\" target=\"_blank\">$ramfname</a> -- ";
-        print $sock "<a href=\"/launcher.htm?path=$ramfname\" target=\"_blank\">launcher</a>\n\n";
+        print $sock "View: <a href=\"/view.htm?path=$ramfname\">$ramfname</a> -- ";
+        print $sock "<a href=\"/launcher.htm?path=$ramfname\">launcher</a>\n\n";
 
         $catout = `$shcmd 'cat \"$shpath\"'`;
 
@@ -134,7 +134,7 @@ sub l00http_shellls_proc {
             s/>/&gt;/g;
             printf $sock ("%4d: %s\n", $lnno, $_);
         }
-        print $sock "\nView: <a href=\"/view.htm?path=$ramfname\" target=\"_blank\">$ramfname</a>\n\n";
+        print $sock "\nView: <a href=\"/view.htm?path=$ramfname\">$ramfname</a>\n\n";
     }
 
 

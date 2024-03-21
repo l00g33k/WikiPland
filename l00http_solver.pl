@@ -270,7 +270,8 @@ sub l00http_solver_proc {
 #print $sock "</pre>\n";
 
 
-            print $sock "<a href=\"/solver.htm?launchit=solver&path=$form->{'path'}\">Select another equation</a><br>\n";
+            print $sock "<a href=\"/solver.htm?launchit=solver&path=$form->{'path'}\">Select another equation</a> -- \n";
+            print $sock "<a href=\"/eval.htm\">eval</a><br>\n";
             print $sock "<form action=\"/solver.htm\" method=\"get\">\n";
             #print $sock "<input type=\"submit\" name=\"solve\" value=\"Solve\">\n";
             print $sock "<input type=\"hidden\" name=\"solve\" value=\"Solve\">\n";
