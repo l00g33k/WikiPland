@@ -49,6 +49,27 @@ my (@reccuLvlColor);
 "blue"
 );
 
+
+my ($localpath, @altpath);
+
+sub l00http_srcdoc_localfname {
+    my ($ctrl, $localfname) = @_;
+    my ($onealtpath);
+
+    if ((! -f "$localfname") && (-d $localpath) && ($#altpath >= 0)) {
+        foreach $onealtpath (@altpath) {
+            if ($localfname =~ /^$onealtpath/) {
+                l00httpd::dbp($config{'desc'}, "localfname was: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+                $localfname =~ s/^$onealtpath/$localpath/;
+                l00httpd::dbp($config{'desc'}, "localfname  is: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+                last;
+            }
+        }
+    }
+
+    $localfname;
+}
+
 sub l00http_srcdoc_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
@@ -189,6 +210,13 @@ sub l00http_srcdoc_proc {
                 }
                 $buffer .= $_;
             }
+            if (($tmp) = /^%ALTPATH:(.+)$/){
+                if (-d $tmp){
+                    $localpath = $tmp;
+                } else {
+                    push(@altpath, $tmp);
+                }
+            }
             push(@buf, $_);
         }
         $buffer .= "\n__SRCDOC__${lnno}_end\n";
@@ -231,7 +259,7 @@ end_of_print1
 end_of_print2
 ;
 
-        $localfname = "$pname${fname}_index.html";
+        $localfname = &l00http_srcdoc_localfname($ctrl, "$pname${fname}_index.html");
         l00httpd::dbp($config{'desc'}, "Write index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         if (open(OU, ">$localfname")) {
             print OU $html;
@@ -374,7 +402,7 @@ end_of_print3
                 $tfullpath =~ s/[^\\\/]+$//;
 
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
-                $localfname = "$pname$copyname";
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$pname$copyname");
                 l00httpd::dbp($config{'desc'}, "Write COPYDEST: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 if (open(COPYDEST, ">$localfname")) {
                     print COPYDEST "<html>\n<head>\n";
@@ -401,7 +429,7 @@ end_of_print3
                     print COPYDEST "<a href=\"/view.htm?path=$tfullpath$tfullname\">Source</a>  : <a href=\"$copyname\">$tfullname</a> in $tfullpath at $hi\n";
                     print COPYDEST "Original: $orgln\n";
 
-                    $localfname = "$tfullpath$tfullname";
+                    $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath$tfullname");
                     l00httpd::dbp($config{'desc'}, "Read COPYSRC: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                     open (COPYSRC, "<$localfname");
                     $lnno = 1;
@@ -459,7 +487,7 @@ end_of_print3
 
             $html2 .= "$_\n";
         }
-        $localfname = "$pname${fname}_nav0.html";
+        $localfname = &l00http_srcdoc_localfname($ctrl, "$pname${fname}_nav0.html");
         l00httpd::dbp($config{'desc'}, "Write nav0.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         if (open(OU, ">$localfname")) {
             print OU $html2;
@@ -480,13 +508,13 @@ end_of_print3
             } else {
                 l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = undef\n"), if ($ctrl->{'debug'} >= 4);
             }
-            $localfname = "$copyname";
+            $localfname = &l00http_srcdoc_localfname($ctrl, "$copyname");
             l00httpd::dbp($config{'desc'}, "Write ENTIREFILE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             if (open(ENTIREFILE, ">$localfname")) {
                 print ENTIREFILE "<html>\n<head>\n";
                 print ENTIREFILE "<title>$fname</title>\n";
                 print ENTIREFILE "</head>\n<body bgcolor=\"#FFFFFF\">\n\n";
-                $localfname = "$fname";
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$fname");
                 l00httpd::dbp($config{'desc'}, "Read COPYSRC: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 if (!open (COPYSRC, "<$localfname")) {
                     l00httpd::dbp($config{'desc'}, "FAILED to read $fname\n"), if ($ctrl->{'debug'} >= 4);
@@ -539,7 +567,7 @@ end_of_print3
     $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     $buffer .= "</form><br>\n";
     $buffer .= "Output on port: \n";
-    $localfname = "$pname${fname}_index.html";
+    $localfname = &l00http_srcdoc_localfname($ctrl, "$pname${fname}_index.html");
     l00httpd::dbp($config{'desc'}, "Links to index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
     $buffer .= "<a href=\"http://localhost:20337$localfname\" target=\"_blank\">20337</a>\n";
     $buffer .= "<a href=\"http://localhost:20347$localfname\" target=\"_blank\">20347</a>\n";
