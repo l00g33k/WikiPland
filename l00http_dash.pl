@@ -1365,7 +1365,7 @@ sub l00http_dash_proc {
             $clip =~ s/\n */\n/gm;
             $clip =~ s/^ *\n *//;
             $clip = &l00httpd::urlencode ($clip);
-            $clip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">&#8227;&#8227;&#8227;</a>";
+            $clip = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">&gt;&gt;&gt;</a>";
             $_ .= " $clip||";
 
             $out .= "$_\n";

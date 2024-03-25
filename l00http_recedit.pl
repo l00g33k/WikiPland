@@ -9,12 +9,13 @@ use l00httpd;
 
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
-my ($record1, $displen, $filter, $eval);
+my ($record1, $displen, $filter, $eval, $dueonly);
 
 $record1 = '^\d{8,8} \d{6,6} ';
 $filter = '.';
 $eval = '';
 $displen = 50;
+$dueonly = '';
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno, $dispcnt) = @_;
@@ -220,6 +221,15 @@ sub l00http_recedit_proc (\%) {
         $record1 = $form->{'record1'};
     }
 
+    if (defined ($form->{'submit'})) {
+        if (defined ($form->{'dueonly'})) {
+            $dueonly = 'checked';
+print "DBGDBG: update dueonly checked\n";
+        } else {
+            $dueonly = '';
+print "DBGDBG: update dueonly NOT checked\n";
+        }
+    }
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>recedit</title>" . $ctrl->{'htmlhead2'};
@@ -503,12 +513,7 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "        <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
-        if (defined ($form->{'dueonly'})) {
-            $_ = 'checked';
-        } else {
-            $_ = '';
-        }
-        print $sock "                <input type=\"checkbox\" name=\"dueonly\" accesskey=\"d\" $_>d&#818;ue\n";
+        print $sock "                <input type=\"checkbox\" name=\"dueonly\" accesskey=\"d\" $dueonly>d&#818;ue\n";
     }
     if (defined ($form->{'reminder'})) {
         $_ = 'checked';
@@ -563,7 +568,8 @@ sub l00http_recedit_proc (\%) {
                                         $due .= sprintf("%03d %s", $duecnt, $_);
                                     }
                                 }
-                                if (defined ($form->{'dueonly'})) {
+                               #if (defined ($form->{'dueonly'})) {
+                                if ($dueonly eq 'checked') {
                                     if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
                                         if ($1 lt $ctrl->{'now_string'}) {
                                             push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno, $dispcnt++));
