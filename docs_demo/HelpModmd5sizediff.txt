@@ -26,6 +26,7 @@ several steps:
 ==Procedure==
 * Open the directory view of the [[/ls.htm?path=./md5sizediff_test/|test case directory]].
 You should see something like this:
+
     ../                 &lt;dir&gt;
     that/               &lt;dir&gt;
     this/               &lt;dir&gt;
@@ -34,3 +35,4 @@ You should see something like this:
 * 
 ===Create md5sum and size of the 'THAT' directory tree===
 ===Compare them===
+* Use || to separate two or more files for combined input.

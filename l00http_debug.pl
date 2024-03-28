@@ -46,8 +46,8 @@ sub l00http_debug_proc (\%) {
     print $sock "<table border=\"0\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"clear\" value=\"C&#818;lear\" accesskey=\"c\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"jump\" value=\"J&#818;ump\" accesskey=\"j\"></td>\n";
     print $sock "        <td>jump invertval: <input type=\"text\" size=\"6\" name=\"jmpintv\" value=\"$jmpintv\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"copy\" value=\"Copy t&#818;o\" accesskey=\"t\">\n";

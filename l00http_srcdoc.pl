@@ -54,17 +54,26 @@ my ($localpath, @altpath);
 
 sub l00http_srcdoc_localfname {
     my ($ctrl, $localfname) = @_;
-    my ($onealtpath);
+    my ($onealtpath, $lpath, $lfname);
 
-    if ((! -f "$localfname") && (-d $localpath) && ($#altpath >= 0)) {
-        foreach $onealtpath (@altpath) {
-            if ($localfname =~ /^$onealtpath/) {
-                l00httpd::dbp($config{'desc'}, "localfname was: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-                $localfname =~ s/^$onealtpath/$localpath/;
-                l00httpd::dbp($config{'desc'}, "localfname  is: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-                last;
+    if (($lpath, $lfname) = $localfname =~ /^(.+?)([^\\\/]+)$/) {
+        l00httpd::dbp($config{'desc'}, "ALTPATH: localfname (\$#altpath $#altpath + 1): $lpath - $lfname\n"), if ($ctrl->{'debug'} >= 1);
+        if ((! -d "$lpath") && (-d $localpath) && ($#altpath >= 0)) {
+            l00httpd::dbp($config{'desc'}, "ALTPATH: substituding:\n"), if ($ctrl->{'debug'} >= 1);
+            foreach $onealtpath (@altpath) {
+                l00httpd::dbp($config{'desc'}, "ALTPATH: candidate: $onealtpath\n"), if ($ctrl->{'debug'} >= 1);
+                if ($lpath =~ /^$onealtpath/) {
+                    l00httpd::dbp($config{'desc'}, "ALTPATH: localfname was: $lpath$lfname\n"), if ($ctrl->{'debug'} >= 1);
+                    $lpath =~ s/^$onealtpath/$localpath/;
+                    l00httpd::dbp($config{'desc'}, "ALTPATH: localfname  is: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+                    $localfname = "$lpath$lfname";
+                    last;
+                }
             }
+        } else {
+            l00httpd::dbp($config{'desc'}, "ALTPATH: no substitution: exist: $lpath\n"), if ($ctrl->{'debug'} >= 1);
         }
+
     }
 
     $localfname;
@@ -127,7 +136,7 @@ sub l00http_srcdoc_proc {
         $form->{'path'} =~ s/\r//g;
         $form->{'path'} =~ s/\n//g;
         ($tfullpath, $tfullname) = $form->{'path'} =~ /^(.+?)([^\\\/]+)$/;
-        print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tfullpath\" target=\"_blank\">Path: </a>";
+        print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tfullpath\">Path:</a> ";
         print $sock "<a href=\"/ls.htm?path=$tfullpath\">$tfullpath</a>";
         print $sock "<a href=\"/view.htm?path=$tfullpath$tfullname\">$tfullname</a>\n";
     }
@@ -210,11 +219,13 @@ sub l00http_srcdoc_proc {
                 }
                 $buffer .= $_;
             }
-            if (($tmp) = /^%ALTPATH:(.+)$/){
-                if (-d $tmp){
+            if (($tmp) = /^%ALTPATH:(.+)%[\r\n]*$/) {
+                if (-d "$tmp") {
                     $localpath = $tmp;
+                    l00httpd::dbp($config{'desc'}, "altpath: localpath  : $localpath\n"), if ($ctrl->{'debug'} >= 1);
                 } else {
                     push(@altpath, $tmp);
+                    l00httpd::dbp($config{'desc'}, "altpath: alt-path($#altpath): $tmp\n"), if ($ctrl->{'debug'} >= 1);
                 }
             }
             push(@buf, $_);
@@ -259,7 +270,7 @@ end_of_print1
 end_of_print2
 ;
 
-        $localfname = &l00http_srcdoc_localfname($ctrl, "$pname${fname}_index.html");
+        $localfname = "$pname${fname}_index.html";
         l00httpd::dbp($config{'desc'}, "Write index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         if (open(OU, ">$localfname")) {
             print OU $html;
@@ -285,16 +296,17 @@ end_of_print2
         while ($loop) {
             $srcln = $ii + 1;
             if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath");
                 $copyidx++;
-                l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 4);
+                l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $localfname\n"), if ($ctrl->{'debug'} >= 4);
                 $html .= "\nSRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln";
                 l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln"), if ($ctrl->{'debug'} >= 4);
                 $secnohash{$srcln} = $secno;
-                ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
+                ($tfullname) = $localfname =~ /([^\\\/]+)$/;
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
-                if (!defined($writeentirefile{$tfullpath})) {
+                if (!defined($writeentirefile{$localfname})) {
                     $cnt++;
-                    $writeentirefile{$tfullpath} = $cnt;
+                    $writeentirefile{$localfname} = $cnt;
                 }
                 l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${tfullpath}\n"), if ($ctrl->{'debug'} >= 4);
                 $tfullname =~ s/^([A-Z]+[a-z0-9])/!$1/;
@@ -307,8 +319,9 @@ end_of_print2
                     $tlevel = length($tmp) - 1;
                     l00httpd::dbp($config{'desc'}, "newsec? line $ii ^= x $tlevel\n"), if ($ctrl->{'debug'} >= 4);
                     if (($tfullpath, $tlnnost, $tlnnohi, $tlnnoen) = $buf[$ii + 1] =~ /^(.+?)::(\d+)::(\d+)::(\d+)/) {
-                        if (!-f $tfullpath) {
-                            l00httpd::dbp($config{'desc'}, "target file not found\n"), if ($ctrl->{'debug'} >= 4);
+                        $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath");
+                        if (!-f $localfname) {
+                            l00httpd::dbp($config{'desc'}, "target file not found: $localfname ($tfullpath)\n"), if ($ctrl->{'debug'} >= 4);
                             $tfullpath = '';
                             $html .= $buf[$ii];
                         } else {
@@ -318,7 +331,7 @@ end_of_print2
                                 $html .= "\n<a name=\"sec_$secno\"></a>\n";
                                 $html .= "$tmp$secno $tmp2\n";
                             }
-                            l00httpd::dbp($config{'desc'}, "NEWSEC! line $ii+1 target level $tlevel line $tlnnost-$tlnnohi-$tlnnoen in file $tfullpath\n"), if ($ctrl->{'debug'} >= 4);
+                            l00httpd::dbp($config{'desc'}, "NEWSEC! line $ii+1 target level $tlevel line $tlnnost-$tlnnohi-$tlnnoen in file $tfullpath AKA $localfname\n"), if ($ctrl->{'debug'} >= 4);
                             # skip full file path, name, and offset
                             $ii++;
                             # if file exist, save original line too
@@ -398,11 +411,12 @@ end_of_print3
                 l00httpd::dbp($config{'desc'}, "SRCDOC:$copyidx($srcln, $level, $tfullpath, $st, $hi, $en, $orgln)\n"), if ($ctrl->{'debug'} >= 4);
                 $writeentirefilehighlight{$tfullpath} .= ":$hi,$reccuLvlColor[$level]:";
                 l00httpd::dbp($config{'desc'}, "SRCDOC:writeentirefilehighlight{$tfullpath} = $writeentirefilehighlight{$tfullpath}\n"), if ($ctrl->{'debug'} >= 4);
-                ($tfullname) = $tfullpath =~ /([^\\\/]+)$/;
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath");
+                ($tfullname) = $localfname =~ /([^\\\/]+)$/;
                 $tfullpath =~ s/[^\\\/]+$//;
 
                 $copyname = "${fname}_${copyidx}_$tfullname.html";
-                $localfname = &l00http_srcdoc_localfname($ctrl, "$pname$copyname");
+                $localfname = "$pname$copyname";
                 l00httpd::dbp($config{'desc'}, "Write COPYDEST: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 if (open(COPYDEST, ">$localfname")) {
                     print COPYDEST "<html>\n<head>\n";
@@ -414,7 +428,7 @@ end_of_print3
                    #print COPYDEST "original line: <i>$orgln</i></p>\n\n";
                     print COPYDEST "<pre>\n";
 
-                    l00httpd::dbp($config{'desc'}, " - tfullname = $tfullname"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, " - tfullname = $tfullname\n"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - tfullpath = $tfullpath\n"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - copyname = $copyname"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - level = $level"), if ($ctrl->{'debug'} >= 4);
@@ -422,14 +436,13 @@ end_of_print3
                     l00httpd::dbp($config{'desc'}, " - hi = $hi"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - en = $en\n"), if ($ctrl->{'debug'} >= 4);
 
-                    $copyname = $tfullname;
-                    $tmp = "$tfullpath$tfullname";
+                    $tmp = "$localfname$tfullname";
                     $copyname = "${pname}${copyname}_$writeentirefile{$tmp}.html";
                     print COPYDEST "index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a> ($copyidx:$srcln)\n";
-                    print COPYDEST "<a href=\"/view.htm?path=$tfullpath$tfullname\">Source</a>  : <a href=\"$copyname\">$tfullname</a> in $tfullpath at $hi\n";
+                    print COPYDEST "<a href=\"/view.htm?path=$localfname$tfullname\">Source</a>  : <a href=\"$copyname\">$tfullname</a> in $localfname at $hi\n";
                     print COPYDEST "Original: $orgln\n";
 
-                    $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath$tfullname");
+                    $localfname = &l00http_srcdoc_localfname($ctrl, "$pname$tfullname");
                     l00httpd::dbp($config{'desc'}, "Read COPYSRC: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                     open (COPYSRC, "<$localfname");
                     $lnno = 1;
@@ -487,7 +500,7 @@ end_of_print3
 
             $html2 .= "$_\n";
         }
-        $localfname = &l00http_srcdoc_localfname($ctrl, "$pname${fname}_nav0.html");
+        $localfname = "$pname${fname}_nav0.html";
         l00httpd::dbp($config{'desc'}, "Write nav0.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         if (open(OU, ">$localfname")) {
             print OU $html2;
@@ -501,14 +514,13 @@ end_of_print3
             $copyname = $fname;
             $copyname =~ s/^.+[\\\/]([^\\\/]+)$/$1/;
             $copyname = "${pname}${copyname}_$writeentirefile{$fname}.html";
-#::conti::
             l00httpd::dbp($config{'desc'}, "writeentirefile = $fname -- $writeentirefile{$fname} : $copyname\n"), if ($ctrl->{'debug'} >= 4);
             if (defined($writeentirefilehighlight{$fname})) {
                 l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = $writeentirefilehighlight{$fname}\n"), if ($ctrl->{'debug'} >= 4);
             } else {
                 l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = undef\n"), if ($ctrl->{'debug'} >= 4);
             }
-            $localfname = &l00http_srcdoc_localfname($ctrl, "$copyname");
+            $localfname = "$copyname";
             l00httpd::dbp($config{'desc'}, "Write ENTIREFILE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             if (open(ENTIREFILE, ">$localfname")) {
                 print ENTIREFILE "<html>\n<head>\n";
@@ -567,12 +579,12 @@ end_of_print3
     $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     $buffer .= "</form><br>\n";
     $buffer .= "Output on port: \n";
-    $localfname = &l00http_srcdoc_localfname($ctrl, "$pname${fname}_index.html");
+    $localfname = "$pname${fname}_index.html";
     l00httpd::dbp($config{'desc'}, "Links to index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-    $buffer .= "<a href=\"http://localhost:20337$localfname\" target=\"_blank\">20337</a>\n";
-    $buffer .= "<a href=\"http://localhost:20347$localfname\" target=\"_blank\">20347</a>\n";
-    $buffer .= "<a href=\"http://localhost:30337$localfname\" target=\"_blank\">30337</a>\n";
-    $buffer .= "<a href=\"http://localhost:30347$localfname\" target=\"_blank\">30347</a>\n";
+    $buffer .= "<a href=\"http://localhost:20337$localfname\">20337</a>\n";
+    $buffer .= "<a href=\"http://localhost:20347$localfname\">20347</a>\n";
+    $buffer .= "<a href=\"http://localhost:30337$localfname\">30337</a>\n";
+    $buffer .= "<a href=\"http://localhost:30347$localfname\">30347</a>\n";
     $buffer .= " - <a href=\"#lastinsert\"\">Last inserted here</a>\n";
     if (defined ($form->{'insertlnno'})) {
         $buffer .= "<br><a href=\"#theform\"\">Jump to the Form</a><br>\n";
