@@ -120,6 +120,7 @@ sub l00http_datetimeline_proc (\%) {
     print $sock "<p>\n";
 
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+        l00httpd::dbp($config{'desc'}, "Scanning $form->{'path'}\n"), if ($ctrl->{'debug'} >= 1);
         $phase = 0;
         $html = '';
         $info = '';
@@ -139,6 +140,7 @@ sub l00http_datetimeline_proc (\%) {
             $lnno++;
 
             if (/^\%DATETIMELINE:START\%/) {
+                l00httpd::dbp($config{'desc'}, "Found \%DATETIMELINE:START\% tag\n"), if ($ctrl->{'debug'} >= 1);
                 $phase = 1;
                 $info .= "Found \%DATETIMELINE:START\%\n";
                 next;
@@ -147,70 +149,81 @@ sub l00http_datetimeline_proc (\%) {
                 next;
             }
             if (/^\%DATETIMELINE:END\%/) {
+                l00httpd::dbp($config{'desc'}, "Found \%DATETIMELINE:END\% tag\n"), if ($ctrl->{'debug'} >= 1);
                 $info .= "\nFound \%DATETIMELINE:END\%\n";
                 last;
             }
 
             s/\n//g;
             s/\r//g;
-            $html .= "                                                      --> $_\n", if ($ctrl->{'debug'} >= 3);
+            $html .= "                                                      --> $_ ($lnno)\n", if ($ctrl->{'debug'} >= 3);
 
             # @2020/1/15 13:00
-                 if (/@(\d+)\/(\d+)\/(\d+) +(\d+):(\d+) *$/) {
+            if      (/@(\d+)\/(\d+)\/(\d+) +(\d+):(\d+)[ \t]*$/) {
                 ($yr, $mo, $da, $hr, $mi) = ($1, $2, $3, $4, $5);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
                 # ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($plantime);
                 # print $sock "    ## $_ == $plantime | $year $mon $mday $hour $min\n";
+                $html .= "                                                      ".__LINE__." plantime \@year/time $plantime\n", if ($ctrl->{'debug'} >= 3);
             # @1/15 13:00
-            } elsif (/@(\d+)\/(\d+) +(\d+):(\d+) *$/) {
+            } elsif (/@(\d+)\/(\d+) +(\d+):(\d+)[ \t]*$/) {
                 ($mo, $da, $hr, $mi) = ($1, $2, $3, $4);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+                $html .= "                                                      ".__LINE__." plantime \@month/time $plantime\n", if ($ctrl->{'debug'} >= 3);
             # @1/15 13:00 remarks
-            } elsif (/@(\d+)\/(\d+) +(\d+):(\d+) +(.+)$/) {
+            } elsif (/@(\d+)\/(\d+) +(\d+):(\d+)[ \t]+(.+)$/) {
                 ($mo, $da, $hr, $mi, $msg) = ($1, $2, $3, $4, $5);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+                $html .= "                                                      ".__LINE__." plantime \@month/time/rem $plantime\n", if ($ctrl->{'debug'} >= 3);
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
             # @2020/1/15
-            } elsif (/^@(\d+)\/(\d+)\/(\d+) *$/) {
+            } elsif (/^@(\d+)\/(\d+)\/(\d+)[ \t]*$/) {
                 ($yr, $mo, $da, $hr, $mi) = ($1, $2, $3, 0, 0);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+                $html .= "                                                      ".__LINE__." plantime \@year $plantime\n", if ($ctrl->{'debug'} >= 3);
             # @1/15
-            } elsif (/^@(\d+)\/(\d+) *$/) {
+            } elsif (/^@(\d+)\/(\d+)[ \t]*$/) {
                 ($mo, $da, $hr, $mi) = ($1, $2, 0, 0, 0);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+                $html .= "                                                      ".__LINE__." plantime \@month $plantime\n", if ($ctrl->{'debug'} >= 3);
             # @13:00 remarks
-            } elsif (/^@(\d+):(\d+) +(.+)$/) {
+            } elsif (/^@(\d+):(\d+)[ \t]+(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+                $html .= "                                                      ".__LINE__." plantime \@time/rem $plantime\n", if ($ctrl->{'debug'} >= 3);
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
             # @13:00
-            } elsif (/^@(\d+):(\d+) *$/) {
+            } elsif (/^@(\d+):(\d+)[ \t]*$/) {
                 ($hr, $mi) = ($1, $2);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
+                $html .= "                                                      ".__LINE__." plantime \@time $plantime\n", if ($ctrl->{'debug'} >= 3);
             # ^13:00 remarks
-            } elsif (/^\^(\d+):(\d+) +(.+)$/) {
+            } elsif (/^\^(\d+):(\d+)[ \t]+(.+)$/) {
                 ($hr, $mi, $msg) = ($1, $2, $3);
-#               $html .= "<hr>\n";
+               #$html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $hr * 3600 + $mi * 60;
+                $html .= "                                                      ".__LINE__." plantime ^time/rem $plantime\n", if ($ctrl->{'debug'} >= 3);
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
             # ^13:00
-            } elsif (/^\^(\d+):(\d+) *$/) {
-#               $html .= "<hr>\n";
+            } elsif (/^\^(\d+):(\d+)[ \t]*$/) {
+               #$html .= "<hr>\n";
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0) + 
                     24 * 3600 + $1 * 3600 + $2 * 60;
+                $html .= "                                                      ".__LINE__." plantime ^time $plantime\n", if ($ctrl->{'debug'} >= 3);
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
             # +13 remarks
-            } elsif (/^\+([.0-9]+) +(.+)$/) {
+            } elsif (/^\+([.0-9]+)[ \t]+(.+)$/) {
                ($hours, $msg) = ($1, $2);
                # +(real number hours)
                $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, "*s*$hours hours**");
                $plantime += $hours * 3600;
+                $html .= "                                                      ".__LINE__." plantime +time/rem $plantime\n", if ($ctrl->{'debug'} >= 3);
                ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                $yr += 1900;
                $mo++;
@@ -218,12 +231,13 @@ sub l00http_datetimeline_proc (\%) {
             } elsif (/^\+([.0-9]+)/) {
                 # +(real number hours)
                 $plantime += $1 * 3600;
+                $html .= "                                                      ".__LINE__." plantime +time $plantime\n", if ($ctrl->{'debug'} >= 3);
                 ($sec,$mi,$hr,$da,$mo,$yr,$wday,$yday,$isdst) = gmtime ($plantime);
                 $yr += 1900;
                 $mo++;
             # ---
             } elsif (/^---/) {
-#               $html .= "<hr>\n";
+               #$html .= "<hr>\n";
             # !remarks
             } elsif (/^!(.*)$/) {
                 $html .= "$1\n";
@@ -233,6 +247,8 @@ sub l00http_datetimeline_proc (\%) {
                 if (!/^ *$/) {
                     $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $_, '');
                 }
+            } else {
+                $html .= "                                                      ^^^ NO MATCHES FOUND\n", if ($ctrl->{'debug'} >= 3);
             }
         }
 

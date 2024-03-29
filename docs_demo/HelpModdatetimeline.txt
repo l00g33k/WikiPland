@@ -77,3 +77,6 @@ Use 2021/5/9 19:00 to specify a different year than the current.
 
     h - rest : remarks
     h - rest
+
+=Debug=
+Set http://127.0.0.1:20337/httpd.htm debug level to 3 for debug messages.
