@@ -123,7 +123,7 @@ sub l00http_srcdoc_proc {
     my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln, $cnt);
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
     my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext, $tgttextcln);
-    my ($tlevel, $tfullpath, $tfullname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
+    my ($tlevel, $prjbase, $prjname, $cpfrompath, $cpfromname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
     my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash, $inpre, $localfname);
 
     # Send HTTP and HTML headers
@@ -135,10 +135,10 @@ sub l00http_srcdoc_proc {
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
         $form->{'path'} =~ s/\n//g;
-        ($tfullpath, $tfullname) = $form->{'path'} =~ /^(.+?)([^\\\/]+)$/;
-        print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tfullpath\">Path:</a> ";
-        print $sock "<a href=\"/ls.htm?path=$tfullpath\">$tfullpath</a>";
-        print $sock "<a href=\"/view.htm?path=$tfullpath$tfullname\">$tfullname</a>\n";
+        ($prjbase, $prjname) = $form->{'path'} =~ /^(.+?)([^\\\/]+)$/;
+        print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$prjbase\">Path:</a> ";
+        print $sock "<a href=\"/ls.htm?path=$prjbase\">$prjbase</a>";
+        print $sock "<a href=\"/view.htm?path=$prjbase$prjname\">$prjname</a>\n";
     }
     print $sock "<br>\n";
 
@@ -170,6 +170,7 @@ sub l00http_srcdoc_proc {
 		}
 
         if (open (IN, "<$form->{'path'}")) {
+            l00httpd::dbp($config{'desc'}, "READ: $form->{'path'}\n"), if ($ctrl->{'debug'} >= 1);
             $lnno = 0;
             $buffer = '';
             for ($ii = 0; $ii < $form->{'insertlnno'}; $ii++) {
@@ -188,6 +189,8 @@ sub l00http_srcdoc_proc {
             }
             # clear flag
             undef $form->{'insertlnno'};
+        } else {
+            l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $form->{'path'}\n"), if ($ctrl->{'debug'} >= 1);
         }
     }
 
@@ -195,6 +198,7 @@ sub l00http_srcdoc_proc {
     $buffer = '';
     @buf = ();
     if (open (IN, "<$form->{'path'}")) {
+        l00httpd::dbp($config{'desc'}, "READ: $form->{'path'}\n"), if ($ctrl->{'debug'} >= 1);
         $lnno = 0;
         $root = '';
         $lasthdrlvl = 1;
@@ -208,9 +212,9 @@ sub l00http_srcdoc_proc {
             $lnno++;
             if (($fileno == $lnno) &&
                 # /sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::9::99999::
-                (($tfullpath, $tfullname, $st, $hi, $en) = /^(.+?)([^\\\/]+?)::(\d+)::(\d+)::(.+)$/)) {
-                $buffer .= "<a href=\"/ls.htm?path=$tfullpath\">$tfullpath</a>".
-                           "<a href=\"/view.htm?path=$tfullpath$tfullname&hiliteln=$hi&lineno=on#line$hi\">$tfullname</a>".
+                (($cpfrompath, $cpfromname, $st, $hi, $en) = /^(.+?)([^\\\/]+?)::(\d+)::(\d+)::(.+)$/)) {
+                $buffer .= "<a href=\"/ls.htm?path=$cpfrompath\">$cpfrompath</a>".
+                           "<a href=\"/view.htm?path=$cpfrompath$cpfromname&hiliteln=$hi&lineno=on#line$hi\">$cpfromname</a>".
                            "::${st}::${hi}::${en}\n";
             } else {
                 if ($lnno == $lastinsert) {
@@ -232,6 +236,8 @@ sub l00http_srcdoc_proc {
         }
         $buffer .= "\n__SRCDOC__${lnno}_end\n";
         close (IN);
+    } else {
+        l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $form->{'path'}\n"), if ($ctrl->{'debug'} >= 1);
     }
     ($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/;
 
@@ -273,8 +279,11 @@ end_of_print2
         $localfname = "$pname${fname}_index.html";
         l00httpd::dbp($config{'desc'}, "Write index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         if (open(OU, ">$localfname")) {
+            l00httpd::dbp($config{'desc'}, "WRITE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             print OU $html;
             close(OU);
+        } else {
+            l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         }
 
 
@@ -286,8 +295,8 @@ end_of_print2
         $cnt = 0;
         &l00http_srcdoc_secno(-2);
         undef %secnohash;
-        $tfullpath = '';
-        $tfullname = '';
+        $cpfrompath = '';
+        $cpfromname = '';
         $loop = 1;
         $ii = 0;
         $copyidx = 0;
@@ -295,34 +304,34 @@ end_of_print2
         l00httpd::dbp($config{'desc'}, "-- scan for srcdoc headers with target line numbers and insert SRCDOC tags\n"), if ($ctrl->{'debug'} >= 4);
         while ($loop) {
             $srcln = $ii + 1;
-            if (($tfullpath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
-                $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath");
+            if (($cpfrompath ne '') && (($ii > $#buf) || ($buf[$ii] =~ /^=+/))) {
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath");
                 $copyidx++;
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $localfname\n"), if ($ctrl->{'debug'} >= 4);
-                $html .= "\nSRCDOC::${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln";
-                l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${tfullpath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln"), if ($ctrl->{'debug'} >= 4);
+                $html .= "\nSRCDOC::${srcln}::${tlevel}::${cpfrompath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln";
+                l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${cpfrompath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln"), if ($ctrl->{'debug'} >= 4);
                 $secnohash{$srcln} = $secno;
-                ($tfullname) = $localfname =~ /([^\\\/]+)$/;
-                $copyname = "${fname}_${copyidx}_$tfullname.html";
+                ($cpfromname) = $localfname =~ /([^\\\/]+)$/;
+                $copyname = "${fname}_${copyidx}_$cpfromname.html";
                 if (!defined($writeentirefile{$localfname})) {
                     $cnt++;
                     $writeentirefile{$localfname} = $cnt;
                 }
-                l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${tfullpath}\n"), if ($ctrl->{'debug'} >= 4);
-                $tfullname =~ s/^([A-Z]+[a-z0-9])/!$1/;
-                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - $tfullname\n";
-                $tfullpath = '';
+                l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${cpfrompath}\n"), if ($ctrl->{'debug'} >= 4);
+                $cpfromname =~ s/^([A-Z]+[a-z0-9])/!$1/;
+                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - $cpfromname\n";
+                $cpfrompath = '';
                 $orgln = '(not available)';
             }
             if ($ii <= $#buf) {
                 if (($tmp, $tmp2) = $buf[$ii] =~ /^(=+)(.+)$/) {
                     $tlevel = length($tmp) - 1;
                     l00httpd::dbp($config{'desc'}, "newsec? line $ii ^= x $tlevel\n"), if ($ctrl->{'debug'} >= 4);
-                    if (($tfullpath, $tlnnost, $tlnnohi, $tlnnoen) = $buf[$ii + 1] =~ /^(.+?)::(\d+)::(\d+)::(\d+)/) {
-                        $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath");
+                    if (($cpfrompath, $tlnnost, $tlnnohi, $tlnnoen) = $buf[$ii + 1] =~ /^(.+?)::(\d+)::(\d+)::(\d+)/) {
+                        $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath");
                         if (!-f $localfname) {
-                            l00httpd::dbp($config{'desc'}, "target file not found: $localfname ($tfullpath)\n"), if ($ctrl->{'debug'} >= 4);
-                            $tfullpath = '';
+                            l00httpd::dbp($config{'desc'}, "target file not found: $localfname ($cpfrompath)\n"), if ($ctrl->{'debug'} >= 4);
+                            $cpfrompath = '';
                             $html .= $buf[$ii];
                         } else {
                             if ($noheading ne 'checked') {
@@ -331,7 +340,7 @@ end_of_print2
                                 $html .= "\n<a name=\"sec_$secno\"></a>\n";
                                 $html .= "$tmp$secno $tmp2\n";
                             }
-                            l00httpd::dbp($config{'desc'}, "NEWSEC! line $ii+1 target level $tlevel line $tlnnost-$tlnnohi-$tlnnoen in file $tfullpath AKA $localfname\n"), if ($ctrl->{'debug'} >= 4);
+                            l00httpd::dbp($config{'desc'}, "NEWSEC! line $ii+1 target level $tlevel line $tlnnost-$tlnnohi-$tlnnoen in file $cpfrompath AKA $localfname\n"), if ($ctrl->{'debug'} >= 4);
                             # skip full file path, name, and offset
                             $ii++;
                             # if file exist, save original line too
@@ -363,7 +372,7 @@ end_of_print2
                             }
                         }
                     } else {
-                        $tfullpath = '';
+                        $cpfrompath = '';
                         $html .= $buf[$ii];
                     }
                 } else {
@@ -405,20 +414,21 @@ end_of_print3
         foreach $_ (split("\n", $html)) {
             # SRCDOC::123::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999::orgln
             if (/^SRCDOC::/ && 
-                (($srcln, $level, $tfullpath, $st, $hi, $en, $orgln) = 
+                (($srcln, $level, $cpfrompath, $st, $hi, $en, $orgln) = 
                 /^SRCDOC::(\d+)::(\d+)::(.+?)::(\d+)::(\d+)::(\d+)::(.+)$/)) {
                 $copyidx++;
-                l00httpd::dbp($config{'desc'}, "SRCDOC:$copyidx($srcln, $level, $tfullpath, $st, $hi, $en, $orgln)\n"), if ($ctrl->{'debug'} >= 4);
-                $writeentirefilehighlight{$tfullpath} .= ":$hi,$reccuLvlColor[$level]:";
-                l00httpd::dbp($config{'desc'}, "SRCDOC:writeentirefilehighlight{$tfullpath} = $writeentirefilehighlight{$tfullpath}\n"), if ($ctrl->{'debug'} >= 4);
-                $localfname = &l00http_srcdoc_localfname($ctrl, "$tfullpath");
-                ($tfullname) = $localfname =~ /([^\\\/]+)$/;
-                $tfullpath =~ s/[^\\\/]+$//;
+                l00httpd::dbp($config{'desc'}, "SRCDOC:$copyidx($srcln, $level, $cpfrompath, $st, $hi, $en, $orgln)\n"), if ($ctrl->{'debug'} >= 4);
+                $writeentirefilehighlight{$cpfrompath} .= ":$hi,$reccuLvlColor[$level]:";
+                l00httpd::dbp($config{'desc'}, "SRCDOC:writeentirefilehighlight{$cpfrompath} = $writeentirefilehighlight{$cpfrompath}\n"), if ($ctrl->{'debug'} >= 4);
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath");
+                ($cpfromname) = $localfname =~ /([^\\\/]+)$/;
+                $cpfrompath =~ s/[^\\\/]+$//;
 
-                $copyname = "${fname}_${copyidx}_$tfullname.html";
+                $copyname = "${fname}_${copyidx}_$cpfromname.html";
                 $localfname = "$pname$copyname";
                 l00httpd::dbp($config{'desc'}, "Write COPYDEST: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 if (open(COPYDEST, ">$localfname")) {
+                    l00httpd::dbp($config{'desc'}, "WRITE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                     print COPYDEST "<html>\n<head>\n";
                     print COPYDEST "<title>$fname</title>\n";
                     print COPYDEST "</head>\n<body bgcolor=\"#FFFFFF\">\n\n";
@@ -428,45 +438,51 @@ end_of_print3
                    #print COPYDEST "original line: <i>$orgln</i></p>\n\n";
                     print COPYDEST "<pre>\n";
 
-                    l00httpd::dbp($config{'desc'}, " - tfullname = $tfullname\n"), if ($ctrl->{'debug'} >= 4);
-                    l00httpd::dbp($config{'desc'}, " - tfullpath = $tfullpath\n"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, " - cpfromname = $cpfromname\n"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, " - cpfrompath = $cpfrompath\n"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - copyname = $copyname"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - level = $level"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - st = $st"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - hi = $hi"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - en = $en\n"), if ($ctrl->{'debug'} >= 4);
 
-                    $tmp = "$localfname$tfullname";
+                    $tmp = "$localfname$cpfromname";
                     $copyname = "${pname}${copyname}_$writeentirefile{$tmp}.html";
                     print COPYDEST "index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a> ($copyidx:$srcln)\n";
-                    print COPYDEST "<a href=\"/view.htm?path=$localfname$tfullname\">Source</a>  : <a href=\"$copyname\">$tfullname</a> in $localfname at $hi\n";
+                    print COPYDEST "<a href=\"/view.htm?path=$localfname$cpfromname\">Source</a>  : <a href=\"$copyname\">$cpfromname</a> in $localfname at $hi\n";
                     print COPYDEST "Original: $orgln\n";
 
-                    $localfname = &l00http_srcdoc_localfname($ctrl, "$pname$tfullname");
+                    $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
                     l00httpd::dbp($config{'desc'}, "Read COPYSRC: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-                    open (COPYSRC, "<$localfname");
-                    $lnno = 1;
-                    while (<COPYSRC>) {
-                        if (($lnno >= $st) && ($lnno <= $en)) {
-                            if ($hi == $lnno) {
-                                print COPYDEST "<font color=\"". $reccuLvlColor [$level] ."\">";
-                                print COPYDEST "Call level $level\n";
+                    if (open (COPYSRC, "<$localfname")) {
+                        l00httpd::dbp($config{'desc'}, "READ: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+                        $lnno = 1;
+                        while (<COPYSRC>) {
+                            if (($lnno >= $st) && ($lnno <= $en)) {
+                                if ($hi == $lnno) {
+                                    print COPYDEST "<font color=\"". $reccuLvlColor [$level] ."\">";
+                                    print COPYDEST "Call level $level\n";
+                                }
+                                print COPYDEST sprintf ("%4d: ", $lnno);
+                                s/</&lt;/g;
+                                s/>/&gt;/g;
+                                print COPYDEST;
+                                if ($hi == $lnno) {
+                                    print COPYDEST "</font>";
+                                }
                             }
-                            print COPYDEST sprintf ("%4d: ", $lnno);
-                            s/</&lt;/g;
-                            s/>/&gt;/g;
-                            print COPYDEST;
-                            if ($hi == $lnno) {
-                                print COPYDEST "</font>";
-                            }
+                            $lnno++;
                         }
-                        $lnno++;
+                        close (COPYSRC);
+                    } else {
+                        l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                     }
-                    close (COPYSRC);
 
 
                     print COPYDEST "</pre></body></html>\n";
                     close(COPYDEST);
+                } else {
+                    l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 }
             } elsif (/^SRCDOC::/) {
                 l00httpd::dbp($config{'desc'}, "ERROR:SRCDOC:$_\n"), if ($ctrl->{'debug'} >= 4);
@@ -503,8 +519,11 @@ end_of_print3
         $localfname = "$pname${fname}_nav0.html";
         l00httpd::dbp($config{'desc'}, "Write nav0.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         if (open(OU, ">$localfname")) {
+            l00httpd::dbp($config{'desc'}, "WRITE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             print OU $html2;
             close(OU);
+        } else {
+            l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $localfname\n"), if ($ctrl->{'debug'} >= 1);
         }
 
         
@@ -523,14 +542,16 @@ end_of_print3
             $localfname = "$copyname";
             l00httpd::dbp($config{'desc'}, "Write ENTIREFILE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             if (open(ENTIREFILE, ">$localfname")) {
+                l00httpd::dbp($config{'desc'}, "WRITE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 print ENTIREFILE "<html>\n<head>\n";
                 print ENTIREFILE "<title>$fname</title>\n";
                 print ENTIREFILE "</head>\n<body bgcolor=\"#FFFFFF\">\n\n";
                 $localfname = &l00http_srcdoc_localfname($ctrl, "$fname");
                 l00httpd::dbp($config{'desc'}, "Read COPYSRC: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 if (!open (COPYSRC, "<$localfname")) {
-                    l00httpd::dbp($config{'desc'}, "FAILED to read $fname\n"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to read $fname\n"), if ($ctrl->{'debug'} >= 4);
                 } else {
+                    l00httpd::dbp($config{'desc'}, "READ: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                     $lnno = 1;
                     print ENTIREFILE "<pre>";
                     while (<COPYSRC>) {
@@ -556,6 +577,8 @@ end_of_print3
                 }
                 print ENTIREFILE "</body></html>\n";
                 close(ENTIREFILE);
+            } else {
+                l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             }
         }
     }
