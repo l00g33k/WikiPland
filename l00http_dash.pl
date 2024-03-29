@@ -902,7 +902,8 @@ sub l00http_dash_proc {
                                 $clip =~ s/(https*):\/\//$1%3A%2F%2F/g;
                             }
 
-                            $dsc = "$bang<a href=\"$clip\" target=\"_blank\">$desc</a>";
+                            # put target before href so it renders correctly
+                            $dsc = "$bang<a target=\"_blank\" href=\"$clip\">$desc</a>";
                         }
                     }
 
