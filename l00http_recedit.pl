@@ -20,7 +20,7 @@ $dueonly = '';
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno, $dispcnt) = @_;
     my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall16h, 
-        $chkall1d, $chkallRB, $chkallFB, $eval1);
+        $chkall1d, $chkallRB, $chkallnow, $chkallFB, $eval1);
 
     $html = '';
 
@@ -43,6 +43,10 @@ sub l00http_recedit_output_row {
     if (defined ($form->{'chkallRB'})) {
         $chkallRB = 'checked';
     }
+    $chkallnow = '';
+    if (defined ($form->{'chkallnow'})) {
+        $chkallnow = 'checked';
+    }
     $chkallFB = '';
     if (defined ($form->{'chkallFB'})) {
         $chkallFB = 'checked';
@@ -53,15 +57,18 @@ sub l00http_recedit_output_row {
         if ($path =~ /^l00:\/\//) {
             # RAM file, 2, 1, 7 hours (or 4)
             $html .= "<font style=\"color:black;background-color:silver\">";
-            $html .=                "<input type=\"checkbox\" name=\"add2h$id\"  $chkallRB>+4h</font><br>\n";
-            $html .= "            +1h<input type=\"checkbox\" name=\"add16h$id\" $chkall16h><br>\n";
+            $html .=                "<input type=\"checkbox\" name=\"add2h$id\"  $chkallRB>+4h</font>\n";
+            $html .=             "\@0<input type=\"checkbox\" name=\"add0h$id\"  $chkallnow><br>\n";
+            $html .=                "<input type=\"checkbox\" name=\"add16h$id\" $chkall16h>+1h\n";
+            $html .= "<font style=\"color:black;background-color:silver\">";
+            $html .=             "del<input type=\"checkbox\" name=\"id$id\" $chkalldel></font></td>\n";
         } else {
             # disk file, 1, 2 days
             $html .= "<font style=\"color:black;background-color:silver\">";
             $html .=                "<input type=\"checkbox\" name=\"add$id\"  $chkall1d>+1d</font><br>\n";
-            $html .= "            +2d<input type=\"checkbox\" name=\"add2d$id\" $chkallFB><br>\n";
+            $html .=             "+2d<input type=\"checkbox\" name=\"add2d$id\" $chkallFB><br>\n";
+            $html .=                "<input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         }
-        $html .= "            <input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
         $obuf =~ s/(\d+:\d+:\d+:\d+:)/$1\n/;
     } else {
         $html .= "        <td><a name=\"__end${id}__\"></a><input type=\"checkbox\" name=\"id$id\" $chkalldel>del</td>\n";
@@ -329,6 +336,24 @@ print "DBGDBG: update dueonly NOT checked\n";
                                     $yr + 1900, $mo + 1, $da, $tmp2);
                             }
                         }
+                        if (defined($form->{"add0h$id"}) && ($form->{"add0h$id"} eq 'on')) {
+                            l00httpd::dbp($config{'desc'}, "smt:add0h$id $_"), if ($ctrl->{'debug'} >= 3);
+                            # set to now
+                            if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
+                                #20130408 100000:10:0:60:copy hurom
+                                $tmp = l00httpd::now_string2time ($ctrl->{'now_string'});
+                                ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                    $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                    substr ($_, 15, 9999));
+                            } elsif (($yr, $mo, $da, $tmp2) = /^(\d+)\/(\d+)\/(\d+)(.*)$/) {
+                                #2013/4/11,1,411test 
+                                $tmp = l00httpd::now_string2time ($ctrl->{'now_string'});
+                                ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                $_ = sprintf ("%d/%d/%d%s", 
+                                    $yr + 1900, $mo + 1, $da, $tmp2);
+                            }
+                        }
                         if (defined($form->{"add16h$id"}) && ($form->{"add16h$id"} eq 'on')) {
                             l00httpd::dbp($config{'desc'}, "smt:add16h$id $_"), if ($ctrl->{'debug'} >= 3);
                             # add 1 hours
@@ -497,7 +522,8 @@ print "DBGDBG: update dueonly NOT checked\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"><p>\n";
+    print $sock "            <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
     print $sock "        <td>\n";
     if ($path =~ /^l00:\/\//) {
         print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"1h&#818;\" accesskey=\"h\">\n";
@@ -508,10 +534,10 @@ print "DBGDBG: update dueonly NOT checked\n";
     if ($path =~ /^l00:\/\//) {
         print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
         print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+15\">\n";
+        print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
     } else {
-        print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\">\n";
+        print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";
     }
-    print $sock "        <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     if (defined ($form->{'reminder'})) {
         print $sock "                <input type=\"checkbox\" name=\"dueonly\" accesskey=\"d\" $dueonly>d&#818;ue\n";
     }
@@ -520,7 +546,7 @@ print "DBGDBG: update dueonly NOT checked\n";
     } else {
         $_ = '';
     }
-    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific>\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
