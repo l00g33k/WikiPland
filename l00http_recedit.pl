@@ -9,13 +9,14 @@ use l00httpd;
 
 my %config = (proc => "l00http_recedit_proc",
               desc => "l00http_recedit_desc");
-my ($record1, $displen, $filter, $eval, $dueonly);
+my ($record1, $displen, $filter, $eval, $dueonly, $notdue);
 
 $record1 = '^\d{8,8} \d{6,6} ';
 $filter = '.';
 $eval = '';
 $displen = 50;
 $dueonly = '';
+$notdue = '';
 
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno, $dispcnt) = @_;
@@ -231,10 +232,17 @@ sub l00http_recedit_proc (\%) {
     if (defined ($form->{'submit'})) {
         if (defined ($form->{'dueonly'})) {
             $dueonly = 'checked';
-print "DBGDBG: update dueonly checked\n";
+            $notdue = '';
         } else {
             $dueonly = '';
-print "DBGDBG: update dueonly NOT checked\n";
+        }
+    }
+    if (defined ($form->{'submit'})) {
+        if (defined ($form->{'notdue'})) {
+            $notdue = 'checked';
+            $dueonly = '';
+        } else {
+            $notdue = '';
         }
     }
 
@@ -522,31 +530,41 @@ print "DBGDBG: update dueonly NOT checked\n";
     print $sock "        </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"><p>\n";
-    print $sock "            <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
-    print $sock "        <td>\n";
-    if ($path =~ /^l00:\/\//) {
-        print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"1h&#818;\" accesskey=\"h\">\n";
+    if (defined ($form->{'reminder'})) {
+        print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"><p>\n";
+        print $sock "            <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
+        print $sock "        <td>\n";
     } else {
-        print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
-    }
-    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
-    if ($path =~ /^l00:\/\//) {
-        print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
-        print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+15\">\n";
-        print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
-    } else {
-        print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";
+        print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
+        print $sock "        <td>\n";
     }
     if (defined ($form->{'reminder'})) {
+        if ($path =~ /^l00:\/\//) {
+            print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"1h&#818;\" accesskey=\"h\">\n";
+        } else {
+            print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
+        }
+    }
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
+    if (defined ($form->{'reminder'})) {
+        if ($path =~ /^l00:\/\//) {
+            print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+15\">\n";
+            print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
+        } else {
+            print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";
+        }
         print $sock "                <input type=\"checkbox\" name=\"dueonly\" accesskey=\"d\" $dueonly>d&#818;ue\n";
+        print $sock "                <input type=\"checkbox\" name=\"notdue\" accesskey=\"n\" $notdue>n&#818;ot\n";
+    } else {
+        print $sock "            <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     }
     if (defined ($form->{'reminder'})) {
         $_ = 'checked';
     } else {
         $_ = '';
     }
-    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific>\n";
+    print $sock "                <input type=\"checkbox\" name=\"reminder\" $_>Enable reminder specific\n";
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
@@ -594,10 +612,15 @@ print "DBGDBG: update dueonly NOT checked\n";
                                         $due .= sprintf("%03d %s", $duecnt, $_);
                                     }
                                 }
-                               #if (defined ($form->{'dueonly'})) {
                                 if ($dueonly eq 'checked') {
                                     if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
                                         if ($1 lt $ctrl->{'now_string'}) {
+                                            push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno, $dispcnt++));
+                                        }
+                                    }
+                                } elsif ($notdue eq 'checked') {
+                                    if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
+                                        if ($1 gt $ctrl->{'now_string'}) {
                                             push (@table, &l00http_recedit_output_row($ctrl, $sock, $form, $line, $id, $_, $path, $lnno, $dispcnt++));
                                         }
                                     }
