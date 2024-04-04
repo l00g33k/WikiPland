@@ -229,7 +229,7 @@ sub l00http_recedit_proc (\%) {
         $record1 = $form->{'record1'};
     }
 
-    if (defined ($form->{'submit'})) {
+    if (defined ($form->{'update'})) {
         if (defined ($form->{'dueonly'})) {
             $dueonly = 'checked';
             $notdue = '';
@@ -237,7 +237,7 @@ sub l00http_recedit_proc (\%) {
             $dueonly = '';
         }
     }
-    if (defined ($form->{'submit'})) {
+    if (defined ($form->{'update'})) {
         if (defined ($form->{'notdue'})) {
             $notdue = 'checked';
             $dueonly = '';
