@@ -5,8 +5,8 @@
 
 my %config = (proc => "l00http_shell_proc",
               desc => "l00http_shell_desc");
-my ($buffer, $out, $cmd, $cnt, $res, $cmdpart, $redirec, $file);
-
+my ($buffer, $out, $cmd, $cnt, $res, $cmdpart, $redirec, $file, $noredirect);
+$noredirect = '';
 
 sub l00http_shell_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -29,6 +29,13 @@ sub l00http_shell_proc {
                 "Note: pipe doesn't work, but > and >> are simulated.".
                 " Please wait...<p>\n";
 
+    if (defined ($form->{'nodirect'}) && ($form->{'nodirect'} eq 'on')) {
+        $noredirect = 'checked';
+    } else {
+        $noredirect = '';
+    }
+
+
     $buffer = "";
     $out = "";
     if (defined ($form->{'buffer'})) {
@@ -38,7 +45,9 @@ sub l00http_shell_proc {
         foreach $cmd (split ("\n", $buffer)) {
             $out .= "$cnt&gt; $cmd\n";
             $res = "";
-            if (($cmdpart, $redirec, $file) = ($cmd =~ /^(.+) *(>+) *(.+)$/))  {
+            # emulate > only if checkbox not checked
+            if (($noredirect eq '') &&
+                (($cmdpart, $redirec, $file) = ($cmd =~ /^(.+) *(>+) *(.+)$/)))  {
                 if (defined ($form->{'exec'})) {
                     $res = `$cmdpart`;
                     open (OUT, "$redirec$file");
@@ -71,6 +80,7 @@ sub l00http_shell_proc {
     print $sock "<textarea name=\"buffer\" cols=\"$ctrl->{'txtw'}\" rows=\"$ctrl->{'txth'}\" accesskey=\"e\">$buffer</textarea>\n";
     print $sock "<p><input type=\"submit\" name=\"exec\" value=\"Ex&#818;ec\" accesskey=\"x\">\n";
     print $sock " <input type=\"submit\" name=\"clear\" value=\"Clear\">\n";
+    print $sock " <input type=\"checkbox\" name=\"nodirect\" $noredirect> Do not simulate redirect\n";
     print $sock "</form>\n";
 
     print $sock "<p><a href=\"/view.htm?path=l00://shell.txt\" target=\"_blank\">Output</a> of shell commands:<p>\n";
