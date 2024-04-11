@@ -137,8 +137,8 @@ sub l00http_srcdoc_proc {
         $form->{'path'} =~ s/\n//g;
         ($prjbase, $prjname) = $form->{'path'} =~ /^(.+?)([^\\\/]+)$/;
         print $sock " <a href=\"/clip.htm?update=Copy+to+clipboard&clip=$prjbase\">Path:</a> ";
-        print $sock "<a href=\"/ls.htm?path=$prjbase\" target=\"_blank\">$prjbase</a>";
-        print $sock "<a href=\"/view.htm?path=$prjbase$prjname\" target=\"_blank\">$prjname</a>\n";
+        print $sock "<a href=\"/ls.htm?path=$prjbase\">$prjbase</a>";
+        print $sock "<a href=\"/view.htm?path=$prjbase$prjname\">$prjname</a>\n";
     }
     print $sock "<br>\n";
 
@@ -213,8 +213,8 @@ sub l00http_srcdoc_proc {
             if (($fileno == $lnno) &&
                 # /sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::9::99999::
                 (($cpfrompath, $cpfromname, $st, $hi, $en) = /^(.+?)([^\\\/]+?)::(\d+)::(\d+)::(.+)$/)) {
-                $buffer .= "<a href=\"/ls.htm?path=$cpfrompath\" target=\"_blank\">$cpfrompath</a>".
-                           "<a href=\"/view.htm?path=$cpfrompath$cpfromname&hiliteln=$hi&lineno=on#line$hi\" target=\"_blank\">$cpfromname</a>".
+                $buffer .= "<a href=\"/ls.htm?path=$cpfrompath\">$cpfrompath</a>".
+                           "<a href=\"/view.htm?path=$cpfrompath$cpfromname&hiliteln=$hi&lineno=on#line$hi\">$cpfromname</a>".
                            "::${st}::${hi}::${en}\n";
             } else {
                 if ($lnno == $lastinsert) {
@@ -597,17 +597,17 @@ end_of_print3
     $buffer .= "<form action=\"/srcdoc.htm\" method=\"get\">\n";
     $buffer .= "<input type=\"submit\" name=\"refresh\" value=\"R&#818;efresh\" accesskey=\"r\">\n";
     $buffer .= "<input type=\"submit\" name=\"generate\" value=\"G&#818;enerate\" accesskey=\"g\">\n";
-    $buffer .= "width% <input type=\"text\" size=\"3\" name=\"width\" value=\"$width\">\n";
+    $buffer .= "w&#818;idth% <input type=\"text\" size=\"3\" name=\"width\" value=\"$width\" accesskey=\"w\">\n";
     $buffer .= "<input type=\"checkbox\" name=\"noheading\" $noheading accesskey=\"n\"> N&#818;o headings\n";
     $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     $buffer .= "</form><br>\n";
     $buffer .= "Output on port: \n";
     $localfname = "$pname${fname}_index.html";
     l00httpd::dbp($config{'desc'}, "Links to index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-    $buffer .= "<a href=\"http://localhost:20337$localfname\" target=\"_blank\">20337</a>\n";
-    $buffer .= "<a href=\"http://localhost:20347$localfname\" target=\"_blank\">20347</a>\n";
-    $buffer .= "<a href=\"http://localhost:30337$localfname\" target=\"_blank\">30337</a>\n";
-    $buffer .= "<a href=\"http://localhost:30347$localfname\" target=\"_blank\">30347</a>\n";
+    $buffer .= "<a href=\"http://localhost:20337$localfname\">20337</a>\n";
+    $buffer .= "<a href=\"http://localhost:20347$localfname\">20347</a>\n";
+    $buffer .= "<a href=\"http://localhost:30337$localfname\">30337</a>\n";
+    $buffer .= "<a href=\"http://localhost:30347$localfname\">30347</a>\n";
     $buffer .= " - <a href=\"#lastinsert\"\">Last inserted here</a>\n";
     if (defined ($form->{'insertlnno'})) {
         $buffer .= "<br><a href=\"#theform\"\">Jump to the Form</a><br>\n";

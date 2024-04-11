@@ -45,7 +45,6 @@ sub l00http_shell_proc {
         foreach $cmd (split ("\n", $buffer)) {
             $out .= "$cnt&gt; $cmd\n";
             $res = "";
-            # emulate > only if checkbox not checked
             if (($noredirect eq '') &&
                 (($cmdpart, $redirec, $file) = ($cmd =~ /^(.+) *(>+) *(.+)$/)))  {
                 if (defined ($form->{'exec'})) {

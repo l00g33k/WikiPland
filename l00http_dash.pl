@@ -898,9 +898,9 @@ sub l00http_dash_proc {
                             # isn't translated into another URL
                             #yahoo|/activity.htm?path=https://finance.yahoo.com/
                             #<a href="/activity.htm?path=https://finance.yahoo.com/" target="_blank">yahoo</a>
-                            if ($clip =~ /https*:\/\//) {
-                                $clip =~ s/(https*):\/\//$1%3A%2F%2F/g;
-                            }
+#4409                       if ($clip =~ /https*:\/\//) {
+#4409                                $clip =~ s/(https*):\/\//$1%3A%2F%2F/g;
+#4409                       }
 
                             # put target before href so it renders correctly
                             $dsc = "$bang<a target=\"_blank\" href=\"$clip\">$desc</a>";
