@@ -16,6 +16,9 @@ $keepnl = '';
 
 sub blog_make_hdr {
     my ($ctrl, $style, $addtime) = @_;
+    if (!define($addtime) || ($addtime =~/^\d+$/)) {
+        $addtime = 0;
+    }
     my ($buffer, $sock, $now_string);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time + $addtime);
     $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
@@ -496,17 +499,19 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"savequick\" value=\"Save&U&#818;RL\" accesskey=\"u\">\n";
     }
     print $sock "<input type=\"submit\" name=\"pasteadd\" value=\"PasteAdd\">\n";
-    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\">\n";
+    print $sock "<input type=\"submit\" name=\"paste\" value=\"Paste\"><p>\n";
     print $sock "<input type=\"submit\" name=\"pastesave\" value=\"PasteSave\">\n";
     if (defined($form->{'afterline'})) {
         print $sock "on line <input type=\"text\" size=\"1\" name=\"afterline\" value=\"$form->{'afterline'}\">\n";
     }
 
 
-    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\"><p>\n";
+    print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\"><p><br>\n";
     # display button to switch style
 
     print $sock "<input type=\"hidden\" name=\"stylecurr\" value=\"$stylenew\">\n";
+    print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
+    print $sock "<input type=\"submit\" name=\"timesave\" value=\"Tim&#818;eSave\" accesskey=\"m\"><p>\n";
     if ($stylenew eq 'log') {
         # log
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Blog sty&#818;le add\" accesskey=\"y\">\n";
@@ -524,8 +529,6 @@ sub l00http_blog_proc {
         print $sock "<input type=\"submit\" name=\"setnewstyle\" value=\"Log sty&#818;le add\" accesskey=\"y\">\n";
         print $sock "<input type=\"hidden\" name=\"stylenew\"    value=\"log\">\n";
     }
-    print $sock "<input type=\"submit\" name=\"timesave\" value=\"Tim&#818;eSave\" accesskey=\"m\">\n";
-    print $sock "<input type=\"submit\" name=\"newtime\" value=\"N&#818;ewTime\" accesskey=\"n\">\n";
 
     if (defined ($form->{'pastesave'})) {
         print $sock "<hr>$pastesavebuf<hr>\n";

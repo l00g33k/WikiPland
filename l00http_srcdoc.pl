@@ -124,7 +124,8 @@ sub l00http_srcdoc_proc {
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
     my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext, $tgttextcln);
     my ($tlevel, $prjbase, $prjname, $cpfrompath, $cpfromname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
-    my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash, $inpre, $localfname);
+    my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash, $inpre, $localfname, $htmlfname);
+    my ($efname, $entirecnt, $entirefname);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -292,7 +293,7 @@ end_of_print2
 
         undef %writeentirefile;
         undef %writeentirefilehighlight;
-        $cnt = 0;
+        $entirecnt = 0;
         &l00http_srcdoc_secno(-2);
         undef %secnohash;
         $cpfrompath = '';
@@ -314,8 +315,8 @@ end_of_print2
                 ($cpfromname) = $localfname =~ /([^\\\/]+)$/;
                 $copyname = "${fname}_${copyidx}_$cpfromname.html";
                 if (!defined($writeentirefile{$localfname})) {
-                    $cnt++;
-                    $writeentirefile{$localfname} = $cnt;
+                    $entirecnt++;
+                    $writeentirefile{$localfname} = $entirecnt;
                 }
                 l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${cpfrompath}\n"), if ($ctrl->{'debug'} >= 4);
                 $cpfromname =~ s/^([A-Z]+[a-z0-9])/!$1/;
@@ -446,10 +447,23 @@ end_of_print3
                     l00httpd::dbp($config{'desc'}, " - hi = $hi"), if ($ctrl->{'debug'} >= 4);
                     l00httpd::dbp($config{'desc'}, " - en = $en\n"), if ($ctrl->{'debug'} >= 4);
 
+                    $tmp = &l00http_srcdoc_localfname($ctrl, "$cpfrompath");
+                    # ::conti:: possibly buggy: predicting entire file index number may be wrong
+                    if (defined($writeentirefile{$tmp})) {
+                        $tmp = $writeentirefile{$localfname};
+                    } else {
+                        $tmp = $entirecnt;
+                    }
+                    $entirefname = "${pname}${fname}_${cpfromname}_$tmp.html";
+                    l00httpd::dbp($config{'desc'}, "Write entire name $entirefname\n"), if ($ctrl->{'debug'} >= 1);
                     $tmp = "$localfname$cpfromname";
                     $copyname = "${pname}${copyname}_$writeentirefile{$tmp}.html";
-                    print COPYDEST "index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a> ($copyidx:$srcln)\n";
-                    print COPYDEST "<a href=\"/view.htm?path=$localfname$cpfromname\">Source</a>  : <a href=\"$copyname\">$cpfromname</a> in $localfname at $hi\n";
+                    print COPYDEST "Index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a> ($copyidx:$srcln)\n";
+                    $htmlfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
+                    l00httpd::dbp($config{'desc'}, "Write FRAGMENT: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+                    # ::conti:: possibly buggy: predicting entire file index number may be wrong
+                    print COPYDEST "Source  <a href=\"/view.htm?path=$htmlfname\">";
+                    print COPYDEST ":</a> <a href=\"$entirefname\">$cpfromname</a> in $localfname at $hi\n";
                     print COPYDEST "Original: $orgln\n";
 
                     $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
@@ -529,34 +543,35 @@ end_of_print3
         
         # print entire file with line number and color
         # ::conti::
-        foreach $fname (keys %writeentirefile) {
-            $copyname = $fname;
+        foreach $efname (keys %writeentirefile) {
+            $copyname = $efname;
             $copyname =~ s/^.+[\\\/]([^\\\/]+)$/$1/;
-            $copyname = "${pname}${copyname}_$writeentirefile{$fname}.html";
-            l00httpd::dbp($config{'desc'}, "writeentirefile = $fname -- $writeentirefile{$fname} : $copyname\n"), if ($ctrl->{'debug'} >= 4);
-            if (defined($writeentirefilehighlight{$fname})) {
-                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = $writeentirefilehighlight{$fname}\n"), if ($ctrl->{'debug'} >= 4);
+            $copyname = "${pname}${fname}_${copyname}_$writeentirefile{$efname}.html";
+            l00httpd::dbp($config{'desc'}, "writeentirefile = $efname -- $writeentirefile{$efname} : $copyname\n"), if ($ctrl->{'debug'} >= 4);
+            if (defined($writeentirefilehighlight{$efname})) {
+                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$efname} = $writeentirefilehighlight{$efname}\n"), if ($ctrl->{'debug'} >= 4);
             } else {
-                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$fname} = undef\n"), if ($ctrl->{'debug'} >= 4);
+                l00httpd::dbp($config{'desc'}, "writeentirefilehighlight{$efname} = undef\n"), if ($ctrl->{'debug'} >= 4);
             }
+            # ::conti:: possibly buggy: predicting entire file index number may be wrong
             $localfname = "$copyname";
             l00httpd::dbp($config{'desc'}, "Write ENTIREFILE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
             if (open(ENTIREFILE, ">$localfname")) {
                 l00httpd::dbp($config{'desc'}, "WRITE: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 print ENTIREFILE "<html>\n<head>\n";
-                print ENTIREFILE "<title>$fname</title>\n";
+                print ENTIREFILE "<title>$efname</title>\n";
                 print ENTIREFILE "</head>\n<body bgcolor=\"#FFFFFF\">\n\n";
-                $localfname = &l00http_srcdoc_localfname($ctrl, "$fname");
+                $localfname = &l00http_srcdoc_localfname($ctrl, "$efname");
                 l00httpd::dbp($config{'desc'}, "Read COPYSRC: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 if (!open (COPYSRC, "<$localfname")) {
-                    l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to read $fname\n"), if ($ctrl->{'debug'} >= 4);
+                    l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to read $efname\n"), if ($ctrl->{'debug'} >= 4);
                 } else {
                     l00httpd::dbp($config{'desc'}, "READ: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                     $lnno = 1;
                     print ENTIREFILE "<pre>";
                     while (<COPYSRC>) {
-                        if (defined($writeentirefilehighlight{$fname}) &&
-                            $writeentirefilehighlight{$fname} =~ /:$lnno,([^:]+):/) {
+                        if (defined($writeentirefilehighlight{$efname}) &&
+                            $writeentirefilehighlight{$efname} =~ /:$lnno,([^:]+):/) {
                             print ENTIREFILE "<font color=\"$1\">";
                         }
 
@@ -566,8 +581,8 @@ end_of_print3
                         s/</&lt;/g;
                         s/>/&gt;/g;
                         print ENTIREFILE;
-                        if (defined($writeentirefilehighlight{$fname}) &&
-                            $writeentirefilehighlight{$fname} =~ /:$lnno,([^:]+):/) {
+                        if (defined($writeentirefilehighlight{$efname}) &&
+                            $writeentirefilehighlight{$efname} =~ /:$lnno,([^:]+):/) {
                             print ENTIREFILE "</font>";
                         }
                         $lnno++;
