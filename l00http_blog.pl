@@ -16,7 +16,7 @@ $keepnl = '';
 
 sub blog_make_hdr {
     my ($ctrl, $style, $addtime) = @_;
-    if (!define($addtime) || ($addtime =~/^\d+$/)) {
+    if (!defined($addtime) || ($addtime =~/^\d+$/)) {
         $addtime = 0;
     }
     my ($buffer, $sock, $now_string);
