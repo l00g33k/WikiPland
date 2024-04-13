@@ -267,7 +267,7 @@ sub l00http_srcdoc_proc {
 <frameset cols="${width}%,*">
 end_of_print1
 ;
-        $html .= "    <frame name=\"nav\" src=\"$pname${fname}_nav0.html\">";
+        $html .= "    <frame name=\"nav\" src=\"${fname}_nav0.html\">";
         $html .= <<end_of_print2
 <frame name="content">
 </frameset>
@@ -310,7 +310,7 @@ end_of_print2
                 $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath");
                 $copyidx++;
                 l00httpd::dbp($config{'desc'}, "INSERT target level $tlevel line ${tlnnost}::${tlnnohi}::$tlnnoen in file $localfname\n"), if ($ctrl->{'debug'} >= 4);
-                $html .= "\nSRCDOC::${srcln}::${tlevel}::${cpfrompath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln";
+                $html .= "\nSRCDOC::${srcln}::${tlevel}::${cpfrompath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln\n";
                 l00httpd::dbp($config{'desc'}, "inSRCDOC::$copyidx:${srcln}::${tlevel}::${cpfrompath}::${tlnnost}::${tlnnohi}::${tlnnoen}::$orgln"), if ($ctrl->{'debug'} >= 4);
                 $secnohash{$srcln} = $secno;
                 ($cpfromname) = $localfname =~ /([^\\\/]+)$/;
@@ -414,16 +414,16 @@ end_of_print3
         $srcln = 0;
         $inpre = 0;
         l00httpd::dbp($config{'desc'}, "-- scan for SRCDOC tags and generate target html\n"), if ($ctrl->{'debug'} >= 4);
-        foreach $_ (split("\n", $html)) {
+        foreach $line (split("\n", $html)) {
             # SRCDOC::123::1::/sdcard/g/myram/x/Perl/srcdoc/template/go.bat::0::10::99999::orgln
-            if (/^SRCDOC::/ && 
+            if ($line =~ /^SRCDOC::/ && 
                 (($srcln, $level, $cpfrompath, $st, $hi, $en, $orgln) = 
-                /^SRCDOC::(\d+)::(\d+)::(.+?)::(\d+)::(\d+)::(\d+)::(.+)$/)) {
+                $line =~ /^SRCDOC::(\d+)::(\d+)::(.+?)::(\d+)::(\d+)::(\d+)::(.+)$/)) {
                 $copyidx++;
                 l00httpd::dbp($config{'desc'}, "SRCDOC:$copyidx($srcln, $level, $cpfrompath, $st, $hi, $en, $orgln)\n"), if ($ctrl->{'debug'} >= 4);
-                $writeentirefilehighlight{$cpfrompath} .= ":$hi,$level:";
-                l00httpd::dbp($config{'desc'}, "SRCDOC:writeentirefilehighlight{$cpfrompath} = $writeentirefilehighlight{$cpfrompath}\n"), if ($ctrl->{'debug'} >= 4);
                 $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath");
+                $writeentirefilehighlight{$localfname} .= ":$hi,$level:";
+                l00httpd::dbp($config{'desc'}, "SRCDOC:writeentirefilehighlight{$cpfrompath} = $writeentirefilehighlight{$cpfrompath}\n"), if ($ctrl->{'debug'} >= 4);
                 ($cpfromname) = $localfname =~ /([^\\\/]+)$/;
                 $cpfrompath =~ s/[^\\\/]+$//;
 
@@ -461,7 +461,6 @@ end_of_print3
                     $entirefname = "${fname}_${cpfromname}_$tmp.html";
                     l00httpd::dbp($config{'desc'}, "ENTIREFILE: entirefname=$entirefname\n"), if ($ctrl->{'debug'} >= 1);
                     $tmp = "$localfname$cpfromname";
-                    $copyname = "${pname}${copyname}_$writeentirefile{$tmp}.html";
                     print COPYDEST "Index   : <a href=\"${fname}_nav0.html#sec_$secnohash{$srcln}\" target=\"nav\"><i>section $secnohash{$srcln}</i></a> ($copyidx:$srcln)\n";
                     $htmlfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
                     l00httpd::dbp($config{'desc'}, "ENTIREFILE: localfname=$localfname\n"), if ($ctrl->{'debug'} >= 1);
@@ -499,10 +498,12 @@ end_of_print3
 
                     print COPYDEST "</pre></body></html>\n";
                     close(COPYDEST);
+                    # zap the SRCDOC:: line
+                    $line ='';
                 } else {
                     l00httpd::dbp($config{'desc'}, "FAILED(".__LINE__.") to open: $localfname\n"), if ($ctrl->{'debug'} >= 1);
                 }
-            } elsif (/^SRCDOC::/) {
+            } elsif ($line =~ /^SRCDOC::/) {
                 l00httpd::dbp($config{'desc'}, "ERROR:SRCDOC:$_\n"), if ($ctrl->{'debug'} >= 4);
             }
             # <a name="2_1_1__with_no_navigation"></a><h3>2.1.1. with no navigation <a href="#___top___">^</a> <a href="#__toc__">toc</a><a href="#toc_2_1_1__with_no_navigation">@</a> <a href="/blog.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&afterline=">lg</a> <a href="/edit.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&editline=on&blklineno=">ed</a> <a href="/view.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&update=Skip&skip=&maxln=200"></a></h3><a name="2_1_1__with_no_navigation_"></a>
@@ -514,25 +515,25 @@ end_of_print3
             # <a href="/edit.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&editline=on&blklineno=">ed</a> 
             # <a href="/view.htm?path=/sdcard/g/myram/x/Perl/srcdoc/template/(undef)&update=Skip&skip=&maxln=200"></a>
             # </h3><a name="2_1_1__with_no_navigation_"></a>
-            if (($tmp) = /<h(\d+)>.*blog.htm.*edit.htm.*view.htm.*<\/h\d+>/) {
-                s/<a href="#toc_.+?<\/a>//;
-                s/<a href="\/blog.htm.+?<\/a>//;
-                s/<a href="\/edit.htm.+?<\/a>//;
+            if (($tmp) = $line =~ /<h(\d+)>.*blog.htm.*edit.htm.*view.htm.*<\/h\d+>/) {
+                $line =~ s/<a href="#toc_.+?<\/a>//;
+                $line =~ s/<a href="\/blog.htm.+?<\/a>//;
+                $line =~ s/<a href="\/edit.htm.+?<\/a>//;
                 if ($srcln > 0) {
                     # level head heading level - 1
                     $tmp--;
-                    s/<a href="\/view.htm.+?<\/a>/ [$tmp] ($srcln)/;
+                    $line =~ s/<a href="\/view.htm.+?<\/a>/ [$tmp] ($srcln)/;
                     $srcln = 0;
                 } else {
-                    s/<a href="\/view.htm.+?<\/a>//;
+                    $line =~ s/<a href="\/view.htm.+?<\/a>//;
                 }
             }
             # <a  href="#__toc__">TOC</a><br>
             # extra space to defeat the followings
-            s/<a href="#___top___.+?<\/a>//;
-            s/<a href="#__toc__.+?<\/a>//;
+            $line =~ s/<a href="#___top___.+?<\/a>//;
+            $line =~ s/<a href="#__toc__.+?<\/a>//;
 
-            $html2 .= "$_\n";
+            $html2 .= "$line\n";
         }
         $localfname = "$pname${fname}_nav0.html";
         l00httpd::dbp($config{'desc'}, "Write nav0.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
