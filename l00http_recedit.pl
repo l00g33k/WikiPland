@@ -312,7 +312,7 @@ sub l00http_recedit_proc (\%) {
                                 $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
                                 if ($tmp < $tmp2) {
                                     # move timestamp to now plus 5 minutes
-                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 60 * 15);
+                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 60 * 5);
                                     $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                          $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
                                          substr ($_, 15, 9999));
@@ -553,7 +553,7 @@ sub l00http_recedit_proc (\%) {
     if (defined ($form->{'reminder'})) {
         if ($path =~ /^l00:\/\//) {
             print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
-            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+15\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+5\">\n";
             print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
         } else {
             print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";

@@ -230,6 +230,7 @@ sub l00http_blogend_proc {
         print $sock "<a href=\"/launcher.htm?path=$path\">Launch</a>: <a href=\"/ls.htm?path=$pname\">$pname</a>";
         print $sock "<a href=\"/ls.htm?path=$form->{'path'}\">$fname</a> ";
         print $sock "<a href=\"/edit.htm?path=$form->{'path'}\">Edit</a>/";
+        print $sock "<a href=\"/view.htm?path=$form->{'path'}\">vw</a>/";
         print $sock "<a href=\"/view.htm?path=$form->{'path'}&exteditor=on\">ext</a>\n";
         if (defined($form->{'afterline'})) {
             print $sock "<a href=\"/recedit.htm?record1=.&path=$form->{'path'}&afterline=$form->{'afterline'}\">+$form->{'afterline'}#</a> ";

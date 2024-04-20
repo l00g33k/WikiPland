@@ -16,12 +16,15 @@ $keepnl = '';
 
 sub blog_make_hdr {
     my ($ctrl, $style, $addtime) = @_;
-    if (!defined($addtime) || ($addtime =~/^\d+$/)) {
+    l00httpd::dbp($config{'desc'}, "blog_make_hdr: addtime   = $addtime\n"), if ($ctrl->{'debug'} >= 3);
+    if (!defined($addtime) || ($addtime !~/^-*\d+$/)) {
         $addtime = 0;
     }
+    l00httpd::dbp($config{'desc'}, "blog_make_hdr: addtime 2 = $addtime\n"), if ($ctrl->{'debug'} >= 3);
     my ($buffer, $sock, $now_string);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time + $addtime);
     $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year + 1900, $mon+1, $mday, $hour, $min, $sec);
+    l00httpd::dbp($config{'desc'}, "blog_make_hdr: now_string = $now_string\n"), if ($ctrl->{'debug'} >= 3);
 
     $buffer = '';
 
@@ -153,21 +156,27 @@ sub l00http_blog_proc {
                     $addtimeval{$nouscore} = 0;
                     if ($nouscore =~ /(\d+)m/) {
                         $addtimeval{$nouscore} = 60 * $1;
+                        l00httpd::dbp($config{'desc'}, "$nouscore $1 m $addtimeval{$nouscore}\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     if ($nouscore =~ /(\d+)h/) {
                         $addtimeval{$nouscore} = 3600 * $1;
+                        l00httpd::dbp($config{'desc'}, "$nouscore $1 h $addtimeval{$nouscore}\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     if ($nouscore =~ /(\d+)d/) {
                         $addtimeval{$nouscore} = 24 * 3600 * $1;
+                        l00httpd::dbp($config{'desc'}, "$nouscore $1 d $addtimeval{$nouscore}\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     if ($nouscore =~ /-(\d+)m/) {
                         $addtimeval{$nouscore} = -60 * $1;
+                        l00httpd::dbp($config{'desc'}, "$nouscore $1 m $addtimeval{$nouscore}\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     if ($nouscore =~ /-(\d+)h/) {
                         $addtimeval{$nouscore} = -3600 * $1;
+                        l00httpd::dbp($config{'desc'}, "$nouscore $1 h $addtimeval{$nouscore}\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     if ($nouscore =~ /-(\d+)d/) {
                         $addtimeval{$nouscore} = -24 * 3600 * $1;
+                        l00httpd::dbp($config{'desc'}, "$nouscore $1 d $addtimeval{$nouscore}\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     push(@blocktime, $nouscore);
                 }
@@ -319,6 +328,7 @@ sub l00http_blog_proc {
         $form->{'newtime'} =~ s/$_//;
 
         $addtime = $addtimeval{$form->{'newtime'}};
+        l00httpd::dbp($config{'desc'}, "$addtime = \$addtimeval{$form->{'newtime'}}\n"), if ($ctrl->{'debug'} >= 3);
         $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
         $form->{'buffer'} = &blog_make_hdr ($ctrl, $stylecurr, $addtime);
         $form->{'buffer'} .= $buffer;
