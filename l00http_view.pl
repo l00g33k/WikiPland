@@ -803,6 +803,8 @@ sub l00http_view_proc {
     $jumptable .= "\nThere are $lineno lines and $size bytes in $form->{'path'}<p>\n";
 
     # skip backward $maxln
+    $jumptable .= "<a href=\"#top\">Jump to top</a> - \n";
+    $jumptable .= "<a href=\"/launcher.htm?path=$pnameurl$fnameurl\">Launcher</a><p>\n";
     $jumptable .= "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$pnameurl$fnameurl#end\">10</a>,\n";
     $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$pnameurl$fnameurl#end\">200</a>,\n";
     $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$pnameurl$fnameurl#end\">500</a>,\n";

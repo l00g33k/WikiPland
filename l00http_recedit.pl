@@ -310,13 +310,18 @@ sub l00http_recedit_proc (\%) {
                                 $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
                                 # timestamp now
                                 $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
-                                if ($tmp < $tmp2) {
-                                    # move timestamp to now plus 5 minutes
+                                if ($tmp2 > $tmp) {
+                                    # if past, move to now + 5 min
                                     ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 60 * 5);
-                                    $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
-                                         $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
-                                         substr ($_, 15, 9999));
+                                } else {
+                                    $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                    $tmp += 5 * 60; # 5 min
+                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                    # if future, + 5 min
                                 }
+                                $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                     substr ($_, 15, 9999));
                             }
                         }
                         if (defined ($form->{'submit'})) {
