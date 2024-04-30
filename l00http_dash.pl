@@ -481,7 +481,8 @@ sub l00http_dash_proc {
             }
             # %DASHBANNER:[[#abc|jump to abc]]%
             if ($alllines[$ii] =~ /^%DASHBANNER:(.+)%$/) {
-                $dashbanner = $1;
+                # concatenate
+                $dashbanner .= $1;
             }
 
             if ($alllines[$ii] =~ /^%BLOGTIME:(.+?)%/) {
