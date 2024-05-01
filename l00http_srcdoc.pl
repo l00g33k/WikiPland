@@ -21,7 +21,7 @@ $blklineno = 0;
 $root = '';
 $filter = '\.c$|||\.cpp$|||\.h$';
 $level = 3;
-$width = 60;
+$width = 40;
 $lastinsert = 0;
 $noheading = '';
 
@@ -120,12 +120,12 @@ sub l00http_srcdoc_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln, $cnt);
+    my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln, $cnt, $jj);
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
     my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext, $tgttextcln);
     my ($tlevel, $prjbase, $prjname, $cpfrompath, $cpfromname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
     my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash, $inpre, $localfname, $htmlfname);
-    my ($efname, $entirecnt, $entirefname);
+    my ($efname, $entirecnt, $entirefname, @callstack, $stack, $lastlvl);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -177,9 +177,19 @@ sub l00http_srcdoc_proc {
             for ($ii = 0; $ii < $form->{'insertlnno'}; $ii++) {
                 $buffer .= <IN>;
             }
-            $buffer .= '=' x ($level + 1) . $title . '=' x ($level + 1) . "\n";
-            $buffer .= "$tgtfile\n";
-            $buffer .= "$body\n";
+            if (defined ($form->{'pair'})) {
+                # add a pair
+                $buffer .= '=' x ($level + 1) . "Calling: $title" . '=' x ($level + 1) . "\n";
+                $buffer .= "$tgtfile\n";
+                $buffer .= "$body\n";
+                $buffer .= '=' x ($level + 1) . "Returning: $title" . '=' x ($level + 1) . "\n";
+                $buffer .= "$tgtfile\n";
+                $buffer .= "$body\n";
+            } else {
+                $buffer .= '=' x ($level + 1) . $title . '=' x ($level + 1) . "\n";
+                $buffer .= "$tgtfile\n";
+                $buffer .= "$body\n";
+            }
             while (<IN>) {
                 $buffer .= $_;
             }
@@ -294,6 +304,7 @@ end_of_print2
         undef %writeentirefile;
         undef %entirefileorgname;
         undef %writeentirefilehighlight;
+        undef @callstack;
         $entirecnt = 0;
         &l00http_srcdoc_secno(-2);
         undef %secnohash;
@@ -303,6 +314,7 @@ end_of_print2
         $ii = 0;
         $copyidx = 0;
         $orgln = '(not available)';
+        $lastlvl = -1;
         l00httpd::dbp($config{'desc'}, "-- scan for srcdoc headers with target line numbers and insert SRCDOC tags\n"), if ($ctrl->{'debug'} >= 4);
         while ($loop) {
             $srcln = $ii + 1;
@@ -321,8 +333,21 @@ end_of_print2
                     $entirefileorgname{$localfname} = $cpfrompath;
                 }
                 l00httpd::dbp($config{'desc'}, "CODE:$copyname -- ${cpfrompath}\n"), if ($ctrl->{'debug'} >= 4);
+                if ($tlevel > $lastlvl) {
+                    $lastlvl = $tlevel;
+                    push (@callstack, $orgln);
+                } elsif ($tlevel < $lastlvl) {
+                    $lastlvl = $tlevel;
+                    pop (@callstack);
+                }
+                $html .= "<pre>\n";
+                for ($jj = 0; $jj <= $#callstack; $jj++) {
+                    $html .= "<font color=\"". $reccuLvlColor [$jj] ."\">$jj: $callstack[$jj]</font>";
+                }
+                $html .= "   $orgln";
+                $html .= "</pre>\n";
                 $cpfromname =~ s/^([A-Z]+[a-z0-9])/!$1/;
-                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - $cpfromname\n";
+                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - <font color=\"". $reccuLvlColor [$tlevel] ."\">$cpfromname</font>\n";
                 $cpfrompath = '';
                 $orgln = '(not available)';
             }
@@ -631,7 +656,8 @@ end_of_print3
     $buffer .= "<a href=\"http://localhost:20347$localfname\">20347</a>\n";
     $buffer .= "<a href=\"http://localhost:30337$localfname\">30337</a>\n";
     $buffer .= "<a href=\"http://localhost:30347$localfname\">30347</a>\n";
-    $buffer .= " - <a href=\"#lastinsert\"\">Last inserted here</a>\n";
+    $buffer .= " - <input type=\"text\" accesskey=\"l\" size=\"1\">\n";
+    $buffer .= "<a href=\"#lastinsert\"\">L&#818;ast inserted here</a>\n";
     if (defined ($form->{'insertlnno'})) {
         $buffer .= "<br><a href=\"#theform\"\">Jump to the Form</a><br>\n";
     }
@@ -649,14 +675,14 @@ end_of_print3
                 $buffer .= "<input type=\"submit\" name=\"Save\" value=\"S&#818;ave notes here $lineno\" accesskey=\"s\">\n";
                 $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
                 $buffer .= "<input type=\"hidden\" name=\"insertlnno\" value=\"$lineno\">\n";
-                $buffer .= "<input type=\"checkbox\" name=\"pair\">Calling/Return From pair\n";
+                $buffer .= "<input type=\"checkbox\" name=\"pair\" accesskey=\"c\">C&#818;alling/Return From pair\n";
                 $buffer .= "Level: ";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"0\" accesskey=\"0\">0&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"1\" accesskey=\"1\" checked>1&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"2\" accesskey=\"2\">2&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"3\" accesskey=\"3\">3&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"4\" accesskey=\"4\">4&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"5\" accesskey=\"5\">5&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"0\" accesskey=\"0\">1&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"1\" accesskey=\"1\" checked>2&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"2\" accesskey=\"2\">3&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"3\" accesskey=\"3\">4&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"4\" accesskey=\"4\">5&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"5\" accesskey=\"5\">6&#818;\n";
                 $tgttextcln = $tgttext;
                 $tgttextcln =~ s/=/ /g;
                 $tgttextcln =~ s/^ +//;
@@ -669,7 +695,7 @@ end_of_print3
             } else {
                 $buffer .= "<form action=\"/srcdoc.htm\" method=\"get\">\n";
                 if (/_end$/) {
-                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno l&#818;ast\" accesskey=\"l\">\n";
+                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno at b&#818;ottom\" accesskey=\"b\">\n";
                 } else {
                     $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno\">\n";
                 }

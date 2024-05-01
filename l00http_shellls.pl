@@ -32,7 +32,7 @@ sub l00http_shellls_proc {
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs);
     my ($lnno, $fname, $catout, $up1lvl, $plpath, $datewidth, 
-        $item, $cnt, $isdir, $shcmd2, @items, $ramfname);
+        $item, $cnt, $isdir, $shcmd2, @items, $ramfname, $fnamedisp);
 
 
     if (defined ($form->{'submit'})) {
@@ -87,9 +87,16 @@ sub l00http_shellls_proc {
             }
 
             $cnt++;
+            $fnamedisp = $fname;
             if ($item =~ /^d/) {
                 # directory
                 $isdir = '/';
+                $nofiles++;
+            } elsif ($item =~ /^l/) {
+                # symblink
+                $isdir = '/';
+                # strip ' -> .*'
+                $fname =~ s/ -> .*//;
                 $nofiles++;
             } else {
                 # file
@@ -97,7 +104,7 @@ sub l00http_shellls_proc {
                 $nodirs++;
             }
             if ($cnt < 5000) {
-                printf $sock ("%4d: %s<a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$shpath$fname$isdir\">$fname$isdir</a>\n", 
+                printf $sock ("%4d: %s<a href=\"/shellls.htm?submit=submit&shcmd=$shcmd2&shpath=$shpath$fname$isdir\">$fnamedisp$isdir</a>\n", 
                     $cnt, substr($item, 0, $datewidth));
             }
         }
