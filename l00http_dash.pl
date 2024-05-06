@@ -1384,10 +1384,10 @@ sub l00http_dash_proc {
                 (defined($form->{"inscat2form"}) &&
                 ($form->{"inscat2form"} =~ /^\d+$/))) {
                 $out =  "<form action=\"/dash.htm\" method=\"get\">".
-                        "<input type=\"submit\" name=\"process\" value=\"A&#818;dd\" accesskey=\"a\"> ".
                         "cat2: <input type=\"text\" size=\"10\" name=\"newtcat\" value=\"newcat\" accesskey=\"e\">".
                         " at line ".$form->{'inscat2form'}.
-                        "<input type=\"checkbox\" name=\"hilite\"> append \@\@\@\n".
+                        "<input type=\"checkbox\" name=\"hilite\"> append \@\@\@ - ".
+                        "<input type=\"submit\" name=\"process\" value=\"A&#818;dd\" accesskey=\"a\"> ".
                         "<input type=\"hidden\" name=\"inscat2at\" value=\"$form->{'inscat2form'}\">".
                         "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">".
                         "</form>\n".
