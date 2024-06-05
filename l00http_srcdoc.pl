@@ -342,7 +342,8 @@ end_of_print2
                 }
                 $html .= "<pre>\n";
                 for ($jj = 0; $jj <= $#callstack; $jj++) {
-                    $html .= "<font color=\"". $reccuLvlColor [$jj] ."\">$jj: $callstack[$jj]</font>";
+                    $tmp = $jj + 1;
+                    $html .= "<font color=\"". $reccuLvlColor [$jj] ."\">$tmp: $callstack[$jj]</font>";
                 }
                 $html .= "   $orgln";
                 $html .= "</pre>\n";

@@ -154,8 +154,8 @@ sub l00http_shellls_proc {
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
     print $sock "<tr>\n";
-    print $sock "  <td>shcmd:</td>\n";
-    print $sock "  <td><input type=\"text\" size=\"10\" name=\"shcmd\" value=\"$shcmd\"></td>\n";
+    print $sock "  <td>shcme&#818;d :</td>\n";
+    print $sock "  <td><input type=\"text\" size=\"10\" name=\"shcmd\" value=\"$shcmd\" accesskey=\"e\"></td>\n";
     print $sock "</tr>\n";
     print $sock "<tr>\n";
     print $sock "  <td>Path:</td>\n";
