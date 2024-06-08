@@ -81,7 +81,8 @@ sub l00http_lineeval_proc (\%) {
 
 
     if (defined ($form->{'run'})) {
-        if ($form->{'useform'} ne 'keep') {
+        if ((defined($form->{'useform'}))
+            && ($form->{'useform'} ne 'keep')) {
             $useform = '';
             if (defined ($form->{'useform'}) && ($form->{'useform'} eq 'on')) {
                 $useform = 'checked';
@@ -270,6 +271,28 @@ sub l00http_lineeval_proc (\%) {
                 }
             }
 
+            # add default eval (x and #) if missing
+            $ii = 1;
+            for ($tmp = 0; $tmp <= $#evals; $tmp++) {
+                if ($evals[$tmp] eq 's/^#//') {
+                    $ii = 0;
+                    last;
+                }
+            }
+            if ($ii) {
+                push(@evals, 's/^#//');
+            }
+            $ii = 1;
+            for ($tmp = 0; $tmp <= $#evals; $tmp++) {
+                if ($evals[$tmp] eq 's/^(.)/#$1/') {
+                    $ii = 0;
+                    last;
+                }
+            }
+            if ($ii) {
+                push(@evals, 's/^(.)/#$1/');
+            }
+
             # find form checkbox
             if ($useform eq 'checked') {
                 foreach $_ (keys %$form) {
@@ -449,6 +472,28 @@ sub l00http_lineeval_proc (\%) {
                 } else {
                     print $sock "mv ";
                 }
+                # add default name (x and #) if missing
+                $ii = 1;
+                for ($tmp = 0; $tmp <= $#evals; $tmp++) {
+                    if ($evals[$tmp] eq '(x') {
+                        $ii = 0;
+                        last;
+                    }
+                }
+                if ($ii) {
+                    push(@evals, '(x');
+                }
+                $ii = 1;
+                for ($tmp = 0; $tmp <= $#evals; $tmp++) {
+                    if ($evals[$tmp] eq '#)') {
+                        $ii = 0;
+                        last;
+                    }
+                }
+                if ($ii) {
+                    push(@evals, '#)');
+                }
+
                 for ($tmp = 0; $tmp <= $#evals; $tmp++) {
                     if ($useform eq 'checked') {
                         # use checkbox
