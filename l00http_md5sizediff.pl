@@ -480,6 +480,7 @@ sub l00http_md5sizediff_proc {
             $ctrl->{'l00file'}->{"l00://md5sizediff.$sname.all.htm"} = '';
             # split combined input files for each side
             $filtercnt{$sname} = 0;
+            $side =~ s/[\n\r]//g;
             foreach $file (split('\|\|', $side)) {
                 print $sock "$sname side: <a href=\"/view.htm?path=$file\" target=\"_blank\">$file</a>\n";
                 $cnt = 0;
