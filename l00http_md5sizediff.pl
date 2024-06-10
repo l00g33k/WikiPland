@@ -1231,11 +1231,16 @@ sub l00http_md5sizediff_proc {
                 } else {
                     @_ = (sort keys %{$bymd5sum{$sname}{$md5sum}});
                     $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n", $cnt, $_[0]).
-                        "        $_[0]\n";
+                        sprintf ("   %03d: same: $_ files $sizebymd5sum{$md5sum} $md5sum --- %s\n", $cnt, $_[0]);
+                    for ($ii = 0; $ii <= $#_; $ii++) {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                            "        \"$_[$ii]\"   # $sname.$cnt.$ii\n";
+                    }
                     @_ = (sort keys %{$bymd5sum{$oname}{$md5sum}});
-                    $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
-                        "        $_[0]\n";
+                    for ($ii = 0; $ii <= $#_; $ii++) {
+                        $ctrl->{'l00file'}->{"l00://md5sizediff.same.htm"} .= 
+                            "        \"$_[$ii]\"   # $oname.$cnt.$ii\n";
+                    }
                 }
                 $cnt++;
             }
