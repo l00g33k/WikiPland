@@ -547,7 +547,6 @@ end_of_print3
                 $line =~ s/<a href="\/edit.htm.+?<\/a>//;
                 if ($srcln > 0) {
                     # level head heading level - 1
-                    $tmp--;
                     $line =~ s/<a href="\/view.htm.+?<\/a>/ [$tmp] ($srcln)/;
                     $srcln = 0;
                 } else {
@@ -684,6 +683,10 @@ end_of_print3
                 $buffer .= "<input type=\"radio\" name=\"level\" value=\"3\" accesskey=\"3\">4&#818;\n";
                 $buffer .= "<input type=\"radio\" name=\"level\" value=\"4\" accesskey=\"4\">5&#818;\n";
                 $buffer .= "<input type=\"radio\" name=\"level\" value=\"5\" accesskey=\"5\">6&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"6\" accesskey=\"6\">6&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"7\" accesskey=\"7\">7&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"8\" accesskey=\"8\">8&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"9\" accesskey=\"9\">9&#818;\n";
                 $tgttextcln = $tgttext;
                 $tgttextcln =~ s/=/ /g;
                 $tgttextcln =~ s/^ +//;
