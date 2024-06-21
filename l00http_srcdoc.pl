@@ -10,7 +10,7 @@ use l00backup;
 my %config = (proc => "l00http_srcdoc_proc",
               desc => "l00http_srcdoc_desc");
 my ($editwd, $editht, $editsz, $root, $filter);
-my ($hostpath, $contextln, $blklineno, $level, @secnos, $noheading);
+my ($hostpath, $contextln, $blklineno, $level, @secnos, $noheading, $devmode);
 my (%writeentirefile, %entirefileorgname, %writeentirefilehighlight, $width, $lastinsert);
 $hostpath = "c:\\x\\";
 $editsz = 0;
@@ -24,6 +24,7 @@ $level = 3;
 $width = 40;
 $lastinsert = 0;
 $noheading = '';
+$devmode = '';
 
 my (@reccuLvlColor);
 @reccuLvlColor = (
@@ -143,6 +144,31 @@ sub l00http_srcdoc_proc {
     }
     print $sock "<br>\n";
 
+    if (defined ($form->{'targetupdate'}) && 
+        defined ($form->{'targetname'}) && (length($form->{'targetname'}) > 3) &&
+        defined ($form->{'targetlnnoold'}) && $form->{'targetlnnoold'} =~ /^\d+$/ &&
+        defined ($form->{'targetlnnonew'}) && $form->{'targetlnnonew'} =~ /^\d+$/) {
+        $buffer = '';
+        if (open(IN, "<$prjbase$prjname")) {
+            $cnt = 0;
+            while (<IN>) {
+                $cnt++;
+                if (($st, $en) = /^$form->{'targetname'}::(\d+)::$form->{'targetlnnoold'}::(\d+)$/) {
+                    print $sock "LINE $cnt WAS: $_<br>\n";
+                    $st = $1 + ($form->{'targetlnnonew'} - $form->{'targetlnnoold'});
+                    $en = $2 + ($form->{'targetlnnonew'} - $form->{'targetlnnoold'});
+                    $_ = "$form->{'targetname'}::$st::$form->{'targetlnnonew'}::$en\n";
+                    print $sock "LINE $cnt  IS: $_<br>\n";
+                }
+                $buffer .= $_;
+            }
+            close(IN);
+            if (open(OU, ">$prjbase$prjname")) {
+                print OU $buffer;
+                close(OU);
+            }
+        }
+    }
 
     # insert notes
     if (defined ($form->{'Save'}) && defined ($form->{'insertlnno'})) {
@@ -267,6 +293,11 @@ sub l00http_srcdoc_proc {
             $noheading = 'checked';
         } else {
             $noheading = '';
+        }
+        if (defined ($form->{'devmode'}) && ($form->{'devmode'} eq 'on')) {
+            $devmode = 'checked';
+        } else {
+            $devmode = '';
         }
         $html = '';
         $html .= <<end_of_print1
@@ -506,7 +537,11 @@ end_of_print3
                                     print COPYDEST "<font color=\"". $reccuLvlColor [$level] ."\">";
                                     print COPYDEST "Call level $level\n";
                                 }
-                                print COPYDEST sprintf ("%4d: ", $lnno);
+                                if ($devmode eq '') {
+                                    print COPYDEST sprintf ("%4d: ", $lnno);
+                                } else {
+                                    print COPYDEST sprintf ("<a href=\"/srcdoc.htm?targetupdate=yes&path=$prjbase$prjname&targetlnnoold=%d&targetlnnonew=%d&targetname=$localfname\">%4d</a>: ", $hi, $lnno, $lnno);
+                                }
                                 s/</&lt;/g;
                                 s/>/&gt;/g;
                                 print COPYDEST;
@@ -647,6 +682,7 @@ end_of_print3
     $buffer .= "<input type=\"submit\" name=\"generate\" value=\"G&#818;enerate\" accesskey=\"g\">\n";
     $buffer .= "w&#818;idth% <input type=\"text\" size=\"3\" name=\"width\" value=\"$width\" accesskey=\"w\">\n";
     $buffer .= "<input type=\"checkbox\" name=\"noheading\" $noheading accesskey=\"n\"> N&#818;o headings\n";
+    $buffer .= "<input type=\"checkbox\" name=\"devmode\" $devmode accesskey=\"d\"> D&#818;ev mode\n";
     $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
     $buffer .= "</form><br>\n";
     $buffer .= "Output on port: \n";
