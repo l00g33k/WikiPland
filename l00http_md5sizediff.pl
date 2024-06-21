@@ -1583,12 +1583,12 @@ sub l00http_md5sizediff_proc {
     print $sock "</td></tr>\n";
 
     print $sock "<tr><td>\n";
-    print $sock "This: (full pathname filter regex (!! inverte): <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
-    print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thispath</textarea>\n";
+    print $sock "Thi&#818;s: (full pathname filter regex (!! inverte): <input type=\"text\" size=\"16\" name=\"filterthis\" value=\"$filterthis\"> )<br>";
+    print $sock "<textarea name=\"path\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"i\">$thispath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
-    print $sock "That: (full pathname filter regex (!! inverte): <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
-    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'}>$thatpath</textarea>\n";
+    print $sock "Tha&#818;t: (full pathname filter regex (!! inverte): <input type=\"text\" size=\"16\" name=\"filterthat\" value=\"$filterthat\"> )<br>";
+    print $sock "<textarea name=\"path2\" cols=$ctrl->{'txtw'} rows=$ctrl->{'txth'} accesskey=\"a\">$thatpath</textarea>\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     if ($ctrl->{'os'} eq 'and') {
