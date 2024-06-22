@@ -130,6 +130,17 @@ sub l00http_calc_proc (\%) {
                         }
                     }
                 } else {
+                    # # between table is comment
+                    if (/^[^#]/ || /^$/) {
+                        # line not starting with # comment, reset
+                        undef @formulea;
+                        undef @head;
+                        $findhead = 1;
+                        $findinit = 1;
+                        $repeats = 1;
+                        $rowcnt = 0;
+                        $header = '';
+                    }
                     $output .= "$_\n";
                 }
             }
