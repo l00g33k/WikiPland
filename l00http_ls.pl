@@ -299,7 +299,7 @@ sub l00http_ls_proc {
     my ($wikihtmlflags, $tmp, $tmp2, $foundhdr, $intoc, $filedata, $skipto, $stopat);
     my ($clipdir, $clipfile, $docrc32, $crc32, $pnameup, $urlraw, $path2, $skiptohdr);
     my (@regexs, $regex, $skip, $pattern, $filecnt, $verbatimheader, $wikicallonload);
-    my ($ramfiletxt, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare, $pre, $dopl, $post);
+    my ($ramfiletxt, $ramfilebare, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare, $pre, $dopl, $post);
 
 
     if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
@@ -1521,6 +1521,7 @@ if ($dbgskipto) {
                         "<td>date/time</td>\n".
                         "</tr>\n";
         $ramfiletxt = $ramdirtxt;
+        $ramfilebare = '';
         $ramfilehtml = $ramdirhtml;
 
         foreach $file (@dirs) {
@@ -1669,6 +1670,7 @@ if ($dbgskipto) {
 
                 $ramfiletxt .= sprintf ("%4d/%02d/%02d %02d:%02d:%02d  % 9d  %s\n", 
                     1900+$year, 1+$mon, $mday, $hour, $min, $sec, $size, $fullpath);
+                $ramfilebare .= "$fullpath\n";
             }
         }
         closedir (DIR);
@@ -1699,6 +1701,8 @@ if ($dbgskipto) {
         $ramfilehtml .= "</table>\n";
         $ramfiletxt =~ s/%3a/:/gms;
         $ramfiletxt =~ s/%2f/\//gms;
+        $ramfilebare =~ s/%3a/:/gms;
+        $ramfilebare =~ s/%2f/\//gms;
 
         &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_files.html");
         &l00httpd::l00fwriteBuf($ctrl, $ramfilehtml);
@@ -1706,16 +1710,16 @@ if ($dbgskipto) {
         &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_files.txt");
         &l00httpd::l00fwriteBuf($ctrl, $ramfiletxt);
         &l00httpd::l00fwriteClose($ctrl);
+        &l00httpd::l00fwriteOpen($ctrl, "l00://ls_all_files_bare.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $ramfilebare);
+        &l00httpd::l00fwriteClose($ctrl);
 
         print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
-       #if ($nodirs >= $lsmaxitems) {
-            print $sock "Directory listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_dirs.html\" target=\"_blank\">l00://ls_all_dirs.html</a>\n";
-            print $sock " -- <a href=\"/view.htm?path=l00://ls_all_dirs.txt\" target=\"_blank\">.txt</a><br>\n";
-       #}
-       #if ($nofiles >= $lsmaxitems) {
-            print $sock "File listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_files.html\" target=\"_blank\">l00://ls_all_files.html</a>\n";
-            print $sock " -- <a href=\"/view.htm?path=l00://ls_all_files.txt\" target=\"_blank\">.txt</a><br>\n";
-       #}
+        print $sock "Directory listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_dirs.html\" target=\"_blank\">l00://ls_all_dirs.html</a>\n";
+        print $sock " -- <a href=\"/view.htm?path=l00://ls_all_dirs.txt\" target=\"_blank\">.txt</a><br>\n";
+        print $sock "File listing limited to $lsmaxitems.  See <a href=\"/ls.htm?path=l00://ls_all_files.html\" target=\"_blank\">l00://ls_all_files.html</a>\n";
+        print $sock " -- <a href=\"/view.htm?path=l00://ls_all_files.txt\" target=\"_blank\">.txt</a>\n";
+        print $sock " -- <a href=\"/view.htm?path=l00://ls_all_files_bare.txt\" target=\"_blank\">bare.txt</a><br>\n";
     }
     print "ls: processed >$path2<\n", if ($ctrl->{'debug'} >= 5);
 
