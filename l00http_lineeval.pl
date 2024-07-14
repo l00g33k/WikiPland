@@ -81,6 +81,9 @@ sub l00http_lineeval_proc (\%) {
 
 
     if (defined ($form->{'run'})) {
+        if (!defined($form->{'useform'})) {
+            $useform = '';
+        }
         if ((defined($form->{'useform'}))
             && ($form->{'useform'} ne 'keep')) {
             $useform = '';
