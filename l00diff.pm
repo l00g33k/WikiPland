@@ -762,9 +762,9 @@ sub l00http_diff_compare {
     # Paul Heckel
     # http://documents.scribd.com/docs/10ro9oowpo1h81pgh1as.pdf
 
+    undef @OLD;
     if (&l00httpd::l00freadOpen($ctrl, "$oldfile")) {
         $htmlout .= "&lt; Old file: <a href=\"/view.htm?path=$oldfile\">$oldfile</a>\n";
-        undef @OLD;
         $cnt = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             $cnt++;
@@ -780,9 +780,9 @@ sub l00http_diff_compare {
         $htmlout .= "$oldfile open failed\n";
     }
 
+    undef @NEW;
     if (&l00httpd::l00freadOpen($ctrl, "$newfile")) {
         $htmlout .= "&gt; New file: <a href=\"/view.htm?path=$newfile\">$newfile</a>\n";
-        undef @NEW;
         $cnt = 0;
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             $cnt++;
