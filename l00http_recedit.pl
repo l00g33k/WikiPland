@@ -499,10 +499,11 @@ sub l00http_recedit_proc (\%) {
     if (defined($ctrl->{'receditextra'})) {
         $_ = $ctrl->{'receditextra'};
     }
-    print $sock "<a href=\"/ls.htm?path=$path$_\">$path</a> - ";
+    print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     if (defined ($form->{'reminder'})) {
         print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
-        print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">LIST</a> - ";
+        print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">(LIST</a> - ";
+        print $sock "<a href=\"#recedit_active\">here)</a> - ";
     }
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>";
     print $sock "<p>";
@@ -689,6 +690,10 @@ sub l00http_recedit_proc (\%) {
 
     print $sock "</table>\n";
     print $sock "</form>\n";
+
+    print $sock "<p><a name=\"recedit_active\"></a>Past due: <a href=\"#_top_\">(jump to top)</a><br>\n";
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $now, 0);
+    print $sock "<p>\n";
 
     print $sock "<p><a name=\"banner\"></a>$ctrl->{'home'}<p>";
 
