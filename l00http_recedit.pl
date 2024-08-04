@@ -501,9 +501,9 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     if (defined ($form->{'reminder'})) {
-        print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
         print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">(LIST</a> - ";
         print $sock "<a href=\"#recedit_active\">here)</a> - ";
+        print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
     }
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>";
     print $sock "<p>";
