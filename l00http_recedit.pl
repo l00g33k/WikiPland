@@ -613,7 +613,9 @@ sub l00http_recedit_proc (\%) {
                         if ($lnno > $afterline) {
                             $filtered .= $_;
                             $nowcnt++;
-                            $now .= sprintf("%03d %s", $nowcnt, $_);
+                            $tmp = $_;
+                            $tmp =~ s/^\d+ \d+:\d+:\d+:\d+://;
+                            $now .= sprintf("%03d %s", $nowcnt, $tmp);
                             # make due list with past due items
                             if (defined ($form->{'reminder'})) {
                                 if ($line =~ /^(\d{8,8} \d{6,6}):\d+/) {
@@ -694,6 +696,7 @@ sub l00http_recedit_proc (\%) {
     print $sock "<p><a name=\"recedit_active\"></a>Past due: <a href=\"#_top_\">(jump to top)</a><br>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $now, 0);
     print $sock "<p>\n";
+    print $sock "<a href=\"#_top_\">(jump to top)</a><br>\n";
 
     print $sock "<p><a name=\"banner\"></a>$ctrl->{'home'}<p>";
 
