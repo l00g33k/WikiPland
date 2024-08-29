@@ -205,7 +205,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $filtered, $cnt, $eval1, $now, $due, $nowcnt, $duecnt, $dispcnt);
+    my ($filter_found_true, $filtered, $cnt, $eval1, $now, $nowtime, $due, $nowcnt, $duecnt, $dispcnt);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -312,12 +312,12 @@ sub l00http_recedit_proc (\%) {
                                 $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
                                 if ($tmp2 > $tmp) {
                                     # if past, move to now + 5 min
-                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 60 * 5);
-                                } else {
-                                    $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                    $tmp += 5 * 60; # 5 min
-                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
-                                    # if future, + 5 min
+                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 60 * 60);
+#                               } else {
+#                                   $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+#                                   $tmp += 5 * 60; # 5 min
+#                                   ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+#                                   # if future, + 5 min
                                 }
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                      $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -502,7 +502,8 @@ sub l00http_recedit_proc (\%) {
     print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     if (defined ($form->{'reminder'})) {
         print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">(LIST</a> - ";
-        print $sock "<a href=\"#recedit_active\">here)</a> - ";
+        print $sock "<a href=\"#recedit_active\">here</a> - ";
+        print $sock "<a href=\"#recedit_active2\">time)</a> - ";
         print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
     }
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>";
@@ -559,7 +560,7 @@ sub l00http_recedit_proc (\%) {
     if (defined ($form->{'reminder'})) {
         if ($path =~ /^l00:\/\//) {
             print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
-            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+5\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+h\">\n";
             print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
         } else {
             print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";
@@ -581,6 +582,7 @@ sub l00http_recedit_proc (\%) {
     if (length($record1) > 0) {
         undef @table;
         $now = "<pre>\n";
+        $nowtime = "<pre>\n";
         $due = "<pre>\n";
         $nowcnt = 0;
         $duecnt = 0;
@@ -614,6 +616,7 @@ sub l00http_recedit_proc (\%) {
                             $filtered .= $_;
                             $nowcnt++;
                             $tmp = $_;
+                            $nowtime .= sprintf("%03d %s", $nowcnt, $tmp);
                             $tmp =~ s/^\d+ \d+:\d+:\d+:\d+://;
                             $now .= sprintf("%03d %s", $nowcnt, $tmp);
                             # make due list with past due items
@@ -660,6 +663,7 @@ sub l00http_recedit_proc (\%) {
         }
 
         $now .= "</pre>\n";
+        $nowtime .= "</pre>\n";
         $due .= "</pre>\n";
 
 		&l00httpd::l00fwriteOpen($ctrl, "l00://recedit_due.txt");
@@ -695,6 +699,11 @@ sub l00http_recedit_proc (\%) {
 
     print $sock "<p><a name=\"recedit_active\"></a>Past due: <a href=\"#_top_\">(jump to top)</a><br>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $now, 0);
+    print $sock "<p>\n";
+    print $sock "<a href=\"#_top_\">(jump to top)</a><br>\n";
+
+    print $sock "<p><a name=\"recedit_active2\"></a>Past due with time: <a href=\"#_top_\">(jump to top)</a><br>\n";
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $nowtime, 0);
     print $sock "<p>\n";
     print $sock "<a href=\"#_top_\">(jump to top)</a><br>\n";
 
