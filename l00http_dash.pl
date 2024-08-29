@@ -11,7 +11,7 @@ my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
 my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $crlfchk, $crlf, $freefmt, $filtime, $fildesc,
-$smallhead, $catflt, $outputsort, $dashwidth, $onlybang, $onlyhat, $target, $fildesc0itm1cat);
+$smallhead, $catflt, $cat2find, $outputsort, $dashwidth, $onlybang, $onlyhat, $target, $fildesc0itm1cat);
 
 $dash_all = 'past';
 $hdronly = 0;
@@ -22,6 +22,7 @@ $newbang = '';
 $freefmt = '';
 $smallhead = '';
 $catflt = '.';
+$cat2find = '';
 $outputsort = '';
 $dashwidth = 18;
 $onlybang = '';
@@ -196,6 +197,7 @@ sub l00http_dash_proc {
         $form->{'fildesc'} = '';
         $form->{'fildesc0itm1cat'} = '';
         $form->{'crlf'} = '';
+        $form->{'cat2find'} = '';
     }
 
     if (defined($form->{'futurebtn'})) {
@@ -275,6 +277,11 @@ sub l00http_dash_proc {
         } else {
             $crlf = '';
             $crlfchk = '';
+        }
+        if ((defined ($form->{'cat2find'})) && ($form->{'cat2find'} eq 'on')) {
+            $cat2find = 'checked';
+        } else {
+            $cat2find = '';
         }
 
         if ((defined ($form->{'filtime'})) && ($form->{'filtime'} eq 'on')) {
@@ -361,7 +368,9 @@ sub l00http_dash_proc {
             print $sock "<input type=\"checkbox\" name=\"fildesc0itm1cat\" $fildesc0itm1cat>all)";
             print $sock "<input type=\"hidden\" name=\"filtime\" value=\"\">";
         }
-        print $sock " Cat1F&#818;lt<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\"> \n";
+        print $sock " Cat1F&#818;lt ";
+        print $sock "<input type=\"checkbox\" name=\"cat2find\" $cat2find>2 ";
+        print $sock "<input type=\"text\" size=\"4\" name=\"catflt\" value=\"$catflt\" accesskey=\"f\"> \n";
         if ($fildesc ne 'checked') {
             print $sock "<input type=\"hidden\" name=\"fildesc0itm1cat\" value=\"\">";
             print $sock "<input type=\"checkbox\" name=\"filtime\" $filtime>time)";
@@ -816,7 +825,8 @@ sub l00http_dash_proc {
                 }
                 if ((($cat1 =~ /$catflt/i) || 
                     ($filtime eq 'checked') || 
-                    ($fildesc eq 'checked')) && 
+                    ($fildesc eq 'checked') ||
+                    ($cat2find eq 'checked')) && 
                     ($eqlvl == 2)) {
                     # only if match cat1 filter
                     # or time
@@ -954,6 +964,14 @@ sub l00http_dash_proc {
                         } elsif ($dsc =~ /$catflt/i) {
                             # remember to display this cat2
                             $desccats{$key} = 1;
+                        }
+                    }
+                    if ($cat2find eq 'checked') {
+                        if ($cat2 =~ /$catflt/i) {
+                            # remember to display this cat2
+                            $desccats{$key} = 1;
+                        } else {
+                            next;
                         }
                     }
                     #[[/ls.htm?path=$form->{'path'}#$jmp|$cat1]]
