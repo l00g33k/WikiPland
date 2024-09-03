@@ -1068,7 +1068,7 @@ while(1) {
                 print $sock $ctrl{'httphead'} . $ctrl{'htmlhead'} . "<title>l00httpd</title></head>\x0D\x0A</html>\n";
                 $sock->close;
                 # log it any way
-                $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $1\n";
+                $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $1\n", if ($debug >= 5);
                 next;
             } elsif ($httpbuf =~ /^POST /) {
                 $httpmethod = 'POST';
@@ -1140,7 +1140,7 @@ while(1) {
             }
 
             print "$ctrl{'now_string'} $client_ip FORM: $urlparams\n", if ($debug >= 1);
-            $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
+            $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n", if ($debug >= 5);
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
             if (($urlparams eq '/') &&              # no path

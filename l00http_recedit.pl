@@ -205,7 +205,7 @@ sub l00http_recedit_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
-    my ($filter_found_true, $filtered, $cnt, $eval1, $now, $nowtime, $due, $nowcnt, $duecnt, $dispcnt);
+    my ($filter_found_true, $filtered, $cnt, $eval1, $now, $nowtime, @nowtime, $due, $nowcnt, $duecnt, $dispcnt);
 
     if (defined ($form->{'path'})) {
         $path = $form->{'path'};
@@ -582,7 +582,7 @@ sub l00http_recedit_proc (\%) {
     if (length($record1) > 0) {
         undef @table;
         $now = "<pre>\n";
-        $nowtime = "<pre>\n";
+        undef @nowtime;
         $due = "<pre>\n";
         $nowcnt = 0;
         $duecnt = 0;
@@ -616,7 +616,7 @@ sub l00http_recedit_proc (\%) {
                             $filtered .= $_;
                             $nowcnt++;
                             $tmp = $_;
-                            $nowtime .= sprintf("%03d %s", $nowcnt, $tmp);
+                            push(@nowtime, $tmp);
                             $tmp =~ s/^\d+ \d+:\d+:\d+:\d+://;
                             $now .= sprintf("%03d %s", $nowcnt, $tmp);
                             # make due list with past due items
@@ -663,6 +663,12 @@ sub l00http_recedit_proc (\%) {
         }
 
         $now .= "</pre>\n";
+        $nowtime = "<pre>\n";
+        $nowcnt = 0;
+        foreach $tmp (sort(@nowtime)) {
+            $nowcnt++;
+            $nowtime .= sprintf("%03d %s", $nowcnt, $tmp);
+        }
         $nowtime .= "</pre>\n";
         $due .= "</pre>\n";
 
