@@ -499,47 +499,19 @@ sub l00http_recedit_proc (\%) {
     if (defined($ctrl->{'receditextra'})) {
         $_ = $ctrl->{'receditextra'};
     }
-    print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     if (defined ($form->{'reminder'})) {
         print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">(LIST</a> - ";
-        print $sock "<a href=\"#recedit_active\">here</a> - ";
-        print $sock "<a href=\"#recedit_active2\">time)</a> - ";
+        print $sock "<a href=\"#recedit_active2\">time</a> - ";
+        print $sock "<a href=\"#recedit_active\">here)</a> - ";
         print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
     }
+    print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>";
     print $sock "<p>";
 
     print $sock "<form action=\"/recedit.htm\" method=\"post\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
 
-    print $sock "        <tr>\n";
-    print $sock "            <td>Record 1:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"record1\" value=\"$record1\">.".
-                                " After line: <input type=\"text\" size=\"4\" name=\"afterline\" value=\"$afterline\">.".
-                                " Max len: <input type=\"text\" size=\"4\" name=\"displen\" value=\"$displen\">.".
-                                "</td>\n";
-    print $sock "        </tr>\n";
-                                                
-    print $sock "        <tr>\n";
-    print $sock "            <td>Path:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$path\"></td>\n";
-    print $sock "        </tr>\n";
-                                                
-    print $sock "        <tr>\n";
-    print $sock "            <td>F&#818;ilter:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\" accesskey=\"f\">";
-    if ($filter eq '.') {
-        print $sock "        </td>\n";
-    } else {
-        print $sock "        - <a href=\"/ls.htm?path=l00://recedit_filtered.txt\">filtered</a></td>\n";
-    }
-    print $sock "        </tr>\n";
-                                                
-    print $sock "        <tr>\n";
-    print $sock "            <td>E&#818;val:</td>\n";
-    print $sock "            <td><input type=\"text\" size=\"16\" name=\"eval\" value=\"$eval\" accesskey=\"e\"></td>\n";
-    print $sock "        </tr>\n";
-                                                
     print $sock "    <tr>\n";
     if (defined ($form->{'reminder'})) {
         print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"><p>\n";
@@ -579,6 +551,11 @@ sub l00http_recedit_proc (\%) {
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "        <tr>\n";
+    print $sock "            <td>Path:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"path\" value=\"$path\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
     if (length($record1) > 0) {
         undef @table;
         $now = "<pre>\n";
@@ -699,6 +676,29 @@ sub l00http_recedit_proc (\%) {
     print $sock "    </td>\n";
     print $sock "    </tr>\n";
 
+    print $sock "        <tr>\n";
+    print $sock "            <td>Record 1:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"record1\" value=\"$record1\">.".
+                                " After line: <input type=\"text\" size=\"4\" name=\"afterline\" value=\"$afterline\">.".
+                                " Max len: <input type=\"text\" size=\"4\" name=\"displen\" value=\"$displen\">.".
+                                "</td>\n";
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>F&#818;ilter:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"filter\" value=\"$filter\" accesskey=\"f\">";
+    if ($filter eq '.') {
+        print $sock "        </td>\n";
+    } else {
+        print $sock "        - <a href=\"/ls.htm?path=l00://recedit_filtered.txt\">filtered</a></td>\n";
+    }
+    print $sock "        </tr>\n";
+                                                
+    print $sock "        <tr>\n";
+    print $sock "            <td>E&#818;val:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"eval\" value=\"$eval\" accesskey=\"e\"></td>\n";
+    print $sock "        </tr>\n";
+                                                
 
     print $sock "</table>\n";
     print $sock "</form>\n";
