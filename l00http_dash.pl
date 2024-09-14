@@ -163,7 +163,7 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, %cat1tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
-    my (@descfind, $moving, $color, $dashbanner);
+    my (@descfind, @cat2find, $moving, $color, $dashbanner);
 
 
     $timecolor = '';
@@ -179,6 +179,7 @@ sub l00http_dash_proc {
     undef %cat1s;
     undef %desccats;
     undef @descfind;
+    undef @cat2find;
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -488,6 +489,10 @@ sub l00http_dash_proc {
             if ($alllines[$ii] =~ /^%DESCFIND:(.+)%$/) {
                 push(@descfind, $1);
             }
+            # %CAT2FIND:'''%
+            if ($alllines[$ii] =~ /^%CAT2FIND:(.+)%$/) {
+                push(@cat2find, $1);
+            }
             # %DASHBANNER:[[#abc|jump to abc]]%
             if ($alllines[$ii] =~ /^%DASHBANNER:(.+)%$/) {
                 # concatenate
@@ -541,6 +546,10 @@ sub l00http_dash_proc {
                 # %DESCFIND:'''%
                 if ($_ =~ /^%DESCFIND:(.+)%$/) {
                     push(@descfind, $1);
+                }
+                # %CAT2FIND:'''%
+                if ($_ =~ /^%CAT2FIND:(.+)%$/) {
+                    push(@cat2find, $1);
                 }
 
                 if (/^%BLOGTIME:(.+?)%/) {
@@ -1534,7 +1543,24 @@ sub l00http_dash_proc {
                         $key =~ s/\+/%2B/g;
                     }
                     $help .= "(<a href=\"/dash.htm?fildesc=on&catflt=$key&process=Process&path=$form->{'path'}&dash_all=all\">$desc</a> - ";
-                    $help .= "<a href=\"/dash.htm?fildesc=on&catflt=($key)&process=Process&path=$form->{'path'}&dash_all=all\">...</a>) ";
+                    $help .=  "<a href=\"/dash.htm?fildesc=on&catflt=($key)&process=Process&path=$form->{'path'}&dash_all=all\">...</a>) ";
+                    $help .= "-- ";
+                }
+                $help .= "\n";
+            }
+
+            if ($#cat2find >= 0) {
+                $help .= "* <font style=\"color:black;background-color:aqua\">Cat2 find</font>: ";
+                foreach $_ (sort @cat2find) {
+                    if (($desc, $key) = /^([^|]+)\|\|(.+)$/) {
+                        $key =~ s/\+/%2B/g;
+                    } else {
+                        $desc = $_;
+                        $key = $_;
+                        $key =~ s/\+/%2B/g;
+                    }
+                    $help .= "(<a href=\"/dash.htm?cat2find=on&catflt=$key&process=Process&path=$form->{'path'}&dash_all=all\">$desc</a> - ";
+                    $help .=  "<a href=\"/dash.htm?cat2find=on&catflt=($key)&process=Process&path=$form->{'path'}&dash_all=all\">...</a>) ";
                     $help .= "-- ";
                 }
                 $help .= "\n";
