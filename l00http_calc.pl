@@ -80,13 +80,17 @@ sub l00http_calc_proc (\%) {
                     }
                     $output .= "||\n";
                     $header .= "||\n";
+                } elsif (($name, $tmp) = /^\$([a-zA-Z0-9_]+) *= *(.+);$/) {
+                    eval "\$$name=$tmp;";
+                    $output .= "\$$name=$tmp;<br>\n";
+                    l00httpd::dbp($config{'desc'}, "\$$name=$tmp;\n"), if ($ctrl->{'debug'} >= 3);
                 } else {
                     $output .= "$_\n";
                 }
             } else {
                 if (/^\|\|.*\|\|$/) {
                     @_ = split('\|\|', $_);
-                    if ($_[1] =~ /:=\*(\d+)/) {
+                    if ($_[1] =~ /:x(\d+)/) {
                         $repeats = $1;
                         l00httpd::dbp($config{'desc'}, "REPEAT $repeats : >$_<\n"), if ($ctrl->{'debug'} >= 3);
                         next;
@@ -128,6 +132,7 @@ sub l00http_calc_proc (\%) {
                             }
                             $output .= "||\n";
                         }
+                        $repeats = 1;
                     }
                 } else {
                     # # between table is comment
