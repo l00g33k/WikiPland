@@ -123,9 +123,13 @@ sub l00http_calc_proc (\%) {
                             }
                             for ($ii = 1; $ii <= $#_; $ii++) {
                                 if (($compute) = $_[$ii] =~ /^ *(.+?) *$/) {
-                                    eval "\$$head[$ii] = $compute";
-                                    eval "\$tmp = \$$head[$ii]";
-                                    $tmp = sprintf($format[$ii], $tmp);
+                                    if ($compute =~ /"([^"]+)"/) {
+                                        $tmp = $1;
+                                    } else {
+                                        eval "\$$head[$ii] = $compute";
+                                        eval "\$tmp = \$$head[$ii]";
+                                        $tmp = sprintf($format[$ii], $tmp);
+                                    }
                                     $output .= "|| $tmp ";
                                     l00httpd::dbp($config{'desc'}, "EVAL  $rowcnt.$repeat.$ii: >$_[$ii]< => >$head[$ii] = $compute< == >$tmp<\n"), if ($ctrl->{'debug'} >= 3);
                                 }
@@ -135,7 +139,7 @@ sub l00http_calc_proc (\%) {
                         $repeats = 1;
                     }
                 } else {
-                    # # between table is comment
+                    # # between table are comments
                     if (/^[^#]/ || /^$/) {
                         # line not starting with # comment, reset
                         undef @formulea;
@@ -164,7 +168,7 @@ sub l00http_calc_proc (\%) {
         print $sock "Unable to open '$form->{'path'}'<p>\n";
     }
 
-   $html .= "=___=\n\n";
+    $html .= "=___=\n\n";
 
     print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $html, 0, $fname);
 
