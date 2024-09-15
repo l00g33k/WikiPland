@@ -16,6 +16,8 @@ by all columns on the right.  Values from the previous row may be referenced as 
 
 * "$NAME = VALUE ;" before the table defines constants.
 
+* "$NAME = VALUE ;" before the table defines constants.
+
 * The following is a simple example.  [[/view.htm?path=$|View]] this page for raw text;
  [[/calc.htm?path=$|calc]] this page:
 
