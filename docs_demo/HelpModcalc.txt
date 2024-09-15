@@ -14,12 +14,15 @@ by all columns on the right.  Values from the previous row may be referenced as 
 
 * A special notation of the form ':=*#' repeats the following rown # times.
 
+* "$NAME = VALUE ;" before the table defines constants.
+
 * The following is a simple example.  [[/view.htm?path=$|View]] this page for raw text;
  [[/calc.htm?path=$|calc]] this page:
 
+$RATE = 0.05;
 
-|| YEAR%d      ||      P ||   RATE ||        INT ||       SUM ||
-|| 2023      ||   1000 ||   0.05 || $P * $RATE || $P + $INT ||
-|| :=*50     ||        ||        ||            ||           ||
-|| $YEAR_ + 1 ||  $SUM_ || $RATE_ || $P * $RATE || $P + $INT ||
+|| YEAR%d     ||      P ||        INT ||       SUM ||
+|| 2023       ||   1000 || $P * $RATE || $P + $INT ||
+|| :=*10      ||        ||            ||           ||
+|| $YEAR_ + 1 ||  $SUM_ || $P * $RATE || $P + $INT ||
 
