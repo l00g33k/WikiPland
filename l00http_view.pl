@@ -412,7 +412,9 @@ sub l00http_view_proc {
                 # Some has only \r as line endings. So convert DOS \r\n to Unix \n
                 # then convert \r to Unix \n
                 $buffer =~ s/\r\n/\n/g;
-                $buffer =~ s/\r/\n/g;
+                # show stray \r but not a newline
+                $buffer =~ s/\r/<\\r>/g;
+                #$buffer =~ s/\r/\n/g;
             }
 
 

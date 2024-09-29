@@ -163,7 +163,7 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, %cat1tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
-    my (@descfind, @cat2find, $moving, $color, $dashbanner);
+    my (@descfind, @cat2find, $moving, $color, $dashbanner, %cat1colorsaw);
 
 
     $timecolor = '';
@@ -180,6 +180,7 @@ sub l00http_dash_proc {
     undef %desccats;
     undef @descfind;
     undef @cat2find;
+    undef %cat1colorsaw;
 
     $dbg = 0;
     if (defined($ctrl->{'dashwidth'})) {
@@ -703,6 +704,10 @@ sub l00http_dash_proc {
                 $cat1ln = $lnno;
             } elsif ($this =~ /^=([^=]+)=/) {
                 $cat1 = $1;
+                if ($cat1 =~ /^\*(.)\*/) {
+                    # remember cat1 color used
+                    $cat1colorsaw{$1} = $cat1;
+                }
                 $tmp = $cat1;
                 $tmp =~ s/\*\*$//;
                 $tmp =~ s/^\*.\*//;
@@ -719,7 +724,7 @@ sub l00http_dash_proc {
                 $updateLast = undef;
 
                 $cat2 = $1;
-                l00httpd::dbp($config{'desc'}, "cat2 >$cat2<\n"), if ($ctrl->{'debug'} >= 5);;
+                l00httpd::dbp($config{'desc'}, "cat2 >$cat2<\n"), if ($ctrl->{'debug'} >= 5);
                 $jmp = $1;
                 $jmp =~ s/\*\*/_/g;  # remove ** highlight
                 $jmp =~ s/\*.\*/_/g;
@@ -1485,6 +1490,26 @@ sub l00http_dash_proc {
 
         # print main table
         print $sock $out;
+
+        # cat1 color used
+        if (($hdronly != 0) && ($outputsort ne '')) {
+            $out = '';
+            print $sock "Available cat1 color: $l00wikihtml::colorlukeys<br>\n";
+            for ($ii = 0; $ii < length($l00wikihtml::colorlukeys); $ii++) {
+                $tmp = substr($l00wikihtml::colorlukeys, $ii, 1);
+                if (!defined($cat1colorsaw{$tmp})) {
+                    $out .= "* *$tmp*This color is not used --- $tmp**\n";
+                }
+            }
+            for ($ii = 0; $ii < length($l00wikihtml::colorlukeys); $ii++) {
+                $tmp = substr($l00wikihtml::colorlukeys, $ii, 1);
+                if (defined($cat1colorsaw{$tmp})) {
+                    $out .= "* $cat1colorsaw{$tmp}\n";
+                }
+            }
+            print $sock &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
+            print $sock "<p>\n";
+        }
 
         # put full jumphref at the bottom
         print $sock $jumphrefs;

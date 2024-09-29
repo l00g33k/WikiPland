@@ -1,0 +1,30 @@
+=Introduction=
+The 'shellsh' module allows you to specify commands to be sourced remotely 
+through 'ssh' or other shell commands and prints the output on the browser.
+Note that you need to make sure that the commands are not interactive, or else 
+the session may hang, requiring you to abort the !WikiPland Perl script to recover.
+
+=Explanation Of Form Fields=
+==shcmd==
+This is the command to be executed locally to access the remote shell.  It 
+is assumed that the string following the command is sent to the remote shell 
+to be executed.  You can also execute locally using 'bash'.  Exampels:
+
+    ssh
+    sshpass -p password ssh name@domain
+    bash -c
+
+=Local path=
+If 'Commands' field is blank, then the content of this file is piped to the 
+remote shell into the file 'Remote path' and then sourced.  Otherwise the 
+content of 'Commands' is first written into 'Local path' and then piped to the 
+remote shell into the file 'Remote path' and then sourced.
+
+=Remote path=
+The commands are written to this fully qualified path in the remote system 
+before it is sourced.  '/tmp/mycommands.bash' or /dev/shm/mycommands.bash' are appropriate.
+
+=Commands=
+You can put any commands here, but be sure they do not require user response 
+as no user input is possible.  Also be aware of the size of the output that 
+does not overwhelm your systems.

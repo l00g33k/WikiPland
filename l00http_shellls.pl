@@ -31,7 +31,7 @@ sub l00http_shellls_proc {
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs);
-    my ($lnno, $fname, $catout, $up1lvl, $plpath, $datewidth, 
+    my ($lnno, $fname, $catout, $up1lvl, $plpath, $datewidth, $cmd, $clip,
         $item, $cnt, $isdir, $shcmd2, @items, $ramfname, $fnamedisp);
 
 
@@ -51,6 +51,7 @@ sub l00http_shellls_proc {
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>shellls</title>" .$ctrl->{'htmlhead2'};
     # clip.pl with \ on Windows
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} \n";
+    print $sock "<a name=\"top\"></a> \n";
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<hr>\n";
 
@@ -148,6 +149,8 @@ sub l00http_shellls_proc {
     print $sock "</pre>\n";
 
 
+    print $sock "<a name=\"end\"></a>\n";
+    print $sock "<a href=\"#top\">Jump to top</a> \n";
     print $sock "<p>There are $nodirs director(ies) and $nofiles file(s)<br>\n";
 
     print $sock "<form action=\"/shellls.htm\" method=\"get\">\n";
@@ -168,9 +171,19 @@ sub l00http_shellls_proc {
     print $sock "</table>\n";
     print $sock "</form>\n";
 
-    print $sock "<p>shcmd: $shcmd<p>\n";
+    $clip = &l00httpd::urlencode ($shcmd);
+    print $sock "<p><a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">shcmd</a>: $shcmd<br>\n";
+    $cmd = "$shcmd 'cd $shpath ; ls -la'";
+    $clip = &l00httpd::urlencode ($cmd);
+    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">ls</a>: $cmd<br>\n";
+    $cmd = "$shcmd 'cd $shpath ; tar zc .' | tar zx";
+    $clip = &l00httpd::urlencode ($cmd);
+    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">pull</a>: $cmd<br>\n";
+    $cmd = "tar zc | $shcmd 'cd $shpath ; tar zx'";
+    $clip = &l00httpd::urlencode ($cmd);
+    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$clip\" target=\"_blank\">push</a>: $cmd<br>\n";
 
-    print $sock "<hr><a name=\"end\"></a>\n";
+    print $sock "<hr>\n";
 
     if (defined ($ctrl->{'FOOT'})) {
         print $sock "$ctrl->{'FOOT'}\n";

@@ -20,7 +20,7 @@ sub l00http_calc_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($ii, $pname, $fname, $html, $output, @format, $compute, $name, $fmt, $tmp);
+    my ($ii, $pname, $fname, $html, $output, @format, $compute, $name, $fmt, $tmp, $calced);
     my (@formulea, @head, $findhead, $findinit, $cnt, $repeats, $repeat, $rowcnt, $header);
 
 
@@ -47,6 +47,7 @@ sub l00http_calc_proc (\%) {
     $rowcnt = 0;
     $header = '';
     $output = '';
+    $calced = 1;
     if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
 
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
@@ -55,8 +56,25 @@ sub l00http_calc_proc (\%) {
             l00httpd::dbp($config{'desc'}, "INPUT $cnt >$_<\n"), if ($ctrl->{'debug'} >= 3);
             if ($findhead) {
                 if (/^\|\|.*\|\|$/) {
+                    if ($calced) {
+                        $calced = 0;
+                        $output .= "* [[/view.htm?path=l00://calc_$fname||Calculated table]]\n\n";
+                    }
+                    # skip text only line
+                    $tmp = $_;
+                    $tmp =~ s/".*?"//g;
+                    $tmp =~ s/[ |]//g;
+                    l00httpd::dbp($config{'desc'}, "\$_   >$_<\n"), if ($ctrl->{'debug'} >= 3);
+                    l00httpd::dbp($config{'desc'}, "\$tmp >$tmp<\n"), if ($ctrl->{'debug'} >= 3);
+                    if ($tmp eq '') {
+                        # display as text if there are only " qouted text
+                        s/"//g;
+                        # calc.pl adds a row number at the first column
+                        $output .= "|| $_\n";
+                        next;
+                    }
+
                     $findhead = 0;
-                    $output .= "* [[/view.htm?path=l00://calc_$fname||Calculated table]]\n\n";
                     @_ = split('\|\|', $_);
                     l00httpd::dbp($config{'desc'}, "HEAD  #col $#_ : >$_<\n"), if ($ctrl->{'debug'} >= 3);
                     $output .= "|| $rowcnt ";

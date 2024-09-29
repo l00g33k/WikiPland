@@ -51,31 +51,62 @@ my (@reccuLvlColor);
 );
 
 
-my ($localpath, @altpath);
+my (@localpath, @altpath);
 
 sub l00http_srcdoc_localfname {
     my ($ctrl, $localfname) = @_;
-    my ($onealtpath, $lpath, $lfname);
+    my ($onealtpath, $trunk, $branch, $localidx);
 
-    if (($lpath, $lfname) = $localfname =~ /^(.+?)([^\\\/]+)$/) {
-        l00httpd::dbp($config{'desc'}, "ALTPATH: localfname (\$#altpath $#altpath + 1): $lpath - $lfname\n"), if ($ctrl->{'debug'} >= 1);
-        if ((! -d "$lpath") && (-d $localpath) && ($#altpath >= 0)) {
-            l00httpd::dbp($config{'desc'}, "ALTPATH: substituding:\n"), if ($ctrl->{'debug'} >= 1);
+    l00httpd::dbp($config{'desc'}, "ALTPATH: given fname (\$#altpath $#altpath + 1): $localfname\n"), if ($ctrl->{'debug'} >= 3);
+    foreach $onealtpath (@altpath) {
+        l00httpd::dbp($config{'desc'}, "ALTPATH: this path in given? $onealtpath\n"), if ($ctrl->{'debug'} >= 3);
+        if (($trunk, $branch) = $localfname =~ /^($onealtpath)(.+)/) {
+            l00httpd::dbp($config{'desc'}, "ALTPATH: yes, trunk: $trunk\n"), if ($ctrl->{'debug'} >= 3);
             foreach $onealtpath (@altpath) {
-                l00httpd::dbp($config{'desc'}, "ALTPATH: candidate: $onealtpath\n"), if ($ctrl->{'debug'} >= 1);
-                if ($lpath =~ /^$onealtpath/) {
-                    l00httpd::dbp($config{'desc'}, "ALTPATH: localfname was: $lpath$lfname\n"), if ($ctrl->{'debug'} >= 1);
-                    $lpath =~ s/^$onealtpath/$localpath/;
-                    l00httpd::dbp($config{'desc'}, "ALTPATH: localfname  is: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-                    $localfname = "$lpath$lfname";
+                l00httpd::dbp($config{'desc'}, "ALTPATH: this alpath valid? $onealtpath$branch\n"), if ($ctrl->{'debug'} >= 3);
+                if (-f "$onealtpath$branch") {
+                    $localfname = "$onealtpath$branch";
+                    l00httpd::dbp($config{'desc'}, "ALTPATH: VALID altpath: $onealtpath$branch\n"), if ($ctrl->{'debug'} >= 3);
                     last;
                 }
             }
-        } else {
-            l00httpd::dbp($config{'desc'}, "ALTPATH: no substitution: exist: $lpath\n"), if ($ctrl->{'debug'} >= 1);
+            last;
         }
-
     }
+
+#       if (($lpath, $lfname) = $localfname =~ /^(.+?)([^\\\/]+)$/) {
+#           l00httpd::dbp($config{'desc'}, "ALTPATH: given fname (\$#altpath $#altpath + 1): $lpath - $lfname\n"), if ($ctrl->{'debug'} >= 1);
+#           for ($localidx = 0; $localidx <= $#localpath; $localidx++) {
+#               l00httpd::dbp($config{'desc'}, "ALTPATH: \$localpath[$localidx]=$localpath[$localidx]\n"), if ($ctrl->{'debug'} >= 1);
+#               if ((! -d "$lpath") && (-d $localpath[$localidx]) && ($#altpath >= 0)) {
+#                   l00httpd::dbp($config{'desc'}, "ALTPATH: substituding: $lpath\n"), if ($ctrl->{'debug'} >= 1);
+#                   foreach $onealtpath (@altpath) {
+#                       l00httpd::dbp($config{'desc'}, "ALTPATH: candidate: $onealtpath\n"), if ($ctrl->{'debug'} >= 1);
+#                       if ($lpath =~ /^$onealtpath/) {
+#   #                   if (-f "$onealtpath$lfname"") {
+#                           l00httpd::dbp($config{'desc'}, "ALTPATH: localfname was: $lpath$lfname\n"), if ($ctrl->{'debug'} >= 1);
+#                           $lpath =~ s/^$onealtpath/$localpath[$localidx]/;
+#                           l00httpd::dbp($config{'desc'}, "ALTPATH: localfname  is: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+#                           $localfname = "$lpath$lfname";
+#                           l00httpd::dbp($config{'desc'}, "ALTPATH: localfname new: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+#                           $localidx = $#localpath + 1;
+#                           last;
+#                       }
+#   #                   if ($lpath =~ /^$onealtpath/) {
+#   #                       l00httpd::dbp($config{'desc'}, "ALTPATH: localfname was: $lpath$lfname\n"), if ($ctrl->{'debug'} >= 1);
+#   #                       $lpath =~ s/^$onealtpath/$localpath[$localidx]/;
+#   #                       l00httpd::dbp($config{'desc'}, "ALTPATH: localfname  is: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+#   #                       $localfname = "$lpath$lfname";
+#   #                       l00httpd::dbp($config{'desc'}, "ALTPATH: localfname new: $localfname\n"), if ($ctrl->{'debug'} >= 1);
+#   #                       $localidx = $#localpath + 1;
+#   #                       last;
+#   #                   }
+#                   }
+#               } else {
+#                   l00httpd::dbp($config{'desc'}, "ALTPATH: no substitution: exist: $lpath\n"), if ($ctrl->{'debug'} >= 1);
+#               }
+#           }
+#       }
 
     $localfname;
 }
@@ -234,6 +265,8 @@ sub l00http_srcdoc_proc {
 
     $buffer = '';
     @buf = ();
+    @altpath = ();
+    @localpath = ();
     if (open (IN, "<$form->{'path'}")) {
         l00httpd::dbp($config{'desc'}, "READ: $form->{'path'}\n"), if ($ctrl->{'debug'} >= 1);
         $lnno = 0;
@@ -261,13 +294,13 @@ sub l00http_srcdoc_proc {
                 $buffer .= $_;
             }
             if (($tmp) = /^%ALTPATH:(.+)%[\r\n]*$/) {
-                if (-d "$tmp") {
-                    $localpath = $tmp;
-                    l00httpd::dbp($config{'desc'}, "altpath: localpath  : $localpath\n"), if ($ctrl->{'debug'} >= 1);
-                } else {
+#               if (-d "$tmp") {
+#                   push(@localpath, $tmp);
+#                   l00httpd::dbp($config{'desc'}, "altpath: localpath  : $localpath[$#localpath]\n"), if ($ctrl->{'debug'} >= 1);
+#               } else {
                     push(@altpath, $tmp);
                     l00httpd::dbp($config{'desc'}, "altpath: alt-path($#altpath): $tmp\n"), if ($ctrl->{'debug'} >= 1);
-                }
+#               }
             }
             push(@buf, $_);
         }
