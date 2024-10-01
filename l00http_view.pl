@@ -12,11 +12,12 @@ my ($buffer);
 my ($hostpath, $lastpath, $refresh, $refreshfile);
 my ($findtext, $block, $wraptext, $nohdr, $found, $pname, $fname, $maxln, $skip, $hilitetext, $sortfind);
 my ($findmaxln, $findskip, $eval, $evalbox, $literal, @colors, $lastfew, $nextfew, $ansi, %ansicode);
-my ($findstart, $findlen, $excludeinfound);
+my ($findstart, $findlen, $excludeinfound, $crisnewline);
 $hostpath = "c:\\x\\";
 $findtext = '';
 $block = '.';
 $excludeinfound = '';
+$crisnewline = '';
 $wraptext = '';
 $literal = '';
 $nohdr = '';
@@ -146,6 +147,11 @@ sub l00http_view_proc {
             $nohdr = 'checked';
         } else {
             $nohdr = '';
+        }
+        if (defined ($form->{'crisnewline'})) {
+            $crisnewline = 'checked';
+        } else {
+            $crisnewline = '';
         }
     }
     if (defined($form->{'cb2eval'})) {
@@ -305,6 +311,7 @@ sub l00http_view_proc {
         print $sock "<input type=\"checkbox\" name=\"hidelnno\">\n";
         print $sock "<a href=\"/view.htm?path=$pnameurl$fnameurl&hidelnno=on&update=S%CC%B2kip&skip=$skip&maxln=$maxln\">Hide line number.</a>\n";
         print $sock "<input type=\"checkbox\" name=\"nohdr\" $nohdr>No header.\n";
+        print $sock "<input type=\"checkbox\" name=\"crisnewline\" $crisnewline>CR=newline\n";
         print $sock "Auto-refresh (0=off) <input type=\"text\" size=\"3\" name=\"refresh\" value=\"\"> sec.\n";
 
         print $sock "(<input type=\"checkbox\" name=\"evalbox\" $evalbox> Eval each \$_:\n";
@@ -413,8 +420,12 @@ sub l00http_view_proc {
                 # then convert \r to Unix \n
                 $buffer =~ s/\r\n/\n/g;
                 # show stray \r but not a newline
-                $buffer =~ s/\r/<\\r>/g;
-                #$buffer =~ s/\r/\n/g;
+                if ($crisnewline eq '') {
+                    $buffer =~ s/\r/<\\r>/g;
+                } else {
+                    # vs code map \r t newline by default
+                    $buffer =~ s/\r/\n/g;
+                }
             }
 
 
@@ -540,8 +551,8 @@ sub l00http_view_proc {
 #                                $tmpln =~ s/</&lt;/g;
 #                                $tmpln =~ s/>/&gt;/g;
                             }
-						    $_ = "<a href=\"/view.htm?update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100&path=$pnameurl$fnameurl\">$tmpno</a>".
-                                " <a href=\"/view.htm?path=$pnameurl$fnameurl&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
+						    $_ = "<a href=\"/view.htm?path=$pnameurl$fnameurl&crisnewline=$crisnewline&update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100\">$tmpno</a>".
+                                " <a href=\"/view.htm?path=$pnameurl$fnameurl&crisnewline=$crisnewline&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
                                 "$tmpln";
 						}
 
