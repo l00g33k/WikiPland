@@ -9,10 +9,19 @@ use l00httpd;
 
 my %config = (proc => "l00http_blog_proc",
               desc => "l00http_blog_desc");
-my ($buffer, $lastbuf, $quicktimesave, $keepnl);
+my ($buffer, $lastbuf, $quicktimesave, $keepnl, @wday2name);
 $lastbuf = '';
 $quicktimesave = 'checked';
 $keepnl = '';
+@wday2name = (
+    'su',
+    'mo',
+    'tu',
+    'wd',
+    'th',
+    'fr',
+    'sa'
+);
 
 sub blog_make_hdr {
     my ($ctrl, $style, $addtime) = @_;
@@ -116,7 +125,7 @@ sub l00http_blog_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname, $access);
+    my (@alllines, $line, $lineno, $path, $buforg, $buforgpre, $fname, $pname, $access, $ii, $future);
     my ($output, $keys, $key, $space, $stylecurr, $stylenew, $addtime, $linedisp, $nouscore, $pastesavebuf);
     my (@blockquick, @blocktime, $urlencode, $tmp, %addtimeval, $url, $urlonly, $includefile, $pnameup);
 
@@ -262,6 +271,7 @@ sub l00http_blog_proc {
         # and setup redirect after we have saved
         print $sock "<meta http-equiv=\"refresh\" content=\"0; url=$urlonly\">";
     }
+
     print $sock $ctrl->{'htmlhead2'};
     print $sock "<a name=\"__top__\"></a>";
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"#end\">Jump to end</a><br>\n";
@@ -321,6 +331,9 @@ sub l00http_blog_proc {
     }
 
     $addtime = 0;
+#::conti::
+# convert newepoch to newtime
+#print $sock "<input type=\"submit\" name=\"newepoch\"  value=\"$_\" $tmp>\n";
     if (defined ($form->{'newtime'})) {
         # new time
         # remove underscore
@@ -565,6 +578,25 @@ sub l00http_blog_proc {
         print $sock "<input type=\"checkbox\" name=\"saveurl\" $quicktimesave>Save&URL\n";
     }
     print $sock "<p>";
+    # buttons for date
+    if ($#blocktime >= 0) {
+        for ($ii = 1; $ii < 30; $ii++) {
+            $future = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9).'050000') + $ii * 24 * 3600;
+            my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($future);
+            if (($ii > 9) && (($wday > 1) && ($wday < 5) && ($wday != 3))) {
+                next;
+            }
+            $future = l00httpd::time2now_string($future);
+            $tmp = substr($future, 2, 2) % 20;
+            if ($tmp >= 10) {
+                $tmp = chr(0x61 + ($tmp - 10));
+            }
+            $tmp = sprintf ("$tmp%1x%02d", substr($future, 4, 2), substr($future, 6, 2));
+            $_ = "_${tmp}$wday2name[$wday]";
+            print $sock "<input type=\"submit\" name=\"newepoch\"  value=\"$_\" $tmp>\n";
+        }
+        print $sock "<p>";
+    }
 
     foreach $_ (@blockquick) {
         $tmp = $_;

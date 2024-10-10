@@ -97,7 +97,8 @@ sub l00http_shellsh_proc {
             }
             s/</&lt;/g;
             s/>/&gt;/g;
-            printf $sock ("%4d: %s\n", $lnno, $_);
+           #printf $sock ("%4d: %s\n", $lnno, $_);
+            printf $sock ("%s\n", $_);
         }
 
         # TOO: execute remote commands

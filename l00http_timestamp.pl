@@ -31,7 +31,15 @@ sub l00http_timestamp_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $timestamp, $clipdate);
+    my (@alllines, $line, $timestamp, $clipdate, $datecode);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
+
+    $mon++;
+    $year = $year % 20;
+    if ($year >= 10) {
+        $year = chr(0x61 + ($year - 10));
+    }
+    $datecode = sprintf ("$year%1x%02d", $mon, $mday);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>timestamp</title>" . $ctrl->{'htmlhead2'};
@@ -49,11 +57,13 @@ sub l00http_timestamp_proc {
 
     print $sock "<br><form action=\"/timestamp.htm\" method=\"get\">\n";
     print $sock "<input type=\"text\" size=\"30\" name=\"timestamp\" value=\"$timestamp\" accesskey=\"e\"><br>\n";
-    print $sock "<input type=\"text\" size=\"30\" name=\"timestampwal\" value=\"$clipdate\" accesskey=\"d\">\n";
+    print $sock "<input type=\"text\" size=\"30\" name=\"timestampwal\" value=\"$clipdate\" accesskey=\"d\"><br>\n";
+    print $sock "<input type=\"text\" size=\"30\" name=\"datecode\" value=\"$datecode\" accesskey=\"k\">\n";
     print $sock "<p><input type=\"submit\" name=\"update\" value=\"N&#818;ew time\" accesskey=\"n\">\n";
     #print $sock "<input type=\"radio\" name=\"mode\" value=\"format1\">Format 1:20100926 190321 <br>\n";
     #print $sock "<input type=\"radio\" name=\"mode\" value=\"format2\">Format 2:?? <br>\n";
-    print $sock "<input type=\"submit\" name=\"clipdate\" value=\"C&#818;lipdate\" accesskey=\"c\"><br>\n";
+    print $sock "<input type=\"submit\" name=\"clipdate\" value=\"C&#818;lipdate\" accesskey=\"c\">\n";
+    print $sock "<input type=\"submit\" name=\"clipcode\" value=\"dat&#818;ecode\" accesskey=\"t\"><br>\n";
     print $sock "</form>\n";
 
     print $sock "<code>$timestamp</code><br>\n";
@@ -63,6 +73,9 @@ sub l00http_timestamp_proc {
     if (defined($ctrl->{'FORM'}->{'clipdate'})) {
         &l00httpd::l00setCB($ctrl, $clipdate);
         print $sock "'$clipdate' copied to clipboard<br>\n";
+    } elsif (defined($ctrl->{'FORM'}->{'clipcode'})) {
+        &l00httpd::l00setCB($ctrl, $datecode);
+        print $sock "'$datecode' copied to clipboard<br>\n";
     } else {
         &l00httpd::l00setCB($ctrl, $timestamp);
         print $sock "'$timestamp' copied to clipboard<br>\n";

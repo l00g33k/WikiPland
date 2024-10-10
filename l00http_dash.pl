@@ -606,7 +606,7 @@ sub l00http_dash_proc {
             for ($ii = 0; $ii < $tmp; $ii++) {
                 $out .= "$alllines[$ii]\n";
                 # look for color
-                if ($alllines[$ii] =~ /^=\*([a-zA-Z])\*.+=/) {
+                if ($alllines[$ii] =~ /^=\*([a-zA-Z0-9])\*.+=/) {
                     $color = $1;
                 }
             }
