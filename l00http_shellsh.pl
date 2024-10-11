@@ -34,10 +34,10 @@ sub l00http_shellsh_proc {
     my $form = $ctrl->{'FORM'};
     my ($nofiles, $nodirs);
     my ($lnno, $fname, $catout, $up1lvl, $plpath, $datewidth, $usepath,
-        $item, $cnt, $isdir, @items, $ramfname, $cmds, $scrpath);
+        $item, $cnt, $isdir, @items, $ramfname, $cmds, $scrpath, $buf);
 
     $cmds = '';
-    if (defined ($form->{'submit'})) {
+    if (defined ($form->{'submit'}) || defined ($form->{'update'})) {
         if (defined ($form->{'shcmd'}) && (length ($form->{'shcmd'}) >= 1) && ($form->{'shcmd'} !~ /^ *$/)) {
             $shcmd = $form->{'shcmd'};
         }
@@ -56,6 +56,33 @@ sub l00http_shellsh_proc {
         # script file exist
         $scrpath = $form->{'path'};
         $usepath = $scrpath;
+        if (defined ($form->{'update'})) {
+            if (open(IN, "<$usepath")) {
+                local $/ = undef;
+                $buf = <IN>;
+                close(IN);
+                if (open(OU, ">$usepath")) {
+                    print OU $buf;
+                    print OU "#FORM:shcmd:$shcmd\n";
+                    print OU "#FORM:remotepath:$remotepath\n";
+                    close(OU);
+                }
+            }
+        } else {
+            if (open(IN, "<$usepath")) {
+                while (<IN>) {
+                    s/[\r\n]//g;
+                    if (/^#FORM:shcmd:(.+)$/) {
+                        $shcmd = $1;
+                    }
+                    if (/^#FORM:remotepath:(.+)$/) {
+                        $remotepath = $1;
+                    }
+                    print OU "#FORM:remotepath:$remotepath\n";
+                }
+                close(IN);
+            }
+        }
     } elsif (length($cmds) > 0) {
         # no script file but has commands, make a file
         if (open(OU, ">$localpath")) {
@@ -87,8 +114,28 @@ sub l00http_shellsh_proc {
         $catout = `cat $usepath | $shcmd 'cat > $remotepath'`;
         print $sock "\nPushing to remote: $catout\n";
 
+        # TOO: execute remote commands
+        $catout = `$shcmd 'source $remotepath'`;
+
+        # save output to ram
+        $ramfname = "l00://shellsh_".&l00crc32::crc32($shcmd).".txt";
+        &l00httpd::l00fwriteOpen($ctrl, "$ramfname");
+        &l00httpd::l00fwriteBuf($ctrl, $catout);
+        &l00httpd::l00fwriteClose($ctrl);
+        print $sock "\n<a href=\"/view.htm?path=$ramfname\" target=\"_blank\">Remote commands outputs:</a>\n";
+        # TOO
+        $lnno = 0;
+        foreach $_ (split("\n", $catout)) {
+            if ($lnno++ > 1000) {
+                last;
+            }
+            s/</&lt;/g;
+            s/>/&gt;/g;
+            printf $sock ("%4d: %s\n", $lnno, $_);
+        }
+
         # TOO2: commands to be sourced at the remote system
-        print $sock "\nCommands:\n";
+        print $sock "\nCommands pushed to remote:\n";
         $catout = `$shcmd 'cat $remotepath'`;
         $lnno = 0;
         foreach $_ (split("\n", $catout)) {
@@ -101,25 +148,6 @@ sub l00http_shellsh_proc {
             printf $sock ("%s\n", $_);
         }
 
-        # TOO: execute remote commands
-        $catout = `$shcmd 'source $remotepath'`;
-
-        # save output to ram
-        $ramfname = "l00://shellsh_".&l00crc32::crc32($shcmd).".txt";
-        &l00httpd::l00fwriteOpen($ctrl, "$ramfname");
-        &l00httpd::l00fwriteBuf($ctrl, $catout);
-        &l00httpd::l00fwriteClose($ctrl);
-        print $sock "\n<a href=\"/view.htm?path=$ramfname\" target=\"_blank\">Outputs:</a>\n";
-        # TOO
-        $lnno = 0;
-        foreach $_ (split("\n", $catout)) {
-            if ($lnno++ > 1000) {
-                last;
-            }
-            s/</&lt;/g;
-            s/>/&gt;/g;
-            printf $sock ("%4d: %s\n", $lnno, $_);
-        }
     }
 
     print $sock "</pre>\n";
@@ -134,7 +162,9 @@ sub l00http_shellsh_proc {
     print $sock "  <td>shcmd: <input type=\"text\" size=\"90\" name=\"shcmd\" value=\"$shcmd\"></td>\n";
     print $sock "</tr>\n";
     print $sock "<tr>\n";
-    print $sock "  <td><a href=\"/view.htm?path=$scrpath\" target=\"_blank\">Read-only path</a></td>\n";
+    print $sock "  <td><a href=\"/view.htm?path=$scrpath\" target=\"_blank\">Read-only path</a>\n";
+    print $sock "  <input type=\"submit\" name=\"update\" value=\"update\"></td>\n";
+    print $sock "  </td>\n";
     print $sock "  <td><input type=\"text\" size=\"100\" name=\"path\" value=\"$scrpath\"></td>\n";
     print $sock "</tr>\n";
     if ($scrpath eq '') {
