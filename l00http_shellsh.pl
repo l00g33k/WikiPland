@@ -12,13 +12,14 @@ use l00crc32;
 my %config = (proc => "l00http_shellsh_proc",
               desc => "l00http_shellsh_desc");
 
-my ($shcmd, $remotepath, $localpath);
+my ($shcmd, $remotepath, $localpath, $xc);
 
 $shcmd = 'bash -c';
 #$remotepath = '/dev/shm/myrcommand.bash';
 #$localpath = '/dev/shm/mylcommand.bash';
 $remotepath = '/sdcard/z/myrmcmds.bash';
 $localpath = '/sdcard/z/mylocmds.bash';
+$xc = '';
 
 sub l00http_shellsh_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
@@ -49,6 +50,11 @@ sub l00http_shellsh_proc {
         }
         if (defined ($form->{'remotepath'}) && (length ($form->{'remotepath'}) >= 1)) {
             $remotepath = $form->{'remotepath'};
+        }
+        if (defined ($form->{'xc'}) && ($form->{'xc'} eq 'on')) {
+            $xc = 'check';
+        } else {
+            $xc = '';
         }
     }
     $scrpath = '';
@@ -115,7 +121,11 @@ sub l00http_shellsh_proc {
         print $sock "\nPushing to remote: $catout\n";
 
         # TOO: execute remote commands
-        $catout = `$shcmd 'source $remotepath'`;
+        if ($xc eq '') {
+            $catout = `$shcmd "bash -c 'source $remotepath' 2>&1"`;
+        } else {
+            $catout = `$shcmd "bash -xc 'source $remotepath' 2>&1"`;
+        }
 
         # save output to ram
         $ramfname = "l00://shellsh_".&l00crc32::crc32($shcmd).".txt";
@@ -158,7 +168,8 @@ sub l00http_shellsh_proc {
     print $sock "<form action=\"/shellsh.htm\" method=\"get\">\n";
     print $sock "<table border=\"1\" cellpadding=\"5\" cellspacing=\"3\">\n";
     print $sock "<tr>\n";
-    print $sock "  <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\"></td>\n";
+    print $sock "  <td><input type=\"submit\" name=\"submit\" value=\"S&#818;ubmit\" accesskey=\"s\">";
+    print $sock "      <input type=\"checkbox\" name=\"xc\" $xc>-x</td>\n";
     print $sock "  <td>shcmd: <input type=\"text\" size=\"90\" name=\"shcmd\" value=\"$shcmd\"></td>\n";
     print $sock "</tr>\n";
     print $sock "<tr>\n";
