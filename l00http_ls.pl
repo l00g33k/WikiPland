@@ -130,9 +130,14 @@ sub l00http_ls_sortfind {
 
 sub l00http_ls_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+    my ($desc);
 
-
-    " B: ls: Files and directories browser";
+    if ($ctrl->{'os'} eq 'tmx') {
+        $desc = " B: ls: Files and directories browser <a href=\"/ls.htm?path=/data/data/com.termux/files/home/\">Termux ~</a>";
+    } else {
+        $desc = " B: ls: Files and directories browser";
+    }
+    $desc;
 }
 
 sub llstricmp {

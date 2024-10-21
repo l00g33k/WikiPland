@@ -18,6 +18,18 @@ $displen = 50;
 $dueonly = '';
 $notdue = '';
 
+sub l00http_recedit_dropseq {
+    my ($aa, $bb);
+    $aa = $a;
+    $bb = $b;
+
+    $aa =~ s/^\d+ //;
+    $bb =~ s/^\d+ //;
+    $aa = lc($aa);
+    $bb = lc($bb);
+    $aa cmp $bb;
+}
+
 sub l00http_recedit_output_row {
     my ($ctrl, $sock, $form, $line, $id, $obuf, $path, $lnno, $dispcnt) = @_;
     my ($tmp, $disp, $lf, $leading, $html, $color1, $color2, $chkalldel, $chkall16h, 
@@ -203,7 +215,7 @@ sub l00http_recedit_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook);
+    my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook, $nowsort);
     my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline);
     my ($filter_found_true, $filtered, $cnt, $eval1, $now, $nowtime, @nowtime, $due, $nowcnt, $duecnt, $dispcnt);
 
@@ -502,7 +514,8 @@ sub l00http_recedit_proc (\%) {
     if (defined ($form->{'reminder'})) {
         print $sock "<a href=\"/ls.htm?path=l00://recedit_active.txt\" target=\"_blank\">(LIST</a> - ";
         print $sock "<a href=\"#recedit_active2\">time</a> - ";
-        print $sock "<a href=\"#recedit_active\">here)</a> - ";
+        print $sock "<a href=\"#recedit_active\">here</a> - ";
+        print $sock "<a href=\"#recedit_active_sort\">sort)</a> - ";
         print $sock "<a href=\"/ls.htm?path=l00://recedit_due.txt\" target=\"_blank\">DUE</a> - ";
     }
     print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
@@ -649,6 +662,21 @@ sub l00http_recedit_proc (\%) {
         $nowtime .= "</pre>\n";
         $due .= "</pre>\n";
 
+        # sort $now to $nowsort
+        $nowsort = "<pre>\n";
+        $nowcnt = 0;
+
+        foreach $tmp (sort l00http_recedit_dropseq split("\n", $now)) {
+            if ($tmp =~ /^<\/*pre>/) {
+                next;
+            }
+            $nowcnt++;
+            # drop leading sequence #
+            $tmp =~ s/^\d+ //;
+            $nowsort .= sprintf("%03d %s\n", $nowcnt, $tmp);
+        }
+        $nowsort .= "</pre>\n";
+
 		&l00httpd::l00fwriteOpen($ctrl, "l00://recedit_due.txt");
         &l00httpd::l00fwriteBuf($ctrl, $due);
 		&l00httpd::l00fwriteClose($ctrl);
@@ -705,6 +733,11 @@ sub l00http_recedit_proc (\%) {
 
     print $sock "<p><a name=\"recedit_active\"></a>Past due: <a href=\"#_top_\">(jump to top)</a><br>\n";
     print $sock &l00wikihtml::wikihtml ($ctrl, "", $now, 0);
+    print $sock "<p>\n";
+    print $sock "<a href=\"#_top_\">(jump to top)</a><br>\n";
+
+    print $sock "<p><a name=\"recedit_active_sort\"></a>Past due sorted: <a href=\"#_top_\">(jump to top)</a><br>\n";
+    print $sock &l00wikihtml::wikihtml ($ctrl, "", $nowsort, 0);
     print $sock "<p>\n";
     print $sock "<a href=\"#_top_\">(jump to top)</a><br>\n";
 
