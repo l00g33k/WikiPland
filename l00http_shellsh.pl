@@ -117,8 +117,8 @@ sub l00http_shellsh_proc {
 
     if (defined ($form->{'submit'}) && ($usepath ne '')) {
         # TOO3: send commands to the remote system
-        $catout = `cat $usepath | $shcmd 'cat > $remotepath'`;
-        print $sock "\nPushing to remote: $catout\n";
+        `cat $usepath | $shcmd 'cat > $remotepath'`;
+        print $sock "\nPushing to remote...\n";
 
         # TOO: execute remote commands
         if ($xc eq '') {
@@ -137,6 +137,7 @@ sub l00http_shellsh_proc {
         $lnno = 0;
         foreach $_ (split("\n", $catout)) {
             if ($lnno++ > 1000) {
+                print $sock "There may be more than $lnno lines of output<br>\n";
                 last;
             }
             s/</&lt;/g;

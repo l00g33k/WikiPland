@@ -541,10 +541,10 @@ sub l00http_recedit_proc (\%) {
             print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
         }
     }
-    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"A&#818;ll del\" accesskey=\"a\">\n";
+    print $sock "        <input type=\"submit\" name=\"chkall\" value=\"a&#818;Del\" accesskey=\"a\">\n";
     if (defined ($form->{'reminder'})) {
         if ($path =~ /^l00:\/\//) {
-            print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4h&#818;\" accesskey=\"h\">\n";
+            print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4 h&#818;\" accesskey=\"h\">\n";
             print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+2h\">\n";
             print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
         } else {
