@@ -14,13 +14,13 @@ $lastbuf = '';
 $quicktimesave = 'checked';
 $keepnl = '';
 @wday2name = (
-    'su',
+    'SU',
     'mo',
     'tu',
     'wd',
     'th',
     'fr',
-    'sa'
+    'SA'
 );
 
 sub blog_make_hdr {

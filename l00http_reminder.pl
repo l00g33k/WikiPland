@@ -407,7 +407,7 @@ sub l00http_reminder_proc {
     print $sock "    </tr>\n";
                                                 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"reload\" value=\"Reload\"></td>\n";
+    print $sock "        <td><input type=\"submit\" name=\"reload\" value=\"R&#818;eload\" accesskey=\"r\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"newtime\" value=\"New Time\"></td>\n";
     print $sock "    </tr>\n";
                                                 
