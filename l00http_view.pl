@@ -329,7 +329,7 @@ sub l00http_view_proc {
         } else {
             $tmp = 0;
         }
-        print $sock "Skip to: <a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">line $tmp</a>\n";
+        print $sock "Skip to: <a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">line $tmp</a>\n";
         # skip forward $maxln
         if ($skip >= 0) {
             # only if skipping from the start
@@ -340,21 +340,21 @@ sub l00http_view_proc {
         } else {
             $tmp = 0;
         }
-        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
+        print $sock "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
         if ($skip >= 0) {
             # only if skipping from the start
             $tmp = int ($skip + $maxln / 2);
         } else {
             $tmp = 0;
         }
-        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
+        print $sock "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
         if ($skip >= 0) {
             # only if skipping from the start
             $tmp = int ($skip + $maxln);
         } else {
             $tmp = 0;
         }
-        print $sock "<a href=\"/view.htm?update=Skip&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
+        print $sock "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&skip=$tmp&maxln=$maxln&path=$pnameurl$fnameurl\">$tmp</a>\n";
         print $sock "</form>\n";
     }
 
@@ -373,22 +373,22 @@ sub l00http_view_proc {
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf ("<a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $tmp, 600, $hilite);
+        print $sock sprintf ("<a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">200</a>", $tmp, 600, $hilite);
         $tmp = $hilite - 500;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $tmp, 2000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">500</a>", $tmp, 2000, $hilite);
         $tmp = $hilite - 1000;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $tmp, 3000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">1000</a>", $tmp, 3000, $hilite);
         $tmp = $hilite - 2000;
         if ($tmp < 1) {
             $tmp = 1;
         }
-        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $tmp, 5000, $hilite);
+        print $sock sprintf (", <a href=\"view.htm?path=$pnameurl2$fnameurl2&update=Skip&crisnewline=$crisnewline&crisnewline=$crisnewline&hiliteln=$hilite&lineno=on&skip=%d&maxln=%d#line%d\">2000</a>", $tmp, 5000, $hilite);
         print $sock " lines of context.";
     }
 
@@ -551,7 +551,7 @@ sub l00http_view_proc {
 #                                $tmpln =~ s/</&lt;/g;
 #                                $tmpln =~ s/>/&gt;/g;
                             }
-						    $_ = "<a href=\"/view.htm?path=$pnameurl$fnameurl&crisnewline=$crisnewline&update=Skip&skip=$tmptop&hiliteln=$tmpno&maxln=100\">$tmpno</a>".
+						    $_ = "<a href=\"/view.htm?path=$pnameurl$fnameurl&crisnewline=$crisnewline&update=Skip&crisnewline=$crisnewline&skip=$tmptop&hiliteln=$tmpno&maxln=100\">$tmpno</a>".
                                 " <a href=\"/view.htm?path=$pnameurl$fnameurl&crisnewline=$crisnewline&hiliteln=$tmpno#line$tmpno\" target=\"_blank\">:</a>".
                                 "$tmpln";
 						}
@@ -820,22 +820,22 @@ sub l00http_view_proc {
     # skip backward $maxln
     $jumptable .= "<a href=\"#top\">Jump to top</a> - \n";
     $jumptable .= "<a href=\"/launcher.htm?path=$pnameurl$fnameurl\">Launcher</a><p>\n";
-    $jumptable .= "View last: <a href=\"/view.htm?update=Skip&skip=-1&maxln=10&path=$pnameurl$fnameurl#end\">10</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=200&path=$pnameurl$fnameurl#end\">200</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=500&path=$pnameurl$fnameurl#end\">500</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=1000&path=$pnameurl$fnameurl#end\">1000</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=2000&path=$pnameurl$fnameurl#end\">2000</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=5000&path=$pnameurl$fnameurl#end\">5000</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=-1&maxln=10000&path=$pnameurl$fnameurl#end\">10000</a> lines.<p>\n";
+    $jumptable .= "View last: <a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=10&path=$pnameurl$fnameurl#end\">10</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=200&path=$pnameurl$fnameurl#end\">200</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=500&path=$pnameurl$fnameurl#end\">500</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=1000&path=$pnameurl$fnameurl#end\">1000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=2000&path=$pnameurl$fnameurl#end\">2000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=5000&path=$pnameurl$fnameurl#end\">5000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=-1&maxln=10000&path=$pnameurl$fnameurl#end\">10000</a> lines.<p>\n";
 
     # view first X lines
-    $jumptable .= "View first: <a href=\"/view.htm?update=Skip&skip=0&maxln=10&path=$pnameurl$fnameurl#top\">10</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=200&path=$pnameurl$fnameurl#top\">200</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=500&path=$pnameurl$fnameurl#top\">500</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=1000&path=$pnameurl$fnameurl#top\">1000</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=2000&path=$pnameurl$fnameurl#top\">2000</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=5000&path=$pnameurl$fnameurl#top\">5000</a>,\n";
-    $jumptable .= "<a href=\"/view.htm?update=Skip&skip=0&maxln=10000&path=$pnameurl$fnameurl#top\">10000</a> lines.<p>\n";
+    $jumptable .= "View first: <a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=10&path=$pnameurl$fnameurl#top\">10</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=200&path=$pnameurl$fnameurl#top\">200</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=500&path=$pnameurl$fnameurl#top\">500</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=1000&path=$pnameurl$fnameurl#top\">1000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=2000&path=$pnameurl$fnameurl#top\">2000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=5000&path=$pnameurl$fnameurl#top\">5000</a>,\n";
+    $jumptable .= "<a href=\"/view.htm?update=Skip&crisnewline=$crisnewline&skip=0&maxln=10000&path=$pnameurl$fnameurl#top\">10000</a> lines.<p>\n";
 
     $jumptable .= "Click <a href=\"/view.htm?path=$pnameurl$fnameurl&update=yes&skip=0&maxln=$lineno\">here</a> to view the entire file. \n";
     $jumptable .= "ls between <a href=\"/ls.htm?path=$pnameurl$fnameurl&skipto=$actualSt&stopat=$actualEn&submit=Submit\">$actualSt - $actualEn</a> - \n";
