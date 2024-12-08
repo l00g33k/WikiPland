@@ -1799,7 +1799,7 @@ if ($dbgskipto) {
 
             print $sock "    <tr>\n";
             print $sock "        <td>&nbsp;</td>\n";
-            print $sock "        <td>Dir. f&#818;ilter: <input type=\"text\" size=\"12\" name=\"dirfilter\" value=\"$dirfilter\" accesskey=\"f\"></td>\n";
+            print $sock "        <td>Dir. filter: <input type=\"text\" size=\"12\" name=\"dirfilter\" value=\"$dirfilter\"></td>\n";
             print $sock "    </tr>\n";
 
             print $sock "    <tr>\n";
@@ -1933,7 +1933,17 @@ if ($dbgskipto) {
                 print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
                 print $sock "</form>\n";
 
-                print $sock "<td>&nbsp;</td>\n";
+                print $sock "<form action=\"/find.htm\" method=\"get\">\n";
+                print $sock "<td><input type=\"submit\" name=\"view\" value=\"F&#818;ile Find\" accesskey=\"f\"></td>\n";
+                if (($pname, $fname) = $form->{'path'} =~ /^(.+\/)([^\/]+)$/) {
+                } else {
+                    $pname = '/';
+                }
+                print $sock "<input type=\"hidden\" name=\"path\" value=\"$pname\">\n";
+                print $sock "<input type=\"hidden\" name=\"fmatch\" value=\"\\.txt\$\">\n";
+                print $sock "</form>\n";
+
+
                 print $sock "<form action=\"/launcher.htm\" method=\"get\">\n";
                 print $sock "<td><input type=\"submit\" name=\"launcher\" value=\"L&#818;auncher\" accesskey=\"l\"></td>\n";
                 print $sock "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";

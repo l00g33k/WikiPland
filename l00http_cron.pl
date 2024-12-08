@@ -332,10 +332,16 @@ sub l00http_cron_proc {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $timenow);
+    my ($httpdredirect);
+
+    $httpdredirect = '';
 
     if (defined ($form->{"reload"})) {
         # Force load and check
         $starttime = &l00http_cron_when_next ($ctrl);
+    }
+    if (defined ($form->{'redirecturl'})) {
+        $httpdredirect = "<META http-equiv=\"refresh\" content=\"0;URL=$form->{'redirecturl'}\">\r\n";
     }
 
 
@@ -359,7 +365,8 @@ sub l00http_cron_proc {
 
 
     # Send HTTP and HTML headers
-    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+#   print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
+    print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $httpdredirect . $ctrl->{'htmlhead2'};
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/cron.htm\">Refresh</a> \n";
     print $sock "<a href=\"#end\">Jump to end</a> \n";
     print $sock "<a href=\"/ls.htm?path=$ctrl->{'workdir'}l00_cron.txt\">$ctrl->{'workdir'}l00_cron.txt</a> \n";
