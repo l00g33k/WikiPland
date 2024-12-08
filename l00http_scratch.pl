@@ -21,7 +21,7 @@ sub l00http_scratch_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
-    " A: scratch: A scratch pad";
+    " 0: scratch: A scratch pad";
 }
 
 
