@@ -34,7 +34,10 @@ sub print_travel_plan {
             $yr, $mo, $da, $dayofweek[$wday], $hr, $mi);
         $firstdate .= "color keys: t - *a*from** -&gt; *S*dest** : remarks / s - *l*place** : remarks / h - *B*hotel** : remarks / r - *h*rest** : remarks\n";
         $firstdate .= "<a href=\"/cal.htm?prewk=0&lenwk=70&today=on&submit=S&path=l00://datetimeline.txt\" target=\"_blank\">calendar</a> - ";
-        $firstdate .= "<a href=\"/view.htm?path=l00://timeline.txt\" target=\"_blank\">timeline template</a>\n";
+        $firstdate .= "<a href=\"/view.htm?path=l00://dtline_blank.txt\" target=\"_blank\">blank template</a> - ";
+        $firstdate .= "<a href=\"/view.htm?path=l00://dtline_org.txt\" target=\"_blank\">original</a> - ";
+        $firstdate .= "<a href=\"/view.htm?path=l00://dtline_new.txt\" target=\"_blank\">date updated</a> - ";
+        $firstdate .= "<a href=\"/diff.htm?compare=y&width=20&pathold=l00://dtline_org.txt&pathnew=l00://dtline_new.txt\" target=\"_blank\">diff org new</a>\n";
     }
 
     $thisdate = sprintf ("%02d/%02d %s", $mo, $da, $dayofweek[$wday], );
@@ -106,10 +109,12 @@ sub l00http_datetimeline_proc (\%) {
     my ($delimiter, $history, $ii, $lastlast, $secondlast, $info);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
     my ($pname, $fname, $plantime, $phase, $msg, $hours, $html, $lnno);
-    my ($timeline, $printTimelineTmpl);
+    my ($dtline_blank, $dtline_org, $dtline_new, $printTimelineTmpl);
     my ($sec2,$mi2,$hr2,$da2,$mo2,$yr2,$wday2,$yday2,$isdst2);
 
-    $timeline = '';
+    $dtline_blank = '';
+    $dtline_org= '';
+    $dtline_new = '';
     $printTimelineTmpl = 1;
 
     # Send HTTP and HTML headers
@@ -169,25 +174,28 @@ sub l00http_datetimeline_proc (\%) {
                 ($yr, $mo, $da) = ($1, $2, $3);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, 0, 0, 0);
                 ($sec2,$mi2,$hr2,$da2,$mo2,$yr2,$wday2,$yday2,$isdst2) = gmtime ($plantime);
-                $timeline .= "# Generating a blank template for 30 days from the start date\n";
-                $timeline .= "# Follow by current version with updated date/day of week in #\n";
-                $timeline .= sprintf("\@%d/%d/%d 08:00\n", $yr2 + 1900, $mo2 + 1, $da2);
-                $timeline .= sprintf("#%d/%d/%d %s\n", $yr2 + 1900, $mo2 + 1, $da2, $dayofweek[$wday2]);
-                $timeline .= "+8              s - where\n";
-                $timeline .= "                h - where\n";
-                $timeline .= "\n";
+                $dtline_blank .= "# Generating a blank template for 30 days from the start date\n";
+                $dtline_blank .= sprintf("\@%d/%d/%d 08:00\n", $yr2 + 1900, $mo2 + 1, $da2);
+                $dtline_blank .= sprintf("#%d/%d/%d %s\n", $yr2 + 1900, $mo2 + 1, $da2, $dayofweek[$wday2]);
+                $dtline_blank .= "+8              s - where\n";
+                $dtline_blank .= "                h - where\n";
+                $dtline_blank .= "\n";
                 for ($ii = 1; $ii < 30; $ii++) {
                     ($sec2,$mi2,$hr2,$da2,$mo2,$yr2,$wday2,$yday2,$isdst2) = gmtime ($plantime + $ii * 3600 * 24);
-                    $timeline .= sprintf("#%d/%d/%d %s\n", $yr2 + 1900, $mo2 + 1, $da2, $dayofweek[$wday2]);
-                    $timeline .= "^11:00\n";
-                    $timeline .= "+8              s - where\n";
-                    $timeline .= "                h - where\n";
-                    $timeline .= "\n";
+                    $dtline_blank .= sprintf("#%d/%d/%d %s\n", $yr2 + 1900, $mo2 + 1, $da2, $dayofweek[$wday2]);
+                    $dtline_blank .= "^11:00\n";
+                    $dtline_blank .= "+8              s - where\n";
+                    $dtline_blank .= "                h - where\n";
+                    $dtline_blank .= "\n";
                 }
-                $timeline .= "#---------------------------------------\n";
-                $timeline .= "# current version with updated date/day of week in #\n";
-                $timeline .= "\n";
+                $dtline_new .= "# current version with updated date/day of week in #\n";
+                $dtline_org .= "# original version\n";
             }
+
+            if ($printTimelineTmpl == 0) {
+                $dtline_org .= "$_\n";
+            }
+
             if      (/@(\d+)\/(\d+)\/(\d+) +(\d+):(\d+)[ \t]*$/) {
                 ($yr, $mo, $da, $hr, $mi) = ($1, $2, $3, $4, $5);
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
@@ -195,7 +203,7 @@ sub l00http_datetimeline_proc (\%) {
                 # print $sock "    ## $_ == $plantime | $year $mon $mday $hour $min\n";
                 $html .= "                                                      ".__LINE__." plantime \@year/time $plantime\n", if ($ctrl->{'debug'} >= 3);
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # @1/15 13:00
             } elsif (/@(\d+)\/(\d+) +(\d+):(\d+)[ \t]*$/) {
@@ -203,7 +211,7 @@ sub l00http_datetimeline_proc (\%) {
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
                 $html .= "                                                      ".__LINE__." plantime \@month/time $plantime\n", if ($ctrl->{'debug'} >= 3);
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # @1/15 13:00 remarks
             } elsif (/@(\d+)\/(\d+) +(\d+):(\d+)[ \t]+(.+)$/) {
@@ -212,7 +220,7 @@ sub l00http_datetimeline_proc (\%) {
                 $html .= "                                                      ".__LINE__." plantime \@month/time/rem $plantime\n", if ($ctrl->{'debug'} >= 3);
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # @2020/1/15
             } elsif (/^@(\d+)\/(\d+)\/(\d+)[ \t]*$/) {
@@ -220,7 +228,7 @@ sub l00http_datetimeline_proc (\%) {
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
                 $html .= "                                                      ".__LINE__." plantime \@year $plantime\n", if ($ctrl->{'debug'} >= 3);
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # @1/15
             } elsif (/^@(\d+)\/(\d+)[ \t]*$/) {
@@ -228,7 +236,7 @@ sub l00http_datetimeline_proc (\%) {
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
                 $html .= "                                                      ".__LINE__." plantime \@month $plantime\n", if ($ctrl->{'debug'} >= 3);
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # @13:00 remarks
             } elsif (/^@(\d+):(\d+)[ \t]+(.+)$/) {
@@ -237,7 +245,7 @@ sub l00http_datetimeline_proc (\%) {
                 $html .= "                                                      ".__LINE__." plantime \@time/rem $plantime\n", if ($ctrl->{'debug'} >= 3);
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # @13:00
             } elsif (/^@(\d+):(\d+)[ \t]*$/) {
@@ -245,7 +253,7 @@ sub l00http_datetimeline_proc (\%) {
                 $plantime = &l00mktime::mktime ($yr - 1900, $mo - 1, $da, $hr, $mi, 0);
                 $html .= "                                                      ".__LINE__." plantime \@time $plantime\n", if ($ctrl->{'debug'} >= 3);
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # ^13:00 remarks
             } elsif (/^\^(\d+):(\d+)[ \t]+(.+)$/) {
@@ -259,8 +267,8 @@ sub l00http_datetimeline_proc (\%) {
                 $mo++;
                 $html .= print_travel_plan ($sock, $form->{'path'}, $lnno, $msg, '');
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= sprintf("#%d/%d/%d %s\n", $yr, $mo, $da, $dayofweek[$wday]);
-                    $timeline .= "$_\n";
+                    $dtline_new .= sprintf("#%d/%d/%d %s\n", $yr, $mo, $da, $dayofweek[$wday]);
+                    $dtline_new .= "$_\n";
                 }
             # ^13:00
             } elsif (/^\^(\d+):(\d+)[ \t]*$/) {
@@ -272,8 +280,8 @@ sub l00http_datetimeline_proc (\%) {
                 $yr += 1900;
                 $mo++;
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= sprintf("#%d/%d/%d %s\n", $yr, $mo, $da, $dayofweek[$wday]);
-                    $timeline .= "$_\n";
+                    $dtline_new .= sprintf("#%d/%d/%d %s\n", $yr, $mo, $da, $dayofweek[$wday]);
+                    $dtline_new .= "$_\n";
                 }
             # +13 remarks
             } elsif (/^\+([.0-9]+)[ \t]+(.+)$/) {
@@ -286,7 +294,7 @@ sub l00http_datetimeline_proc (\%) {
                 $yr += 1900;
                 $mo++;
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # +13
             } elsif (/^\+([.0-9]+)/) {
@@ -297,7 +305,7 @@ sub l00http_datetimeline_proc (\%) {
                 $yr += 1900;
                 $mo++;
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # ---
             } elsif (/^---/) {
@@ -306,12 +314,12 @@ sub l00http_datetimeline_proc (\%) {
             } elsif (/^!(.*)$/) {
                 $html .= "$1\n";
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             # everything else except # comments
             } elsif (/^[^#]/) {
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
                 s/^ +//;
                 if (!/^ *$/) {
@@ -320,7 +328,7 @@ sub l00http_datetimeline_proc (\%) {
             } else {
                 $html .= "                                                      ^^^ NO MATCHES FOUND\n", if ($ctrl->{'debug'} >= 3);
                 if ($printTimelineTmpl == 0) {
-                    $timeline .= "$_\n";
+                    $dtline_new .= "$_\n";
                 }
             }
         }
@@ -333,8 +341,16 @@ sub l00http_datetimeline_proc (\%) {
         &l00httpd::l00fwriteBuf($ctrl, $cal);
         &l00httpd::l00fwriteClose($ctrl);
 
-        &l00httpd::l00fwriteOpen($ctrl, "l00://timeline.txt");
-        &l00httpd::l00fwriteBuf($ctrl, $timeline);
+        &l00httpd::l00fwriteOpen($ctrl, "l00://dtline_blank.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $dtline_blank);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://dtline_org.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $dtline_org);
+        &l00httpd::l00fwriteClose($ctrl);
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://dtline_new.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $dtline_new);
         &l00httpd::l00fwriteClose($ctrl);
     } else {
         print $sock "Unable to open '$form->{'path'}'<p>\n";

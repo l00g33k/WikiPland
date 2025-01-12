@@ -716,7 +716,7 @@ sub l00http_view_proc {
                     if ($hilite == $lineno) {
                         print $sock sprintf ("<a name=\"line%d\"></a><a href=\"/clip.htm?update=Copy+to+clipboard&clip=", $lineno);
                         print $sock $clip;
-                        print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$pnameurl2$fnameurl2&blklineno=%d\">:</a> ", $lineno, $lineno) . "$_</font>\n";
+                        print $sock sprintf ("\" target=\"_blank\">%04d</a> <font style=\"color:black;background-color:lime\"><a href=\"edit.htm?path=$pnameurl2$fnameurl2&blklineno=%d\" target=\"_blank\">:</a> ", $lineno, $lineno) . "$_</font>\n";
 
                         # publish path^M
                         $tmptop = $lineno - 10;
