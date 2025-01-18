@@ -520,6 +520,9 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "<a name=\"_top_\"></a><a href=\"/ls.htm?path=$path$_\">$path</a> - ";
     print $sock "<a href=\"/view.htm?path=$path\">vw</a>";
+    if (defined ($form->{'reminder'})) {
+        print $sock " - <a href=\"/reminder.htm?path=$path\">rem</a>";
+    }
     print $sock "<p>";
 
     print $sock "<form action=\"/recedit.htm\" method=\"post\">\n";
