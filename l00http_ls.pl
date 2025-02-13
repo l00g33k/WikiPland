@@ -596,7 +596,9 @@ sub l00http_ls_proc {
                                 if ($pname eq 'l00://') {
                                     print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/#ram\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                                 } else {
-                                    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                                    $tmp2 = $pname;
+                                    $tmp2 =~ s/\// \/ /g;
+                                    print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$tmp2</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                                 }
                             } else {
                                 print $sock $ctrl->{'htmlhead'} . "<title>$path ls</title>" .$ctrl->{'htmlhead2'};
@@ -918,7 +920,9 @@ if ($dbgskipto) {
                         if ($path eq 'l00://') {
                             print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/#ram\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                         } else {
-                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$pname</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
+                            $tmp2 = $pname;
+                            $tmp2 =~ s/\// \/ /g;
+                            print $sock "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=$tmp\" target=\"_blank\">Path</a>:&nbsp;<a href=\"/ls.htm?path=$pname\">$tmp2</a><a href=\"/ls.htm?path=$pname$fname\">$fname</a><br>\n";
                         }
                     } else {
                         print $sock $ctrl->{'htmlhead'} . "<title>$path2 ls</title>\n$verbatimheader</head>\x0D\x0A<body$wikicallonload>\n";
@@ -1956,10 +1960,12 @@ if ($dbgskipto) {
             if (!defined ($file)) {
                 $dir = $path2;
                 $dir =~ s/\/[^\/]+$/\//;
+                $tmp2 = $path2;
+                $tmp2 =~ s/\// \/ /g;
                 print $sock "<p><a href=\"/find.htm?path=$dir&fmatch=%5C.txt%24\">find in files</a> in $dir\n";
-                print $sock "<p>Send $path2 to <a href=\"/launcher.htm?path=$path2\">launcher</a>.\n";
+                print $sock "<p>Send $tmp2 to <a href=\"/launcher.htm?path=$path2\">launcher</a>.\n";
                 print $sock "<a href=\"/ls.htm?path=$path2&raw=on\">Raw</a>\n";
-                print $sock "<p><a href=\"/view.htm?path=$path2\">View</a> $path2\n";
+                print $sock "<p><a href=\"/view.htm?path=$path2\">View</a> $tmp2\n";
 
                 if (defined($ctrl->{'sshsync'}) &&
                     (($tmp, $tmp2) = $ctrl->{'sshsync'} =~ /^(.+?):(.+)$/)) {
@@ -1968,10 +1974,10 @@ if ($dbgskipto) {
                     $tmp = 'ssh user@host';
                     $tmp2 = '';
                 }
-                print $sock "<p>sshsync.pl command line:\n<pre>".
+                print $sock "<p>sshsync.pl command line:\n<strong>".
                     "echo -e \"\\\n".
                     "$tmp  \\`  $form->{'path'}  \\`  bash -c  \\`  $fname \\n\\\n".
-                    "\" | perl ${tmp2}sshsync.pl</pre>\n";
+                    "\" | perl ${tmp2}sshsync.pl</strong>\n";
 
                 print $sock "<p><table border=\"1\" cellpadding=\"5\" cellspacing=\"3\"><tr>\n";
                 print $sock "<form action=\"/ls.htm\" method=\"get\">\n";
