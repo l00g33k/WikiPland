@@ -144,7 +144,7 @@ sub l00http_periocalrem_perio {
                 $eventnear = '';
 			    last;
 			}
-            if ((!/^#/) && (!/^\*+ /) && (!/^ *!/)) {
+            if ((!/^#/) && (!/^\*+ /) && (!/^ *!/) && (!/^ *$/)) {
                 if (/\* CLEAR_THIS_STOPS_ALL/) {
 				    # skip special key
 				    next;
