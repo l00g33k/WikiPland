@@ -139,13 +139,13 @@ sub l00http_iframes_proc (\%) {
                                                 
     $formout .= "    <tr>\n";
     $formout .= "        <td><input type=\"submit\" name=\"clear\" value=\"Clear\"></td>\n";
-    $formout .= "        <td><input type=\"submit\" name=\"code\" value=\"Refresh\"> <input type=\"submit\" name=\"render\" value=\"Render\"> <input type=\"checkbox\" name=\"noform\"> Hide form</td>\n";
+    $formout .= "        <td><input type=\"submit\" name=\"code\" value=\"Refresh\"> <input type=\"submit\" name=\"render\" value=\"R&#818;ender\" accesskey=\"r\"> <input type=\"checkbox\" name=\"noform\"> Hide form</td>\n";
     $formout .= "    </tr>\n";
 
 
     if ($spec ne '') {
         $formout .= "    <tr>\n";
-        $formout .= "        <td><input type=\"submit\" name=\"update\" value=\"Update\"></td>\n";
+        $formout .= "        <td><input type=\"submit\" name=\"update\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
         $formout .= "        <td>Frame details:</td>\n";
         $formout .= "    </tr>\n";
 
@@ -188,8 +188,8 @@ sub l00http_iframes_proc (\%) {
                 $formout .= "        <input type=\"checkbox\" name=\"lf_$rowidx\" $tmp> &lt;p&gt; ";
                 $formout .= "        <a href=\"$u\">URL</a>: ";
                 $formout .= "             <input type=\"text\" size=\"6\" name=\"url_$rowidx\" value=\"$u\"> ";
-                $formout .= "        wd: <input type=\"text\" size=\"2\" name=\"wd_$rowidx\" value=\"$wd\"> ";
-                $formout .= "        ht: <input type=\"text\" size=\"3\" name=\"ht_$rowidx\" value=\"$ht\"> ";
+                $formout .= "        w&#818;d: <input type=\"text\" size=\"2\" name=\"wd_$rowidx\" value=\"$wd\" accesskey=\"w\"> ";
+                $formout .= "        h&#818;t: <input type=\"text\" size=\"3\" name=\"ht_$rowidx\" value=\"$ht\" accesskey=\"h\"> ";
                 $formout .= "        t_${rowidx}_${colidx}</td>\n";
                 $formout .= "    </tr>\n";
 

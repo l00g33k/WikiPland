@@ -1,5 +1,23 @@
 %TOC%
 
+=Waypoint Regex Filter Quick Links=
+The 'matched' checkbox and the regex field can be filled using quick links 
+
+    %KMLFIL:*% filters:
+
+    0: ALL
+    1: start Ad
+    2: locals
+
+'ALL' is preset to select all waypoints.  The rest are generated from special 
+notation in the file:
+
+    %KMLFIL:name:regex%
+    %KMLFIL:locals:l_%
+    %KMLFIL:start Ad:^[Ad]%
+
+Name must not contain ':'.
+
 =Polyline support=
 Polyline support is specified by the 'poly: ' prefix 
 and a space delimited latitude,longitude pairs

@@ -271,12 +271,15 @@ sub l00http_kml2gmap_proc {
     my ($sortothers, %sortentires, $sortphase, $drawgriddo, $drawgriddo2);
     my (@polyline, $polyidx, $polybuf, $polypt, $wayptcolor, $icon, $fetchramjson);
     my ($gpstrackwastrack, $gpstrackhaspts, $gpstracktimenow, $gpstracktimelast);
+    my (%kmlfil, $kmlfilcnt);
 
     $gpslon = '';
     $gpslat = '';
     $desc = "new$new";
 
     $polyidx = 0;
+    %kmlfil = ();
+    $kmlfilcnt = 0;
 
     if (defined($ctrl->{'googleapikey'})) {
         $apikey = $ctrl->{'googleapikey'};
@@ -790,6 +793,9 @@ SCRIPTSRC
                         $gpstracktimenow = $1;
                     }
                 }
+            } elsif (/^%KMLFIL:(.+?):(.+)%$/) {
+                $kmlfil{$2} = $1;
+                $kmlfilcnt++;
             } else {
                 #$starname = '';
                 next;
@@ -1169,6 +1175,20 @@ SCRIPTSRC
         print $sock "<input type=\"hidden\" name=\"width\" value=\"$width\">\n";
         print $sock "<input type=\"hidden\" name=\"height\" value=\"$height\">\n";
         print $sock "</form>\n";
+
+        # http://localhost:30347/kml2gmap.htm?desc=new1&path=%2Fsdcard%2Fl00httpd%2FTvlTaiwan2025.txt&long=&lat=&matched=on&selregex=l_&initzoom=&update=U%CC%B2pdate&polylinejs=&width=300&height=200
+        # http://localhost:30347/kml2gmap.htm?path=/sdcard/l00httpd/TvlTaiwan2025.txt&width=300&height=200&update=yes&matched=&exclude=&selregex=
+        if ($kmlfilcnt > 0) {
+            print $sock "%KMLFIL:*% filters:<p>\n";
+            print $sock "<pre>\n";
+            print $sock "0: <a href=\"/kml2gmap.htm?path=$form->{'path'}&matched=&exclude=&selregex=&update=U%CC%B2pdate\">ALL</a>\n";
+            $tmp = 1;
+            foreach $_ (sort keys %kmlfil) {
+                print $sock "$tmp: <a href=\"/kml2gmap.htm?path=$form->{'path'}&matched=on&selregex=$_&update=U%CC%B2pdate\">$kmlfil{$_}</a>\n";
+                $tmp++;
+            }
+            print $sock "</pre>\n";
+        }
 
         if ($htmlout ne '') {
             my ($pname, $fname);
