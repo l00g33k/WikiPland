@@ -343,15 +343,22 @@ sub l00http_recedit_proc (\%) {
                                 $mo--;
                                 # timestamp of the item
                                 $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
-                                # timestamp now
-                                $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
-                                if (($tmp2 + 12 * 60 * 60) > $tmp) {
-                                    # if past, move to now + 5 min
-                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 12 * 60 * 60);
+                                # timestamp 23:00
+                               #$tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
+                                $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 28;
+                                if ($tmp2 > $tmp) {
+                                   ## if before 23:00, set to 23:00
+                                    # if before tomorrow 4am, set to it
+                                    $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                         $yr + 1900, $mo + 1, $da, 23, 0, 0,
+                                         substr ($_, 15, 9999));
+                                    $tmp = &l00httpd::time2now_string ($tmp2);
+                                    ($yr, $mo, $da, $hr, $mi, $se) = $tmp =~ /^(....)(..)(..) (..)(..)(..)/;
+                                    $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                         $yr + 1900, $mo + 1, $da, $hr, $mi, $se,
+                                         substr ($_, 15, 9999));
+
                                 }
-                                $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
-                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
-                                     substr ($_, 15, 9999));
                             }
                         }
                         if (defined ($form->{'submit'})) {
@@ -567,7 +574,7 @@ sub l00http_recedit_proc (\%) {
         if ($path =~ /^l00:\/\//) {
             print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4 h&#818;\" accesskey=\"h\">\n";
             print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+2h\">\n";
-            print $sock "        <input type=\"submit\" name=\"nowplus2\" value=\"+12h\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus2\" value=\"=+4\">\n";
             print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
         } else {
             print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";
