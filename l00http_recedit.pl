@@ -355,7 +355,7 @@ sub l00http_recedit_proc (\%) {
                                     $tmp = &l00httpd::time2now_string ($tmp2);
                                     ($yr, $mo, $da, $hr, $mi, $se) = $tmp =~ /^(....)(..)(..) (..)(..)(..)/;
                                     $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
-                                         $yr + 1900, $mo + 1, $da, $hr, $mi, $se,
+                                         $yr, $mo, $da, $hr, $mi, $se,
                                          substr ($_, 15, 9999));
 
                                 }

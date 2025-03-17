@@ -455,11 +455,14 @@ sub l00http_reminder_proc {
     print $sock "<li>Pause: ";
     foreach $_ (1..29) {
         if (($_ % 5) == 0)  {
-            $f0 = "<font style=\"color:black;background-color:aqua\">";
-            $f1 = "</font>";
-        } else {
+           #$f0 = "<font style=\"color:black;background-color:aqua\">";
+           #$f1 = "</font>";
             $f0 = '';
             $f1 = '';
+        } else {
+           #$f0 = '';
+           #$f1 = '';
+           next;
         }
         print $sock "<a href=\"/reminder.htm?pause=Pause&min=$_\">$f0$_'$f1</a> - \n";
     }
@@ -480,10 +483,11 @@ sub l00http_reminder_proc {
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=180\">3h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=240\">4h</a> - \n";
     print $sock "<a href=\"/reminder.htm?pause=Pause&min=540\">9h</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=840\">14h</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=1440\">24h</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=2880\">48h</a> - \n";
-    print $sock "<a href=\"/reminder.htm?pause=Pause&min=4320\">72h</a></li>\n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=840\">${f0}14h${f1}</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=1440\">${f0}24h${f1}</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=2880\">${f0}48h${f1}</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=4320\">${f0}72h${f1}</a> - \n";
+    print $sock "<a href=\"/reminder.htm?pause=Pause&min=5160\">${f0}86h${f1}</a></li>\n";
     print $sock "<p>";
 
     print $sock "$ctrl->{'home'} $ctrl->{'HOME'} <a href=\"/reminder.htm\">Refresh</a><p>\n";
@@ -579,7 +583,7 @@ sub l00http_reminder_perio {
                 "<a href=\"#hometop\"><strong><font style=\"color:black;background-color:Plum\">vv<\/font><\/strong></a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=5#pause\">5'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=15#pause\">15'</a> - ".
-               #"<a href=\"/reminder.htm?pause=Pause&min=20#pause\">20'</a> - ".
+                "<a href=\"/reminder.htm?pause=Pause&min=30#pause\">30'</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=60#pause\">1h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=120#pause\">2h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
