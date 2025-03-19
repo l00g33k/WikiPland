@@ -53,7 +53,7 @@ sub l00http_cal_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};
     my $form = $ctrl->{'FORM'};
-    my ($rpt, $now, $buf, $tmp, $table, $pname, $fname, $lnno);
+    my ($rpt, $now, $buf, $tmp, $tmp2, $table, $pname, $fname, $lnno);
     my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos, $lastdate, $rel,
         @includes, $incpath, $pathbase, $includefn, %calfilters);
 
@@ -356,6 +356,9 @@ sub l00http_cal_proc {
             if ($todo =~ /\[\[.+\]\]/) {
                 # if it is a link, put in [link]
                 $todo = "&#91;$todo&#93;";
+            } elsif (($tmp, $tmp2) = $todo =~ /^(.+?)\|\|(.+)$/) {
+                # send tmp2 to clipboard
+                $todo = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=".&l00httpd::urlencode ($tmp2)."\" target=newwin>$tmp</a>";
             } else {
                 # else make a link to send text to clip.htm
                 $tmp = $todo;
