@@ -6,4 +6,10 @@ calremBannerDisabled^justdefine
 
     % INCLUDE<path/to/file>%
 
-* '\n' is converted to line break &lt;br&gt;
+* '\n' is converted to line break <br>
+* To add a link (no spaces between [:
+
+    [ [URL] ]
+* To send text to clipboard:
+
+    Description||text
