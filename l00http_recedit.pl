@@ -345,13 +345,14 @@ sub l00http_recedit_proc (\%) {
                                 $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
                                 # timestamp 23:00
                                #$tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
-                                $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 28;
+                                if ($ctrl->{'now_string'} lt substr($ctrl->{'now_string'}, 0, 9)."040000") {
+                                    # if now is before 4am, set it to today 4am
+                                    $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 4;
+                                } else {
+                                    $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 28;
+                                }
                                 if ($tmp2 > $tmp) {
-                                   ## if before 23:00, set to 23:00
-                                    # if before tomorrow 4am, set to it
-                                    $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
-                                         $yr + 1900, $mo + 1, $da, 23, 0, 0,
-                                         substr ($_, 15, 9999));
+                                    # if before tomorrow (or today) 4am, set to it
                                     $tmp = &l00httpd::time2now_string ($tmp2);
                                     ($yr, $mo, $da, $hr, $mi, $se) = $tmp =~ /^(....)(..)(..) (..)(..)(..)/;
                                     $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
