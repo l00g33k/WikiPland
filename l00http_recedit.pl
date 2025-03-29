@@ -278,7 +278,8 @@ sub l00http_recedit_proc (\%) {
         $afterline = $1;
     }
 
-    if ((defined ($form->{'submit'}) || defined ($form->{'nowplus'}) || defined ($form->{'nowplus2'})) && (length($record1) > 0)) {
+    if ((defined ($form->{'submit'}) || defined ($form->{'nowplus'}) || defined ($form->{'nowplus1'}) || defined ($form->{'nowplus2'})) 
+        && (length($record1) > 0)) {
         if (&l00httpd::l00freadOpen($ctrl, $path)) {
             $found = 0;
             $cmted = '';
@@ -330,6 +331,24 @@ sub l00http_recedit_proc (\%) {
 #                                   $tmp += 5 * 60; # 5 min
 #                                   ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
 #                                   # if future, + 5 min
+                                }
+                                $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                     $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                     substr ($_, 15, 9999));
+                            }
+                        }
+                        if (defined($form->{"nowplus1"})) {
+                            if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
+                                #20130408 100000:10:0:60:copy hurom
+                                $yr -= 1900;
+                                $mo--;
+                                # timestamp of the item
+                                $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
+                                # timestamp now
+                                $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
+                                if (($tmp2 + 2 * 3600) > $tmp) {
+                                    # if past, move to now + 5 min
+                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = localtime (time + 2 * 3600 + int(($tmp - $tmp2) / 60));
                                 }
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                      $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
@@ -574,8 +593,9 @@ sub l00http_recedit_proc (\%) {
     if (defined ($form->{'reminder'})) {
         if ($path =~ /^l00:\/\//) {
             print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4 h&#818;\" accesskey=\"h\">\n";
-            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+5m\">\n";
-            print $sock "        <input type=\"submit\" name=\"nowplus2\" value=\"=+4\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+5m\"><p>\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus1\" value=\"+2h\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus2\" value=\"=4+\">\n";
             print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
         } else {
             print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";
