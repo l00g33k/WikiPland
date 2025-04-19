@@ -367,7 +367,7 @@ sub l00http_blog_proc {
                 $mon = ord($2) - ord('a') + 10;
             }
             $mday = $3;
-            $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year, $mon, $mday, 8, 0, 0);
+            $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year, $mon, $mday, 5, 0, 0);
             $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
             $form->{'buffer'} = &blog_make_hdr_nowstr ($ctrl, $stylecurr, $now_string);
             $form->{'buffer'} .= $buffer;
