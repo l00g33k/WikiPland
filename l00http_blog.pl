@@ -54,6 +54,29 @@ sub blog_make_hdr {
     $buffer;
 }
 
+sub blog_make_hdr_nowstr {
+    my ($ctrl, $style, $now_string) = @_;
+    my ($buffer, $sock);
+
+    $buffer = '';
+
+    if ($style eq 'log') {
+        # log
+        $buffer = $now_string . ' ';
+    } elsif ($style eq 'star') {
+        # star
+        $buffer = '* ' . $now_string . ' ';
+    } elsif ($style eq 'blog') {
+        # blog
+        $buffer = "==$now_string ==\n* ";
+    } elsif ($style eq 'bare') {
+        # bare
+        # nothing
+    }
+
+    $buffer;
+}
+
 sub blog_get_msg {
     my ($buffer, $style) = @_;
 
@@ -330,10 +353,30 @@ sub l00http_blog_proc {
         }
     }
 
+    if (defined ($form->{'newepoch'})) {
+        if ($form->{'newepoch'} =~ /^_([0-9a-j])([0-9a-c])(\d\d)/) {
+            my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst, $now_string);
+            if (ord($1) <= 0x39) {
+                $year = 2020 + ord($1) - ord('0');
+            } else {
+                $year = 2020 + ord($1) - ord('a') + 10;
+            }
+            if (ord($2) <= 0x39) {
+                $mon = ord($2) - ord('0');
+            } else {
+                $mon = ord($2) - ord('a') + 10;
+            }
+            $mday = $3;
+            $now_string = sprintf ("%4d%02d%02d %02d%02d%02d", $year, $mon, $mday, 8, 0, 0);
+            $buffer = &blog_get_msg ($form->{'buffer'}, $stylecurr);
+            $form->{'buffer'} = &blog_make_hdr_nowstr ($ctrl, $stylecurr, $now_string);
+            $form->{'buffer'} .= $buffer;
+            # fake a 'Save' click
+            $form->{'save'} = 1;
+        }
+    }
+
     $addtime = 0;
-#::conti::
-# convert newepoch to newtime
-#print $sock "<input type=\"submit\" name=\"newepoch\"  value=\"$_\" $tmp>\n";
     if (defined ($form->{'newtime'})) {
         # new time
         # remove underscore
@@ -577,8 +620,16 @@ sub l00http_blog_proc {
     if ($#blocktime >= 0) {
         print $sock "<input type=\"checkbox\" name=\"saveurl\" $quicktimesave>Save&URL\n";
     }
+
     print $sock "<p>";
+    foreach $_ (@blockquick) {
+        $tmp = $_;
+        $tmp =~ s/\*/asterisk/g;
+        print $sock "<input type=\"submit\" name=\"$tmp\" value=\"$_\">\n";
+    }
+
     # buttons for date
+    print $sock "<p>";
     if ($#blocktime >= 0) {
         for ($ii = 1; $ii < 30; $ii++) {
             $future = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9).'050000') + $ii * 24 * 3600;
@@ -596,12 +647,6 @@ sub l00http_blog_proc {
             print $sock "<input type=\"submit\" name=\"newepoch\"  value=\"$_\" $tmp>\n";
         }
         print $sock "<p>";
-    }
-
-    foreach $_ (@blockquick) {
-        $tmp = $_;
-        $tmp =~ s/\*/asterisk/g;
-        print $sock "<input type=\"submit\" name=\"$tmp\" value=\"$_\">\n";
     }
 
     print $sock "</form>\n";
