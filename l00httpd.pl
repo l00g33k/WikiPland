@@ -319,9 +319,9 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     } else {
         $ctrl{'os'} = 'lin';
     }
-    # didn't work on ubuntu
-    #$ctrl{'machine'} = $ENV{'HOSTNAME'};
-    $ctrl{'machine'} = `echo \$HOSTNAME`;
+    # read from my file
+    print "Read 'machine' from ~/_whoami\n";
+    $ctrl{'machine'} = `cat ~/_whoami`;
 }
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
