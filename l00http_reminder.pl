@@ -588,7 +588,7 @@ sub l00http_reminder_perio {
                 "<a href=\"/reminder.htm?pause=Pause&min=120#pause\">2h</a> - ".
                 "<a href=\"/reminder.htm?pause=Pause&min=240#pause\">4h</a> - ".
                #"<a href=\"/reminder.htm?pause=Pause&min=180#pause\">3h</a> - ".
-                "<font style=\"color:yellow;background-color:red\">$msgtoast</font> - ".
+                "<font style=\"color:black;background-color:lightgray\">$msgtoast</font> - ".
                 "<a href=\"/reminder.htm#manage\">:::</a> </center><a name=\"_remend_\"></a>";
 
             $ctrl->{'BANNERSML:reminder'} = "<center>".
