@@ -133,9 +133,9 @@ sub l00http_ls_desc {
     my ($desc);
 
     if ($ctrl->{'os'} eq 'tmx') {
-        $desc = " B: ls: Files and directories browser <a href=\"/ls.htm?path=/data/data/com.termux/files/home/\">Termux ~</a>";
+        $desc = " 0: ls: Files and directories browser <a href=\"/ls.htm?path=/data/data/com.termux/files/home/\">Termux ~</a>";
     } else {
-        $desc = " B: ls: Files and directories browser";
+        $desc = " 0: ls: Files and directories browser";
     }
     $desc;
 }
