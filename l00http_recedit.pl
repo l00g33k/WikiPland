@@ -575,11 +575,11 @@ sub l00http_recedit_proc (\%) {
 
     print $sock "    <tr>\n";
     if (defined ($form->{'reminder'})) {
-        print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"><p>\n";
+        print $sock "        <td style=\"vertical-align:top\"><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"><p>\n";
         print $sock "            <input type=\"submit\" name=\"update\" value=\"R&#818;efresh\" accesskey=\"r\"></td>\n";
         print $sock "        <td>\n";
     } else {
-        print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
+        print $sock "        <td style=\"vertical-align:top\"><input type=\"submit\" name=\"submit\" value=\"U&#818;pdate\" accesskey=\"u\"></td>\n";
         print $sock "        <td>\n";
     }
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"a&#818;Del\" accesskey=\"a\">\n";
@@ -742,7 +742,7 @@ sub l00http_recedit_proc (\%) {
     }
 
     print $sock "    <tr>\n";
-    print $sock "        <td><input type=\"submit\" name=\"submit\" value=\"Update\"></td>\n";
+    print $sock "        <td style=\"vertical-align:top\"><input type=\"submit\" name=\"submit\" value=\"Update\"></td>\n";
     print $sock "        <td><input type=\"submit\" name=\"update\" value=\"Refresh\">\n";
     if (defined ($form->{'reminder'})) {
         $_ = 'checked';
