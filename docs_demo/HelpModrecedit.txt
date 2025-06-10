@@ -1,3 +1,6 @@
 * Common 'Record 1' regex string:
 ** timestamped line entry:
     ^\d{8,8} \d{6,6}:\d+
+
+* Checking both '@0' and 'del' sets the item time to tomorrow 4am (or today if past midnight.)
+* Checking both '+4h' and '+1h' add 8 hours.

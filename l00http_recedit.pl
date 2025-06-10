@@ -311,7 +311,13 @@ sub l00http_recedit_proc (\%) {
                     if ($line =~ /$filter/) {
                         if (defined ($form->{'submit'})) {
                             if (defined($form->{"id$id"}) && ($form->{"id$id"} eq 'on')) {
-                                $_ = "#$_";
+                                if (defined($form->{"add0h$id"}) && ($form->{"add0h$id"} eq 'on')) {
+                                    # both @0 and del checked, do =+4am instead
+                                    $form->{"add0h$id"} = 'flag';
+                                    $form->{"nowplus2"} = 'on';
+                                } else {
+                                    $_ = "#$_";
+                                }
                             }
                         }
                         if (defined($form->{"nowplus"})) {
@@ -380,6 +386,11 @@ sub l00http_recedit_proc (\%) {
 
                                 }
                             }
+                            if (defined($form->{"add0h$id"}) && ($form->{"add0h$id"} eq 'flag')) {
+                                # normally @0 and nowplus2 can't be set at the same time
+                                # it is using as a special flag; now reset it
+                                $form->{"nowplus2"} = undef;
+                            }
                         }
                         if (defined ($form->{'submit'})) {
                             if (defined($form->{"add0h$id"}) && ($form->{"add0h$id"} eq 'on')) {
@@ -428,30 +439,59 @@ sub l00http_recedit_proc (\%) {
                                 }
                             }
                             if (defined($form->{"add16h$id"}) && ($form->{"add16h$id"} eq 'on')) {
-                                l00httpd::dbp($config{'desc'}, "smt:add16h$id $_"), if ($ctrl->{'debug'} >= 3);
-                                # add 1 hours
-                                if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
-                                    #20130408 100000:10:0:60:copy hurom
-                                    $yr -= 1900;
-                                    $mo--;
-                                    $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                    $tmp += 1 * 3600; # add16h
-                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
-                                    $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
-                                        $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
-                                        substr ($_, 15, 9999));
-                                } elsif (($yr, $mo, $da, $tmp2) = /^(\d+)\/(\d+)\/(\d+)(.*)$/) {
-                                    #2013/4/11,1,411test 
-                                    $yr -= 1900;
-                                    $mo--;
-                                    $hr = 0;
-                                    $mi = 0;
-                                    $se = 0;
-                                    $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
-                                    $tmp += 1 * 3600; # add16h
-                                    ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
-                                    $_ = sprintf ("%d/%d/%d%s", 
-                                        $yr + 1900, $mo + 1, $da, $tmp2);
+                                if (defined($form->{"add2h$id"}) && ($form->{"add2h$id"} eq 'on')) {
+                                    # if both checked, add another 4h for 8h total
+                                    l00httpd::dbp($config{'desc'}, "smt:add2h$id $_"), if ($ctrl->{'debug'} >= 3);
+                                    # add 4 hours
+                                    if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
+                                        #20130408 100000:10:0:60:copy hurom
+                                        $yr -= 1900;
+                                        $mo--;
+                                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                        $tmp += 4 * 3600; # add2h
+                                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                        $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                            $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                            substr ($_, 15, 9999));
+                                    } elsif (($yr, $mo, $da, $tmp2) = /^(\d+)\/(\d+)\/(\d+)(.*)$/) {
+                                        #2013/4/11,1,411test 
+                                        $yr -= 1900;
+                                        $mo--;
+                                        $hr = 0;
+                                        $mi = 0;
+                                        $se = 0;
+                                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                        $tmp += 4 * 3600; # add2h
+                                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                        $_ = sprintf ("%d/%d/%d%s", 
+                                            $yr + 1900, $mo + 1, $da, $tmp2);
+                                    }
+                                } else {
+                                    l00httpd::dbp($config{'desc'}, "smt:add16h$id $_"), if ($ctrl->{'debug'} >= 3);
+                                    # add 1 hours
+                                    if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
+                                        #20130408 100000:10:0:60:copy hurom
+                                        $yr -= 1900;
+                                        $mo--;
+                                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                        $tmp += 1 * 3600; # add16h
+                                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                        $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                            $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                            substr ($_, 15, 9999));
+                                    } elsif (($yr, $mo, $da, $tmp2) = /^(\d+)\/(\d+)\/(\d+)(.*)$/) {
+                                        #2013/4/11,1,411test 
+                                        $yr -= 1900;
+                                        $mo--;
+                                        $hr = 0;
+                                        $mi = 0;
+                                        $se = 0;
+                                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                        $tmp += 1 * 3600; # add16h
+                                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                        $_ = sprintf ("%d/%d/%d%s", 
+                                            $yr + 1900, $mo + 1, $da, $tmp2);
+                                    }
                                 }
                             }
                             if (defined($form->{"add4h$id"}) && ($form->{"add4h$id"} eq 'on')) {
