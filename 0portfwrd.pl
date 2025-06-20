@@ -22,6 +22,8 @@ $debug = 0;
 $noisy = 0;
 $ok2fwrd = 0;
 $cliip = 0;
+$msg = 'hello';
+
 
 while ($arg = shift) {
     if ($arg =~ /help/) {
@@ -201,6 +203,11 @@ while($loop) {
 			if (defined ($params{'quit'})) {
                 $loop = 0;
                 print "Quit requested\n";
+            }
+            if (defined($params{'msg'})) {
+                $msg = $params{'msg'};
+                $msg =~ tr/+/ /;
+                $msg =~ s/\%([a-fA-F0-9]{2})/pack("C", hex($1))/seg;
             }
 			if (defined ($params{'setconfig'})) {
 				if ($params{'statusonly'} eq "on") {
@@ -438,6 +445,11 @@ print "IP $ip. $params{$ip}\n";
             $htmlout .= "        </tr>\n";
 
 
+            $htmlout .= "        <tr>\n";
+            $htmlout .= "            <td><input type=\"submit\" name=\"setmsg\" value=\"Set Message\"></td>\n";
+            $htmlout .= "            <td><textarea name=\"msg\" cols=60 rows=20 accesskey=\"e\">$msg</textarea></td>\n";
+            $htmlout .= "        </tr>\n";
+
 
             $htmlout .= "    </table>\n";
             $htmlout .= "</form>\n";
@@ -593,6 +605,7 @@ print "LISTEN server_socket $server_socket - ok2fwrd $ok2fwrd - client_ip >$clie
                             print $client_socket "HTTP/1.0 200 OK\r\n\r\n<html><body>" . 
                                 "Welcome!  It is now $now_string.  Your external IP address is $client_ip. " .
                                 "Your code is: $client_ip_code{$client_ip}" .
+                                "\n<hr>\n$msg\n" .
                                 "</body></html>";
                         }
                         &close_client_sock;
