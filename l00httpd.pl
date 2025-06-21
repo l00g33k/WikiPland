@@ -400,9 +400,21 @@ sub readl00httpdcfg {
                 if (/^#/) {
                     next;
                 }
-        
                 s/\r//g;
                 s/\n//g;
+                # \ as line continuation
+                if (/^(.+)\\$/) {
+                    $tmp = $1;
+                    while (<IN>) {
+                        if (/^(.+)\\$/) {
+                            $tmp .= $1;
+                        } else {
+                            $tmp .= $_;
+                            last;
+                        }
+                    }
+                    $_ = $tmp;
+                }
                 if (/^machine=~\/(.+)\/ */) {
                     # new machine filter
                     $skipfilter = $1;
