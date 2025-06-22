@@ -406,6 +406,8 @@ sub readl00httpdcfg {
                 if (/^(.+)\\$/) {
                     $tmp = $1;
                     while (<IN>) {
+                        s/\r//g;
+                        s/\n//g;
                         if (/^(.+)\\$/) {
                             $tmp .= $1;
                         } else {
