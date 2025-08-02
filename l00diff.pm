@@ -338,7 +338,7 @@ sub l00http_diff_output {
             next;
         }
         # print moved block in NEW
-        if ($NA[$nii] < $oii) {
+        if (defined($NA[$nii]) && ($NA[$nii] < $oii)) {
             if ($lastact ne '[') {
                 $lastact = '[';
                 # make link to changes
@@ -365,7 +365,7 @@ sub l00http_diff_output {
             next;
         }
         # print moved block in OLD
-        if ($OA[$oii] < $nii) {
+        if (defined($OA[$oii]) && ($OA[$oii] < $nii)) {
             if ($lastact ne ']') {
                 $lastact = ']';
                 # make link to changes
