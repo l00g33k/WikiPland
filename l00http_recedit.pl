@@ -315,6 +315,8 @@ sub l00http_recedit_proc (\%) {
                                     # both @0 and del checked, do =+4am instead
                                     $form->{"add0h$id"} = 'flag';
                                     $form->{"nowplus2"} = 'on';
+                                } elsif (defined($form->{"add16h$id"}) && ($form->{"add16h$id"} eq 'on')) {
+                                    # both @0 and +1h checked, do +20min instead
                                 } else {
                                     $_ = "#$_";
                                 }
@@ -462,6 +464,33 @@ sub l00http_recedit_proc (\%) {
                                         $se = 0;
                                         $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
                                         $tmp += 4 * 3600; # add2h
+                                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                        $_ = sprintf ("%d/%d/%d%s", 
+                                            $yr + 1900, $mo + 1, $da, $tmp2);
+                                    }
+                                } elsif (defined($form->{"id$id"}) && ($form->{"id$id"} eq 'on')) {
+                                    # both @0 and +1h checked, do +20min instead
+                                    l00httpd::dbp($config{'desc'}, "20m:$id $_"), if ($ctrl->{'debug'} >= 3);
+                                    # add 1 hours
+                                    if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
+                                        #20130408 100000:10:0:60:copy hurom
+                                        $yr -= 1900;
+                                        $mo--;
+                                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                        $tmp += 1200; # add 20 min
+                                        ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
+                                        $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
+                                            $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
+                                            substr ($_, 15, 9999));
+                                    } elsif (($yr, $mo, $da, $tmp2) = /^(\d+)\/(\d+)\/(\d+)(.*)$/) {
+                                        #2013/4/11,1,411test 
+                                        $yr -= 1900;
+                                        $mo--;
+                                        $hr = 0;
+                                        $mi = 0;
+                                        $se = 0;
+                                        $tmp = &l00mktime::mktime ($yr, $mo, $da, $hr, $mi, $se);
+                                        $tmp += 1200; # add 20 min
                                         ($se,$mi,$hr,$da,$mo,$yr,$tmp,$tmp,$tmp) = gmtime ($tmp);
                                         $_ = sprintf ("%d/%d/%d%s", 
                                             $yr + 1900, $mo + 1, $da, $tmp2);

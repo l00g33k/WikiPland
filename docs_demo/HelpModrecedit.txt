@@ -4,3 +4,16 @@
 
 * Checking both '@0' and 'del' sets the item time to tomorrow 4am (or today if past midnight.)
 * Checking both '+4h' and '+1h' add 8 hours.
+
+* Time checkbox:
+** For l00:// RAM files:
+|| Labels        || Effects                      ||
+|| +4h           || add 4 hours                      ||
+|| @0            || update to current time                      ||
+|| +1h           || add 1 hour                      ||
+|| del           || deleted (prepend #)                      ||
+|| @0 &amp; del  || move to next 4am                      ||
+|| +1h &amp; del || add 20 min                      ||
+|| +4h &amp; +1h || add 8 hours                      ||
+
+* END
