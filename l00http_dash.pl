@@ -837,6 +837,14 @@ sub l00http_dash_proc {
                 } else {
                     $dsc =~ s/^\.(.+)$/.<strong><font style="color:black;background-color:aqua">$1<\/font><\/strong>/;
                 }
+                # , color lime for do now
+                if ($dsc =~ /^,([^\[\]]+?)(\|+[^\[\]]+)$/) {
+                    # special case : "desc | URL" and "desc ||clipboard"
+                    # but not [[URL|desc]]
+                    $dsc = ".<strong><font style=\"color:black;background-color:lime\">$1<\/font><\/strong>$2";
+                } else {
+                    $dsc =~ s/^,(.+)$/.<strong><font style="color:black;background-color:lime">$1<\/font><\/strong>/;
+                }
                 if ((($cat1 =~ /$catflt/i) || 
                     ($filtime eq 'checked') || 
                     ($fildesc eq 'checked') ||
@@ -1614,6 +1622,7 @@ sub l00http_dash_proc {
             $help .= "* ~: *y*yellow**\n";
             $help .= "* `: *L*lightGray**\n";
             $help .= "* .: *a*cyan**\n";
+            $help .= "* ,: *l*lime**\n";
         }
         print $sock &l00wikihtml::wikihtml ($ctrl, $pname, "$out$help", 6);
 

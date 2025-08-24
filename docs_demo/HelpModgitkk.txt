@@ -1,0 +1,4 @@
+* A browser interface to the gitkk alias:
+
+    git log -n $GLOGN --all --graph --pretty=format:'%Cred%h%Creset%Cgreen(%ci)%Creset%C(bold blue)<%an>%Creset%C(magenta)%d%Creset %s' --abbrev-commit
+

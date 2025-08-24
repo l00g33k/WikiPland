@@ -28,7 +28,29 @@ $usewinclipboard = 0;
     'gray',
     'olive',
     'lightGray',
-    'teal'
+    'teal',
+    'orange',
+    'gold',
+    'green',
+    'DeepPink',
+    'Brown',
+    'DeepSkyBlue',
+    'Purple',
+    'LightGray',
+    'Teal',
+    'SandyBrown',
+    'HotPink',
+    'blue',
+    'Salmon',
+    'Khaki',
+    'YellowGreen',
+    'Aquamarine',
+    'Plum',
+    'LightSalmon',
+    'Moccasin',
+    'DarkSeaGreen',
+    'LightSteelBlue',
+    'MediumPurple'
 );
 
 #debugprint("calling $cnt\n");
