@@ -993,6 +993,9 @@ sub l00http_blockfilter_proc {
                 "<a href=\"/filemgt.htm?path=l00://blockfilter_cfg.txt&path2=l00://blockfilter_cfg.txt.$fname\" target=\"_blank\">copy it to</a> ... ".
                 "View <a href=\"/view.htm?path=l00://blockfilter_output_notag.txt\" target=\"_blank\">l00://blockfilter_output_notag.txt</a>".
                 "<p>\n";
+        } else {
+            # small form
+            print $sock "View <a href=\"/view.htm?path=l00://blockfilter_output.txt\" target=\"_blank\">l00://blockfilter_output.txt</a><br>\n";
         }
         print $sock "<a name=\"__toc__\"></a>$header\n";
         print $sock "<pre>$output</pre>\n";
