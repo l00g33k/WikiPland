@@ -418,6 +418,9 @@ sub l00http_tr_proc {
         }
         print $sock "<br><pre>\n";
     } else {
+        print $sock "<a name=\"__top__\"></a>";
+        print $sock "<a href=\"#now\">now</a>\n";
+        print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}&bare=on\">refresh</a>\n";
         print $sock "<pre>\n";
     }
 
@@ -426,9 +429,8 @@ sub l00http_tr_proc {
     # display the time slot
     $blkln = 0;
     $clocknotshown = 1;
-    if ($notbare) {
-        printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
-    }
+    printf $sock ("<script Language=\"JavaScript\">nows = []; itvmin = $itvmin;</script>", $now);
+
     for ($ii = $iist; $ii <= $iien; $ii++) {
         # *l*color bold**
         $outs[$ii] =~       s/ \*([$colorlukeys])\*([^*]+?)\*\*$/ <strong><font style="color:$colorfg{$1};background-color:$colorlu{$1}">$2<\/font><\/strong> /;# at EOL
@@ -437,10 +439,12 @@ sub l00http_tr_proc {
         $outs[$ii] =~ s/([ >|])\*([$colorlukeys])\*([^*]+?)\*\*([ <\]])/$1<strong><font style="color:$colorfg{$2};background-color:$colorlu{$2}">$3<\/font><\/strong>$4/g;
 
         if ($ii == $now) {
-            $clocknotshown = 1;
+            $clocknotshown = 0;
+            print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
             if ($notbare) {
-                print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
                 print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
+            } else {
+                print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}&bare=on\">refresh</a> <pre>\n";
             }
             $blkln = 0; # force time display for time 'now'
             #print "$now $outs[$ii]\n";
@@ -454,22 +458,19 @@ sub l00http_tr_proc {
         } elsif ($blkln < 2) {
             print $sock "$outs[$ii]\n\n\n";
         }
-        if ($notbare) {
-            printf $sock ("<script Language=\"JavaScript\">nows.push('ln%04d');</script>", $ii);
-        }
+        printf $sock ("<script Language=\"JavaScript\">nows.push('ln%04d');</script>", $ii);
     }
-    if ($notbare) {
-        if ($clocknotshown) {
-            print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+    if ($clocknotshown) {
+        print $sock "</pre><a name=\"now\"></a>$tr_clockhtml\nnow - " .substr($ctrl->{'now_string'}, 9, 4)." - <a href=\"#__end__\">end</a> - <a href=\"#__top__\">top</a>";
+        if ($notbare) {
             print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}\">refresh</a> <pre>\n";
+        } else {
+            print $sock " - <a href=\"/tr.htm?path=$form->{'fname'}&bare=on\">refresh</a> <pre>\n";
         }
     }
     print $sock "</pre>\n";
-
-    if ($notbare) {
-        if ($now >= $iien) {
-            print $sock "<a name=\"now\">now</a> ".substr($ctrl->{'now_string'}, 9, 4)."\n";
-        }
+    if (!$notbare) {
+        print $sock "<a name=\"__end__\"></a>";
     }
 
 
