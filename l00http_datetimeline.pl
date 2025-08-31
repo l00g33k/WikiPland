@@ -180,7 +180,7 @@ sub l00http_datetimeline_proc (\%) {
                 $dtline_blank .= "+8              s - where\n";
                 $dtline_blank .= "                h - where\n";
                 $dtline_blank .= "\n";
-                for ($ii = 1; $ii < 30; $ii++) {
+                for ($ii = 1; $ii < 60; $ii++) {
                     ($sec2,$mi2,$hr2,$da2,$mo2,$yr2,$wday2,$yday2,$isdst2) = gmtime ($plantime + $ii * 3600 * 24);
                     $dtline_blank .= sprintf("#%d/%d/%d %s\n", $yr2 + 1900, $mo2 + 1, $da2, $dayofweek[$wday2]);
                     $dtline_blank .= "^11:00\n";
