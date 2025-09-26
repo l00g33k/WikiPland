@@ -93,7 +93,7 @@ function getDistanceFromLatLonInKm(p1, p2) {
     ; 
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     var d = R * c; // Distance in km
-    return d;
+    return d + " (" + dLon + "," + dLat + ")";
 }
 
 function deg2rad(deg) {
@@ -261,6 +261,11 @@ $htmlhead = "<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.0//EN\" \"h
             "<meta name=\"generator\" content=\"WikiPland: https://github.com/l00g33k/WikiPland\">\x0D\x0A".
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\x0D\x0A";
 
+my ($offset, $offsetlon, $offsetlat);
+$offset = '';
+$offsetlon = 0;
+$offsetlat = 0;
+
 sub l00http_kml2gmap_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
@@ -290,6 +295,17 @@ sub l00http_kml2gmap_proc {
     }
     if (defined ($form->{'height'}) && ($form->{'height'} =~ /(\d+)/)) {
         $height = $form->{'height'};
+    }
+    if (defined ($form->{'offset'})) {
+        if ($form->{'offset'} =~ /([0-9.+-]+),([0-9.+-]+)/) {
+            $offset = $form->{'offset'};
+            $offsetlon = $1;
+            $offsetlat = $2;
+        } else {
+            $offset = '';
+            $offsetlon = 0;
+            $offsetlat = 0;
+        }
     }
 
     if (defined ($form->{'maptype'}) && ($form->{'maptype'} eq 'satellite')) {
@@ -1085,6 +1101,9 @@ SCRIPTSRC
         $labeltable .= $labelsort{$_};
     }
     $labeltable .= "displaying $nowypts waypoints\n";
+    if ($offset ne '') {
+        $labeltable .= "GPS offset: ($offsetlat,$offsetlon)\n";
+    }
     $labeltable .= "</pre>\n";
 
     print $sock "<span id=\"zoom\">&nbsp;</span><br>";
@@ -1156,6 +1175,9 @@ SCRIPTSRC
         print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
+        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
+        print $sock "</td></tr>\n";
+        print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>\n";
         print $sock "zoom <input type=\"text\" name=\"initzoom\" size=\"5\" value=\"$initzoom\"> (was $zoom)\n";
         print $sock "</td></tr>\n";
@@ -1215,6 +1237,9 @@ SCRIPTSRC
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Height:</td><td><input type=\"text\" name=\"height\" size=\"5\" value=\"$height\">\n";
+    print $sock "</td></tr>\n";
+    print $sock "<tr><td>\n";
+    print $sock "Offset(lat,lon):</td><td><input type=\"text\" name=\"offset\"  id=\"offset\"  size=\"12\" value=\"$offset\">\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\">\n";

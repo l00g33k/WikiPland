@@ -98,24 +98,24 @@ $devlog .= "* Now is: $ctrl->{'now_string'}\n";
 $devlog .= "\n";
 
 
-$buf = `tmux list-panes -a -F "#{session_id}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_current_path}"`;
+$buf = `tmux list-panes -a -F "#{session_id}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_current_path} #{pane_width} #{pane_height}"`;
 
 
 $wikiout .= "=tmux list-panes=\n";
 $wikiout .= "\n";
-$wikiout .= "|| **PANE** || **name** || **cmdln** || **pwd** ||\n";
+$wikiout .= "|| **PANE** || **name** || **cmdln** || **pwd** || **wd x ht** ||\n";
 foreach $out (split("\n", $buf)) {
-    ($pane, $name, $cmd, $path) = split(" ", $out);
+    ($pane, $name, $cmd, $path, $wd, $ht) = split(" ", $out);
     $paneclean = $pane;
     $paneclean =~ s/^\$/S/;
     $paneshow = "<a href=\"#$paneclean\">$pane</a>";
-    $wikiout .= "|| $paneshow || $name || $cmd || $path ||\n";
+    $wikiout .= "|| $paneshow || $name || $cmd || $path || $wd x $ht ||\n";
 }
 
 $wikiout .= "\n%TOC%\n";
 
 foreach $line (split("\n", $buf)) {
-    ($pane, $name, $cmd, $path) = split(" ", $line);
+    ($pane, $name, $cmd, $path, $wd, $ht) = split(" ", $line);
     $pathshort = substr($path, -60, 60);
     $paneclean = $pane;
     $paneclean =~ s/^\$/S/;
@@ -136,7 +136,7 @@ foreach $line (split("\n", $buf)) {
 </form>
 EOB
     $wikiout .= "\n";
-    $cmd = "tmux capture-pane -p -t '$pane' -J -S - -E - | tail -n 50";
+    $cmd = "tmux capture-pane -p -t '$pane' -J -S - -E - | tail -n $ht";
     $buf = `$cmd`;
     foreach $out (split("\n", $buf)) {
         $wikiout .= "    $out\n";
