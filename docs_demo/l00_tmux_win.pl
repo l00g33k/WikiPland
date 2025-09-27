@@ -52,7 +52,11 @@ tail <input type="text" name="panelen" size="3" value="$tmuxpanelen">
 <input type="hidden" name="path" value="$ctrl->{'FORM'}->{'path'}">
 <input type="hidden" name="arg3" value="doit">
 </form>
-* preset:
+EOB
+
+    &tmuxpaneform ($tmuxwincmdln);
+    $wikiout .= <<EOB;
+* preset: (keywords: enter escape pageup pagedown up down left right)
 ** spaces must be qouted or escaped
 EOB
 
@@ -140,6 +144,9 @@ EOB
     $cmd = "tmux capture-pane -p -t '$pane' -J -S - -E - | tail -n $ht";
     $buf = `$cmd`;
     foreach $out (split("\n", $buf)) {
+        $out =~ s/</&lt;/g;
+        $out =~ s/>/&lt;/g;
+        $out =~ s/</&lt;/g;
         $wikiout .= "    $out\n";
     }
 }
