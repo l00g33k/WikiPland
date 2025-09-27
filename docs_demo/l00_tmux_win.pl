@@ -123,6 +123,7 @@ foreach $line (split("\n", $buf)) {
     $wikiout .= "==$pane: $name -- $cmd -- $pathshort==\n";
     $wikiout .= "* PANE : $pane\n";
     $wikiout .= "* NAME : $name\n";
+    $wikiout .= "* size : $wd x $ht\n";
     $wikiout .= "* Cmdl : $cmd\n";
     $wikiout .= "* PATH : $path\n";
     $wikiout .= "* Click the 'Send' button on the next page to actually send the commands.\n";
