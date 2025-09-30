@@ -102,24 +102,42 @@ $devlog .= "* Now is: $ctrl->{'now_string'}\n";
 $devlog .= "\n";
 
 
-$buf = `tmux list-panes -a -F "#{session_id}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_current_path} #{pane_width} #{pane_height}"`;
+$buf = `tmux list-panes -a -F "#{session_id}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_width} #{pane_height} #{pane_pid} #{pane_left} #{pane_top} #{pane_current_path}"`;
 
 
 $wikiout .= "=tmux list-panes=\n";
 $wikiout .= "\n";
-$wikiout .= "|| **PANE** || **name** || **cmdln** || **pwd** || **wd x ht** ||\n";
+$wikiout .= "|| **PANE** || **name** || **cmdln** || **pwd** || **wd x ht** || **lt x tp** || **PID** || **child PID** ||\n";
+$devlog .= "=tmux list-panes=\n";
 foreach $out (split("\n", $buf)) {
-    ($pane, $name, $cmd, $path, $wd, $ht) = split(" ", $out);
+    $devlog .= "out: $out\n";
+    ($pane, $name, $cmd, $wd, $ht, $pid, $lt, $tp, $path) = split(" ", $out);
+    if ($path eq '') {
+        $path = "(N/A)";
+    }
+    $devlog .= "children: $children\n";
+    $children = '';
+    $child = $pid;
+    while ($child = `pgrep -P $child | tr '\n' ' '`) {
+        if ($child !~ /\d+/) {
+            last;
+        }
+        $children .= "$child ";
+    }
     $paneclean = $pane;
     $paneclean =~ s/^\$/S/;
     $paneshow = "<a href=\"#$paneclean\">$pane</a>";
-    $wikiout .= "|| $paneshow || $name || $cmd || $path || $wd x $ht ||\n";
+    $wikiout .= "|| $paneshow || $name || $cmd || $path || $wd x $ht || $lt x $tp || $pid || $children ||\n";
 }
 
 $wikiout .= "\n%TOC%\n";
 
 foreach $line (split("\n", $buf)) {
-    ($pane, $name, $cmd, $path, $wd, $ht) = split(" ", $line);
+    ($pane, $name, $cmd, $wd, $ht, $pid, $path) = split(" ", $line);
+    if ($path eq '') {
+        $path = "(N/A)";
+    }
+    $children = `pgrep -P $pid`;
     $pathshort = substr($path, -60, 60);
     $paneclean = $pane;
     $paneclean =~ s/^\$/S/;
@@ -130,6 +148,24 @@ foreach $line (split("\n", $buf)) {
     $wikiout .= "* size : $wd x $ht\n";
     $wikiout .= "* Cmdl : $cmd\n";
     $wikiout .= "* PATH : $path\n";
+    $wikiout .= "* PID:\n";
+    $ps = `ps h $pid | tr '\n' ' '`;
+    $wikiout .= "    Pane  PID: $pid: $ps\n";
+    $child = $pid;
+    while ($child = `pgrep -P $child | tr '\n' ' '`) {
+        if ($child !~ /\d+/) {
+            last;
+        }
+        foreach $child1 (split(" ", $child)) {
+            $ps = `ps h $child1 | tr '\n' ' '`;
+            $wikiout .= "    Child PID: $child1: $ps\n";
+        }
+    }
+    $wikiout .= "* pstree:\n";
+    $buf = `pstree -pt $pid`;
+    foreach $line2 (split("\n", $buf)) {
+        $wikiout .= "    $line2\n";
+    }
     $wikiout .= "* Click the 'Send' button on the next page to actually send the commands.\n";
     $wikiout .= <<EOB;
 <form action="/do.htm" method="get">
