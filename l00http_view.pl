@@ -939,6 +939,7 @@ sub l00http_view_proc {
             printf $sock ("% 5d: %s\n", $findCount[$findidx], $_);
             $findidx++;
         }
+        print $sock "\n<a href=\"/filemgt.htm?path=l00%3a%2f%2ffind.txt\" target=\"_blank\">filemgt</a> to copy l00://find.txt.<br>\n";
         print $sock "</pre>\n";
     }
 
