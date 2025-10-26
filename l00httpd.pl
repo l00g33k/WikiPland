@@ -1154,7 +1154,6 @@ while(1) {
             }
 
             print "$ctrl{'now_string'} $client_ip FORM: $urlparams\n", if ($debug >= 1);
-            $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n", if ($debug >= 5);
 
             # Wii will not render HTML if URL ends in .txt; it ignores after '?'
             if (($urlparams eq '/') &&              # no path
@@ -1211,6 +1210,12 @@ while(1) {
                 ($cmdlnparam ne '')) {
                 $modcalled = $cmdlnmod;
                 $urlparams = "path=$cmdlnparam";
+            }
+
+            if ($debug >= 5) {
+                $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $httpmethod $urlparams\n";
+            } elsif ($debug >= 1) {
+                $ctrl{'l00file'}->{'l00://server.log'} .= "$ctrl{'now_string'} $client_ip $modcalled\n";
             }
 
             print "$ctrl{'now_string'}: $client_ip Auth>$idpw< /$modcalled\n", if ($debug >= 4);
