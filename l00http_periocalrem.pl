@@ -7,14 +7,23 @@ use warnings;
 my %config = (proc => "l00http_periocalrem_proc",
               desc => "l00http_periocalrem_desc",
               perio => "l00http_periocalrem_perio");
-my($lastchkdate, %calremcolor, %calremfont);
+my($lastchkdate, %calremcolor, %calremfont, $noram_calram_txt);
 $lastchkdate = '';
 
 sub l00http_periocalrem_desc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
+
+    # define transient file path
+    if (defined($ctrl->{'noramfile'})) {
+        $noram_calram_txt = "$ctrl->{'workdir'}noram_calrem.txt.local";
+    } else {
+        $noram_calram_txt = "l00://calrem.txt";
+    }
+
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
     "periocalrem: Calendar reminder";
+
 }
 
 
@@ -49,7 +58,7 @@ sub l00http_periocalrem_perio {
 
 
     l00httpd::dbp($config{'desc'}, "CALREM $lastchkdate\n"), if ($ctrl->{'debug'} >= 2);
-    if (!&l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
+    if (!&l00httpd::l00freadOpen($ctrl, $noram_calram_txt)) {
         # rescan if extracted result was deleted
         $lastchkdate = '';
         l00httpd::dbp($config{'desc'}, "No calrem.txt\n"), if ($ctrl->{'debug'} >= 5);
@@ -121,12 +130,12 @@ sub l00http_periocalrem_perio {
 
             if ($eventnear ne '') {
                 $eventnear = "* CLEAR_THIS_STOPS_ALL\n".
-                             "* To refresh, [[/edit.htm?path=l00://calrem.txt&save=on&clear=on|delete calrem.txt]]\n".
+                             "* To refresh, [[/edit.htm?path=$noram_calram_txt&save=on&clear=on|delete calrem.txt]]\n".
                              "* [[/cal.htm?path=$ctrl->{'workdir'}l00_cal.txt&today=on|View calendar]]\n".
                              "* List of current calendar events:\n\n".
                              "$eventnear\n".
                              "* End of list\n";
-                &l00httpd::l00fwriteOpen($ctrl, 'l00://calrem.txt');
+                &l00httpd::l00fwriteOpen($ctrl, $noram_calram_txt);
 		     	&l00httpd::l00fwriteBuf($ctrl, $eventnear);
 			    &l00httpd::l00fwriteClose($ctrl);
 			}
@@ -134,7 +143,7 @@ sub l00http_periocalrem_perio {
     }
     undef $ctrl->{'BANNER:periocalrem'};
     if ((!defined($ctrl->{'calremBannerDisabled'})) && 
-        &l00httpd::l00freadOpen($ctrl, 'l00://calrem.txt')) {
+        &l00httpd::l00freadOpen($ctrl, $noram_calram_txt)) {
         $eventnear = '';
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
             l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_\n"), if ($ctrl->{'debug'} >= 5);
@@ -164,7 +173,7 @@ sub l00http_periocalrem_perio {
 				}
             }
             if ($eventnear ne '') {
-                $ctrl->{'BANNER:periocalrem'} = "<center><a href=\"/recedit.pl?record1=.&path=l00://calrem.txt\">cal</a>: $eventnear</center>";
+                $ctrl->{'BANNER:periocalrem'} = "<center><a href=\"/recedit.pl?record1=.&path=$noram_calram_txt\">cal</a>: $eventnear</center>";
             }
         }
     }

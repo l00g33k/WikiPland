@@ -12,7 +12,8 @@ use l00mktime;
 
 # this is a simple template, a good starting point to make your own modules
 
-my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot, $atshutdown, $ondemand);
+my ($percnt, $interval, $starttime, $filetime, $toggle, $atboot, $atshutdown, $ondemand, 
+$noram_cronlog_txt, $noram_crontab_htm);
 my %config = (proc => "l00http_cron_proc",
               desc => "l00http_cron_desc",
               perio => "l00http_cron_perio",
@@ -171,7 +172,7 @@ sub l00http_cron_when_next {
     my ($yr, $mo, $da, $hr, $mi, $se, $nstring, $startin, $tmp);
     my ($mnly, $hrly, $dyly, $mhly, $wkly, $cmd, $starttime0, $skip, $skipfilter);
 
-    &l00httpd::l00fwriteOpen($ctrl, 'l00://crontab.htm');
+    &l00httpd::l00fwriteOpen($ctrl, $noram_crontab_htm);
     &l00httpd::l00fwriteBuf($ctrl, "# Visit <a href=\"/cron.htm\">cron</a> module.\n");
     $_ = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
@@ -318,10 +319,21 @@ sub l00http_cron_desc {
     # Descriptions to be displayed in the list of modules table
     # at http://localhost:20337/
 
+    # define transient file path
+    if (defined($ctrl->{'noramfile'})) {
+        $noram_cronlog_txt = "$ctrl->{'workdir'}noram_cronlog.txt.local";
+        $noram_crontab_htm = "$ctrl->{'workdir'}noram_crontab.htm.local";
+    } else {
+        $noram_cronlog_txt = "l00://cronlog.txt";
+        $noram_crontab_htm = "l00://crontab.htm";
+    }
+
     $starttime = &l00http_cron_when_next ($ctrl);
 
-    $ctrl->{'l00file'}->{"l00://cronlog.txt"} = "* cron.htm log file:\n\n";
-
+   #$ctrl->{'l00file'}->{"l00://cronlog.txt"} = "* cron.htm log file:\n\n";
+    &l00httpd::l00fwriteOpen($ctrl, $noram_cronlog_txt);
+    &l00httpd::l00fwriteBuf($ctrl, "* cron.htm log file:\n\n");
+    &l00httpd::l00fwriteClose($ctrl);
 
     " B: cron: A cron task dispatcher. Add task in <a href=\"/view.htm?path=$ctrl->{'workdir'}l00_cron.txt\">l00_cron.txt</a>";
 }
@@ -388,8 +400,8 @@ sub l00http_cron_proc {
     print $sock "</table>\n";
     print $sock "</form></p>\n";
                                                 
-    print $sock "View scheduler: <a href=\"/view.htm?path=l00://crontab.htm\">l00://crontab.htm</a><p>\n";
-    print $sock "View log: <a href=\"/view.htm?path=l00://cronlog.txt\">l00://cronlog.txt</a><p>\n";
+    print $sock "View scheduler: <a href=\"/view.htm?path=$noram_crontab_htm\">$noram_crontab_htm</a><p>\n";
+    print $sock "View log: <a href=\"/view.htm?path=$noram_cronlog_txt\">$noram_cronlog_txt</a><p>\n";
     $timenow = time;
     ($yr, $mo, $da, $hr, $mi, $se, $nstring, $wday) = 
         &l00http_cron_j2now_string ($timenow);
@@ -403,7 +415,7 @@ sub l00http_cron_perio {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my ($retval, $eventtime, $cmd, $lnno, $cronspec, $l00name, $hdr, $bdy);
     my ($tmp, $urlpath, %FORM, $modcalled, $urlparams, @cmd_param_pairs);
-    my ($cmd_param_pair, $name, $param, $subname, $socknul, $crontab);
+    my ($cmd_param_pair, $name, $param, $subname, $socknul, $crontab, $cronlog_txt_new);
     my ($savehome, $savehttphead, $savehtmlhead, $savehtmlttl, $savehtmlhead2, $saveclient_ip);
 
 
@@ -418,7 +430,7 @@ sub l00http_cron_perio {
 
             # do task
             $eventtime = 0x7fffffff;
-            if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
+            if (&l00httpd::l00freadOpen($ctrl, $noram_crontab_htm)) {
                 $crontab = &l00httpd::l00freadAll($ctrl);
                 foreach $_ (split("\n", $crontab)) {
                     s/\n//;
@@ -441,7 +453,8 @@ sub l00http_cron_perio {
                         $cmd = $1;
                         if (time >= $eventtime) {
                             # 3 kinds of commands are supported
-                            $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "$ctrl->{'now_string'} ";
+                           #$ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "$ctrl->{'now_string'} ";
+                            $cronlog_txt_new = "$ctrl->{'now_string'} ";
                             if (($tmp, $urlpath) = $cmd =~ m!^http://(localhost|127\.0\.0\.1):$ctrl->{'ctrl_port_first'}(.+)!) {
                                 # 1) wget self. Since we aren't multi-thread, we have to simulate by 
                                 # creating the %FORM and call the module directly
@@ -449,7 +462,8 @@ sub l00http_cron_perio {
                                 # http://localhost:20337/shell.htm?buffer=msg+%25USERNAME%25+%2FTIME%3A1+WikiPland+says+ello&exec=Exec
                                 undef %FORM;
                                 if ($urlpath =~ /^\/(\w+)\.(pl|htm)[^?]*\?*(.*)$/) {
-                                    $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget self: $_";
+                                   #$ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget self: $_";
+                                    $cronlog_txt_new .= "wget self: $_";
 
                                     # of form: http://localhost:20337/ls.htm?path=/sdcard
                                     $modcalled = $1;
@@ -515,7 +529,8 @@ sub l00http_cron_perio {
                                 }
 
                             } elsif ($cmd =~ m!^http://!) {
-                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget http: $_";
+                               #$ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "wget http: $_";
+                                $cronlog_txt_new .= "wget http: $_";
 
                                 # 2) a normal HTTP. use l00http_wget.pl
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; wget >$cmd<\n"), if ($ctrl->{'debug'} >= 2);
@@ -530,7 +545,8 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$bdy");
                                 &l00httpd::l00fwriteClose($ctrl);
                             } else {
-                                $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "shell command: $_";
+                               #$ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "shell command: $_";
+                                $cronlog_txt_new .= "shell command: $_";
 
                                 # 3) assume to be a shell command. user be warned
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; shell >$cmd<\n"), if ($ctrl->{'debug'} >= 2);
@@ -541,7 +557,11 @@ sub l00http_cron_perio {
                                 &l00httpd::l00fwriteBuf($ctrl, "$_");
                                 &l00httpd::l00fwriteClose($ctrl);
                             }
-                            $ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "\n";
+                           #$ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "\n";
+                            $cronlog_txt_new .= "\n";
+                            &l00httpd::l00fwriteOpen($ctrl, $noram_cronlog_txt);
+                            &l00httpd::l00fwriteBuf($ctrl, $cronlog_txt_new);
+                            &l00httpd::l00fwriteClose($ctrl);
                         }
                     }
                 }
@@ -570,7 +590,7 @@ sub l00http_cron_shutdown {
     $atshutdown = 1;
     $starttime = &l00http_cron_when_next ($ctrl);
 
-    if (&l00httpd::l00freadOpen($ctrl, 'l00://crontab.htm')) {
+    if (&l00httpd::l00freadOpen($ctrl, $noram_crontab_htm)) {
         if (defined($sock)) {
             print $sock "'cron' module \@shutdown tasks:<p>\n<pre>\n";
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
