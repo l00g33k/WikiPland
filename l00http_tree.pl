@@ -556,7 +556,7 @@ sub l00http_tree_proc {
     }
 
 
-    print $sock "<form action=\"/tree.txt\" method=\"get\"><hr>\n";
+    print $sock "<form action=\"/tree.htm\" method=\"get\"><hr>\n";
     print $sock "<input type=\"submit\" name=\"submit\" value=\"Scan\">\n";
     print $sock "<input type=\"text\" size=\"16\" name=\"path\" value=\"$form->{'path'}\">\n";
     print $sock "<br>Depth: <input type=\"text\" size=\"6\" name=\"depth\" value=\"20\">\n";
