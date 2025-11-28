@@ -34,7 +34,7 @@ sub l00http_diff_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($htmlout, $OA, $NA);
+    my ($htmlout, $OA, $NA, $cmd);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -56,6 +56,12 @@ sub l00http_diff_proc {
     print $sock "<a href=\"#diffchanges\">Jump to changes</a>\n";
     print $sock "<p>\n";
 
+    print $sock "Send to clipboard: ";
+    $cmd = &l00httpd::urlencode ("vimdiff $oldfile $newfile ");
+    print $sock "<a href=\"/clip.htm?update=update&clip=$cmd\">vimdiff</a> - \n";
+    $cmd = &l00httpd::urlencode ("vim -o $oldfile $newfile ");
+    print $sock "<a href=\"/clip.htm?update=update&clip=$cmd\">vim -o</a>\n";
+    print $sock "<p>\n";
 
     if ($ctrl->{'debug'} >= 2) {
         $debug = $ctrl->{'debug'};
