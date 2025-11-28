@@ -1,3 +1,4 @@
+* [[/do.htm?path=./l00_tmux_win.pl|Screen capture]] for tmux user.
 %TOC%
 =If You Are Not Using Android=
 * This page is part of the standard WikiPland distribution. If you are viewing this page on the Red Hat Cloud, rhcloud.com, please keep in mind the intended audience of this page are those who are installing WikiPland on Android devices.
