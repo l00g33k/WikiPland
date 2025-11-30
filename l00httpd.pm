@@ -884,6 +884,8 @@ print "TOAST : $ctrl->{'toastapp'} $ctrl->{'toastopt'}\n";
         $ctrl->{'droid'}->makeToast($buf);
     } elsif ($ctrl->{'os'} eq 'win') {
         `msg %USERNAME% /TIME:1 $buf`;
+    } elsif ($ctrl->{'os'} eq 'tmx') {
+        `termux-toast "$buf"`;
     }
 
 }
@@ -959,6 +961,60 @@ sub android_get_gps {
                 $EW, int ($lons), ($lons - int ($lons)) * 60,
                 $mday, $mname [$mon], $year % 100, $hour, $min, $sec, $coor->{'altitude'});
         }
+    } elsif ($ctrl->{'os'} eq 'tmx') {
+        #   $ termux-location
+        #   {
+        #     "latitude": 33.82589955,
+        #     "longitude": -118.03784659,
+        #     "altitude": -26.173736572265625,
+        #     "accuracy": 16.079999923706055,
+        #     "bearing": 0.0,
+        #     "speed": 0.0,
+        #     "elapsedMs": 9,
+        #     "provider": "gps"
+        #   }
+        $gps = `termux-location`;
+        &dbp('l00httpd.pm', "android_get_gps: \n\$gps is $gps\n"), if ($ctrl->{'debug'} >= 5);
+
+        $lastgps = time;
+        $lastres .= " = $ctrl->{'now_string'}\n";
+
+        $tmp = $lastgps - ($coor->{'time'} / 1000);
+        $lastres .= "$coor->{'provider'}@"."$coor->{'time'} diff=$tmp s\n";
+
+        if ($gps =~ /"longitude": (.+?),/m) {
+            $lon = $1;
+        } else {
+            $lon = 0;
+        }
+        if ($gps =~ /"latitude": (.+?),/m) {
+            $lat = $1;
+        } else {
+            $lat = 0;
+        }
+        &dbp('l00httpd.pm', "android_get_gps: lon = $lon - lat = $lat\n"), if ($ctrl->{'debug'} >= 5);
+
+        $lastcoor = sprintf ("%15.10f,%14.10f", $lat, $lon);
+        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($lastgps);
+        if ($lon > 0) {
+            $EW = "E";
+            $lons = $lon;
+        } else {
+            $EW = "W";
+            $lons = -$lon;
+        }
+        if ($lat > 0) {
+            $NS = "N";
+            $lats = $lat;
+        } else {
+            $NS = "S";
+            $lats = -$lat;
+        }
+        #T  N2226.76139 E11354.35311 30-Dec-89 23:00:00 -9999
+        $out = sprintf ("T  %s%02d%08.5f %s%03d%08.5f %02d-%s-%02d %02d:%02d:%02d % 4d ; $src $ctrl->{'now_string'}",
+            $NS, int ($lats), ($lats - int ($lats)) * 60,
+            $EW, int ($lons), ($lons - int ($lons)) * 60,
+            $mday, $mname [$mon], $year % 100, $hour, $min, $sec, $coor->{'altitude'});
     }
 
     ($out, $lat, $lon, $lastcoor, $lastgps, $lastres);

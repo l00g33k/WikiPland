@@ -175,9 +175,17 @@ sub l00http_gps_proc {
             open (OUT, ">>$ctrl->{'gpsdir'}gps.way");
 			print OUT "$lat,$lon $form->{'locremark'} $buf\n";
 			close(OUT);
+        } elsif ($ctrl->{'os'} eq 'tmx') {
+            ($out, $lat, $lon, $lastcoor, $lastgps, $lastres)
+                = &l00httpd::android_get_gps ($ctrl, $known0loc1, $lastgps);
+            l00httpd::dbp($config{'desc'}, "got lat,lon $lat,$lon, $lastgps\n"), if ($ctrl->{'debug'} >= 5);
         }
     } elsif (defined ($form->{"getgps"})) {
         if ($ctrl->{'os'} eq 'and') {
+            ($out, $lat, $lon, $lastcoor, $lastgps, $lastres)
+                = &l00httpd::android_get_gps ($ctrl, $known0loc1, $lastgps);
+            l00httpd::dbp($config{'desc'}, "got lat,lon $lat,$lon, $lastgps\n"), if ($ctrl->{'debug'} >= 5);
+        } elsif ($ctrl->{'os'} eq 'tmx') {
             ($out, $lat, $lon, $lastcoor, $lastgps, $lastres)
                 = &l00httpd::android_get_gps ($ctrl, $known0loc1, $lastgps);
             l00httpd::dbp($config{'desc'}, "got lat,lon $lat,$lon, $lastgps\n"), if ($ctrl->{'debug'} >= 5);
