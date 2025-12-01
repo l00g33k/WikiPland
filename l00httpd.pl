@@ -195,13 +195,11 @@ sub getsvrip {
         }
         print "raw ip = $ip\n", if ($debug >= 5);
         if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
-#           if ($ip =~ /(192\.168\.\d+\.\d+)/)
             if ($ip =~ /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/ms) {
                 $ip = $1;
             }
         } else {
             if (defined ($ip)) {
-#               if (@_ = $ip =~ /inet (\d+\.\d+\.\d+\.\d+)/g)
                 if (@_ = $ip =~ /inet (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g) {
                     $ip = '';
                     foreach $_ (@_) {
@@ -213,10 +211,8 @@ sub getsvrip {
                             }
                         }
                     }
-#               } elsif ($ip =~ /(\d+\.\d+\.\d+\.\d+) +Bcast/) {
                 } elsif ($ip =~ /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) +Bcast/) {
                     $ip = $1;
-#               } elsif ($ip =~ /addr:(\d+\.\d+\.\d+\.\d+)/) {
                 } elsif ($ip =~ /addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/) {
                     $ip = $1;
                 }
@@ -295,6 +291,15 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     if ($ENV{'HOME'} eq '/data/data/com.termux/files/home') {
         $ctrl{'os'} = 'tmx';
         $ctrl{'machine'} = "TERMUX: $ctrl{'machine'}";
+        if (-f "/data/data/com.termux/files/home/_whoami") {
+            if (open(IN, "</data/data/com.termux/files/home/_whoami")) {
+                if ($_ = <IN>) {
+                    s/[\n\r]//g;
+                    $ctrl{'machine'} = "TERMUX: $_";
+                }
+                close(IN);
+            }
+        }
     } else {
         $ctrl{'os'} = 'and';
         $ctrl{'bbox'} = 'busybox ';
