@@ -1,5 +1,7 @@
 %TOC%
 
+=UI=
+* Check item checkboxes and 'Process' to update timestamp to current time.
 =:XDA: :PDA: Keywords=
 * :XDA: suppress listings.
 * :PDA: suppress listings that are in the future.
