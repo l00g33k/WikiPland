@@ -15,7 +15,7 @@ sub l00http_periocalrem_desc {
 
     # define transient file path
     if (defined($ctrl->{'noramfile'})) {
-        $noram_calram_txt = "$ctrl->{'workdir'}noram_calrem.txt.local";
+        $noram_calram_txt = "$ctrl->{'workdir'}.lo_calrem.txt.local";
     } else {
         $noram_calram_txt = "l00://calrem.txt";
     }

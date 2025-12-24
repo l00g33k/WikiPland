@@ -321,8 +321,8 @@ sub l00http_cron_desc {
 
     # define transient file path
     if (defined($ctrl->{'noramfile'})) {
-        $noram_cronlog_txt = "$ctrl->{'workdir'}noram_cronlog.txt.local";
-        $noram_crontab_htm = "$ctrl->{'workdir'}noram_crontab.htm.local";
+        $noram_cronlog_txt = "$ctrl->{'workdir'}.lo_cronlog.txt.local";
+        $noram_crontab_htm = "$ctrl->{'workdir'}.lo_crontab.htm.local";
     } else {
         $noram_cronlog_txt = "l00://cronlog.txt";
         $noram_crontab_htm = "l00://crontab.htm";
