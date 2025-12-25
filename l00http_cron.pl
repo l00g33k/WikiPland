@@ -456,6 +456,12 @@ sub l00http_cron_perio {
                            #$ctrl->{'l00file'}->{"l00://cronlog.txt"} .= "$ctrl->{'now_string'} ";
                             $cronlog_txt_new = "$ctrl->{'now_string'} ";
                             if (($tmp, $urlpath) = $cmd =~ m!^http://(localhost|127\.0\.0\.1):$ctrl->{'ctrl_port_first'}(.+)!) {
+                                # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+                                if ($urlpath =~ /%L00HTTP<(.+?)>%/) {
+                                    if (defined($ctrl->{$1})) {
+                                        $urlpath =~ s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                                    }
+                                }
                                 # 1) wget self. Since we aren't multi-thread, we have to simulate by 
                                 # creating the %FORM and call the module directly
                                 l00httpd::dbp($config{'desc'}, "Time is $eventtime; Simulate wget self >$urlpath<\n"), if ($ctrl->{'debug'} >= 2);
