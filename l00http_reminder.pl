@@ -99,6 +99,12 @@ sub l00http_reminder_find {
         $bufinc = '';
         while (<IN>) {
             s/[\r\n]//g;
+            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+            if (/%L00HTTP<(.+?)>%/) {
+                if (defined($ctrl->{$1})) {
+                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                }
+            }
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 $pathbase = '';
@@ -520,6 +526,12 @@ sub l00http_reminder_proc {
         $bufinc = '';
         foreach $_ (split("\n", $bufall)) {
             s/[\r\n]//g;
+            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+            if (/%L00HTTP<(.+?)>%/) {
+                if (defined($ctrl->{$1})) {
+                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                }
+            }
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 s/>/&gt;/g;
