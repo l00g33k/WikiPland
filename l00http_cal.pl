@@ -162,6 +162,12 @@ sub l00http_cal_proc {
             }
 
             # include file
+            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+            if (/%L00HTTP<(.+?)>%/) {
+                if (defined($ctrl->{$1})) {
+                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+                }
+            }
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 $pathbase = '';
