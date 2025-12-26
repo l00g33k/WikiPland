@@ -67,7 +67,7 @@ sub l00http_recedit_output_row {
     if (defined ($form->{'reminder'})) {
         # print reminder specific checkboxes
         $html .= "        <td><a name=\"__end${id}__\"></a>";
-        if ($path =~ /^l00:\/\//) {
+        if (($path =~ /^l00:\/\//) || ($path =~ /[\/\\]\.lo_/)) {
             # RAM file, 2, 1, 7 hours (or 4)
             $html .= "<font style=\"color:black;background-color:silver\">";
             $html .=                "<input type=\"checkbox\" name=\"add2h$id\"  $chkallRB>+4h</font>\n";
@@ -653,14 +653,14 @@ sub l00http_recedit_proc (\%) {
     }
     print $sock "        <input type=\"submit\" name=\"chkall\" value=\"a&#818;Del\" accesskey=\"a\">\n";
     if (defined ($form->{'reminder'})) {
-        if ($path =~ /^l00:\/\//) {
+        if (($path =~ /^l00:\/\//) || ($path =~ /[\/\\]\.lo_/)) {
             print $sock "        <input type=\"submit\" name=\"chkall16h\" value=\"1h&#818;\" accesskey=\"h\">\n";
         } else {
             print $sock "        <input type=\"submit\" name=\"chkall1d\" value=\"1d&#818;\" accesskey=\"d\">\n";
         }
     }
     if (defined ($form->{'reminder'})) {
-        if ($path =~ /^l00:\/\//) {
+        if (($path =~ /^l00:\/\//) || ($path =~ /[\/\\]\.lo_/)) {
             print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4 h&#818;\" accesskey=\"h\">\n";
             print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+5m\"><p>\n";
             print $sock "        <input type=\"submit\" name=\"nowplus1\" value=\"+1h\">\n";
