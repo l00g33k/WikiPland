@@ -21,7 +21,7 @@ sub l00http_screen_proc (\%) {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my ($path, $type, $vol, $ii);
+    my ($path, $type, $vol, $ii, $newbrightness, $tmp);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>screen</title>" . $ctrl->{'htmlhead2'};
@@ -53,17 +53,44 @@ sub l00http_screen_proc (\%) {
         $vol = $vol->{'result'};
         # reset to selected brightness (Slide lost screen brightness after camera)
         $ctrl->{'screenbrightness'} = $vol;
+    } elsif ($ctrl->{'os'} eq 'tmx') {
+        l00httpd::dbp($config{'desc'}, "FORM:\n" . &l00httpd::dumphashbuf ("form", $form) . "\n");
+        if (defined ($form->{'setmax'})) {
+            $newbrightness = 255;
+            `termux-brightness $newbrightness`;
+        } elsif (defined ($form->{'setmin'})) {
+            $newbrightness = 0;
+            `termux-brightness $newbrightness`;
+        } elsif (defined ($form->{'bright'})) {
+            $newbrightness = $form->{'bright'};
+            `termux-brightness $newbrightness`;
+        }
+        $ctrl->{'screenbrightness'} = $newbrightness;
+        $vol = $newbrightness;
     } else {
         $vol = 'N/A';
     }
 
     print $sock "<a href=\"/screen.htm?inc10=\">++</a> - \n";
     print $sock "<a href=\"/screen.htm?dec10=\">--</a> - \n";
-    for ($ii = 0; $ii < 255; $ii += 5) {
-        if ($ii == $vol) {
-            print $sock "[$ii] - \n";
-        } else {
-            print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
+    if ($ctrl->{'os'} eq 'tmx') {
+        $tmp = $vol;
+#       for ($ii = 0; $ii < 255; $ii += 1) 
+        for ($ii = 0; $ii < 255; $ii = ($ii < 12) ? ($ii + 1) : (int($ii * 1.2))) {
+            if ($ii >= $tmp) {
+                $tmp = 255;
+                print $sock "[$ii] - \n";
+            } else {
+                print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
+            }
+        }
+    } else {
+        for ($ii = 0; $ii < 255; $ii += 5) {
+            if ($ii == $vol) {
+                print $sock "[$ii] - \n";
+            } else {
+                print $sock "<a href=\"/screen.htm?bright=$ii\">$ii</a> - \n";
+            }
         }
     }
     print $sock "<p>\n";
