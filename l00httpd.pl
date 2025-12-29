@@ -1795,6 +1795,16 @@ while(1) {
                         print $sock "<a href=\"/view.htm?path=/sys/class/power_supply/battery/uevent\">Batt$battpct</a> \n";
                     }
                 }
+                if ($ctrl{'os'} eq 'tmx') {
+                    print $sock "<a href=\"#wifi\">wifi</a> \n";
+                    if ($ishost) {
+                        if ($batttime + 300 < time) {
+                            $batttime = time;
+                            $battpct = `termux-battery-status | grep percentage | sed 's/.*  *\\([0-9][0-9]*\\).*/\\1/'`;
+                        }
+                        print $sock "Batt=$battpct\% \n";
+                    }
+                }
                 if (($ctrl{'os'} eq 'win') || ($ctrl{'os'} eq 'cyg')) {
                     if ($ishost) {
                         if ($batttime + 300 < time) {
