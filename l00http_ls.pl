@@ -759,6 +759,8 @@ if ($dbgskipto) {
             if (defined ($form->{'exteditor'})) {
                 if ($ctrl->{'os'} eq 'and') {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$path2", "text/plain");
+                } elsif ($ctrl->{'os'} eq 'tmx') {
+                    `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; am start -a "android.intent.action.VIEW" -d "file://$path2" -t "text/plain"`;
                 } elsif (($ctrl->{'os'} eq 'win') || ($ctrl->{'os'} eq 'cyg')) {
                     my ($pid);
                     if ($pid = fork) {

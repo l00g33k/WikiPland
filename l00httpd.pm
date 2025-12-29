@@ -789,7 +789,8 @@ sub l00getCB {
             close($fhdl);
         }
     } elsif ($ctrl->{'os'} eq 'tmx') {
-        $buf = `termux-clipboard-get`;
+        # 
+        $buf = `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; termux-clipboard-get`;
     } else {
         # Linux, using xclip
         $buf = `xclip -sel clip -o`;
@@ -838,7 +839,7 @@ sub l00setCB {
     } elsif ($ctrl->{'os'} eq 'tmx') {
         $buf =~ s/\\/\\\\\\\\/gm;
         $buf =~ s/"/\\"/gm;
-        `termux-clipboard-set "$buf"`;
+        `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; termux-clipboard-set "$buf"`;
     } else {
         # Linux, using xclip
         my ($pid);

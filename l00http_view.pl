@@ -404,6 +404,10 @@ sub l00http_view_proc {
                 defined ($form->{'exteditor'}) &&
                 (!($form->{'path'} =~ /^l00:\/\//))) {
                 $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "file://$form->{'path'}", "text/plain");
+            } elsif (($ctrl->{'os'} eq 'tmx') && 
+                defined ($form->{'exteditor'}) &&
+                (!($form->{'path'} =~ /^l00:\/\//))) {
+                `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; am start -a "android.intent.action.VIEW" -d "file://$form->{'path'}" -t "text/plain"`;
             }
 
             if ($evalbox eq 'checked') {

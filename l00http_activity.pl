@@ -94,6 +94,19 @@ sub l00http_activity_proc {
                     $ctrl->{'droid'}->startActivity("android.intent.action.VIEW", "$path");
                 }
             }
+        } elsif ($ctrl->{'os'} eq 'tmx') {
+            if ($path ne '') {
+                if (-f $path) {
+                    if ($mime eq '') {
+                        `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; am start -a "android.intent.action.VIEW" -d "file://$path"`;
+                    } else {
+                        `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; am start -a "android.intent.action.VIEW" -d "file://$path" -t "$mime"`;
+                    }
+                } else {
+                    `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; am start -a "android.intent.action.VIEW" -d "$path"`;
+                }
+            }
+            }
         } elsif ($ctrl->{'os'} eq 'win') {
             if ($path ne '') {
                 $path =~ s/\//\\/g;
