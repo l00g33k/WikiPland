@@ -661,6 +661,9 @@ sub l00http_reminder_perio {
                 if ($ctrl->{'os'} eq 'and') {
                     $ctrl->{'droid'}->vibrate($vmsec);
                 }
+                if ($ctrl->{'os'} eq 'tmx') {
+                    `termux-vibrate -d $vmsec`;
+                }
             } else {
                 $vibracnt++;
             }
