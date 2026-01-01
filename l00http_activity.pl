@@ -106,7 +106,6 @@ sub l00http_activity_proc {
                     `am start -n com.termux/.app.TermuxActivity 1> /dev/null 2> /dev/null ; am start -a "android.intent.action.VIEW" -d "$path"`;
                 }
             }
-            }
         } elsif ($ctrl->{'os'} eq 'win') {
             if ($path ne '') {
                 $path =~ s/\//\\/g;

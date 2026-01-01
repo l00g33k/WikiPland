@@ -790,7 +790,7 @@ SCRIPTSRC
                 if ($1 eq 'S') {
                     $lat = -$lat;
                 }
-                $name = sprintf ("L%04d", $lnno);
+                $name = sprintf ("%04dL", $lnno);
 
                 $gpstrackwastrack = 1;      # last coordinate was GPS track
                 if ($gpstrackhaspts == 0) {
@@ -839,7 +839,25 @@ SCRIPTSRC
                     $gpstracktimelast = $gpstracktimenow;
                 }
                 $gpstracktimenow =~ s/ /_/g;
-                $name .= "_$gpstracktimenow";
+                if ($gpstracktimenow =~ /20(\d\d)(\d\d)(\d\d)_(\d\d)(\d*)/) {
+                    if (($1 % 20) < 16) {
+                        $name = sprintf("%x", $1 % 20);
+                    } else {
+                        $name = sprintf("%c", 'g' + ($1 % 20) - 16);
+                    }
+                    $name .= sprintf("%x%02d", $2, $3);
+                    if ($4 < 12) {
+                        $name .= sprintf("%xA", $4);
+                    } else {
+                        $name .= sprintf("%xP", $4 - 12);
+                    }
+                    if (($5 >= '0') && ($5 <= '6')) {
+                        $name .= sprintf("%c", 65 + 32 + $5);
+                    }
+                    $name .= "$lnno";
+                } else {
+                    $name .= "_$gpstracktimenow";
+                }
             }
 
             # select marker by regex
@@ -1170,9 +1188,6 @@ SCRIPTSRC
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\" value=\"$gpslat\">\n";
-        print $sock "</td></tr>\n";
-        print $sock "<tr><td>\n";
-        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
