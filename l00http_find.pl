@@ -328,6 +328,9 @@ sub l00http_find_search {
             "Click path to visit directory, click filename to view file\n";
     }
     print $sock "<br>Total $totalbytes bytes in $totalfiles files -- \n";
+    if ($totalfiles > $lsmaxitems) {
+        print $sock "listing only $lsmaxitems of $totalfiles --- \n";
+    }
     print $sock "<a href=\"/view.htm?path=l00://find_in_files.html\" target=\"_blank\">l00://find_in_files.html</a> - \n";
     print $sock "<a href=\"/view.htm?path=l00://find_in_files.txt\" target=\"_blank\">l00://find_in_files.txt</a><p>\n";
 
@@ -343,7 +346,7 @@ sub l00http_find_proc {
     my ($thispath, $pathcnt, $filecnt, $filelist, $dirlist, $dirlist1000, $dirlisttxt, $listcnt);
 
 
-    if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
+    if (defined($form->{'lsmaxitems'}) && ($form->{'lsmaxitems'} =~ /(\d+)/)) {
         $lsmaxitems = $1;
     }
 
@@ -534,6 +537,11 @@ sub l00http_find_proc {
     print $sock "        <tr>\n";
     print $sock "            <td>Max. lines:</td>\n";
     print $sock "            <td><input type=\"text\" size=\"16\" name=\"maxlines\" value=\"$maxlines\"></td>\n";
+    print $sock "        </tr>\n";
+
+    print $sock "        <tr>\n";
+    print $sock "            <td>Max. listing:</td>\n";
+    print $sock "            <td><input type=\"text\" size=\"16\" name=\"lsmaxitems\" value=\"$lsmaxitems\"></td>\n";
     print $sock "        </tr>\n";
 
     print $sock "        <tr>\n";
