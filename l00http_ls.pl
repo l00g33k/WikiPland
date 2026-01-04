@@ -307,7 +307,7 @@ sub l00http_ls_proc {
     my ($ramfiletxt, $ramfilebare, $ramfilehtml, $ramdirtxt, $ramdirhtml, $barebare, $pre, $dopl, $post);
 
 
-    if (defined($ctrl->{'lsmaxitems'}) && ($ctrl->{'lsmaxitems'} =~ /(\d+)/)) {
+    if (defined($form->{'lsmaxitems'}) && ($form->{'lsmaxitems'} =~ /(\d+)/)) {
         $lsmaxitems = $1;
     }
 
@@ -1851,6 +1851,10 @@ if ($dbgskipto) {
                 print $sock "  <td>Path:</td>\n";
                 print $sock "  <td><input type=\"text\" size=\"10\" name=\"path\" value=\"$path2\"></td>\n";
                 print $sock "</tr>\n";
+                print $sock "    <tr>\n";
+                print $sock "        <td>Max length:</td>\n";
+                print $sock "        <td><input type=\"text\" size=\"10\" name=\"lsmaxitems\" value=\"$lsmaxitems\"></td>\n";
+                print $sock "    </tr>\n";
                 if ($ctrl->{'noclinav'}) {
                     $buf = "checked";
                 } else {
