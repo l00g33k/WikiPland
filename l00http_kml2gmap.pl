@@ -846,13 +846,14 @@ SCRIPTSRC
                         $name = sprintf("%c", 'g' + ($1 % 20) - 16);
                     }
                     $name .= sprintf("%x%02d", $2, $3);
-                    if ($4 < 12) {
-                        $name .= sprintf("%xA", $4);
-                    } else {
-                        $name .= sprintf("%xP", $4 - 12);
-                    }
+                    $tmp = '';
                     if (($5 >= '0') && ($5 <= '6')) {
-                        $name .= sprintf("%c", 65 + 32 + $5);
+                        $tmp = $5;
+                    }
+                    if ($4 < 12) {
+                        $name .= sprintf("%x${tmp}A", $4);
+                    } else {
+                        $name .= sprintf("%x${tmp}P", $4 - 12);
                     }
                     $name .= "$lnno";
                 } else {
