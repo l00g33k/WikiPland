@@ -446,7 +446,7 @@ sub l00http_view_proc {
                 $found = "<font style=\"color:black;background-color:lime\">Find in this file results:</font> <a href=\"#__find__\">(jump to results end)</a>. ";
                 $found .= "View <a href=\"/view.htm?path=l00://find.htm\" target=\"_blank\">l00://find.htm</a> - ";
                 $found .= "<a href=\"/view.htm?path=l00://find.txt\" target=\"_blank\">.txt</a>; ";
-                $found .= "<a href=\"/filemgt.htm?path=l00://find.htm&path2=l00://find.htm.$fname\" target=\"_blank\">copy it to</a>...\n";
+                $found .= "<a href=\"/filemgt.htm?path=l00://find.txt&path2=l00://find.txt.$fname\" target=\"_blank\">copy it to</a>...\n";
 
                 if ($findlen != 0) { 
                     $found .= "<strong>Find range limited to starting from line $findstart for $findlen lines.</strong>\n";
