@@ -425,7 +425,8 @@ sub readl00httpdcfg {
                 if (/^machine=~\/(.+)\/ */) {
                     # new machine filter
                     $skipfilter = $1;
-                    if ($ctrl{'machine'} =~ /$skipfilter/) {
+                    $tmp = "$ctrl{'machine'}:$ctrl_port";
+                    if ($tmp =~ /$skipfilter/) {
                         # matched, don't skip
                         $skip = 0;
                     } else {
