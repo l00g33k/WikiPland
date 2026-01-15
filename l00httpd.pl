@@ -769,6 +769,8 @@ print "ctrl_port is $ctrl_port\n";
 $ctrl{'ctrl_port_first'}  = $ctrl_port_first;
 $ctrl{'ctrl_port'} = $ctrl_port;
 
+# reload noramfile
+&readl00httpdcfg;
 # load modules
 &loadmods($plpath);
 &loadmods($ctrl{'extraplpath'});
