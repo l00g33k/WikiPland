@@ -64,7 +64,7 @@ my (%connected, %cliipok, $cliipfil, $uptime, $ttlconns, $needpw, %ipallowed);
 my ($htmlheadV1, $htmlheadV2, $htmlheadB0, $skip, $skipfilter, $httpmethod);
 my ($cmdlnhome, $waketil, $ipage, $battpct, $batttime, $quitattime, $quitattimer, $quitmsg1, $quitmsg2, $fixedport);
 my ($cmdlnmod, $cmdlnparam, $rammaxitems, $ramfilehtml, $ramfiledisp, $ramfiletxt);
-my ($httpdredirect);
+my ($httpdredirect, @l00matches, $l00match);
 
 
 # set listening port
@@ -637,6 +637,18 @@ if (($cmdlnmod ne '') && ($cmdlnparam ne '')) {
     # use command line supplied mod and path as HOME target
     $ctrl{'HOME'} = "<a href=\"/$cmdlnmod.htm?path=$cmdlnparam\">HOME</a>";
 }
+
+
+# 'HOME' replacement
+@l00matches = $ctrl{'HOME'} =~ /%L00HTTP<(.+?)>%/g;
+if ($#l00matches >= 0) {
+    foreach $l00match (@l00matches) {
+        if (defined($ctrl{$l00match})) {
+            $ctrl{'HOME'} =~ s/%L00HTTP<($l00match)>%/$ctrl{$l00match}/g;
+        }
+    }
+}
+
 
 if ((defined ($ctrl{'debug'})) && ($ctrl{'debug'} =~ /^\d$/)) {
     $debug = $ctrl{'debug'};

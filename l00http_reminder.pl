@@ -68,7 +68,7 @@ sub l00http_reminder_find {
     my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
     my ($vb, $vs, $vb0, $vs0, $secs, $found);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
-    my ($pathbase, $incpath, $bufinc);
+    my ($pathbase, $incpath, $bufinc, $l00match, @l00matches);
 
     # compute UTC and localtime offset in seconds
 	# Compute all times in UTC but the time to display is in local time
@@ -100,11 +100,19 @@ sub l00http_reminder_find {
         while (<IN>) {
             s/[\r\n]//g;
             # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-            if (/%L00HTTP<(.+?)>%/) {
-                if (defined($ctrl->{$1})) {
-                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+            @l00matches = /%L00HTTP<(.+?)>%/g;
+            if ($#l00matches >= 0) {
+                foreach $l00match (@l00matches) {
+                    if (defined($ctrl->{$l00match})) {
+                        s/%L00HTTP<($l00match)>%/$ctrl->{$l00match}/g;
+                    }
                 }
             }
+#           if (/%L00HTTP<(.+?)>%/) {
+#               if (defined($ctrl->{$1})) {
+#                   s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+#               }
+#           }
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 $pathbase = '';
@@ -188,7 +196,7 @@ sub l00http_reminder_proc {
     my ($pathbase, $incpath, $bufinc, $bufall);
     # see notes in l00http_reminder_find() about time + $utcoffsec
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime (time - $utcoffsec);
-    my ($life, $f0, $f1);
+    my ($life, $f0, $f1, $l00match, @l00matches);
 
     $formmsg = '';
 
@@ -527,11 +535,19 @@ sub l00http_reminder_proc {
         foreach $_ (split("\n", $bufall)) {
             s/[\r\n]//g;
             # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-            if (/%L00HTTP<(.+?)>%/) {
-                if (defined($ctrl->{$1})) {
-                    s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+            @l00matches = /%L00HTTP<(.+?)>%/g;
+            if ($#l00matches >= 0) {
+                foreach $l00match (@l00matches) {
+                    if (defined($ctrl->{$l00match})) {
+                        s/%L00HTTP<($l00match)>%/$ctrl->{$l00match}/g;
+                    }
                 }
             }
+#           if (/%L00HTTP<(.+?)>%/) {
+#               if (defined($ctrl->{$1})) {
+#                   s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
+#               }
+#           }
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 s/>/&gt;/g;
