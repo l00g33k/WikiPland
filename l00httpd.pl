@@ -328,6 +328,7 @@ if (defined ($ENV{'ANDROID_ROOT'})) {
     print "Read 'machine' from ~/_whoami\n";
     $ctrl{'machine'} = `cat ~/_whoami`;
 }
+$ctrl{'machine'} =~ s/[\r\n]//g;
 print "Running on '$ctrl{'os'}' OS '$ctrl{'machine'}' machine\n";
 
 # 1) Searches in own directory for filenames like l00http_(\w*)\.pl and remember them
@@ -429,9 +430,11 @@ sub readl00httpdcfg {
                     if ($tmp =~ /$skipfilter/) {
                         # matched, don't skip
                         $skip = 0;
+                        print "Process  machine: $tmp =~ $skipfilter\n";
                     } else {
                         # no match, skipping
                         $skip = 1;
+                        print "Skipping machine: $tmp =~ $skipfilter\n";
                     }
                     next;
                 }
