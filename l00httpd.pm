@@ -201,7 +201,7 @@ sub dumphash {
     }
 }
 
-#$found .= &l00httpd::findInBuf ($findtext, $block, $buf, [$literal], $lastfew, $nextfew, [$sort]);
+#$found .= &l00httpd::findInBuf ($findtext, $block, $buf, [$literal], $lastfew, $nextfew, $sort, $casesen);
 sub findInBuf  {
     # $findtext : string to find
     # $block    : text block marker
@@ -213,7 +213,8 @@ sub findInBuf  {
     # $findstart: 
     # $findlen  :
     # $excludeinfound : exclude in found
-    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort, $findstart, $findlen, $excludeinfound) = @_;
+    # $casesen  : true for case sensitivity
+    my ($findtext, $block, $buf, $literal, $lastfew, $nextfew, $sort, $findstart, $findlen, $excludeinfound, $casesen) = @_;
     my ($hit, $found, $blocktext, $line, $lineorg, $pattern, $lnno, @founds, @findCount, $findidx, 
         $llnno, $invertfind, $ii, $color, @lastfewlns, $hitpast, $nextln, $dsplnno);
 
@@ -235,6 +236,10 @@ sub findInBuf  {
     if (!defined($findlen)) {
         $findlen = 0;
     }
+    if (!defined($casesen)) {
+        $casesen = 0;
+    }
+
 
     if ($findtext =~ /^!!/) {
         # invert find logic
@@ -313,25 +318,50 @@ sub findInBuf  {
         # $findtext could be multiple pattern separated by ||
         $findidx = 0;
         foreach $pattern (split ('\|\|', $findtext)) {
-            if ($line =~ /$pattern/i) {
-                # it's a hit
-                $hit = 1;
-                $hitpast = $nextfew;
-                # but is it excluded?
-                if ($excludeinfound ne '') {
-                    # exclude in found specified
-                    foreach $pattern (split ('\|\|', $excludeinfound)) {
-                        if ($line =~ /$pattern/i) {
-                            # clear hit flags
-                            $hit = 0;
-                            $hitpast = 0;
-                            last;
+            if ($casesen) {
+                # find case sensitive
+                if ($line =~ /$pattern/) {
+                    # it's a hit
+                    $hit = 1;
+                    $hitpast = $nextfew;
+                    # but is it excluded?
+                    if ($excludeinfound ne '') {
+                        # exclude in found specified
+                        foreach $pattern (split ('\|\|', $excludeinfound)) {
+                            if ($line =~ /$pattern/) {
+                                # clear hit flags
+                                $hit = 0;
+                                $hitpast = 0;
+                                last;
+                            }
                         }
+                        $findCount[$findidx]++;
+                    } else {
+                        $findCount[$findidx]++;
+                        last;
                     }
-                    $findCount[$findidx]++;
-                } else {
-                    $findCount[$findidx]++;
-                    last;
+                }
+            } else {
+                if ($line =~ /$pattern/i) {
+                    # it's a hit
+                    $hit = 1;
+                    $hitpast = $nextfew;
+                    # but is it excluded?
+                    if ($excludeinfound ne '') {
+                        # exclude in found specified
+                        foreach $pattern (split ('\|\|', $excludeinfound)) {
+                            if ($line =~ /$pattern/i) {
+                                # clear hit flags
+                                $hit = 0;
+                                $hitpast = 0;
+                                last;
+                            }
+                        }
+                        $findCount[$findidx]++;
+                    } else {
+                        $findCount[$findidx]++;
+                        last;
+                    }
                 }
             }
             $findidx++;

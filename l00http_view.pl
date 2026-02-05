@@ -90,13 +90,14 @@ sub l00http_view_proc {
     my ($lineno, $buffer, $pname, $pnameurl, $fname, $fnameurl, $hilite, $clip, $tmp, $hilitetextidx);
     my ($tmpno, $tmpln, $tmptop, $foundcnt, $totallns, $skip0, $refreshtag, $hit, @findCount, $findidx);
     my ($foundfullrst, $foundfullrstnew, @foundfullarray, $actualSt, $actualEn, $pattern, $ii, $color);
-    my ($displayed, $onefindtext, $tmplnallhits, $pnameurl2, $fnameurl2, $jumptable);
+    my ($displayed, $onefindtext, $tmplnallhits, $pnameurl2, $fnameurl2, $jumptable, $casesen);
 
     $skip0  = 0;
     $pnameurl = '';
     $fnameurl = '';
     $pnameurl2 = '';
     $fnameurl2 = '';
+    $casesen = 0;
 
     if (defined ($form->{'path'})) {
         $form->{'path'} =~ s/\r//g;
@@ -398,6 +399,10 @@ sub l00http_view_proc {
         $found = '';
         $displayed = '';
 
+        if (defined ($form->{'casesen'}) && ($form->{'casesen'} eq 'on')) {
+            $casesen = 1;
+        }
+
         if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
             # launch editor
             if (($ctrl->{'os'} eq 'and') && 
@@ -486,7 +491,7 @@ sub l00http_view_proc {
                 ($foundfullrst, @findCount) = &l00httpd::findInBuf ($findtext, $block, 
                     $buffer, ($literal eq 'checked'), $lastfew, 
                     $nextfew, ($sortfind eq 'checked'), $findstart, 
-                    $findlen, $excludeinfound);
+                    $findlen, $excludeinfound, $casesen);
                 # l00httpd::findInBuf should return the number of matches
                 @foundfullarray = split("\n", $foundfullrst);
                 if ($wraptext eq '') {
@@ -897,6 +902,7 @@ sub l00http_view_proc {
     print $sock "Formatted:\n";
     print $sock "</td><td>\n";
     print $sock "<input type=\"checkbox\" name=\"wraptext\" $wraptext>wrap text\n";
+    print $sock "<input type=\"checkbox\" name=\"casesen\">use case\n";
     print $sock "</td></tr>\n";
     print $sock "<tr><td>\n";
     print $sock "Literal:\n";
