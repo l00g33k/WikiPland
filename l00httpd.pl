@@ -455,6 +455,12 @@ sub readl00httpdcfg {
                                 $ctrl{$key} = $val;
                             }
                             print "workdir EXIST: $ctrl{$key}\n";
+                        } elsif ($key eq 'ctrl_port') {
+                            $ctrl{$key} = $val;
+                            $ctrl_port = $val;
+                        } elsif ($key eq 'cli_port') {
+                            $ctrl{$key} = $val;
+                            $cli_port = $val;
                         } else {
                             $ctrl{$key} = $val;
                         }
