@@ -129,7 +129,7 @@ sub l00http_calc_proc (\%) {
                         $output .= "||\n";
                     } else {
                         for ($repeat = 0; $repeat < $repeats; $repeat++) {
-                            if (($rowcnt % 20) == 0) {
+                            if (($rowcnt % 10) == 0) {
                                 $output .= "|| $header";
                             }
                             $output .= "|| $rowcnt ";
