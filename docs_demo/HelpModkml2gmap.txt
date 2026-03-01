@@ -55,14 +55,14 @@ Append !!!# where # is color code, e.g. for lime waypoint:
     * waypoint_name!!!l
 
     r   red *
-    y   yellow *
-    l   lime *
+    y   yellow * **
+    l   lime * **
     s   silver
     a   cyan *
     f   deeporange
     g   gray *
     o   olive
-    d   orange *
+    d   orange * **
     G   green *
     D   pink *
     b   brown *
@@ -72,6 +72,7 @@ Append !!!# where # is color code, e.g. for lime waypoint:
     T   teal
     B   SandyBrown
     h   deeppurple
-    u   blue
+    u   blue **
 
     * distinct colors
+    ** works in Firefox
