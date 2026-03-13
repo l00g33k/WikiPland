@@ -7,7 +7,7 @@ use warnings;
 
 my %config = (proc => "l00http_datetimeline_proc",
               desc => "l00http_datetimeline_desc");
-my ($yr, $mo, $da, $hr, $mi, $lastdate, $firstdate, $cal);
+my ($yr, $mo, $da, $hr, $mi, $lastdate, $firstdate, $cal, $hotelcol, $hotelname);
 
 my @dayofweek = (
 'Sun',
@@ -80,11 +80,27 @@ sub print_travel_plan {
     # h - hotel : remarks
     } elsif ($msg =~ /^h - +(.+?) : +(.+)$/) {
              $msg = "hotel: *B*$1** : $2";
-             $cal .= "$yr/$mo/$da,1,*B*$1**\n";
+             if ($hotelname ne $1) {
+                 $hotelname =  $1;
+                 if ($hotelcol == 'B') {
+                     $hotelcol =  '6';
+                 } else {
+                     $hotelcol =  'B';
+                 }
+             }
+             $cal .= "$yr/$mo/$da,1,*$hotelcol*$1**\n";
     # h - hotel
     } elsif ($msg =~ /^h - +(.+)$/) {
              $msg = "hotel: *B*$1** ";
-             $cal .= "$yr/$mo/$da,1,*B*$1**\n";
+             if ($hotelname ne $1) {
+                 $hotelname =  $1;
+                 if ($hotelcol == 'B') {
+                     $hotelcol =  '6';
+                 } else {
+                     $hotelcol =  'B';
+                 }
+             }
+             $cal .= "$yr/$mo/$da,1,*$hotelcol*$1**\n";
     # n - notes
     } elsif ($msg =~ /^n - +(.+)$/) {
              $msg = "notes *y*$1** ";
@@ -116,6 +132,8 @@ sub l00http_datetimeline_proc (\%) {
     $dtline_org= '';
     $dtline_new = '';
     $printTimelineTmpl = 1;
+    $hotelcol = 'B';
+    $hotelname = '';
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>datetimeline</title>" . $ctrl->{'htmlhead2'};
