@@ -163,7 +163,7 @@ sub l00http_dash_proc {
     my (%addtimeval, @blocktime, $modified, $addtime, $checked, $tasksTimeKey, $part1, $part2, $jumphrefs, $jumphrefstop);
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, %cat1tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
-    my (@descfind, @cat2find, $moving, $color, $dashbanner, %cat1colorsaw);
+    my (@descfind, @cat2find, $moving, $color, $dashbanner, %cat1colorsaw, $dashes_shown, @dashes_shown_field, @dashes_shown_items);
 
 
     $timecolor = '';
@@ -597,6 +597,7 @@ sub l00http_dash_proc {
             splice (@alllines, $form->{"moveto"}, 0, $tmp);
             $modified = 1;
         }
+
         $out = '';
         # insert heading
         if ((defined($form->{"inscat2at"})) && 
@@ -1266,6 +1267,7 @@ sub l00http_dash_proc {
         }
 
         $out  = '';
+        $dashes_shown = '';
         undef @tops2;
         undef %displaying;
         if ($dbg) {
@@ -1320,8 +1322,9 @@ sub l00http_dash_proc {
             push(@tops2, $_);
         }
 
+
         $anchor = '<a name="bangbang"></a>';
-        $jumpmarks = 'Jump marks: ';
+        $jumpmarks = "Jump marks: [[/recedit.htm?path=l00://dashes_shown.txt&record1=.&displen=100||dashes_shown]] ";
         foreach $_ (sort l00http_dash_outputsort @tops2) {
             # drop seconds, print month as hex
             s/^(\|\|!*)\d\d\d\d(\d\d)(\d\d) (\d\d\d\d)\d\d\|\|/sprintf("${1}%x${3}_$4||",$2)/e;
@@ -1416,6 +1419,23 @@ sub l00http_dash_proc {
             if(/\[\[#(.+?)\]\]/) {
                 $jumpmarks .= "<a href=\"#$1\">$1</a> - ";
             }
+
+            # dashes_shown
+            s/<.+?>//g;
+            s/\*.\*//g;
+            s/\*\*//g;
+            s/&gt;/>/g;
+            s/&lt;/</g;
+            s/ >>>//g;
+            @dashes_shown_field = split('\|\|', $_);
+            $dashes_shown_field[3] =~ s/^\^ *//;
+            $dashes_shown_field[4] =~ s/^#\d+ +//;
+            $dashes_shown_field[4] =~ s/&#8227;//g;
+            @dashes_shown_items = split('&#9670;', $dashes_shown_field[4]);
+            for ($ii = 1; $ii <= $#dashes_shown_items; $ii++) {
+#            foreach $tmp (@dashes_shown_items) {
+                $dashes_shown .= "$dashes_shown_field[3] -- $dashes_shown_items[$ii]\n";
+            }
         }
 
         $out =~ s/\\n/<br>/gm;
@@ -1446,6 +1466,10 @@ sub l00http_dash_proc {
 
         $out = &l00wikihtml::wikihtml ($ctrl, $pname, $out, 6);
         $out =~ s/ +(<\/td>)/$1/mg;
+
+        &l00httpd::l00fwriteOpen($ctrl, "l00://dashes_shown.txt");
+        &l00httpd::l00fwriteBuf($ctrl, $dashes_shown);
+        &l00httpd::l00fwriteClose($ctrl);
 
         if ($freefmt ne 'checked') {
             $out = "<pre>$out</pre>\n";
