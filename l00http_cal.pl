@@ -55,9 +55,10 @@ sub l00http_cal_proc {
     my $form = $ctrl->{'FORM'};
     my ($rpt, $now, $buf, $tmp, $tmp2, $table, $pname, $fname, $lnno);
     my ($day1, $dayno, $wkno, $dayno2, $wkno2, @todos, $lastdate, $rel,
-        @includes, $incpath, $pathbase, $includefn, %calfilters);
+        @includes, $incpath, $pathbase, $includefn, %calfilters, $doinc);
 
     undef %calfilters;
+
 
     # get current date/time
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
@@ -76,6 +77,11 @@ sub l00http_cal_proc {
     print "cal: input file is >$fullpathname<\n", if ($ctrl->{'debug'} >= 3);
     l00httpd::dbp($config{'desc'}, "input file is >$fullpathname<\n"), if ($ctrl->{'debug'} >= 3);
     ($pname, $fname) = $fullpathname =~ /^(.+\/)([^\/]+)$/;
+
+    $doinc = 1;
+    if (defined ($form->{'doinc'}) && ($form->{'doinc'} eq 'on')) {
+        $doinc = 0;
+    }
 
     # handling moving lnno to moveto
     if (defined ($form->{'lnno'}) && defined ($form->{'moveto'})) {
@@ -168,7 +174,7 @@ sub l00http_cal_proc {
                     s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
                 }
             }
-            if (/^%INCLUDE<(.+?)>%/) {
+            if ($doinc && /^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 $pathbase = '';
                 if ($incpath =~ /^\.\//) {
@@ -590,7 +596,7 @@ sub l00http_cal_proc {
 
     print $sock "    <tr>\n";
     print $sock "        <td><input type=\"checkbox\" name=\"daywkno\" $daywkno>Print day/week number</td>\n";
-    print $sock "        <td>&nbsp;</td>\n";
+    print $sock "        <td><input type=\"checkbox\" name=\"doinc\">no include</td>\n";
     print $sock "    </tr>\n";
 
     print $sock "        <tr>\n";
