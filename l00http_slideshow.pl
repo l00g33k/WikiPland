@@ -113,7 +113,7 @@ sub l00http_slideshow_proc {
     my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $older, $newer, 
         $size, $atime, $mtimea, $mtimeb, $ctime, $blksize, $blocks, $urlname);
     my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst, $newline);
-    my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx);
+    my ($idx0, $idx1, $plon, $plat, $datetime, $datetime0, $waypts, $mkridx, $stepbuf);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>slideshow</title>" . $ctrl->{'htmlhead2'};
@@ -319,9 +319,27 @@ sub l00http_slideshow_proc {
         }
         $older = "$path$allpics[$tmp]";
 
+        # step jump
+        $stepbuf = "";
+        if ($width =~ /%/) {
+            $tmp = $width;
+            $tmp =~ s/%//;
+            $tmp = int (100 / $tmp);
+        } else {
+            $tmp = 10;
+        }
+        $stepbuf .= " +";
+        for ($ii = 1; $ii <= $tmp; $ii++) {
+            if ($ii + $idx0 - 1 <= $#allpics) {
+                $stepbuf .= "<a href=\"/slideshow.htm?path=$path$allpics[$ii + $idx0 - 1]\">$ii</a> ";
+            }
+        }
+
         print $sock "<a href=\"/slideshow.htm?path=$newer\">Newer</a> \n";
         print $sock "<a href=\"/slideshow.htm?path=$older\">Older</a> \n";
-        print $sock "$idx0..$idx1 of ", $#allpics + 1, ".\n";
+        print $sock "$idx0..$idx1 of ", $#allpics + 1, ". \n";
+        print $sock "$stepbuf\n";
+        print $sock "\n";
         print $sock "<p>\n";
 
         print $sock $outbuf;
