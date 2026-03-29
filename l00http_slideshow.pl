@@ -329,8 +329,8 @@ sub l00http_slideshow_proc {
             $tmp = 10;
         }
         $stepbuf .= " +";
-        for ($ii = 1; $ii <= $tmp; $ii++) {
-            if ($ii + $idx0 - 1 <= $#allpics) {
+        for ($ii = -$tmp; $ii <= $tmp; $ii++) {
+            if (($ii + $idx0 - 1 >= 0) && ($ii + $idx0 - 1 <= $#allpics)) {
                 $stepbuf .= "<a href=\"/slideshow.htm?path=$path$allpics[$ii + $idx0 - 1]\">$ii</a> ";
             }
         }
