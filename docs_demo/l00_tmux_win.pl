@@ -13,7 +13,7 @@ sub tmuxpaneform {
     $wikiout .= <<EOB;
 ** 
 <form action="/do.htm" method="get">
-<input type="submit" name="submit" value="Submit" accesskey="n">
+<input type="submit" name="submit" value="Prepare">
 <input type="text" name="arg2" value="$tmuxwincmdln2">
 <input type="hidden" name="arg1" value="$pane">
 <input type="hidden" name="path" value="$ctrl->{'FORM'}->{'path'}">
@@ -22,7 +22,7 @@ sub tmuxpaneform {
 EOB
 }
 
-if ((($ctrl->{'FORM'}->{'submit'} eq 'Submit') ||
+if ((($ctrl->{'FORM'}->{'submit'} eq 'Prepare') ||
     ($ctrl->{'FORM'}->{'submit'} eq 'Send')) &&
     defined($ctrl->{'FORM'}->{'arg1'}) && 
     defined($ctrl->{'FORM'}->{'arg2'})) {
@@ -45,7 +45,7 @@ if ((($ctrl->{'FORM'}->{'submit'} eq 'Submit') ||
 
     $wikiout .= <<EOB;
 <form action="/do.htm" method="get">
-<input type="submit" name="submit" value="Send" accesskey="n">
+<input type="submit" name="submit" value="Send" accesskey="n"> n&#818;
 <input type="text" name="arg2" value="$tmuxwincmdln">
 tail <input type="text" name="panelen" size="3" value="$tmuxpanelen">
 <input type="hidden" name="arg1" value="$pane">
@@ -169,7 +169,7 @@ foreach $line (split("\n", $buf)) {
     $wikiout .= "* Click the 'Send' button on the next page to actually send the commands.\n";
     $wikiout .= <<EOB;
 <form action="/do.htm" method="get">
-<input type="submit" name="submit" value="Submit" accesskey="n">
+<input type="submit" name="submit" value="Prepare">
 <input type="text" name="arg2" value="$tmuxwincmdln">
 <input type="hidden" name="arg1" value="$pane">
 <input type="hidden" name="path" value="$ctrl->{'FORM'}->{'path'}">
