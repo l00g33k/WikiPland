@@ -132,42 +132,47 @@ foreach $out (split("\n", $buf)) {
 
 $wikiout .= "\n%TOC%\n";
 
-foreach $line (split("\n", $buf)) {
-    ($pane, $name, $cmd, $wd, $ht, $pid, $path) = split(" ", $line);
-    if ($path eq '') {
-        $path = "(N/A)";
-    }
-    $children = `pgrep -P $pid`;
-    $pathshort = substr($path, -60, 60);
-    $paneclean = $pane;
-    $paneclean =~ s/^\$/S/;
-    $wikiout .= "<a name=\"$paneclean\"></a>\n";
-    $wikiout .= "==$pane: $name -- $cmd -- $pathshort==\n";
-    $wikiout .= "* PANE : $pane\n";
-    $wikiout .= "* NAME : $name\n";
-    $wikiout .= "* size : $wd x $ht\n";
-    $wikiout .= "* Cmdl : $cmd\n";
-    $wikiout .= "* PATH : $path\n";
-    $wikiout .= "* PID:\n";
-    $ps = `ps h $pid | tr '\n' ' '`;
-    $wikiout .= "    Pane  PID: $pid: $ps\n";
-    $child = $pid;
-    while ($child = `pgrep -P $child | tr '\n' ' '`) {
-        if ($child !~ /\d+/) {
-            last;
+if ((($ctrl->{'FORM'}->{'submit'} eq 'Prepare') ||
+    ($ctrl->{'FORM'}->{'submit'} eq 'Send')) &&
+    defined($ctrl->{'FORM'}->{'arg1'}) && 
+    defined($ctrl->{'FORM'}->{'arg2'})) {
+} else {
+    foreach $line (split("\n", $buf)) {
+        ($pane, $name, $cmd, $wd, $ht, $pid, $path) = split(" ", $line);
+        if ($path eq '') {
+            $path = "(N/A)";
         }
-        foreach $child1 (split(" ", $child)) {
-            $ps = `ps h $child1 | tr '\n' ' '`;
-            $wikiout .= "    Child PID: $child1: $ps\n";
+        $children = `pgrep -P $pid`;
+        $pathshort = substr($path, -60, 60);
+        $paneclean = $pane;
+        $paneclean =~ s/^\$/S/;
+        $wikiout .= "<a name=\"$paneclean\"></a>\n";
+        $wikiout .= "==$pane: $name -- $cmd -- $pathshort==\n";
+        $wikiout .= "* PANE : $pane\n";
+        $wikiout .= "* NAME : $name\n";
+        $wikiout .= "* size : $wd x $ht\n";
+        $wikiout .= "* Cmdl : $cmd\n";
+        $wikiout .= "* PATH : $path\n";
+        $wikiout .= "* PID:\n";
+        $ps = `ps h $pid | tr '\n' ' '`;
+        $wikiout .= "    Pane  PID: $pid: $ps\n";
+        $child = $pid;
+        while ($child = `pgrep -P $child | tr '\n' ' '`) {
+            if ($child !~ /\d+/) {
+                last;
+            }
+            foreach $child1 (split(" ", $child)) {
+                $ps = `ps h $child1 | tr '\n' ' '`;
+                $wikiout .= "    Child PID: $child1: $ps\n";
+            }
         }
-    }
-    $wikiout .= "* pstree:\n";
-    $buf = `pstree -pt $pid`;
-    foreach $line2 (split("\n", $buf)) {
-        $wikiout .= "    $line2\n";
-    }
-    $wikiout .= "* Click the 'Send' button on the next page to actually send the commands.\n";
-    $wikiout .= <<EOB;
+        $wikiout .= "* pstree:\n";
+        $buf = `pstree -pt $pid`;
+        foreach $line2 (split("\n", $buf)) {
+            $wikiout .= "    $line2\n";
+        }
+        $wikiout .= "* Click the 'Send' button on the next page to actually send the commands.\n";
+        $wikiout .= <<EOB;
 <form action="/do.htm" method="get">
 <input type="submit" name="submit" value="Prepare">
 <input type="text" name="arg2" value="$tmuxwincmdln">
@@ -176,14 +181,15 @@ foreach $line (split("\n", $buf)) {
 <input type="hidden" name="arg3" value="">
 </form>
 EOB
-    $wikiout .= "\n";
-    $cmd = "tmux capture-pane -p -t '$pane' -J -S - -E - | tail -n $ht";
-    $buf = `$cmd`;
-    foreach $out (split("\n", $buf)) {
-        $out =~ s/</&lt;/g;
-        $out =~ s/>/&lt;/g;
-        $out =~ s/</&lt;/g;
-        $wikiout .= "    $out\n";
+        $wikiout .= "\n";
+        $cmd = "tmux capture-pane -p -t '$pane' -J -S - -E - | tail -n $ht";
+        $buf = `$cmd`;
+        foreach $out (split("\n", $buf)) {
+            $out =~ s/</&lt;/g;
+            $out =~ s/>/&lt;/g;
+            $out =~ s/</&lt;/g;
+            $wikiout .= "    $out\n";
+        }
     }
 }
 
