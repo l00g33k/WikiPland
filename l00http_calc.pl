@@ -100,7 +100,8 @@ sub l00http_calc_proc (\%) {
                     $header .= "||\n";
                 } elsif (($name, $tmp) = /^\$([a-zA-Z0-9_]+) *= *(.+);$/) {
                     eval "\$$name=$tmp;";
-                    $output .= "\$$name=$tmp;<br>\n";
+                    eval "\$val=\$$name;";
+                    $output .= "\$$name=$tmp; === $val<br>\n";
                     l00httpd::dbp($config{'desc'}, "\$$name=$tmp;\n"), if ($ctrl->{'debug'} >= 3);
                 } else {
                     $output .= "$_\n";
