@@ -16,13 +16,34 @@ by all columns on the right.  Values from the previous row may be referenced as 
 
 * "$NAME = VALUE ;" before the table defines constants.
 
-* "$NAME = VALUE ;" before the table defines constants.
-
 * The following is a simple example.  [[/view.htm?path=$|View]] this page for raw text;
  [[/calc.htm?path=$|calc]] this page:
 
 $RATE = 0.05;
 
+|| YEAR%d     ||      P ||        INT ||       SUM ||
+|| 2023       ||   1000 || $P * $RATE || $P + $INT ||
+|| :x10       ||        ||            ||           ||
+|| $YEAR_ + 1 ||  $SUM_ || $P * $RATE || $P + $INT ||
+
+* Displaying a second unrelated table:
+
+$RATE = 0.07;
+
+|| YEAR%d     ||      P ||        INT ||       SUM ||
+|| 2000       ||    100 || $P * $RATE || $P + $INT ||
+|| :x10       ||        ||            ||           ||
+|| $YEAR_ + 1 ||  $SUM_ || $P * $RATE || $P + $INT ||
+
+* Displaying simple calculation
+
+|| A || B || C || D || SUM               ||
+|| 1 || 2 || 3 || 4 || $A + $B + $C + $D ||
+
+* A row consists of only " bracketed strings is considered a comment line and 
+is displayed as is, e.g.:
+
+|| "year#"    || "prin" || "interest" || "sum"     ||
 || YEAR%d     ||      P ||        INT ||       SUM ||
 || 2023       ||   1000 || $P * $RATE || $P + $INT ||
 || :x10       ||        ||            ||           ||

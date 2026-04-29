@@ -22,7 +22,12 @@ sub l00http_calc_proc (\%) {
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($ii, $pname, $fname, $html, $output, @format, $compute, $name, $fmt, $tmp, $calced);
     my (@formulea, @head, $findhead, $findinit, $cnt, $repeats, $repeat, $rowcnt, $header);
+    my ($pre, $post, $strong0, $strong1);
 
+    $pre = '<code>';
+    $post = '</code>';
+    $strong0 = '<strong>';
+    $strong1 = '</strong>';
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . "<title>calc</title>" . $ctrl->{'htmlhead2'};
@@ -77,7 +82,7 @@ sub l00http_calc_proc (\%) {
                     $findhead = 0;
                     @_ = split('\|\|', $_);
                     l00httpd::dbp($config{'desc'}, "HEAD  #col $#_ : >$_<\n"), if ($ctrl->{'debug'} >= 3);
-                    $output .= "|| $rowcnt ";
+                    $output .= "|| <code> $rowcnt </code> ";
                     $rowcnt++;
                     for ($ii = 1; $ii <= $#_; $ii++) {
                         $format[$ii] = '%.2f';
@@ -89,11 +94,11 @@ sub l00http_calc_proc (\%) {
                         } else {
                             $head[$ii] = "UKN$ii";
                         }
-                        $header .= "|| $head[$ii]";
+                        $header .= "|| <code> ${strong0}$head[$ii]${strong1} </code> ";
                         eval "\$$head[$ii] = 0";
                         eval "\$$head[$ii]_ = 0";
                         eval "\$tmp = \$$head[$ii]";
-                        $output .= "|| $head[$ii] ";
+                        $output .= "|| <code> ${strong0}$head[$ii]${strong1} </code> ";
                         l00httpd::dbp($config{'desc'}, "COL   $ii : >$_[$ii]< -> head >$head[$ii]< := >$tmp<\n"), if ($ctrl->{'debug'} >= 3);
                     }
                     $output .= "||\n";
@@ -101,7 +106,7 @@ sub l00http_calc_proc (\%) {
                 } elsif (($name, $tmp) = /^\$([a-zA-Z0-9_]+) *= *(.+);$/) {
                     eval "\$$name=$tmp;";
                     eval "\$val=\$$name;";
-                    $output .= "\$$name=$tmp; === $val<br>\n";
+                    $output .= "|| <code> \$$name=$tmp </code> || <code> $val </code> ||\n";
                     l00httpd::dbp($config{'desc'}, "\$$name=$tmp;\n"), if ($ctrl->{'debug'} >= 3);
                 } else {
                     $output .= "$_\n";
@@ -116,14 +121,14 @@ sub l00http_calc_proc (\%) {
                     }
                     if ($findinit) {
                         $findinit = 0;
-                        $output .= "|| $rowcnt ";
+                        $output .= "|| <code> $rowcnt </code> ";
                         $rowcnt++;
                         for ($ii = 1; $ii <= $#_; $ii++) {
                             if (($compute) = $_[$ii] =~ /^ *(.+?) *$/) {
                                 eval "\$$head[$ii] = $compute";
                                 eval "\$tmp = \$$head[$ii]";
                                 $tmp = sprintf($format[$ii], $tmp);
-                                $output .= "|| $tmp ";
+                                $output .= "|| <code> $tmp </code> ";
                                 l00httpd::dbp($config{'desc'}, "INIT  $ii : >$_[$ii]< -> >$head[$ii] $format[$ii] = $compute< := >$tmp<\n"), if ($ctrl->{'debug'} >= 3);
                             }
                         }
@@ -133,7 +138,7 @@ sub l00http_calc_proc (\%) {
                             if (($rowcnt % 10) == 0) {
                                 $output .= "|| $header";
                             }
-                            $output .= "|| $rowcnt ";
+                            $output .= "|| <code> $rowcnt </code> ";
                             $rowcnt++;
                             for ($ii = 1; $ii <= $#_; $ii++) {
                                 if (($compute) = $_[$ii] =~ /^ *(.+?) *$/) {
@@ -149,7 +154,7 @@ sub l00http_calc_proc (\%) {
                                         eval "\$tmp = \$$head[$ii]";
                                         $tmp = sprintf($format[$ii], $tmp);
                                     }
-                                    $output .= "|| $tmp ";
+                                    $output .= "|| <code> $tmp </code> ";
                                     l00httpd::dbp($config{'desc'}, "EVAL  $rowcnt.$repeat.$ii: >$_[$ii]< => >$head[$ii] = $compute< == >$tmp<\n"), if ($ctrl->{'debug'} >= 3);
                                 }
                             }
