@@ -65,16 +65,16 @@ sub l00http_reminder_date2j {
 sub l00http_reminder_find {
 # find active reminder (oldest)
     my $ctrl = pop;
-    my ($st, $it, $mg, $st0, $it0, $mg0, $mgall);
-    my ($vb, $vs, $vb0, $vs0, $secs, $found);
+    my ($st, $it, $mg, $st1, $st0, $it0, $mg0, $mgall);
+    my ($vb, $vs, $vb0, $vs0, $secs, $found, $vb1, $vs1, $vb2, $vs2);
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
     my ($pathbase, $incpath, $bufinc, $l00match, @l00matches);
 
     # compute UTC and localtime offset in seconds
-	# Compute all times in UTC but the time to display is in local time
-	# so we need to know the difference UTC and local time. Stackoverflow says 
-	# to compute the difference between gmtime and localtime to avoid module 
-	# dependency. We use noon today UTC to avoid rolling over midnight
+    # Compute all times in UTC but the time to display is in local time
+    # so we need to know the difference UTC and local time. Stackoverflow says 
+    # to compute the difference between gmtime and localtime to avoid module 
+    # dependency. We use noon today UTC to avoid rolling over midnight
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime (time);
     $secs = &l00mktime::mktime ($year, $mon, $mday, 12, 0, 0);
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime ($secs);
@@ -108,11 +108,6 @@ sub l00http_reminder_find {
                     }
                 }
             }
-#           if (/%L00HTTP<(.+?)>%/) {
-#               if (defined($ctrl->{$1})) {
-#                   s/%L00HTTP<(.+?)>%/$ctrl->{$1}/g;
-#               }
-#           }
             if (/^%INCLUDE<(.+?)>%/) {
                 $incpath = $1;
                 $pathbase = '';
@@ -135,24 +130,40 @@ sub l00http_reminder_find {
             }
         }
 
+        # $vb must be sticky in cases it isn't the last item
+        $vb2 = 0;
+        $vs2 = 0;
         foreach $_ (split ("\n", $bufinc)) {
             chomp;
             $found = 0;
+            # 20260508 100000:6:1:200:vibra up
             if (($st, $it, $vb, $vs, $mg) = /^([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
                 $found = 1;
             } elsif (($st, $it, $vb, $vs, $mg) = /^#!([ 0-9]+):([ 0-9]+):([ 0-9]+):([ 0-9]+):(.*)$/) {
                 $found = 1;
             }
             if ($found) {
+                # this line is a time item
+                # convert time to seconds
                 $st = &l00http_reminder_date2j ($st);
                 if (/^#!/) {
                     $mg = "#!$mg";
+                    l00httpd::dbp($config{'desc'}, "st=$st it=$it bv=$vb vs=$vs\n"), if ($ctrl->{'debug'} >= 2);
                 }
-		        #print "st $st $_\n";
+                #print "st $st $_\n";
+                # if first item, or if this item time is older than the last
+                # i.e. st0 is oldest item time
                 if (($st0 == 0) || ($st < $st0)) {
                     ($st0, $it0, $vb0, $vs0, $mg0) = ($st, $it, $vb, $vs, $mg);
+#                   if ($vb0 > 0) {
+#                       $vb2 = $vb0;
+#                       l00httpd::dbp($config{'desc'}, sprintf("vb2 = $vb2\n")), if ($ctrl->{'debug'} >= 2);
+#                       $vs2 = $vs0;
+#                       l00httpd::dbp($config{'desc'}, sprintf("vs2 = $vs2\n")), if ($ctrl->{'debug'} >= 2);
+#                   }
                 }
-                if (($st0 == 0) || (time - $utcoffsec >= $st)) {
+                # if st is in the past
+                if (time - $utcoffsec >= $st) {
                     l00httpd::dbp($config{'desc'}, "ON: $_\n"), if ($ctrl->{'debug'} >= 2);
                     # ' # ' marks start of comment to be dropped
                     $mg =~ s/ # .+$//;
@@ -160,6 +171,17 @@ sub l00http_reminder_find {
                         $mgall = $mg;
                     } else {
                         $mgall = "$mgall -- $mg";
+                    }
+                    ($st1, $it0, $vb1, $vs1, $mg0) = ($st, $it, $vb, $vs, $mg);
+                    if ($vb1 > 0) {
+                        if (($vb2 == 0) || ($vb1 < $vb2)) {
+                            $vb2 = $vb1;
+                            l00httpd::dbp($config{'desc'}, sprintf("vb2 = $vb2\n")), if ($ctrl->{'debug'} >= 2);
+                        }
+                        if (($vs2 == 0) || ($vs1 > $vs2)) {
+                            $vs2 = $vs1;
+                            l00httpd::dbp($config{'desc'}, sprintf("vs2 = $vs2\n")), if ($ctrl->{'debug'} >= 2);
+                        }
                     }
                 }
             }
@@ -169,8 +191,9 @@ sub l00http_reminder_find {
             $interval = $it0;
             $msgtoast = $mgall;
             l00httpd::dbp($config{'desc'}, sprintf("Found: $msgtoast, starttime $starttime, NOW %d\n", time - $utcoffsec)), if ($ctrl->{'debug'} >= 2);
-            $vibra = $vb0;
-            $vmsec = $vs0;
+            $vibra = $vb2;
+            $vmsec = $vs2;
+            l00httpd::dbp($config{'desc'}, sprintf("vibra = $vibra vmsec = $vmsec\n")), if ($ctrl->{'debug'} >= 2);
         }
         close (IN);
     }
@@ -592,7 +615,7 @@ sub l00http_reminder_perio {
         }
         if (($interval > 0) && 
             (($lastcalled == 1) || (time - $utcoffsec >= ($lastcalled + $pause + $interval)))) {
-            l00httpd::dbp($config{'desc'}, "\$interval=$interval \$lastcalled=$lastcalled (time=". time ." - \$utcoffsec=$utcoffsec)=". (time - $utcoffsec ) ."(\$lastcalled=$lastcalled + \$pause=$pause + \$interval=$interval)=". ($lastcalled + $pause + $interval)), if ($ctrl->{'debug'} >= 3);
+            l00httpd::dbp($config{'desc'}, "\$interval=$interval \$lastcalled=$lastcalled (time=". time ." - \$utcoffsec=$utcoffsec)=". (time - $utcoffsec ) ."(\$lastcalled=$lastcalled + \$pause=$pause + \$interval=$interval)=". ($lastcalled + $pause + $interval) . "\n"), if ($ctrl->{'debug'} >= 3);
 
             $lastcalled = time - $utcoffsec;
             $pause = 0; $ctrl->{'reminder'} = $msgtoast;
@@ -668,6 +691,7 @@ sub l00http_reminder_perio {
                 }
             }
 
+            l00httpd::dbp($config{'desc'}, "\$vibra=$vibra \$vibracnt=$vibracnt\n"), if ($ctrl->{'debug'} >= 5);
             if (($vibra > 0) && ($vibracnt >= $vibra)) {
                 $vibracnt = 1;
                 if ($wake == 0) {
@@ -677,9 +701,11 @@ sub l00http_reminder_perio {
                     }
                 }
                 if ($ctrl->{'os'} eq 'and') {
+                    l00httpd::dbp($config{'desc'}, "vibrate on android\n"), if ($ctrl->{'debug'} >= 5);
                     $ctrl->{'droid'}->vibrate($vmsec);
                 }
                 if ($ctrl->{'os'} eq 'tmx') {
+                    l00httpd::dbp($config{'desc'}, "vibrate on termux\n"), if ($ctrl->{'debug'} >= 5);
                     `termux-vibrate -d $vmsec`;
                 }
             } else {
