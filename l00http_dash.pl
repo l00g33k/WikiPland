@@ -164,6 +164,7 @@ sub l00http_dash_proc {
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, %cat1tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
     my (@descfind, @cat2find, $moving, $color, $dashbanner, %cat1colorsaw, $dashes_shown, @dashes_shown_field, @dashes_shown_items);
+    my ($l00match, @l00matches);
 
 
     $timecolor = '';
@@ -513,6 +514,15 @@ sub l00http_dash_proc {
                     $addtimeval{$tmp} = 24 * 3600 * $1;
                 }
                 push(@blocktime, $tmp);
+            }
+            # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
+            @l00matches = /%L00HTTP<(.+?)>%/g;
+            if ($#l00matches >= 0) {
+                foreach $l00match (@l00matches) {
+                    if (defined($ctrl->{$l00match})) {
+                        s/%L00HTTP<($l00match)>%/$ctrl->{$l00match}/g;
+                    }
+                }
             }
             # %INCLUDE<./xxx.txt>%
             if ($alllines[$ii] =~ /%INCLUDE<(.+?)>%/) {
