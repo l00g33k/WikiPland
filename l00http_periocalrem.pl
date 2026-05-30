@@ -146,7 +146,7 @@ sub l00http_periocalrem_perio {
         &l00httpd::l00freadOpen($ctrl, $noram_calram_txt)) {
         $eventnear = '';
         while ($_ = &l00httpd::l00freadLine($ctrl)) {
-            l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_\n"), if ($ctrl->{'debug'} >= 5);
+            l00httpd::dbp($config{'desc'}, "CALREM calrem all: $_"), if ($ctrl->{'debug'} >= 5);
             chop;
             if (/#\* CLEAR_THIS_STOPS_ALL/) {
 			    # special key

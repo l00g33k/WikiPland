@@ -311,6 +311,17 @@ sub l00http_dash_proc {
     $fname = '';
     if (defined ($form->{'path'})) {
         ($pname, $fname) = $form->{'path'} =~ /^(.+[\\\/])([^\\\/]+)$/;
+        if (defined ($form->{'inctemp'})) {
+            if (&l00httpd::l00freadOpen($ctrl, $form->{'path'})) {
+                $buffer = &l00httpd::l00freadAll($ctrl);
+                if (&l00httpd::l00freadOpen($ctrl, "$ctrl->{'workdir'}dash_sample.txt")) {
+                    $buffer .= &l00httpd::l00freadAll($ctrl);
+                }
+                &l00httpd::l00fwriteOpen($ctrl, $form->{'path'});
+                &l00httpd::l00fwriteBuf($ctrl, $buffer);
+                &l00httpd::l00fwriteClose($ctrl);
+            }
+        }
     }
 
     # Send HTTP and HTML headers
@@ -449,6 +460,7 @@ sub l00http_dash_proc {
         }
         print $sock "$out.\n";
         print $sock "<input type=\"submit\" name=\"move\" value=\"Move\">\n";
+        print $sock "<input type=\"submit\" name=\"inctemp\" value=\"Insert template\">\n";
     
         print $sock "</form>\n";
     }
