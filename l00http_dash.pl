@@ -164,7 +164,7 @@ sub l00http_dash_proc {
     my ($jumpcnt, @jumpname, @jumpcat, $jumpmarks, $includefile, $pnameup, %desccats, $barekey, $access);
     my ($lineevalst, $lineevalen, %cat2tolnno, %cat1tolnno, $hidedays, %cat1s, $nowCatFil, $nowItemFil, $timecolor);
     my (@descfind, @cat2find, $moving, $color, $dashbanner, %cat1colorsaw, $dashes_shown, @dashes_shown_field, @dashes_shown_items);
-    my ($l00match, @l00matches);
+    my ($l00match, @l00matches, $thisline);
 
 
     $timecolor = '';
@@ -528,16 +528,19 @@ sub l00http_dash_proc {
                 push(@blocktime, $tmp);
             }
             # translate all %L00HTTP<plpath>% to $ctrl->{'plpath'}
-            @l00matches = /%L00HTTP<(.+?)>%/g;
+            $thisline = $alllines[$ii];
+            @l00matches = $thisline =~ /%L00HTTP<(.+?)>%/g;
             if ($#l00matches >= 0) {
+                l00httpd::dbp($config{'desc'}, "L00HTTP1: $thisline\n"), if ($ctrl->{'debug'} >= 5);
                 foreach $l00match (@l00matches) {
                     if (defined($ctrl->{$l00match})) {
-                        s/%L00HTTP<($l00match)>%/$ctrl->{$l00match}/g;
+                        $thisline =~ s/%L00HTTP<($l00match)>%/$ctrl->{$l00match}/g;
                     }
                 }
+                l00httpd::dbp($config{'desc'}, "L00HTTP2: $thisline\n"), if ($ctrl->{'debug'} >= 5);
             }
             # %INCLUDE<./xxx.txt>%
-            if ($alllines[$ii] =~ /%INCLUDE<(.+?)>%/) {
+            if ($thisline =~ /%INCLUDE<(.+?)>%/) {
                 $includefile = $1;
                 # subst %INCLUDE<./xxx.txt> as 
                 #       %INCLUDE</absolute/path/xxx.txt>
@@ -548,11 +551,13 @@ sub l00http_dash_proc {
                 $pnameup = $pname;
                 $pnameup =~ s/([\\\/])[^\\\/]+[\\\/]$/$1/;
                 $includefile =~ s/^\.\.\//$pnameup\//;
+                l00httpd::dbp($config{'desc'}, "INCLUDING: $includefile\n"), if ($ctrl->{'debug'} >= 5);
             }
         }
         # handle include
         if (($includefile ne '') && 
             (&l00httpd::l00freadOpen($ctrl, $includefile))) {
+            l00httpd::dbp($config{'desc'}, "INCLUDE: $includefile\n"), if ($ctrl->{'debug'} >= 5);
             while ($_ = &l00httpd::l00freadLine($ctrl)) {
                 s/\r//;
                 s/\n//;
