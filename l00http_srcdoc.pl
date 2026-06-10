@@ -289,7 +289,7 @@ sub l00http_srcdoc_proc {
             } else {
                 if ($lnno == $lastinsert) {
                     l00httpd::dbp($config{'desc'}, "Insert lastinsert = $lastinsert\n"), if ($ctrl->{'debug'} >= 4);
-                    $buffer .= "<a name=\"lastinsert\"></a>\n";
+                    $buffer .= "<a name=\"lastinsert\"></a> *d*Last inserted VVV**\n";
                 }
                 $buffer .= $_;
             }
@@ -725,7 +725,7 @@ end_of_print3
     $buffer .= "<a href=\"http://localhost:30337$localfname\" target=\"_blank\">30337</a>\n";
     $buffer .= "<a href=\"http://localhost:30347$localfname\" target=\"_blank\">30347</a>\n";
     $buffer .= " - <input type=\"text\" accesskey=\"l\" size=\"1\">\n";
-    $buffer .= "<a href=\"#lastinsert\"\">L&#818;ast inserted here</a>\n";
+    $buffer .= "<a href=\"#lastinsert\"\">L&#818;ast inserted here ($lastinsert)</a>\n";
     if (defined ($form->{'insertlnno'})) {
         $buffer .= "<br><a href=\"#theform\"\">Jump to the Form</a><br>\n";
     }
