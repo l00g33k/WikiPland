@@ -412,7 +412,7 @@ end_of_print2
                 $html .= "   $orgln";
                 $html .= "</pre>\n";
                 $cpfromname =~ s/^([A-Z]+[a-z0-9])/!$1/;
-                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - <font color=\"". $reccuLvlColor [$tlevel] ."\">$cpfromname</font>\n";
+                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - <font color=\"". $reccuLvlColor [$tlevel] ."\">$cpfromname</font>:$tlnnohi\n";
                 $cpfrompath = '';
                 $orgln = '(not available)';
             }
@@ -547,7 +547,6 @@ end_of_print3
                     } else {
                         $tmp = $entirecnt + 1;
                     }
-                    $entirefname = "${pname}${fname}_${cpfromname}_$tmp.html";
                     $entirefname = "${fname}_${cpfromname}_$tmp.html";
                     l00httpd::dbp($config{'desc'}, "ENTIREFILE: entirefname=$entirefname\n"), if ($ctrl->{'debug'} >= 1);
                     $tmp = "$localfname$cpfromname";
@@ -556,7 +555,7 @@ end_of_print3
                     l00httpd::dbp($config{'desc'}, "ENTIREFILE: localfname=$localfname\n"), if ($ctrl->{'debug'} >= 1);
                     # ::conti:: possibly buggy: predicting entire file index number may be wrong
                     print COPYDEST "Source  <a href=\"/view.htm?path=$htmlfname\">";
-                    print COPYDEST ":</a> <a href=\"$entirefname\">$cpfromname</a> in $localfname at $hi\n";
+                    print COPYDEST ":</a> <font style=\"color:black;background-color:lime\"><a href=\"$entirefname\">$cpfromname</a></font> line $hi in $cpfrompath\n";
                     print COPYDEST "Original: $orgln\n";
 
                     $localfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
@@ -721,15 +720,16 @@ end_of_print3
     $buffer .= "Output on port: \n";
     $localfname = "$pname${fname}_index.html";
     l00httpd::dbp($config{'desc'}, "Links to index.html: $localfname\n"), if ($ctrl->{'debug'} >= 1);
-    $buffer .= "<a href=\"http://localhost:20337$localfname\">20337</a>\n";
-    $buffer .= "<a href=\"http://localhost:20347$localfname\">20347</a>\n";
-    $buffer .= "<a href=\"http://localhost:30337$localfname\">30337</a>\n";
-    $buffer .= "<a href=\"http://localhost:30347$localfname\">30347</a>\n";
+    $buffer .= "<a href=\"http://localhost:20337$localfname\" target=\"_blank\">20337</a>\n";
+    $buffer .= "<a href=\"http://localhost:20347$localfname\" target=\"_blank\">20347</a>\n";
+    $buffer .= "<a href=\"http://localhost:30337$localfname\" target=\"_blank\">30337</a>\n";
+    $buffer .= "<a href=\"http://localhost:30347$localfname\" target=\"_blank\">30347</a>\n";
     $buffer .= " - <input type=\"text\" accesskey=\"l\" size=\"1\">\n";
     $buffer .= "<a href=\"#lastinsert\"\">L&#818;ast inserted here</a>\n";
     if (defined ($form->{'insertlnno'})) {
         $buffer .= "<br><a href=\"#theform\"\">Jump to the Form</a><br>\n";
     }
+    $buffer .= "<p>\n";
     foreach $_ (split("\n", $html)) {
         if (($lineno) = /^__SRCDOC__(\d+)/) {
            #$buffer .= "SRCDOC FORM:$1\n";
@@ -746,16 +746,16 @@ end_of_print3
                 $buffer .= "<input type=\"hidden\" name=\"insertlnno\" value=\"$lineno\">\n";
                 $buffer .= "<input type=\"checkbox\" name=\"pair\" accesskey=\"c\">C&#818;alling/Return From pair\n";
                 $buffer .= "Level: ";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"0\" accesskey=\"0\">1&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"1\" accesskey=\"1\" checked>2&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"2\" accesskey=\"2\">3&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"3\" accesskey=\"3\">4&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"4\" accesskey=\"4\">5&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"5\" accesskey=\"5\">6&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"6\" accesskey=\"6\">6&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"7\" accesskey=\"7\">7&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"8\" accesskey=\"8\">8&#818;\n";
-                $buffer .= "<input type=\"radio\" name=\"level\" value=\"9\" accesskey=\"9\">9&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"0\" accesskey=\"1\">1&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"1\" accesskey=\"2\" checked>2&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"2\" accesskey=\"3\">3&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"3\" accesskey=\"4\">4&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"4\" accesskey=\"5\">5&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"5\" accesskey=\"6\">6&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"6\" accesskey=\"7\">7&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"7\" accesskey=\"8\">8&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"8\" accesskey=\"9\">9&#818;\n";
+                $buffer .= "<input type=\"radio\" name=\"level\" value=\"9\" accesskey=\"0\">10&#818;\n";
                 $tgttextcln = $tgttext;
                 $tgttextcln =~ s/=/ /g;
                 $tgttextcln =~ s/^ +//;
