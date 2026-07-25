@@ -634,7 +634,7 @@ SCRIPTSRC
 #    }
 
     $labeltable = '';
-    $labeltable .= "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
+    $labeltable .= "Markers from <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
     $labeltable .= "Description: latitude,longitude ";
     $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
     $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&update=yes&matched=&exclude=&selregex=\">all</a>. ";
@@ -840,22 +840,29 @@ SCRIPTSRC
                 }
                 $gpstracktimenow =~ s/ /_/g;
                 if ($gpstracktimenow =~ /20(\d\d)(\d\d)(\d\d)_(\d\d)(\d*)/) {
+                    # digit year
                     if (($1 % 20) < 16) {
                         $name = sprintf("%x", $1 % 20);
                     } else {
                         $name = sprintf("%c", 'g' + ($1 % 20) - 16);
                     }
+                    # 1 digit month, day
                     $name .= sprintf("%x%02d", $2, $3);
+                    # 1 digit minute
                     $tmp = '';
                     if (($5 >= '0') && ($5 <= '6')) {
                         $tmp = $5;
                     }
+                    # hour
                     if ($4 < 12) {
-                        $name .= sprintf("%x${tmp}A", $4);
+                        # am
+                        $name .= sprintf("%xA${tmp}", $4);
                     } else {
-                        $name .= sprintf("%x${tmp}P", $4 - 12);
+                        # pm
+                        $name .= sprintf("%xP${tmp}", $4 - 12);
                     }
-                    $name .= "$lnno";
+                    # line no
+                    $name .= "#$lnno";
                 } else {
                     $name .= "_$gpstracktimenow";
                 }
@@ -1157,7 +1164,7 @@ SCRIPTSRC
     print $sock "<a href=\"#__form__\">form</a> - \n";
     print $sock "<a href=\"#___end___\">end</a> - \n";
     print $sock "Download: (<a href=\"/kml.htm/$form->{'path'}.kml?path=$form->{'path'}&matched=$matched&exclude=$exclude&selregex=$selregex\">.kml</a>, regex match) - \n";
-    print $sock "Read: <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
+    print $sock "Read: <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}</a> - \n";
     print $sock "<a href=\"/view.htm?path=$form->{'path'}\">View</a> - \n";
     print $sock "<a href=\"/launcher.htm?path=$form->{'path'}\">Launcher</a><p>\n";
 
@@ -1191,7 +1198,7 @@ SCRIPTSRC
         print $sock "Latitude:</td><td><input type=\"text\" name=\"lat\"  id=\"lat\"  size=\"12\" value=\"$gpslat\">\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
-        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex <input type=\"text\" name=\"selregex\" size=\"5\" value=\"$selregex\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
+        print $sock "<input type=\"checkbox\" name=\"matched\" $matched>matched <br><input type=\"checkbox\" name=\"exclude\" $exclude>exclude</td><td>regex&#818; <input type=\"text\" name=\"selregex\" size=\"10\" value=\"$selregex\" accesskey=\"x\"> <input type=\"checkbox\" name=\"longname\" $longname> Long names\n";
         print $sock "</td></tr>\n";
         print $sock "<tr><td>\n";
         print $sock "<input type=\"checkbox\" name=\"drawgrid\" $drawgrid>Show grids</td><td>\n";

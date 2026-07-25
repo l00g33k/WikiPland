@@ -1,5 +1,16 @@
 %TOC%
 
+=Track shows 10 min=
+* Format
+
+    3704bP0#5032
+
+** 3: year: 2023
+** 7: month: 1-9, a, b, c
+** 04: day
+** P: am, A; pm, P
+** 5032: line number
+
 =Waypoint Regex Filter Quick Links=
 The 'matched' checkbox and the regex field can be filled using quick links 
 

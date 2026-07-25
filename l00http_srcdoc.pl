@@ -158,6 +158,7 @@ sub l00http_srcdoc_proc {
     my ($tlevel, $prjbase, $prjname, $cpfrompath, $cpfromname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
     my ($loop, $st, $hi, $en, $fileno, $orgln, $secno, %secnohash, $inpre, $localfname, $htmlfname);
     my ($efname, $entirecnt, $entirefname, @callstack, $stack, $lastlvl);
+    my ($viewSt, $viewHl);
 
     # Send HTTP and HTML headers
     print $sock $ctrl->{'httphead'} . $ctrl->{'htmlhead'} . $ctrl->{'htmlttl'} . $ctrl->{'htmlhead2'};
@@ -412,7 +413,7 @@ end_of_print2
                 $html .= "   $orgln";
                 $html .= "</pre>\n";
                 $cpfromname =~ s/^([A-Z]+[a-z0-9])/!$1/;
-                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - <font color=\"". $reccuLvlColor [$tlevel] ."\">$cpfromname</font>:$tlnnohi\n";
+                $html .= "<a href=\"$copyname\" target=\"content\">[show code]</a> - <font color=\"". $reccuLvlColor [$tlevel] ."\">$cpfromname</font>:$tlnnohi -- ($srcln)\n";
                 $cpfrompath = '';
                 $orgln = '(not available)';
             }
@@ -554,7 +555,9 @@ end_of_print3
                     $htmlfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
                     l00httpd::dbp($config{'desc'}, "ENTIREFILE: localfname=$localfname\n"), if ($ctrl->{'debug'} >= 1);
                     # ::conti:: possibly buggy: predicting entire file index number may be wrong
-                    print COPYDEST "Source  <a href=\"/view.htm?path=$htmlfname\">";
+                    $viewSt = $hi - 20;
+                    $viewHl = $hi;
+                    print COPYDEST "Source  <a href=\"/view.htm?path=$htmlfname&update=Skip&skip=$viewSt&hiliteln=$viewHl&maxln=50\">";
                     print COPYDEST ":</a> <font style=\"color:black;background-color:lime\"><a href=\"$entirefname\">$cpfromname</a></font> line $hi in $cpfrompath\n";
                     print COPYDEST "Original: $orgln\n";
 
@@ -614,7 +617,7 @@ end_of_print3
                 $line =~ s/<a href="\/edit.htm.+?<\/a>//;
                 if ($srcln > 0) {
                     # level head heading level - 1
-                    $line =~ s/<a href="\/view.htm.+?<\/a>/ [$tmp] ($srcln)/;
+                    $line =~ s/<a href="\/view.htm.+?<\/a>/ <font style=\"color:black;background-color:silver\">[$tmp]<\/font> ($srcln)/;
                     $srcln = 0;
                 } else {
                     $line =~ s/<a href="\/view.htm.+?<\/a>//;
@@ -768,9 +771,9 @@ end_of_print3
             } else {
                 $buffer .= "<form action=\"/srcdoc.htm\" method=\"get\">\n";
                 if (/_end$/) {
-                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno at b&#818;ottom\" accesskey=\"b\">\n";
+                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here. $lineno at b&#818;ottom\" accesskey=\"b\">\n";
                 } else {
-                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno\">\n";
+                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here. vvv=$lineno+ \">\n";
                 }
                 $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
                 $buffer .= "<input type=\"hidden\" name=\"insertlnno\" value=\"$lineno\">\n";
