@@ -10,4 +10,8 @@ regex get its own color highlighting
 * In addition, a special regex of the form '((line_number))' highlights 
 the specified line number.
 
+=Find Coloring=
+
+    aqua||lime||deepPink||deepSkyBlue||fuchsia||yellow||silver||brown||red||gray||olive||lightGray||teal||orange||gold||green||DeepPink||Brown||DeepSkyBlue||Purple||LightGray||Teal||SandyBrown||HotPink||blue||Salmon||Khaki||YellowGreen||Aquamarine||Plum||LightSalmon||Moccasin||DarkSeaGreen||LightSteelBlue||MediumPurple
+
 %::INDEX::%
