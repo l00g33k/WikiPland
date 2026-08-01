@@ -10,14 +10,12 @@ use l00backup;
 my %config = (proc => "l00http_dash_proc",
               desc => "l00http_dash_desc");
 
-my ($dash_all, $hdronly, $listbang, $newbang, $newwin, $crlfchk, $crlf, $freefmt, $filtime, $fildesc,
-$smallhead, $catflt, $cat2find, $outputsort, $dashwidth, $onlybang, $onlyhat, $target, $fildesc0itm1cat);
+my ($dash_all, $hdronly, $listbang, $newbang, $crlfchk, $crlf, $freefmt, $filtime, $fildesc,
+$smallhead, $catflt, $cat2find, $outputsort, $dashwidth, $onlybang, $onlyhat, $fildesc0itm1cat);
 
 $dash_all = 'past';
 $hdronly = 0;
 $listbang = '';
-$newwin = '';
-$target = '';
 $newbang = '';
 $freefmt = '';
 $smallhead = '';
@@ -267,13 +265,6 @@ sub l00http_dash_proc {
         } else {
             $catflt = '.';
         }
-        if ((defined ($form->{'newwin'})) && ($form->{'newwin'} eq 'on')) {
-            $newwin = 'checked';
-            $target = 'target="_blank"';
-        } else {
-            $newwin = '';
-            $target = '';
-        }
         if ((defined ($form->{'crlf'})) && ($form->{'crlf'} eq 'on')) {
             $crlf = " <br>";
             $crlfchk = 'checked';
@@ -430,7 +421,6 @@ sub l00http_dash_proc {
         print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>";
         print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&dash_all=all\">all</a>.\n";
         print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
-        print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
 #       print $sock "<input type=\"checkbox\" name=\"crlf\" $crlfchk>crlf\n";
         if ($crlfchk eq 'checked') {
             $_ = '';
@@ -896,7 +886,9 @@ sub l00http_dash_proc {
                     if (($time_start == 0) && ($dsc =~ /time\.stop/)) {
                         $time_start = &l00httpd::now_string2time($tim);
                     }
-                    $key = "||$cat1font1<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>$cat1font2||$cat2 ";
+                   #$key = "||$cat1font1<a href=\"/ls.htm?path=$form->{'path'}#$jmp\" $target>$cat1</a>$cat1font2||$cat2 ";
+                    # #$jmp seems necessary to show shortcuts
+                    $key = "||$cat1font1<a href=\"/view.htm?path=$form->{'path'}&hiliteln=${lineevalln}&lineno=on&update=y&skip=${lineevalln}&maxln=200#$jmp\">$cat1</a>$cat1font2||$cat2 ";
                     if (($time_start > 0) && ($dsc =~ /time\.start/)) {
                         $time_start -= &l00httpd::now_string2time($tim);
 
@@ -1716,7 +1708,6 @@ sub l00http_dash_proc {
             }
             print $sock "<input type=\"radio\" name=\"dash_all\" value=\"all\" $_>all. ";
             print $sock "<input type=\"checkbox\" name=\"listbang\" $listbang>list '!'.\n";
-            print $sock "<input type=\"checkbox\" name=\"newwin\" $newwin>new win.\n";
             print $sock "<input type=\"checkbox\" name=\"freefmt\" $freefmt>";
             if ($freefmt ne 'checked') {
                 print $sock "<a href=\"/dash.htm?process=Process&path=$form->{'path'}&freefmt=on\">free format</a>.\n";
