@@ -216,7 +216,7 @@ sub l00http_recedit_proc (\%) {
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
     my ($path, $found, $line, $id, $output, $delete, $cmted, $editln, $keeplook, $nowsort);
-    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, @table, $ii, $lnno, $afterline, @nowplus1age, $nowplus1oldest);
+    my ($yr, $mo, $da, $hr, $mi, $se, $tmp, $tmp2, $tmp3, @table, $ii, $lnno, $afterline, @nowplus1age, $nowplus1oldest);
     my ($filter_found_true, $filtered, $cnt, $eval1, $now, $nowtime, @nowtime, $due, $nowcnt, $duecnt, $dispcnt);
 
     if (defined ($form->{'path'})) {
@@ -308,6 +308,8 @@ sub l00http_recedit_proc (\%) {
                                 if ($nowplus1oldest > $nowplus1age[$cnt]) {
                                     $nowplus1oldest = $nowplus1age[$cnt];
                                 }
+                                $tmp = "tmp=" . $tmp . " tmp2=" . $tmp2 . " - " . ($tmp-$tmp2) . " -- " . $nowplus1oldest . ": $line";
+                                l00httpd::dbp($config{'desc'}, "AGE: $tmp"), if ($ctrl->{'debug'} >= 2);
                             }
                         }
                     }
@@ -388,14 +390,19 @@ sub l00http_recedit_proc (\%) {
                                 $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
                                 # timestamp now
                                 $tmp2 = l00httpd::now_string2time($ctrl->{'now_string'}) + 4 * 3600;
-                                if ($tmp2 > $tmp ) {
+                                if ($tmp2 > $tmp) {
+                                    $tmp3 = "tmp=" . $tmp . " tmp2=" . $tmp2 . " - " . ($tmp-$tmp2) . " -- " . $nowplus1oldest . ": $_";
+                                    l00httpd::dbp($config{'desc'}, "AGEMV: $tmp3"), if ($ctrl->{'debug'} >= 2);
                                     # item is less than 4 hours into the future, shift it so the oldest is 5 mins in the future
                                     $tmp = &l00httpd::time2now_string ($tmp - $nowplus1oldest + 300);
                                     ($yr, $mo, $da, $hr, $mi, $se) = $tmp =~ /^(....)(..)(..) (..)(..)(..)/;
+                                    $yr -= 1900;
+                                    $mo--;
                                 }
                                 $_ = sprintf ("%04d%02d%02d %02d%02d%02d%s", 
                                      $yr + 1900, $mo + 1, $da, $hr, $mi, $se, 
                                      substr ($_, 15, 9999));
+                                l00httpd::dbp($config{'desc'}, "AGEMV: new: $_"), if ($ctrl->{'debug'} >= 2);
                             }
                         } if (defined($form->{"nowplus2"})) {
                             if (($yr, $mo, $da, $hr, $mi, $se) = /^(....)(..)(..) (..)(..)(..)/) {
