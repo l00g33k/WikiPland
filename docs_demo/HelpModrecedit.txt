@@ -1,3 +1,7 @@
+* '+1h' button: shift all items that are 4 hours or older by a uniform time such that 
+the oldest item is 5 minutes into the future.  This preserves the previously timed 
+priority while shifting the whole plan 5 minutes into the future.
+
 * Common 'Record 1' regex string:
 ** timestamped line entry:
     ^\d{8,8} \d{6,6}:\d+
