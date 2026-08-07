@@ -53,6 +53,25 @@ my (@reccuLvlColor);
 
 my (@localpath, @altpath);
 
+sub l00http_srcdoc_lvl_color {
+    my ($level) = @_;
+    my $lvlcolor;
+
+       if ($level == 1) { $lvlcolor = '0'; }
+    elsif ($level == 2) { $lvlcolor = 'd'; }
+    elsif ($level == 3) { $lvlcolor = 'T'; }
+    elsif ($level == 4) { $lvlcolor = 'a'; }
+    elsif ($level == 5) { $lvlcolor = 's'; }
+    elsif ($level == 6) { $lvlcolor = '4'; }
+    elsif ($level == 7) { $lvlcolor = '5'; }
+    elsif ($level == 8) { $lvlcolor = '1'; }
+    else {
+        $lvlcolor = 'o';
+    }
+
+    $lvlcolor;
+}
+
 sub l00http_srcdoc_localfname {
     my ($ctrl, $localfname) = @_;
     my ($onealtpath, $trunk, $branch, $localidx);
@@ -152,7 +171,7 @@ sub l00http_srcdoc_proc {
     my ($main, $ctrl) = @_;      #$ctrl is a hash, see l00httpd.pl for content definition
     my $sock = $ctrl->{'sock'};     # dereference network socket
     my $form = $ctrl->{'FORM'};     # dereference FORM data
-    my (@alllines, $line, $lineno, $blkbuf, $tgtline, $tgtln, $cnt, $jj);
+    my (@alllines, $line, $lineno, $lineno0, $blkbuf, $tgtline, $tgtln, $cnt, $jj);
     my ($pname, $fname, $comment, $buffer, @buf, $tmp, $tmp2, $lnno, $uri, $ii, $cmd, $lasthdrlvl);
     my ($gethdr, $html, $html2, $title, $body, $level, $tgtfile, $tgttext, $tgttextcln);
     my ($tlevel, $prjbase, $prjname, $cpfrompath, $cpfromname, $tlnnohi, $tlnnost, $tlnnoen, $srcln, $copyname, $copyidx);
@@ -236,10 +255,10 @@ sub l00http_srcdoc_proc {
             }
             if (defined ($form->{'pair'})) {
                 # add a pair
-                $buffer .= '=' x ($level + 1) . "Calling: $title" . '=' x ($level + 1) . "\n";
+                $buffer .= '=' x ($level + 1) . " *2*Calling:** $title" . '=' x ($level + 1) . "\n";
                 $buffer .= "$tgtfile\n";
                 $buffer .= "$body\n";
-                $buffer .= '=' x ($level + 1) . "Returning: $title" . '=' x ($level + 1) . "\n";
+                $buffer .= '=' x ($level + 1) . " *8*Returning:** $title" . '=' x ($level + 1) . "\n";
                 $buffer .= "$tgtfile\n";
                 $buffer .= "$body\n";
             } else {
@@ -279,7 +298,7 @@ sub l00http_srcdoc_proc {
                 s/[\r\n]//g;
                 s/^=+//;
                 s/=+$//;
-                $_ = '=' x length($level1) . "*L*[" . length($level1) . "]** " . $_ .  '=' x length($level1);
+                $_ = '=' x length($level1) . "*". &l00http_srcdoc_lvl_color(length($level1)) ."*[" . length($level1) . "]** " . $_ .  '=' x length($level1);
                 $buffer .= "\n__SRCDOC__$lnno\n";
                 $fileno = $lnno + 2;
             }
@@ -558,7 +577,7 @@ end_of_print3
                     $htmlfname = &l00http_srcdoc_localfname($ctrl, "$cpfrompath$cpfromname");
                     l00httpd::dbp($config{'desc'}, "ENTIREFILE: localfname=$localfname\n"), if ($ctrl->{'debug'} >= 1);
                     # ::conti:: possibly buggy: predicting entire file index number may be wrong
-                    print COPYDEST "Source  <a href=\"/view.htm?path=$htmlfname\">";
+                    print COPYDEST "Source  <a href=\"/view.htm?path=$htmlfname&update=y&skip=$hi&maxln=200&hiliteln=$hi&lineno=on\">";
                     print COPYDEST ":</a> <font style=\"color:black;background-color:lime\"><a href=\"$entirefname\">$cpfromname</a></font> line $hi in $cpfrompath\n";
                     print COPYDEST "Original: $orgln\n";
 
@@ -771,10 +790,11 @@ end_of_print3
                 $buffer .= "</form>\n";
             } else {
                 $buffer .= "<form action=\"/srcdoc.htm\" method=\"get\">\n";
+                $lineno0 = $lineno - 1;
                 if (/_end$/) {
-                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno at b&#818;ottom\" accesskey=\"b\">\n";
+                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno0 at b&#818;ottom\" accesskey=\"b\">\n";
                 } else {
-                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno\">\n";
+                    $buffer .= "<input type=\"submit\" name=\"showform\" value=\"Show form here $lineno0\">\n";
                 }
                 $buffer .= "<input type=\"hidden\" name=\"path\" value=\"$form->{'path'}\">\n";
                 $buffer .= "<input type=\"hidden\" name=\"insertlnno\" value=\"$lineno\">\n";
