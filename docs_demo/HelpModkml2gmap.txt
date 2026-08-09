@@ -149,4 +149,4 @@ Works in MAPS.ME
 0.00,18.00 gps
 
 * gps
-0.00,19.00 gps
+0.00,0.00 gps
