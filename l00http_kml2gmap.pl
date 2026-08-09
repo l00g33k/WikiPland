@@ -634,7 +634,7 @@ SCRIPTSRC
 #    }
 
     $labeltable = '';
-    $labeltable .= "Markers from <a href=\"/view.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
+    $labeltable .= "Markers from <a href=\"/ls.htm?path=$form->{'path'}\">$form->{'path'}<a>\n";
     $labeltable .= "Description: latitude,longitude ";
     $labeltable .= "(<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height$tmp\">reload</a>; ";
     $labeltable .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&update=yes&matched=&exclude=&selregex=\">all</a>. ";
