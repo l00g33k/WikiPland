@@ -60,6 +60,29 @@ sub l00http_dash_linewrap {
         $inangle = 0;   # flag to exclude counting <tags>
         $insquare = 0;  # flag to exclude counting [[url|desc]]
         $width = 0;     # currently accumulated width
+        for ($ii = 0; $ii < $idx; $ii++) {
+            # find < and [[ before idx
+            if (substr($buffer, $ii, 1) eq '<') {
+                # found '<', to skip to '>'
+                $inangle = 1;
+            }
+            if (substr($buffer, $ii, 2) eq '[[') {
+                # found '[[', to skip to ']]'
+                $insquare = 1;
+            }
+            if ($insquare) {
+                if (substr($buffer, $ii - 1, 2) eq ']]') {
+                    # in '[[' and found ']]', reset
+                    $insquare = 0;
+                }
+            }
+            if ($inangle) {
+                if (substr($buffer, $ii, 1) eq '>') {
+                    # in '<' and found '>', reset
+                    $inangle = 0;
+                }
+            }
+        }
         for ($ii = $idx; $ii < $len; $ii++) {
             if (substr($buffer, $ii, 1) eq '<') {
                 # found '<', to skip to '>'
@@ -939,7 +962,7 @@ sub l00http_dash_proc {
                                 $bang = $1;
                                 $desc =~ s/^!+//;
                             }
-                            $dsc = "$bang<a href=\"/clip.htm?clip=$clip\" target=\"_blank\">$desc&#8227;</a>";
+                            $dsc = "$bang<a href=\"/clip.htm?clip=$clip\" target=\"_blank\" xxx=\"3\">$desc&#8227;</a>";
                         } elsif (($desc, $clip) = $dsc =~ /^ *(.+) *\| *(.+) *$/) {
                             $bang = '';
                             # preserve ! or !! as leading
