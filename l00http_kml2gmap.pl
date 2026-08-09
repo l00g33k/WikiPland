@@ -945,6 +945,8 @@ SCRIPTSRC
             }
             if ($longname eq 'checked') {
                 $jlabel .= ":$name";
+                # tmux Perl doesn't handle ' in long name crashes Google Map
+                $jlabel =~ s/'/_/g;
             }
             $labelsort{"$name -- $jlabel"}  = "<a href=\"/kml2gmap.htm?delln=$lnno&path=$form->{'path'}\">del</a>: ";
             $labelsort{"$name -- $jlabel"} .= "<a href=\"/kml2gmap.htm?path=$form->{'path'}&width=$width&height=$height&mkridx=$nowypts\">$jlabel</a>: ";

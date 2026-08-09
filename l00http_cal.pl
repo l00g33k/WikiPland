@@ -370,14 +370,14 @@ sub l00http_cal_proc {
                 $todo = "&#91;$todo&#93;";
             } elsif (($tmp, $tmp2) = $todo =~ /^(.+?)\|\|(.+)$/) {
                 # send tmp2 to clipboard
-                $todo = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=".&l00httpd::urlencode ($tmp2)."\" target=newwin>$tmp</a>";
+                $todo = "<a href=\"/clip.htm?clip=".&l00httpd::urlencode ($tmp2)."\" target=newwin>$tmp</a>";
             } else {
                 # else make a link to send text to clip.htm
                 $tmp = $todo;
                 $tmp =~ s/<.+?>//g;
                 $tmp =~ s/^ +//;
                 $tmp =~ s/ +$//;
-                $todo = "<a href=\"/clip.htm?update=Copy+to+clipboard&clip=".&l00httpd::urlencode ($tmp)."\" target=newwin>$todo</a>";
+                $todo = "<a href=\"/clip.htm?clip=".&l00httpd::urlencode ($tmp)."\" target=newwin>$todo</a>";
             }
             if (defined ($list {"$wkno`$dayofwk"})) {
                 if (defined ($form->{'newline'}))  {
