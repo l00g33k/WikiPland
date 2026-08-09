@@ -87,3 +87,64 @@ Append !!!# where # is color code, e.g. for lime waypoint:
 
     * distinct colors
     ** works in Firefox
+
+=MAPS.ME Export=
+Works in MAPS.ME
+
+* gps_r!!!r
+0,0 gps
+
+* gps_y!!!y
+0,1 gps
+
+* gps_l!!!l
+0,2 gps
+
+* gps_s!!!s
+0,3 gps
+
+* gps_a!!!a
+0,4 gps
+
+* gps_f!!!f
+0,5 gps
+
+* gps_g!!!g
+0,6 gps
+
+* gps_o!!!o
+0,7 gps
+
+* gps_d!!!d
+0,8 gps
+
+* gps_G!!!G
+0,9 gps
+
+* gps_D!!!D
+0,10 gps
+
+* gps_b!!!b
+0,11 gps
+
+* gps_S!!!S
+0,12 gps
+
+* gps_p!!!p
+0,13 gps
+
+* gps_L!!!L
+0,14 gps
+
+* gps_T!!!T
+0,15 gps
+
+* gps_B!!!B
+0,16 gps
+
+* gps_h!!!h
+0,17 gps
+
+* gps_u!!!u
+0,18 gps
+
