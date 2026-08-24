@@ -76,9 +76,9 @@ EOB
     }
 
     # print pane
-    $wikiout .= "* $pane pane content:\n\n";
-    $wikiout .= " \n \n";
+    $wikiout .= "* $pane pane content:\n";
     $cmd = "tmux capture-pane -p -t '$pane' -J -S - -E - | tail -n $tmuxpanelen";
+    $wikiout .= "    $cmd\n \n";
     $buf = `$cmd`;
     foreach $out (split("\n", $buf)) {
         $wikiout .= "    $out\n";
@@ -102,32 +102,38 @@ $devlog .= "* Now is: $ctrl->{'now_string'}\n";
 $devlog .= "\n";
 
 
-$buf = `tmux list-panes -a -F "#{session_id}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_width} #{pane_height} #{pane_pid} #{pane_left} #{pane_top} #{pane_current_path}"`;
+if ((($ctrl->{'FORM'}->{'submit'} eq 'Prepare') ||
+    ($ctrl->{'FORM'}->{'submit'} eq 'Send')) &&
+    defined($ctrl->{'FORM'}->{'arg1'}) && 
+    defined($ctrl->{'FORM'}->{'arg2'})) {
+} else {
+    $buf = `tmux list-panes -a -F "#{session_id}:#{window_index}.#{pane_index} #{window_name} #{pane_current_command} #{pane_width} #{pane_height} #{pane_pid} #{pane_left} #{pane_top} #{pane_current_path}"`;
 
 
-$wikiout .= "=tmux list-panes=\n";
-$wikiout .= "\n";
-$wikiout .= "|| **PANE** || **name** || **cmdln** || **pwd** || **wd x ht** || **lt x tp** || **PID** || **child PID** ||\n";
-$devlog .= "=tmux list-panes=\n";
-foreach $out (split("\n", $buf)) {
-    $devlog .= "out: $out\n";
-    ($pane, $name, $cmd, $wd, $ht, $pid, $lt, $tp, $path) = split(" ", $out);
-    if ($path eq '') {
-        $path = "(N/A)";
-    }
-    $devlog .= "children: $children\n";
-    $children = '';
-    $child = $pid;
-    while ($child = `pgrep -P $child | tr '\n' ' '`) {
-        if ($child !~ /\d+/) {
-            last;
+    $wikiout .= "=tmux list-panes=\n";
+    $wikiout .= "\n";
+    $wikiout .= "|| **PANE** || **name** || **cmdln** || **pwd** || **wd x ht** || **lt x tp** || **PID** || **child PID** ||\n";
+    $devlog .= "=tmux list-panes=\n";
+    foreach $out (split("\n", $buf)) {
+        $devlog .= "out: $out\n";
+        ($pane, $name, $cmd, $wd, $ht, $pid, $lt, $tp, $path) = split(" ", $out);
+        if ($path eq '') {
+            $path = "(N/A)";
         }
-        $children .= "$child ";
+        $devlog .= "children: $children\n";
+        $children = '';
+        $child = $pid;
+        while ($child = `pgrep -P $child | tr '\n' ' '`) {
+            if ($child !~ /\d+/) {
+                last;
+            }
+            $children .= "$child ";
+        }
+        $paneclean = $pane;
+        $paneclean =~ s/^\$/S/;
+        $paneshow = "<a href=\"#$paneclean\">$pane</a>";
+        $wikiout .= "|| $paneshow || $name || $cmd || $path || $wd x $ht || $lt x $tp || $pid || $children ||\n";
     }
-    $paneclean = $pane;
-    $paneclean =~ s/^\$/S/;
-    $paneshow = "<a href=\"#$paneclean\">$pane</a>";
-    $wikiout .= "|| $paneshow || $name || $cmd || $path || $wd x $ht || $lt x $tp || $pid || $children ||\n";
 }
 
 $wikiout .= "\n%TOC%\n";
