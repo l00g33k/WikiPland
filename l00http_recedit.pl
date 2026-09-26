@@ -413,11 +413,11 @@ sub l00http_recedit_proc (\%) {
                                 $tmp = l00httpd::now_string2time(substr ($_, 0, 15));
                                 # timestamp 23:00
                                #$tmp2 = l00httpd::now_string2time($ctrl->{'now_string'});
-                                if ($ctrl->{'now_string'} lt substr($ctrl->{'now_string'}, 0, 9)."040000") {
-                                    # if now is before 4am, set it to today 4am
-                                    $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 4;
+                                if ($ctrl->{'now_string'} lt substr($ctrl->{'now_string'}, 0, 9)."050000") {
+                                    # if now is before 5am, set it to today 4am
+                                    $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 5;
                                 } else {
-                                    $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 28;
+                                    $tmp2 = l00httpd::now_string2time(substr($ctrl->{'now_string'}, 0, 9)."000000") + 3600 * 29;
                                 }
                                 if ($tmp2 > $tmp) {
                                     # if before tomorrow (or today) 4am, set to it
@@ -705,7 +705,7 @@ sub l00http_recedit_proc (\%) {
             print $sock "        <input type=\"submit\" name=\"chkallRB\" value=\"4 h&#818;\" accesskey=\"h\">\n";
             print $sock "        <input type=\"submit\" name=\"nowplus\" value=\"+5m\"><p>\n";
             print $sock "        <input type=\"submit\" name=\"nowplus1\" value=\"+1h\">\n";
-            print $sock "        <input type=\"submit\" name=\"nowplus2\" value=\"=4+\">\n";
+            print $sock "        <input type=\"submit\" name=\"nowplus2\" value=\"=5+\">\n";
             print $sock "        <input type=\"submit\" name=\"chkallnow\" value=\"\@0\"><p>\n";
         } else {
             print $sock "        <input type=\"submit\" name=\"chkallFB\" value=\"2d&#818;\" accesskey=\"d\"><p>\n";

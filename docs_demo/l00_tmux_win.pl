@@ -81,6 +81,8 @@ EOB
     $wikiout .= "    $cmd\n \n";
     $buf = `$cmd`;
     foreach $out (split("\n", $buf)) {
+        $out =~ s/</&lt;/g;
+        $out =~ s/>/&gt;/g;
         $wikiout .= "    $out\n";
     }
 }
@@ -192,8 +194,7 @@ EOB
         $buf = `$cmd`;
         foreach $out (split("\n", $buf)) {
             $out =~ s/</&lt;/g;
-            $out =~ s/>/&lt;/g;
-            $out =~ s/</&lt;/g;
+            $out =~ s/>/&gt;/g;
             $wikiout .= "    $out\n";
         }
     }
